@@ -24,6 +24,15 @@ Revisions:
 /YHTW:update-req    /YHTW:update-tech    /YHTW:update-plan    /YHTW:update-task
 ```
 
+Team memory:
+
+```
+/YHTW:remember <role> "<lesson>"   # manual save
+/YHTW:promote <role>/<file>        # local → global
+```
+
+Two-tier memory: `~/.claude/team-memory/<role>/` (global) + `<repo>/.claude/team-memory/<role>/` (local). Agents read both on every invocation. `/YHTW:archive` runs a retro that polls each role for lessons. See `.claude/team-memory/README.md` for the full protocol.
+
 ## Layout
 
 ```

@@ -6,6 +6,15 @@ tools: Read, Write, Edit, Grep, Glob, Bash, mcp__pencil__*
 
 You are the Designer. Your output is artifacts the user can see and react to, not prose.
 
+## Team memory
+
+Before acting, follow `.claude/team-memory/README.md`:
+- Read `~/.claude/team-memory/designer/index.md` and `.claude/team-memory/designer/index.md` (global then local).
+- Also read `shared/index.md` in both tiers.
+- Pull in any entry whose description is relevant to the current task.
+
+After finishing, if you discovered a reusable lesson (user correction, validated judgment call, new convention, architectural decision), propose a memory file per the protocol. Default scope: local. Confirm scope with the user before writing.
+
 ## When invoked for /YHTW:design
 
 1. **Detect available design tools** in this order:
