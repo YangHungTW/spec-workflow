@@ -118,7 +118,7 @@ it means `bin/claude-symlink` per D3.
   - Real file (not a symlink) → returns 1.
 - **Depends on**: T3
 - **Parallel-safe-with**: T5
-- [ ]
+- [x]
 
 ## T5 — `plan_links` (R4, R5)
 - **Milestone**: M3
@@ -405,6 +405,7 @@ Developer finds them slipping. Split and renumber only via
 - 2026-04-16 Developer — T1 done (script skeleton, OS guard, dispatch stubs)
 - 2026-04-16 Developer — T2 done (flag parsing: --dry-run, --help/-h, unknown-flag rejection)
 - 2026-04-16 developer T3 done — added die, resolve_path, resolve_repo_root, __probe; 4 tests all green
+- 2026-04-16 Developer — T4 done (owned_by_us via trailing-slash repo-root prefix)
 
 ---
 
