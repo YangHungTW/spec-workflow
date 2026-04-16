@@ -38,3 +38,5 @@
 - 2026-04-16 implement wave 3 done — T5
 - 2026-04-16 Developer — T6 done (classify_target 8-state taxonomy)
 - 2026-04-16 implement wave 4 done — T6
+- 2026-04-16 Developer — T7 done (cmd_install with ensure_parent/create_link/report helpers)
+- 2026-04-16 implement wave 5 done — T7
