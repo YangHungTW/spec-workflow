@@ -1,5 +1,53 @@
 #!/usr/bin/env bash
-# claude-symlink — manage YHTW .claude/ symlinks (install/uninstall/update)
+# =============================================================================
+# claude-symlink — manage YHTW .claude/ symlinks across projects
+# =============================================================================
+#
+# USAGE
+#   bin/claude-symlink <subcommand> [--dry-run]
+#   bin/claude-symlink --help
+#
+# SUBCOMMANDS
+#   install     Create the full managed symlink set under ~/.claude/.
+#               Safe to re-run; paths already at desired state report [already].
+#
+#   uninstall   Remove only the symlinks this tool owns. Never touches real
+#               files, real dirs, or symlinks created by other tools.
+#
+#   update      Reconcile the managed set: add missing links, replace broken
+#               owned links, prune owned orphans (links whose repo source no
+#               longer exists or is no longer in the plan). Equivalent to a
+#               combined install + orphan-sweep.
+#
+# MANAGED SET
+#   The tool manages exactly these paths under ~/.claude/:
+#     agents/YHTW          — directory symlink → <repo>/.claude/agents/YHTW
+#     commands/YHTW        — directory symlink → <repo>/.claude/commands/YHTW
+#     team-memory/**       — one file symlink per regular file under
+#                            <repo>/.claude/team-memory/ (walked at run time)
+#
+# OPTIONS
+#   --dry-run   Compute the full plan and print would-* verbs; zero mutations.
+#               Exit 0 unless planning itself fails.
+#   --help, -h  Print this message and exit 0.
+#
+# EXIT CODES
+#   0   All managed paths converged to desired state (or dry-run produced
+#       a plan without error).
+#   1   At least one path was skipped due to a conflict, or a filesystem
+#       mutation failed. The tool reports everything before exiting.
+#   2   Usage error or unresolvable precondition (bad subcommand, OS guard,
+#       unresolvable repo root).
+#
+# CONFLICT HANDLING (no --force in v1)
+#   Conflicts are reported and skipped; the user resolves them manually.
+#   skipped:real-file             — inspect path, back up, rm, re-run
+#   skipped:real-dir              — inspect path, back up, rm -rf if safe, re-run
+#   skipped:foreign-symlink       — a symlink from another tool; rm manually, re-run
+#   skipped:foreign-broken-symlink — broken symlink not ours; rm manually, re-run
+#   skipped:not-ours (uninstall)  — symlink at managed path not owned; left untouched
+#
+# =============================================================================
 set -u -o pipefail
 
 # OS guard: Windows shells are not supported
@@ -365,16 +413,36 @@ create_link() {
 
 usage() {
   cat <<'EOF'
-Usage: claude-symlink <subcommand> [options]
+Usage: bin/claude-symlink <subcommand> [--dry-run]
+       bin/claude-symlink --help
 
 Subcommands:
-  install     Create managed symlinks under ~/.claude/
-  uninstall   Remove managed symlinks from ~/.claude/
-  update      Reconcile managed symlinks (add missing, prune orphans)
+  install     Create the full managed symlink set under ~/.claude/.
+              Safe to re-run; paths already correct report [already].
+  uninstall   Remove only tool-owned symlinks from ~/.claude/.
+  update      Reconcile managed symlinks: add missing, replace broken-ours,
+              prune owned orphans.
+
+Managed set:
+  agents/YHTW          → <repo>/.claude/agents/YHTW   (directory symlink)
+  commands/YHTW        → <repo>/.claude/commands/YHTW  (directory symlink)
+  team-memory/**       → one file symlink per file under <repo>/.claude/team-memory/
 
 Options:
-  --dry-run   Show what would be done without making any changes
-  --help, -h  Show this help message and exit 0
+  --dry-run   Show what would be done without making any changes (exit 0).
+  --help, -h  Show this help message and exit 0.
+
+Exit codes:
+  0  All managed paths converged (or dry-run plan produced without error).
+  1  At least one conflict was skipped or a mutation failed.
+  2  Usage error or unresolvable precondition.
+
+Conflict resolution (no --force in v1 — resolve manually):
+  skipped:real-file              inspect, back up, rm, re-run
+  skipped:real-dir               inspect, back up, rm -rf if safe, re-run
+  skipped:foreign-symlink        rm the foreign symlink manually, re-run
+  skipped:foreign-broken-symlink rm the broken foreign symlink manually, re-run
+  skipped:not-ours (uninstall)   symlink not owned by this tool; left untouched
 EOF
 }
 
