@@ -383,7 +383,7 @@ it means `bin/claude-symlink` per D3.
   - No content changes to `.claude/` source trees.
 - **Depends on**: T11
 - **Parallel-safe-with**: —
-- [ ]
+- [x]
 
 ---
 
@@ -423,6 +423,7 @@ Developer finds them slipping. Split and renumber only via
 - 2026-04-16 Developer — T9 done (cmd_update reconciler with orphan pruning)
 - 2026-04-16 Developer — T10 done (summary, exit codes finalized; __probe gated behind YHTW_PROBE=1)
 - 2026-04-16 developer T11 done — smoke harness covering AC1–AC12 with sandbox-HOME preflight
+- 2026-04-16 Developer — T12 done (script header + README section, parity with --help)
 
 ---
 
