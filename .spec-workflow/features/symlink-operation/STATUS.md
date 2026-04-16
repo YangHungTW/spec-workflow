@@ -46,3 +46,5 @@
 - 2026-04-16 implement wave 7 done — T9
 - 2026-04-16 Developer — T10 done (summary, exit codes finalized; __probe gated behind YHTW_PROBE=1)
 - 2026-04-16 implement wave 8 done — T10
+- 2026-04-16 Developer — T11 done (smoke harness covering AC1–AC12 with sandbox-HOME preflight)
+- 2026-04-16 implement wave 9 done — T11
