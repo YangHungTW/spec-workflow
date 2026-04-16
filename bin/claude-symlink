@@ -405,9 +405,13 @@ parse_flags() {
   done
 }
 
-cmd_install() {
-  plan_links
-
+# ---------------------------------------------------------------------------
+# apply_plan — inner loop shared by cmd_install and cmd_update (Pass 1)
+# Iterates PLAN_SRC/PLAN_TGT (must be populated by caller via plan_links).
+# Classifies each target and acts per the R10 action table.
+# Updates MAX_CODE in place. Does NOT call emit_summary.
+# ---------------------------------------------------------------------------
+apply_plan() {
   local i=0
   while [ "$i" -lt "${#PLAN_SRC[@]}" ]; do
     local src="${PLAN_SRC[$i]}"
@@ -498,7 +502,11 @@ cmd_install() {
         ;;
     esac
   done
+}
 
+cmd_install() {
+  plan_links
+  apply_plan
   emit_summary
   return "$MAX_CODE"
 }
@@ -640,8 +648,79 @@ cmd_uninstall() {
 }
 
 cmd_update() {
-  echo "stub: update"
-  echo "dry-run=$DRY_RUN"
+  # ------------------------------------------------------------------
+  # Pass 1: add / fix — identical to cmd_install's apply_plan loop
+  # ------------------------------------------------------------------
+  plan_links
+  apply_plan
+
+  # ------------------------------------------------------------------
+  # Pass 2: prune orphans under team-memory
+  # Build DESIRED_TARGETS as an indexed array (D1: no associative arrays).
+  # Walk find -type l under $HOME/.claude/team-memory; for each link that
+  # is owned_by_us AND not in DESIRED_TARGETS, remove and report removed:orphan.
+  # Foreign / unrelated links: left alone, not reported.
+  # ------------------------------------------------------------------
+  local DESIRED_TARGETS=()
+  local j=0
+  while [ "$j" -lt "${#PLAN_TGT[@]}" ]; do
+    DESIRED_TARGETS+=("${PLAN_TGT[$j]}")
+    j=$((j + 1))
+  done
+
+  local candidate_parents=()
+  local tm_dir="$HOME/.claude/team-memory"
+  if [ -d "$tm_dir" ]; then
+    while IFS= read -r -d '' link; do
+      # Only process links owned by us
+      owned_by_us "$link" || continue
+
+      # Check if this link is in DESIRED_TARGETS (linear search via for loop)
+      local in_set=0
+      local t
+      for t in "${DESIRED_TARGETS[@]}"; do
+        [ "$t" = "$link" ] && in_set=1 && break
+      done
+
+      [ "$in_set" -eq 1 ] && continue
+
+      # Not in desired set → orphan: remove and report
+      local link_parent
+      link_parent=$(dirname "$link")
+
+      if [ "$DRY_RUN" -eq 1 ]; then
+        report "would-remove:orphan" "$link"
+      else
+        if rm "$link"; then
+          report "removed:orphan" "$link"
+          candidate_parents+=("$link_parent")
+          # Walk up toward tm_dir, collecting parent dirs for cleanup
+          local up="$link_parent"
+          while true; do
+            local up_parent
+            up_parent=$(dirname "$up")
+            [ "$up_parent" = "$HOME/.claude" ] && break
+            [ "$up_parent" = "$up" ] && break
+            candidate_parents+=("$up_parent")
+            up="$up_parent"
+          done
+        else
+          echo "error: could not remove orphan link: $link" >&2
+          MAX_CODE=1
+        fi
+      fi
+    done < <(find "$tm_dir" -type l -print0 2>/dev/null)
+  fi
+
+  # ------------------------------------------------------------------
+  # Pass 3: best-effort rmdir of empty parents (same as uninstall)
+  # ------------------------------------------------------------------
+  if [ "${#candidate_parents[@]}" -gt 0 ]; then
+    try_remove_empty_parents "${candidate_parents[@]}"
+  fi
+
+  emit_summary
+  return "$MAX_CODE"
 }
 
 main() {

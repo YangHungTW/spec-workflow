@@ -281,7 +281,7 @@ it means `bin/claude-symlink` per D3.
     still reconciles others, exit 1 (AC8).
 - **Depends on**: T7, T8
 - **Parallel-safe-with**: —
-- [ ]
+- [x]
 
 ## T10 — `emit_summary` + final exit code wiring (R13, R14, R15)
 - **Milestone**: M8
@@ -420,6 +420,7 @@ Developer finds them slipping. Split and renumber only via
 - 2026-04-16 Developer — T6 done (classify_target with 8-state taxonomy)
 - 2026-04-16 developer T7 done — cmd_install with ensure_parent/create_link/report helpers; 17 tests across 4 scenarios all green
 - 2026-04-16 Developer — T8 done (cmd_uninstall with ownership-gated removal and empty-parent cleanup)
+- 2026-04-16 Developer — T9 done (cmd_update reconciler with orphan pruning)
 
 ---
 
