@@ -32,3 +32,5 @@
 - 2026-04-16 TPM — added Parallel-safe-with fields and Wave schedule (mid-stream tasks-doc update for new /YHTW:implement)
 - 2026-04-16 Developer — T3 done (resolve_path, resolve_repo_root, die, __probe)
 - 2026-04-16 implement wave 1 done — T3
+- 2026-04-16 implement wave 2 done — T4
+- 2026-04-16 TPM — revised wave schedule (T4/T5 de-paired after Wave 2 merge conflict; now single-task waves end-to-end)

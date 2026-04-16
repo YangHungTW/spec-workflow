@@ -116,8 +116,13 @@ it means `bin/claude-symlink` per D3.
   - Sibling-repo path `/Users/yanghungtw/Tools/spec-workflow-fork/.claude/…`
     → returns 1 (NOT a prefix match because of trailing slash).
   - Real file (not a symlink) → returns 1.
+- _Note [CHANGED 2026-04-16]: T4 and T5 must NOT run concurrently. Both
+  add a new arm to the `__probe` dispatcher in `bin/claude-symlink` in
+  adjacent regions; git's textual merge collides even though the
+  functions are logically independent. De-paired into separate waves
+  after a Wave 2 merge conflict._
 - **Depends on**: T3
-- **Parallel-safe-with**: T5
+- **Parallel-safe-with**: — [CHANGED 2026-04-16]
 - [x]
 
 ## T5 — `plan_links` (R4, R5)
@@ -143,8 +148,13 @@ it means `bin/claude-symlink` per D3.
     `/tmp/fakehome/.claude/commands/YHTW` targets respectively.
   - Every subsequent target starts with `/tmp/fakehome/.claude/team-memory/`.
   - Sources are absolute and all begin with the repo root.
+- _Note [CHANGED 2026-04-16]: T4 and T5 must NOT run concurrently. Both
+  add a new arm to the `__probe` dispatcher in `bin/claude-symlink` in
+  adjacent regions; git's textual merge collides even though the
+  functions are logically independent. De-paired into separate waves
+  after a Wave 2 merge conflict._
 - **Depends on**: T3
-- **Parallel-safe-with**: T4
+- **Parallel-safe-with**: — [CHANGED 2026-04-16]
 - [ ]
 
 ## T6 — `classify_target` (R10, D5)
@@ -413,16 +423,18 @@ Developer finds them slipping. Split and renumber only via
 
 - Wave 0 (done): T1, T2
 - Wave 1: T3
-- Wave 2: T4, T5         (parallel — both depend only on T3)
-- Wave 3: T6
-- Wave 4: T7
-- Wave 5: T8
-- Wave 6: T9
-- Wave 7: T10
-- Wave 8: T11
-- Wave 9: T12
+- Wave 2: T4                                  [CHANGED 2026-04-16]
+- Wave 3: T5                                  [CHANGED 2026-04-16]
+- Wave 4: T6                                  [CHANGED 2026-04-16]
+- Wave 5: T7                                  [CHANGED 2026-04-16]
+- Wave 6: T8                                  [CHANGED 2026-04-16]
+- Wave 7: T9                                  [CHANGED 2026-04-16]
+- Wave 8: T10                                 [CHANGED 2026-04-16]
+- Wave 9: T11                                 [CHANGED 2026-04-16]
+- Wave 10: T12                                [CHANGED 2026-04-16]
 
-Single-task waves (3, 6+) reflect the strict-spine sequencing. Only the
-T7/T8/T9 chain could be re-flattened into earlier waves if the shared
+All waves are now single-task; the parallel pair was de-paired after a
+textual merge conflict in Wave 2 (see T4/T5 notes). The T7/T8/T9 chain
+could still be re-flattened into earlier waves if the shared
 `report` / `emit_summary` skeleton lands first; that refactor is out of
 scope for this revision — see "Sequencing notes" above.
