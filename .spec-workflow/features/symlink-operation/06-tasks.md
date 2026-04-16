@@ -348,7 +348,7 @@ it means `bin/claude-symlink` per D3.
     iff any FAIL.
 - **Depends on**: T10
 - **Parallel-safe-with**: —
-- [ ]
+- [x]
 
 ## T12 — Docs: script header + README section
 - **Milestone**: M10
@@ -422,6 +422,7 @@ Developer finds them slipping. Split and renumber only via
 - 2026-04-16 Developer — T8 done (cmd_uninstall with ownership-gated removal and empty-parent cleanup)
 - 2026-04-16 Developer — T9 done (cmd_update reconciler with orphan pruning)
 - 2026-04-16 Developer — T10 done (summary, exit codes finalized; __probe gated behind YHTW_PROBE=1)
+- 2026-04-16 developer T11 done — smoke harness covering AC1–AC12 with sandbox-HOME preflight
 
 ---
 
