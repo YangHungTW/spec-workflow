@@ -17,7 +17,7 @@
 - [ ] implement     (tasks checked off)          — Developer
 - [ ] gap-check     (07-gaps.md, verdict PASS)   — QA-analyst
 - [ ] verify        (08-verify.md, verdict PASS) — QA-tester
-- [ ] archive       (moved to docs/archive/)     — TPM
+- [ ] archive       (moved to specs/archive/)     — TPM
 
 ## Notes
 <!-- date + role + what changed -->

@@ -1,6 +1,6 @@
 # Team memory protocol
 
-Per-role memory for the YHTW virtual team. Separate from per-feature artifacts under `docs/features/` — those are work products; this is accumulated craft.
+Per-role memory for the YHTW virtual team. Separate from per-feature artifacts under `specs/features/` — those are work products; this is accumulated craft.
 
 ## Two-tier layout
 

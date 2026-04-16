@@ -6,8 +6,8 @@ Orchestrator. Reads STATUS and advances one stage. Stops at any point that needs
 
 ## Steps
 
-1. Parse `$ARGUMENTS` as `<slug>`. If missing, list features under `docs/features/` with their current stage and ask which.
-2. Read `docs/features/<slug>/STATUS.md`.
+1. Parse `$ARGUMENTS` as `<slug>`. If missing, list features under `specs/features/` with their current stage and ask which.
+2. Read `specs/features/<slug>/STATUS.md`.
 3. Determine the **next unchecked stage** in the Stage checklist.
 4. Apply these rules:
    - If `has-ui: false` and next stage is `design` → auto-check the `design` box with note `skipped (has-ui: false)` in STATUS Notes, then re-read and advance again.
