@@ -247,7 +247,7 @@ it means `bin/claude-symlink` per D3.
     is `rmdir`ed (AC5); if it contains an unrelated file, it is left.
 - **Depends on**: T4, T5, T7 (for `remove_link` primitive & `report` helper reuse)
 - **Parallel-safe-with**: —
-- [ ]
+- [x]
 
 ## T9 — `cmd_update` (R9)
 - **Milestone**: M7, M8
@@ -419,6 +419,7 @@ Developer finds them slipping. Split and renumber only via
 - 2026-04-16 Developer — T5 done (plan_links + __probe plan dump, post-T4 base)
 - 2026-04-16 Developer — T6 done (classify_target with 8-state taxonomy)
 - 2026-04-16 developer T7 done — cmd_install with ensure_parent/create_link/report helpers; 17 tests across 4 scenarios all green
+- 2026-04-16 Developer — T8 done (cmd_uninstall with ownership-gated removal and empty-parent cleanup)
 
 ---
 

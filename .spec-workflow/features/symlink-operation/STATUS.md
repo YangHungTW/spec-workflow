@@ -40,3 +40,5 @@
 - 2026-04-16 implement wave 4 done — T6
 - 2026-04-16 Developer — T7 done (cmd_install with ensure_parent/create_link/report helpers)
 - 2026-04-16 implement wave 5 done — T7
+- 2026-04-16 Developer — T8 done (cmd_uninstall with ownership-gated removal and empty-parent cleanup)
+- 2026-04-16 implement wave 6 done — T8
