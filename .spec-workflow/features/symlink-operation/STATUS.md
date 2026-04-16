@@ -31,3 +31,4 @@
 - 2026-04-16 Developer — T1 done (script skeleton, OS guard, dispatch stubs)
 - 2026-04-16 TPM — added Parallel-safe-with fields and Wave schedule (mid-stream tasks-doc update for new /YHTW:implement)
 - 2026-04-16 Developer — T3 done (resolve_path, resolve_repo_root, die, __probe)
+- 2026-04-16 implement wave 1 done — T3
