@@ -50,9 +50,11 @@ REPORT_LINES=()
 COUNT_created=0
 COUNT_created_replaced_broken=0
 COUNT_already=0
+COUNT_removed=0
 COUNT_skipped=0
 COUNT_would_create=0
 COUNT_would_replace=0
+COUNT_would_remove=0
 COUNT_would_skip=0
 
 # ---------------------------------------------------------------------------
@@ -291,9 +293,11 @@ report() {
     created)                      COUNT_created=$((COUNT_created + 1)) ;;
     created:replaced-broken)      COUNT_created_replaced_broken=$((COUNT_created_replaced_broken + 1)) ;;
     already)                      COUNT_already=$((COUNT_already + 1)) ;;
+    removed|removed:*)            COUNT_removed=$((COUNT_removed + 1)) ;;
     skipped:*)                    COUNT_skipped=$((COUNT_skipped + 1)) ;;
     would-create)                 COUNT_would_create=$((COUNT_would_create + 1)) ;;
     would-replace)                COUNT_would_replace=$((COUNT_would_replace + 1)) ;;
+    would-remove)                 COUNT_would_remove=$((COUNT_would_remove + 1)) ;;
     would-skip:*)                 COUNT_would_skip=$((COUNT_would_skip + 1)) ;;
   esac
 }
@@ -499,9 +503,140 @@ cmd_install() {
   return "$MAX_CODE"
 }
 
+# ---------------------------------------------------------------------------
+# remove_link <tgt>
+# Removes the symlink at <tgt>. Never rm -r; caller must ensure <tgt> is a symlink.
+# Under DRY_RUN=1, emits would-remove verb instead of mutating.
+# Returns 0 on success, 1 on failure.
+# ---------------------------------------------------------------------------
+remove_link() {
+  local tgt="$1"
+
+  if [ "$DRY_RUN" -eq 1 ]; then
+    report "would-remove" "$tgt"
+    return 0
+  fi
+
+  if ! rm "$tgt"; then
+    echo "error: could not remove symlink: $tgt" >&2
+    return 1
+  fi
+  return 0
+}
+
+# ---------------------------------------------------------------------------
+# try_remove_empty_parents <parent_dirs_array_items...>
+# Accepts a list of directory paths (typically parents of removed links).
+# Attempts rmdir on each, sorted deepest-first (longest path first).
+# Swallows rmdir failures (non-empty dirs).
+# Never attempts to rmdir $HOME/.claude/ itself.
+# Under DRY_RUN=1, becomes a no-op (removal already reported as would-remove).
+# ---------------------------------------------------------------------------
+try_remove_empty_parents() {
+  local stop_at="$HOME/.claude"
+
+  # Receive dirs as arguments; deduplicate by building a list
+  local all_dirs=()
+  local d
+  for d in "$@"; do
+    # Skip the stop boundary and anything above it
+    [ "$d" = "$stop_at" ] && continue
+    # Only consider dirs that are under stop_at
+    case "$d" in
+      "$stop_at/"*) all_dirs+=("$d") ;;
+    esac
+  done
+
+  [ "${#all_dirs[@]}" -eq 0 ] && return 0
+
+  # Sort deepest-first: use a simple insertion-sort on path length.
+  # Bash 3.2 has no sort -z; we sort by string length descending.
+  # Strategy: print each path, sort by length (awk + sort), process in order.
+  local sorted_dirs
+  sorted_dirs=$(
+    for dd in "${all_dirs[@]}"; do
+      printf '%s\n' "$dd"
+    done | awk '{ print length, $0 }' | sort -rn | awk '{ print $2 }'
+  )
+
+  # Walk sorted list, attempt rmdir, swallow errors
+  while IFS= read -r dir; do
+    [ -z "$dir" ] && continue
+    [ "$dir" = "$stop_at" ] && continue
+    # Attempt rmdir silently; failure means dir is non-empty → leave it
+    rmdir "$dir" 2>/dev/null || true
+  done <<< "$sorted_dirs"
+
+  return 0
+}
+
 cmd_uninstall() {
-  echo "stub: uninstall"
-  echo "dry-run=$DRY_RUN"
+  local -a candidate_parents=()
+
+  # ------------------------------------------------------------------
+  # Step 1: managed dir-level links (agents/YHTW, commands/YHTW)
+  # ------------------------------------------------------------------
+  local dir_links=()
+  dir_links+=("$HOME/.claude/agents/YHTW")
+  dir_links+=("$HOME/.claude/commands/YHTW")
+
+  local dl
+  for dl in "${dir_links[@]}"; do
+    if owned_by_us "$dl"; then
+      local dl_parent
+      dl_parent=$(dirname "$dl")
+      if remove_link "$dl"; then
+        report "removed" "$dl"
+        candidate_parents+=("$dl_parent")
+      else
+        MAX_CODE=1
+      fi
+    elif [ -e "$dl" ] || [ -L "$dl" ]; then
+      # Path exists (real or foreign symlink) but is not ours → skipped:not-ours
+      report "skipped:not-ours" "$dl"
+    fi
+    # Truly absent paths: no report (per spec)
+  done
+
+  # ------------------------------------------------------------------
+  # Step 2: walk team-memory for owned symlinks
+  # ------------------------------------------------------------------
+  local tm_dir="$HOME/.claude/team-memory"
+  if [ -d "$tm_dir" ]; then
+    while IFS= read -r -d '' link; do
+      if owned_by_us "$link"; then
+        local link_parent
+        link_parent=$(dirname "$link")
+        if remove_link "$link"; then
+          report "removed" "$link"
+          candidate_parents+=("$link_parent")
+          # Also walk up toward tm_dir (not inclusive of $HOME/.claude/)
+          local up="$link_parent"
+          while true; do
+            local up_parent
+            up_parent=$(dirname "$up")
+            [ "$up_parent" = "$HOME/.claude" ] && break
+            [ "$up_parent" = "$up" ] && break
+            candidate_parents+=("$up_parent")
+            up="$up_parent"
+          done
+        else
+          MAX_CODE=1
+        fi
+      fi
+      # Foreign links under team-memory: leave silent (per spec §3 subtlety)
+    done < <(find "$tm_dir" -type l -print0 2>/dev/null)
+  fi
+
+  # ------------------------------------------------------------------
+  # Step 3: best-effort rmdir of empty parents, deepest-first
+  # ------------------------------------------------------------------
+  if [ "${#candidate_parents[@]}" -gt 0 ]; then
+    try_remove_empty_parents "${candidate_parents[@]}"
+  fi
+
+  emit_summary
+  return "$MAX_CODE"
 }
 
 cmd_update() {
