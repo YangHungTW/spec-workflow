@@ -35,6 +35,7 @@ it means `bin/claude-symlink` per D3.
   - `bin/claude-symlink install` exits 0 and prints `stub: install`.
   - `test -x bin/claude-symlink` succeeds.
 - **Depends on**: —
+- **Parallel-safe-with**: —
 - [x]
 
 ## T2 — Flag parsing: `--dry-run`, `--help`, `-h`
@@ -60,6 +61,7 @@ it means `bin/claude-symlink` per D3.
   - `bin/claude-symlink install --force` exits 2 with a "unknown flag"
     message on stderr.
 - **Depends on**: T1
+- **Parallel-safe-with**: —
 - [x]
 
 ## T3 — `resolve_path` + `resolve_repo_root` (D2, R1)
@@ -91,7 +93,8 @@ it means `bin/claude-symlink` per D3.
   - Cycle test: create `A -> B`, `B -> A` in `/tmp`, assert
     `resolve_path` exits non-zero within 40 iterations, not a hang.
 - **Depends on**: T2
-- [ ]
+- **Parallel-safe-with**: —
+- [x]
 
 ## T4 — `owned_by_us` (D6)
 - **Milestone**: M2
@@ -113,8 +116,14 @@ it means `bin/claude-symlink` per D3.
   - Sibling-repo path `/Users/yanghungtw/Tools/spec-workflow-fork/.claude/…`
     → returns 1 (NOT a prefix match because of trailing slash).
   - Real file (not a symlink) → returns 1.
+- _Note [CHANGED 2026-04-16]: T4 and T5 must NOT run concurrently. Both
+  add a new arm to the `__probe` dispatcher in `bin/claude-symlink` in
+  adjacent regions; git's textual merge collides even though the
+  functions are logically independent. De-paired into separate waves
+  after a Wave 2 merge conflict._
 - **Depends on**: T3
-- [ ]
+- **Parallel-safe-with**: — [CHANGED 2026-04-16]
+- [x]
 
 ## T5 — `plan_links` (R4, R5)
 - **Milestone**: M3
@@ -139,8 +148,14 @@ it means `bin/claude-symlink` per D3.
     `/tmp/fakehome/.claude/commands/YHTW` targets respectively.
   - Every subsequent target starts with `/tmp/fakehome/.claude/team-memory/`.
   - Sources are absolute and all begin with the repo root.
+- _Note [CHANGED 2026-04-16]: T4 and T5 must NOT run concurrently. Both
+  add a new arm to the `__probe` dispatcher in `bin/claude-symlink` in
+  adjacent regions; git's textual merge collides even though the
+  functions are logically independent. De-paired into separate waves
+  after a Wave 2 merge conflict._
 - **Depends on**: T3
-- [ ]
+- **Parallel-safe-with**: — [CHANGED 2026-04-16]
+- [x]
 
 ## T6 — `classify_target` (R10, D5)
 - **Milestone**: M4
@@ -165,7 +180,8 @@ it means `bin/claude-symlink` per D3.
     against the real `$HOME` (preflight guard; same shape we'll reuse in
     T11).
 - **Depends on**: T4, T5
-- [ ]
+- **Parallel-safe-with**: —
+- [x]
 
 ## T7 — `cmd_install` (R6, R7, R10, R12, R13)
 - **Milestone**: M5, M8
@@ -198,7 +214,8 @@ it means `bin/claude-symlink` per D3.
   - `install --dry-run` on clean sandbox → every verb is `would-create`,
     zero symlinks on disk afterward (AC9 subset).
 - **Depends on**: T6
-- [ ]
+- **Parallel-safe-with**: —
+- [x]
 
 ## T8 — `cmd_uninstall` (R8)
 - **Milestone**: M6, M8
@@ -229,7 +246,8 @@ it means `bin/claude-symlink` per D3.
   - If `$HOME/.claude/team-memory/shared/` is empty after removals, it
     is `rmdir`ed (AC5); if it contains an unrelated file, it is left.
 - **Depends on**: T4, T5, T7 (for `remove_link` primitive & `report` helper reuse)
-- [ ]
+- **Parallel-safe-with**: —
+- [x]
 
 ## T9 — `cmd_update` (R9)
 - **Milestone**: M7, M8
@@ -262,7 +280,8 @@ it means `bin/claude-symlink` per D3.
   - Real-file conflict at a managed path → `update` skips that path,
     still reconciles others, exit 1 (AC8).
 - **Depends on**: T7, T8
-- [ ]
+- **Parallel-safe-with**: —
+- [x]
 
 ## T10 — `emit_summary` + final exit code wiring (R13, R14, R15)
 - **Milestone**: M8
@@ -291,7 +310,8 @@ it means `bin/claude-symlink` per D3.
   - `bin/claude-symlink __probe` (if not env-gated) exits 2 as an
     unknown subcommand.
 - **Depends on**: T7, T8, T9
-- [ ]
+- **Parallel-safe-with**: —
+- [x]
 
 ## T11 — Smoke harness `test/smoke.sh` covering AC1–AC12
 - **Milestone**: M9
@@ -327,7 +347,8 @@ it means `bin/claude-symlink` per D3.
   - Every scenario prints `AC<n>: PASS` or `AC<n>: FAIL`; non-zero exit
     iff any FAIL.
 - **Depends on**: T10
-- [ ]
+- **Parallel-safe-with**: —
+- [x]
 
 ## T12 — Docs: script header + README section
 - **Milestone**: M10
@@ -361,7 +382,56 @@ it means `bin/claude-symlink` per D3.
     skimmed by QA-analyst in T-next gap-check.
   - No content changes to `.claude/` source trees.
 - **Depends on**: T11
-- [ ]
+- **Parallel-safe-with**: —
+- [x]
+
+## T13 — Fix `cmd_uninstall` dry-run double-report  [ADDED 2026-04-16]
+- **Milestone**: M6 (extends T8's deliverable)
+- **Requirements**: R12
+- **Decisions**: D4
+- **Scope**: `cmd_uninstall` in `bin/claude-symlink` currently
+  double-reports each tool-owned symlink under `--dry-run`:
+  `remove_link` already emits `[would-remove]` when `DRY_RUN=1`, but the
+  callers in `cmd_uninstall` then unconditionally call `report "removed"
+  "$tgt"`, producing two lines per owned path. Restructure the two
+  removal loops in `cmd_uninstall` — the dir-level managed paths block
+  (around line 660) and the team-memory symlink walk (around line 685) —
+  to guard the `report "removed"` call with an inline
+  `if [ "$DRY_RUN" != "1" ]` check, matching the pattern `cmd_update`'s
+  orphan-prune section uses correctly (around line 759–778). Simplest
+  shape:
+  ```bash
+  if remove_link "$tgt"; then
+    if [ "$DRY_RUN" != "1" ]; then
+      report "removed" "$tgt"
+    fi
+  else
+    ...
+  fi
+  ```
+  Equivalent alternative: make `remove_link` never self-report and
+  always emit the verb from the caller — but that requires a matching
+  change in `cmd_update` to stay consistent, so prefer the inline-guard
+  delta unless the Developer finds a cleaner factoring. Do NOT introduce
+  any new verb tags; the closed R13 verb set is unchanged.
+- **Deliverables**: surgical edits to `cmd_uninstall`'s two removal
+  blocks in `bin/claude-symlink`; new scenario F appended to
+  `test/t8_cmd_uninstall.sh` that runs `uninstall --dry-run` after an
+  install and asserts (a) each managed path appears in the output
+  EXACTLY ONCE, (b) every verb on those lines is `[would-*]`, (c) zero
+  lines contain `[removed]`, (d) `MAX_CODE` stays 0.
+- **Verify**:
+  - `bash test/t8_cmd_uninstall.sh` — new scenario F exits green.
+  - All existing t8 scenarios (A–E) still pass (15/15 previously).
+  - `bash test/smoke.sh` — still 12/12 PASS.
+  - Sandbox grep audit: after
+    `HOME=$(mktemp -d) bin/claude-symlink install && \
+     HOME=<same> bin/claude-symlink uninstall --dry-run`,
+    count of output lines starting with `[would-` equals the number of
+    managed links present; count of lines with `[removed]` is `0`.
+- **Depends on**: T12
+- **Parallel-safe-with**: —
+- [x]
 
 ---
 
@@ -392,3 +462,39 @@ Developer finds them slipping. Split and renumber only via
 
 - 2026-04-16 Developer — T1 done (script skeleton, OS guard, dispatch stubs)
 - 2026-04-16 Developer — T2 done (flag parsing: --dry-run, --help/-h, unknown-flag rejection)
+- 2026-04-16 developer T3 done — added die, resolve_path, resolve_repo_root, __probe; 4 tests all green
+- 2026-04-16 Developer — T4 done (owned_by_us via trailing-slash repo-root prefix)
+- 2026-04-16 Developer — T5 done (plan_links + __probe plan dump, post-T4 base)
+- 2026-04-16 Developer — T6 done (classify_target with 8-state taxonomy)
+- 2026-04-16 developer T7 done — cmd_install with ensure_parent/create_link/report helpers; 17 tests across 4 scenarios all green
+- 2026-04-16 Developer — T8 done (cmd_uninstall with ownership-gated removal and empty-parent cleanup)
+- 2026-04-16 Developer — T9 done (cmd_update reconciler with orphan pruning)
+- 2026-04-16 Developer — T10 done (summary, exit codes finalized; __probe gated behind YHTW_PROBE=1)
+- 2026-04-16 developer T11 done — smoke harness covering AC1–AC12 with sandbox-HOME preflight
+- 2026-04-16 Developer — T12 done (script header + README section, parity with --help)
+- 2026-04-16 Developer — T13 done (cmd_uninstall dry-run double-report fixed; resolves SF-2)
+
+---
+
+## Wave schedule
+
+- Wave 0 (done): T1, T2
+- Wave 1: T3
+- Wave 2: T4                                  [CHANGED 2026-04-16]
+- Wave 3: T5                                  [CHANGED 2026-04-16]
+- Wave 4: T6                                  [CHANGED 2026-04-16]
+- Wave 5: T7                                  [CHANGED 2026-04-16]
+- Wave 6: T8                                  [CHANGED 2026-04-16]
+- Wave 7: T9                                  [CHANGED 2026-04-16]
+- Wave 8: T10                                 [CHANGED 2026-04-16]
+- Wave 9: T11                                 [CHANGED 2026-04-16]
+- Wave 10: T12                                [CHANGED 2026-04-16]
+- Wave 11: T13                                [ADDED 2026-04-16]
+
+All waves are now single-task; the parallel pair was de-paired after a
+textual merge conflict in Wave 2 (see T4/T5 notes). The T7/T8/T9 chain
+could still be re-flattened into earlier waves if the shared
+`report` / `emit_summary` skeleton lands first; that refactor is out of
+scope for this revision — see "Sequencing notes" above. Wave 11 added
+post-gap-check to resolve SF-2 — dry-run double-report in
+`cmd_uninstall`.

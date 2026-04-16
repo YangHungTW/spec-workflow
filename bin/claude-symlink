@@ -1,5 +1,53 @@
 #!/usr/bin/env bash
-# claude-symlink — manage YHTW .claude/ symlinks (install/uninstall/update)
+# =============================================================================
+# claude-symlink — manage YHTW .claude/ symlinks across projects
+# =============================================================================
+#
+# USAGE
+#   bin/claude-symlink <subcommand> [--dry-run]
+#   bin/claude-symlink --help
+#
+# SUBCOMMANDS
+#   install     Create the full managed symlink set under ~/.claude/.
+#               Safe to re-run; paths already at desired state report [already].
+#
+#   uninstall   Remove only the symlinks this tool owns. Never touches real
+#               files, real dirs, or symlinks created by other tools.
+#
+#   update      Reconcile the managed set: add missing links, replace broken
+#               owned links, prune owned orphans (links whose repo source no
+#               longer exists or is no longer in the plan). Equivalent to a
+#               combined install + orphan-sweep.
+#
+# MANAGED SET
+#   The tool manages exactly these paths under ~/.claude/:
+#     agents/YHTW          — directory symlink → <repo>/.claude/agents/YHTW
+#     commands/YHTW        — directory symlink → <repo>/.claude/commands/YHTW
+#     team-memory/**       — one file symlink per regular file under
+#                            <repo>/.claude/team-memory/ (walked at run time)
+#
+# OPTIONS
+#   --dry-run   Compute the full plan and print would-* verbs; zero mutations.
+#               Exit 0 unless planning itself fails.
+#   --help, -h  Print this message and exit 0.
+#
+# EXIT CODES
+#   0   All managed paths converged to desired state (or dry-run produced
+#       a plan without error).
+#   1   At least one path was skipped due to a conflict, or a filesystem
+#       mutation failed. The tool reports everything before exiting.
+#   2   Usage error or unresolvable precondition (bad subcommand, OS guard,
+#       unresolvable repo root).
+#
+# CONFLICT HANDLING (no --force in v1)
+#   Conflicts are reported and skipped; the user resolves them manually.
+#   skipped:real-file             — inspect path, back up, rm, re-run
+#   skipped:real-dir              — inspect path, back up, rm -rf if safe, re-run
+#   skipped:foreign-symlink       — a symlink from another tool; rm manually, re-run
+#   skipped:foreign-broken-symlink — broken symlink not ours; rm manually, re-run
+#   skipped:not-ours (uninstall)  — symlink at managed path not owned; left untouched
+#
+# =============================================================================
 set -u -o pipefail
 
 # OS guard: Windows shells are not supported
@@ -12,19 +60,389 @@ case "$_os" in
 esac
 
 DRY_RUN=0
+REPO=""
+
+# ---------------------------------------------------------------------------
+# Globals for cmd_install / cmd_update / cmd_uninstall shared infrastructure
+# ---------------------------------------------------------------------------
+# PLAN_SRC / PLAN_TGT: populated by plan_links
+PLAN_SRC=()
+PLAN_TGT=()
+
+# CREATED_DIRS: indexed array tracking parent dirs we created (not pre-existing).
+# Populated by ensure_parent. Used by T8's try_remove_empty_parents.
+CREATED_DIRS=()
+
+# MAX_CODE: tracks the highest exit code seen so far.
+# 0 = fully converged; 1 = conflict or mutation failure; 2 = die()
+MAX_CODE=0
+
+# REPORT_LINES: ordered buffer of per-path report lines (flushed by emit_summary).
+REPORT_LINES=()
+
+# Per-verb counters for the final summary line.
+# Verb tags (closed set, R13 / 04-tech.md §2):
+#   created             — new symlink created
+#   created:replaced-broken — replaced a broken-ours or wrong-link-ours symlink
+#   already             — symlink already at desired state
+#   skipped:real-file   — target is a real file (conflict, not touched)
+#   skipped:real-dir    — target is a real dir (conflict, not touched)
+#   skipped:foreign-symlink    — live symlink not owned by us
+#   skipped:foreign-broken-symlink — broken symlink not owned by us
+#   would-create        — dry-run: would create
+#   would-replace       — dry-run: would replace broken/wrong-ours link
+#   would-skip:real-file       — dry-run: would skip real-file conflict
+#   would-skip:real-dir        — dry-run: would skip real-dir conflict
+#   would-skip:foreign-symlink — dry-run: would skip foreign symlink
+#   would-skip:foreign-broken-symlink — dry-run: would skip foreign broken
+COUNT_created=0
+COUNT_created_replaced_broken=0
+COUNT_already=0
+COUNT_removed=0
+COUNT_skipped=0
+COUNT_would_create=0
+COUNT_would_replace=0
+COUNT_would_remove=0
+COUNT_would_skip=0
+
+# ---------------------------------------------------------------------------
+# die <code> <msg> — print msg to stderr and exit with code
+# ---------------------------------------------------------------------------
+die() {
+  local code="$1"
+  local msg="$2"
+  echo "$msg" >&2
+  exit "$code"
+}
+
+# ---------------------------------------------------------------------------
+# resolve_path <p> — pure-bash portable path resolution (no readlink -f)
+# Iteratively resolves symlinks by cd'ing into dirname and reading basename.
+# Caps at 40 iterations to detect cycles; calls die 2 on cycle.
+# ---------------------------------------------------------------------------
+resolve_path() {
+  local p="$1"
+  local iterations=0
+  local max_iterations=40
+
+  # Make path absolute if relative
+  case "$p" in
+    /*) ;;
+    *) p="$(pwd -P)/$p" ;;
+  esac
+
+  while [ "$iterations" -lt "$max_iterations" ]; do
+    # Normalize: cd into the dirname, reconstruct absolute path
+    local dir base
+    dir=$(dirname "$p")
+    base=$(basename "$p")
+
+    # cd into the directory (use subshell to avoid polluting caller)
+    local abs_dir
+    abs_dir=$(cd "$dir" 2>/dev/null && pwd -P) || die 2 "resolve_path: cannot cd into '$dir'"
+    p="$abs_dir/$base"
+
+    # If the basename is a symlink, read it and continue
+    if [ -L "$p" ]; then
+      local link_target
+      link_target=$(readlink "$p")
+      # If the link target is relative, resolve relative to the symlink's dir
+      case "$link_target" in
+        /*) p="$link_target" ;;
+        *)  p="$abs_dir/$link_target" ;;
+      esac
+      iterations=$((iterations + 1))
+    else
+      # Not a symlink — we have the real path
+      echo "$p"
+      return 0
+    fi
+  done
+
+  die 2 "symlink cycle at '$1'"
+}
+
+# ---------------------------------------------------------------------------
+# resolve_repo_root — resolves the repo root from the script's own path.
+# Caches the result in global REPO. Idempotent.
+# The script lives at <repo>/bin/<name>, so dirname twice strips /bin/<name>.
+# ---------------------------------------------------------------------------
+resolve_repo_root() {
+  [ -n "$REPO" ] && return 0
+  local script_path
+  script_path=$(resolve_path "${BASH_SOURCE[0]}")
+  REPO=$(dirname "$(dirname "$script_path")")
+}
+
+# ---------------------------------------------------------------------------
+# owned_by_us <path> — ownership gate (D6)
+# Returns 0 iff:
+#   1. <path> is a symlink (-L), AND
+#   2. resolve_path of the link's raw target begins with "$REPO/.claude/"
+#      (trailing slash is mandatory to prevent a sibling repo like
+#      "$REPO-fork/.claude/..." from matching via a string-prefix false-positive)
+# This is the sole function that decides "ours vs theirs" — nothing else may.
+# ---------------------------------------------------------------------------
+owned_by_us() {
+  local path="$1"
+
+  # Must be a symlink
+  [ -L "$path" ] || return 1
+
+  # Get the raw link target (no -f; bare readlink for portability)
+  local raw_target
+  raw_target=$(readlink "$path")
+
+  # Resolve relative targets against the symlink's own directory.
+  # Run resolve_path in a subshell so that die() on a non-existent path does
+  # not terminate the whole script — we treat any resolution failure as "not ours".
+  local resolved_target
+  local link_dir
+  link_dir=$(dirname "$path")
+  case "$raw_target" in
+    /*) resolved_target=$(resolve_path "$raw_target" 2>/dev/null) || return 1 ;;
+    *)  resolved_target=$(resolve_path "$link_dir/$raw_target" 2>/dev/null) || return 1 ;;
+  esac
+
+  # Check prefix with mandatory trailing slash to avoid sibling-repo collision
+  case "$resolved_target" in
+    "$REPO/.claude/"*) return 0 ;;
+    *)                 return 1 ;;
+  esac
+}
+
+# ---------------------------------------------------------------------------
+# plan_links — populate global indexed arrays PLAN_SRC and PLAN_TGT (D1)
+# Two fixed directory-level pairs (agents/YHTW, commands/YHTW) come first,
+# then one entry per file under $REPO/.claude/team-memory/ (walked via find).
+# Does NOT print anything; use __probe plan to dump pairs for debugging.
+# HOME must come from the environment (R2) — never hardcoded.
+# ---------------------------------------------------------------------------
+plan_links() {
+  PLAN_SRC=()
+  PLAN_TGT=()
+
+  # Fixed pair 1: agents/YHTW
+  PLAN_SRC+=("$REPO/.claude/agents/YHTW")
+  PLAN_TGT+=("$HOME/.claude/agents/YHTW")
+
+  # Fixed pair 2: commands/YHTW
+  PLAN_SRC+=("$REPO/.claude/commands/YHTW")
+  PLAN_TGT+=("$HOME/.claude/commands/YHTW")
+
+  # File-level pairs: walk team-memory with -print0 for filename safety
+  local prefix="$REPO/.claude/team-memory/"
+  while IFS= read -r -d '' src; do
+    local rel="${src#$prefix}"
+    PLAN_SRC+=("$src")
+    PLAN_TGT+=("$HOME/.claude/team-memory/$rel")
+  done < <(find "$REPO/.claude/team-memory" -type f -print0)
+}
+
+# ---------------------------------------------------------------------------
+# classify_target <tgt> <expected_src> — pure classification function (D5, R10)
+# Echoes exactly one of:
+#   missing | ok | wrong-link-ours | wrong-link-foreign |
+#   broken-ours | broken-foreign | real-file | real-dir
+# No side effects. No stderr on expected states.
+#
+# Case ladder (04-tech.md §3):
+#   1. If not a symlink and doesn't exist → missing
+#   2. If symlink and broken (-L but ! -e):
+#      Ownership check uses raw readlink + prefix compare because resolve_path
+#      cannot traverse into a non-existent target path (it would die), so
+#      owned_by_us() always returns 1 for broken links. We work around this
+#      by reading the raw link target with `readlink` and resolving it manually
+#      relative to the link's parent dir, then checking the $REPO/.claude/ prefix.
+#      → broken-ours or broken-foreign
+#   3. If symlink and live (-L and -e):
+#      Use resolve_path to get the canonical target, compare to expected_src.
+#      owned_by_us determines ours vs foreign.
+#      → ok | wrong-link-ours | wrong-link-foreign
+#   4. -f and ! -L → real-file
+#   5. -d and ! -L → real-dir
+#   6. Otherwise → missing
+# ---------------------------------------------------------------------------
+classify_target() {
+  local tgt="$1"
+  local expected_src="$2"
+
+  if [ -L "$tgt" ]; then
+    # It is a symlink — check if it's alive or broken
+    if [ ! -e "$tgt" ]; then
+      # Broken symlink: owned_by_us cannot resolve the target (it would die
+      # on a non-existent path), so we manually check the raw link target's
+      # prefix against $REPO/.claude/ to distinguish broken-ours vs broken-foreign.
+      local raw_target
+      raw_target=$(readlink "$tgt")
+      local abs_raw_target
+      case "$raw_target" in
+        /*)
+          abs_raw_target="$raw_target"
+          ;;
+        *)
+          abs_raw_target="$(dirname "$tgt")/$raw_target"
+          ;;
+      esac
+      case "$abs_raw_target" in
+        "$REPO/.claude/"*)
+          echo "broken-ours"
+          ;;
+        *)
+          echo "broken-foreign"
+          ;;
+      esac
+    else
+      # Live symlink: resolve target and compare to expected_src
+      local resolved_target
+      resolved_target=$(resolve_path "$tgt" 2>/dev/null) || {
+        echo "broken-foreign"
+        return 0
+      }
+      if [ "$resolved_target" = "$expected_src" ]; then
+        echo "ok"
+      elif owned_by_us "$tgt"; then
+        echo "wrong-link-ours"
+      else
+        echo "wrong-link-foreign"
+      fi
+    fi
+  elif [ -f "$tgt" ]; then
+    echo "real-file"
+  elif [ -d "$tgt" ]; then
+    echo "real-dir"
+  else
+    echo "missing"
+  fi
+}
+
+# ---------------------------------------------------------------------------
+# report <verb> <tgt> [<src>]
+# Appends a formatted line to REPORT_LINES and bumps the matching counter.
+# Output format: [verb]   <tgt>  ←  <src>   (src omitted on skipped/removed)
+# ---------------------------------------------------------------------------
+report() {
+  local verb="$1"
+  local tgt="$2"
+  local src="${3:-}"
+
+  local line
+  if [ -n "$src" ]; then
+    line="[$verb]  $tgt  ←  $src"
+  else
+    line="[$verb]  $tgt"
+  fi
+
+  REPORT_LINES+=("$line")
+  echo "$line"
+
+  # Bump per-verb counter
+  case "$verb" in
+    created)                      COUNT_created=$((COUNT_created + 1)) ;;
+    created:replaced-broken)      COUNT_created_replaced_broken=$((COUNT_created_replaced_broken + 1)) ;;
+    already)                      COUNT_already=$((COUNT_already + 1)) ;;
+    removed|removed:*)            COUNT_removed=$((COUNT_removed + 1)) ;;
+    skipped:*)                    COUNT_skipped=$((COUNT_skipped + 1)) ;;
+    would-create)                 COUNT_would_create=$((COUNT_would_create + 1)) ;;
+    would-replace)                COUNT_would_replace=$((COUNT_would_replace + 1)) ;;
+    would-remove)                 COUNT_would_remove=$((COUNT_would_remove + 1)) ;;
+    would-skip:*)                 COUNT_would_skip=$((COUNT_would_skip + 1)) ;;
+  esac
+}
+
+# ---------------------------------------------------------------------------
+# emit_summary
+# Prints the final summary line with per-verb counts and the exit code.
+# Called at the end of every subcommand.
+# ---------------------------------------------------------------------------
+emit_summary() {
+  echo "summary: created=$COUNT_created already=$COUNT_already removed=$COUNT_removed skipped=$COUNT_skipped  (exit $MAX_CODE)"
+}
+
+# ---------------------------------------------------------------------------
+# ensure_parent <tgt>
+# Computes dirname of <tgt>; if the directory does not yet exist, creates it
+# with mkdir -p and appends the path to CREATED_DIRS.
+# Under DRY_RUN=1, becomes a no-op (the directory is not created).
+# Idempotent: if the directory already exists, does nothing.
+# ---------------------------------------------------------------------------
+ensure_parent() {
+  local tgt="$1"
+  local parent
+  parent=$(dirname "$tgt")
+
+  # If the parent already exists, nothing to do
+  [ -d "$parent" ] && return 0
+
+  # Under dry-run, skip mutation
+  if [ "$DRY_RUN" -eq 1 ]; then
+    return 0
+  fi
+
+  if ! mkdir -p "$parent"; then
+    echo "error: could not create parent directory: $parent" >&2
+    return 1
+  fi
+
+  # Record the deepest newly-created directory for later uninstall cleanup.
+  # We record all ancestors up to but not including an already-existing one.
+  CREATED_DIRS+=("$parent")
+  return 0
+}
+
+# ---------------------------------------------------------------------------
+# create_link <src> <tgt>
+# Creates a symlink at <tgt> pointing to absolute <src>.
+# Under DRY_RUN=1, becomes a no-op.
+# Returns non-zero if ln -s fails.
+# ---------------------------------------------------------------------------
+create_link() {
+  local src="$1"
+  local tgt="$2"
+
+  if [ "$DRY_RUN" -eq 1 ]; then
+    return 0
+  fi
+
+  if ! ln -s "$src" "$tgt"; then
+    echo "error: could not create symlink: $tgt → $src" >&2
+    return 1
+  fi
+  return 0
+}
 
 usage() {
   cat <<'EOF'
-Usage: claude-symlink <subcommand> [options]
+Usage: bin/claude-symlink <subcommand> [--dry-run]
+       bin/claude-symlink --help
 
 Subcommands:
-  install     Create managed symlinks under ~/.claude/
-  uninstall   Remove managed symlinks from ~/.claude/
-  update      Reconcile managed symlinks (add missing, prune orphans)
+  install     Create the full managed symlink set under ~/.claude/.
+              Safe to re-run; paths already correct report [already].
+  uninstall   Remove only tool-owned symlinks from ~/.claude/.
+  update      Reconcile managed symlinks: add missing, replace broken-ours,
+              prune owned orphans.
+
+Managed set:
+  agents/YHTW          → <repo>/.claude/agents/YHTW   (directory symlink)
+  commands/YHTW        → <repo>/.claude/commands/YHTW  (directory symlink)
+  team-memory/**       → one file symlink per file under <repo>/.claude/team-memory/
 
 Options:
-  --dry-run   Show what would be done without making any changes
-  --help, -h  Show this help message and exit 0
+  --dry-run   Show what would be done without making any changes (exit 0).
+  --help, -h  Show this help message and exit 0.
+
+Exit codes:
+  0  All managed paths converged (or dry-run plan produced without error).
+  1  At least one conflict was skipped or a mutation failed.
+  2  Usage error or unresolvable precondition.
+
+Conflict resolution (no --force in v1 — resolve manually):
+  skipped:real-file              inspect, back up, rm, re-run
+  skipped:real-dir               inspect, back up, rm -rf if safe, re-run
+  skipped:foreign-symlink        rm the foreign symlink manually, re-run
+  skipped:foreign-broken-symlink rm the broken foreign symlink manually, re-run
+  skipped:not-ours (uninstall)   symlink not owned by this tool; left untouched
 EOF
 }
 
@@ -55,23 +473,361 @@ parse_flags() {
   done
 }
 
+# ---------------------------------------------------------------------------
+# apply_plan — inner loop shared by cmd_install and cmd_update (Pass 1)
+# Iterates PLAN_SRC/PLAN_TGT (must be populated by caller via plan_links).
+# Classifies each target and acts per the R10 action table.
+# Updates MAX_CODE in place. Does NOT call emit_summary.
+# ---------------------------------------------------------------------------
+apply_plan() {
+  local i=0
+  while [ "$i" -lt "${#PLAN_SRC[@]}" ]; do
+    local src="${PLAN_SRC[$i]}"
+    local tgt="${PLAN_TGT[$i]}"
+    i=$((i + 1))
+
+    # ensure_parent: create parent dir (no-op under dry-run)
+    if ! ensure_parent "$tgt"; then
+      MAX_CODE=1
+      continue
+    fi
+
+    local class
+    class=$(classify_target "$tgt" "$src")
+
+    case "$class" in
+      missing)
+        if [ "$DRY_RUN" -eq 1 ]; then
+          report "would-create" "$tgt" "$src"
+        else
+          if ! create_link "$src" "$tgt"; then
+            MAX_CODE=1
+            continue
+          fi
+          report "created" "$tgt" "$src"
+        fi
+        ;;
+
+      ok)
+        report "already" "$tgt"
+        ;;
+
+      broken-ours|wrong-link-ours)
+        if [ "$DRY_RUN" -eq 1 ]; then
+          report "would-replace" "$tgt" "$src"
+        else
+          if ! rm "$tgt"; then
+            echo "error: could not remove existing link: $tgt" >&2
+            MAX_CODE=1
+            continue
+          fi
+          if ! create_link "$src" "$tgt"; then
+            MAX_CODE=1
+            continue
+          fi
+          report "created:replaced-broken" "$tgt" "$src"
+        fi
+        ;;
+
+      real-file)
+        if [ "$DRY_RUN" -eq 1 ]; then
+          report "would-skip:real-file" "$tgt"
+        else
+          report "skipped:real-file" "$tgt"
+          MAX_CODE=1
+        fi
+        ;;
+
+      real-dir)
+        if [ "$DRY_RUN" -eq 1 ]; then
+          report "would-skip:real-dir" "$tgt"
+        else
+          report "skipped:real-dir" "$tgt"
+          MAX_CODE=1
+        fi
+        ;;
+
+      wrong-link-foreign)
+        if [ "$DRY_RUN" -eq 1 ]; then
+          report "would-skip:foreign-symlink" "$tgt"
+        else
+          report "skipped:foreign-symlink" "$tgt"
+        fi
+        ;;
+
+      broken-foreign)
+        if [ "$DRY_RUN" -eq 1 ]; then
+          report "would-skip:foreign-broken-symlink" "$tgt"
+        else
+          report "skipped:foreign-broken-symlink" "$tgt"
+        fi
+        ;;
+
+      *)
+        echo "error: unexpected classification '$class' for $tgt" >&2
+        MAX_CODE=1
+        continue
+        ;;
+    esac
+  done
+}
+
 cmd_install() {
-  echo "stub: install"
-  echo "dry-run=$DRY_RUN"
+  plan_links
+  apply_plan
+  emit_summary
+  return "$MAX_CODE"
+}
+
+# ---------------------------------------------------------------------------
+# remove_link <tgt>
+# Removes the symlink at <tgt>. Never rm -r; caller must ensure <tgt> is a symlink.
+# Under DRY_RUN=1, emits would-remove verb instead of mutating.
+# Returns 0 on success, 1 on failure.
+# ---------------------------------------------------------------------------
+remove_link() {
+  local tgt="$1"
+
+  if [ "$DRY_RUN" -eq 1 ]; then
+    report "would-remove" "$tgt"
+    return 0
+  fi
+
+  if ! rm "$tgt"; then
+    echo "error: could not remove symlink: $tgt" >&2
+    return 1
+  fi
+  return 0
+}
+
+# ---------------------------------------------------------------------------
+# try_remove_empty_parents <parent_dirs_array_items...>
+# Accepts a list of directory paths (typically parents of removed links).
+# Attempts rmdir on each, sorted deepest-first (longest path first).
+# Swallows rmdir failures (non-empty dirs).
+# Never attempts to rmdir $HOME/.claude/ itself.
+# Under DRY_RUN=1, becomes a no-op (removal already reported as would-remove).
+# ---------------------------------------------------------------------------
+try_remove_empty_parents() {
+  local stop_at="$HOME/.claude"
+
+  # Receive dirs as arguments; deduplicate by building a list
+  local all_dirs=()
+  local d
+  for d in "$@"; do
+    # Skip the stop boundary and anything above it
+    [ "$d" = "$stop_at" ] && continue
+    # Only consider dirs that are under stop_at
+    case "$d" in
+      "$stop_at/"*) all_dirs+=("$d") ;;
+    esac
+  done
+
+  [ "${#all_dirs[@]}" -eq 0 ] && return 0
+
+  # Sort deepest-first: use a simple insertion-sort on path length.
+  # Bash 3.2 has no sort -z; we sort by string length descending.
+  # Strategy: print each path, sort by length (awk + sort), process in order.
+  local sorted_dirs
+  sorted_dirs=$(
+    for dd in "${all_dirs[@]}"; do
+      printf '%s\n' "$dd"
+    done | awk '{ print length, $0 }' | sort -rn | awk '{ print $2 }'
+  )
+
+  # Walk sorted list, attempt rmdir, swallow errors
+  while IFS= read -r dir; do
+    [ -z "$dir" ] && continue
+    [ "$dir" = "$stop_at" ] && continue
+    # Attempt rmdir silently; failure means dir is non-empty → leave it
+    rmdir "$dir" 2>/dev/null || true
+  done <<< "$sorted_dirs"
+
+  return 0
 }
 
 cmd_uninstall() {
-  echo "stub: uninstall"
-  echo "dry-run=$DRY_RUN"
+  local -a candidate_parents=()
+
+  # ------------------------------------------------------------------
+  # Step 1: managed dir-level links (agents/YHTW, commands/YHTW)
+  # ------------------------------------------------------------------
+  local dir_links=()
+  dir_links+=("$HOME/.claude/agents/YHTW")
+  dir_links+=("$HOME/.claude/commands/YHTW")
+
+  local dl
+  for dl in "${dir_links[@]}"; do
+    if owned_by_us "$dl"; then
+      local dl_parent
+      dl_parent=$(dirname "$dl")
+      if remove_link "$dl"; then
+        if [ "$DRY_RUN" != "1" ]; then
+          report "removed" "$dl"
+        fi
+        candidate_parents+=("$dl_parent")
+      else
+        MAX_CODE=1
+      fi
+    elif [ -e "$dl" ] || [ -L "$dl" ]; then
+      # Path exists (real or foreign symlink) but is not ours → skipped:not-ours
+      report "skipped:not-ours" "$dl"
+    fi
+    # Truly absent paths: no report (per spec)
+  done
+
+  # ------------------------------------------------------------------
+  # Step 2: walk team-memory for owned symlinks
+  # ------------------------------------------------------------------
+  local tm_dir="$HOME/.claude/team-memory"
+  if [ -d "$tm_dir" ]; then
+    while IFS= read -r -d '' link; do
+      if owned_by_us "$link"; then
+        local link_parent
+        link_parent=$(dirname "$link")
+        if remove_link "$link"; then
+          if [ "$DRY_RUN" != "1" ]; then
+            report "removed" "$link"
+          fi
+          candidate_parents+=("$link_parent")
+          # Also walk up toward tm_dir (not inclusive of $HOME/.claude/)
+          local up="$link_parent"
+          while true; do
+            local up_parent
+            up_parent=$(dirname "$up")
+            [ "$up_parent" = "$HOME/.claude" ] && break
+            [ "$up_parent" = "$up" ] && break
+            candidate_parents+=("$up_parent")
+            up="$up_parent"
+          done
+        else
+          MAX_CODE=1
+        fi
+      fi
+      # Foreign links under team-memory: leave silent (per spec §3 subtlety)
+    done < <(find "$tm_dir" -type l -print0 2>/dev/null)
+  fi
+
+  # ------------------------------------------------------------------
+  # Step 3: best-effort rmdir of empty parents, deepest-first
+  # ------------------------------------------------------------------
+  if [ "${#candidate_parents[@]}" -gt 0 ]; then
+    try_remove_empty_parents "${candidate_parents[@]}"
+  fi
+
+  emit_summary
+  return "$MAX_CODE"
 }
 
 cmd_update() {
-  echo "stub: update"
-  echo "dry-run=$DRY_RUN"
+  # ------------------------------------------------------------------
+  # Pass 1: add / fix — identical to cmd_install's apply_plan loop
+  # ------------------------------------------------------------------
+  plan_links
+  apply_plan
+
+  # ------------------------------------------------------------------
+  # Pass 2: prune orphans under team-memory
+  # Build DESIRED_TARGETS as an indexed array (D1: no associative arrays).
+  # Walk find -type l under $HOME/.claude/team-memory; for each link that
+  # is owned_by_us AND not in DESIRED_TARGETS, remove and report removed:orphan.
+  # Foreign / unrelated links: left alone, not reported.
+  # ------------------------------------------------------------------
+  local DESIRED_TARGETS=()
+  local j=0
+  while [ "$j" -lt "${#PLAN_TGT[@]}" ]; do
+    DESIRED_TARGETS+=("${PLAN_TGT[$j]}")
+    j=$((j + 1))
+  done
+
+  local candidate_parents=()
+  local tm_dir="$HOME/.claude/team-memory"
+  if [ -d "$tm_dir" ]; then
+    while IFS= read -r -d '' link; do
+      # Only process links owned by us
+      owned_by_us "$link" || continue
+
+      # Check if this link is in DESIRED_TARGETS (linear search via for loop)
+      local in_set=0
+      local t
+      for t in "${DESIRED_TARGETS[@]}"; do
+        [ "$t" = "$link" ] && in_set=1 && break
+      done
+
+      [ "$in_set" -eq 1 ] && continue
+
+      # Not in desired set → orphan: remove and report
+      local link_parent
+      link_parent=$(dirname "$link")
+
+      if [ "$DRY_RUN" -eq 1 ]; then
+        report "would-remove:orphan" "$link"
+      else
+        if rm "$link"; then
+          report "removed:orphan" "$link"
+          candidate_parents+=("$link_parent")
+          # Walk up toward tm_dir, collecting parent dirs for cleanup
+          local up="$link_parent"
+          while true; do
+            local up_parent
+            up_parent=$(dirname "$up")
+            [ "$up_parent" = "$HOME/.claude" ] && break
+            [ "$up_parent" = "$up" ] && break
+            candidate_parents+=("$up_parent")
+            up="$up_parent"
+          done
+        else
+          echo "error: could not remove orphan link: $link" >&2
+          MAX_CODE=1
+        fi
+      fi
+    done < <(find "$tm_dir" -type l -print0 2>/dev/null)
+  fi
+
+  # ------------------------------------------------------------------
+  # Pass 3: best-effort rmdir of empty parents (same as uninstall)
+  # ------------------------------------------------------------------
+  if [ "${#candidate_parents[@]}" -gt 0 ]; then
+    try_remove_empty_parents "${candidate_parents[@]}"
+  fi
+
+  emit_summary
+  return "$MAX_CODE"
 }
 
 main() {
+  # Handle __probe before parse_flags to keep it hidden from normal dispatch.
+  # __probe is gated behind YHTW_PROBE=1; without it, fall through to unknown-subcommand.
+  # __probe              — prints REPO=<repo> for smoke-verification
+  # __probe resolve <p>  — calls resolve_path and exits with its exit code
+  if [ "${1:-}" = "__probe" ] && [ "${YHTW_PROBE:-}" = "1" ]; then
+    resolve_repo_root
+    if [ "${2:-}" = "resolve" ] && [ -n "${3:-}" ]; then
+      resolve_path "$3"
+      exit $?
+    elif [ "${2:-}" = "owned" ] && [ -n "${3:-}" ]; then
+      # Returns 0 if the path is owned by us, 1 otherwise (silent; caller checks $?)
+      owned_by_us "$3"
+      exit $?
+    elif [ "${2:-}" = "plan" ]; then
+      # Dump plan pairs one-per-line as <src>\t<tgt> (literal tab)
+      plan_links
+      local i=0
+      while [ "$i" -lt "${#PLAN_SRC[@]}" ]; do
+        printf '%s\t%s\n' "${PLAN_SRC[$i]}" "${PLAN_TGT[$i]}"
+        i=$((i + 1))
+      done
+    elif [ "${2:-}" = "classify" ] && [ -n "${3:-}" ] && [ -n "${4:-}" ]; then
+      # classify_target <tgt> <expected_src> — echoes the classification
+      classify_target "$3" "$4"
+    else
+      echo "REPO=$REPO"
+    fi
+    exit 0
+  fi
+
   parse_flags "$@"
+  resolve_repo_root
 
   if [ "${#POSITIONALS[@]}" -eq 0 ]; then
     usage >&2
@@ -93,3 +849,4 @@ main() {
 }
 
 main "$@"
+exit "$MAX_CODE"

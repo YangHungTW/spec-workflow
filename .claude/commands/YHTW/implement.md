@@ -1,48 +1,56 @@
 ---
-description: Execute the next wave of tasks in parallel via worktrees. Usage: /YHTW:implement <slug> [--task T<n>] [--serial]
+description: Run all remaining waves in parallel until done or blocked. Usage: /YHTW:implement <slug> [--one-wave] [--task T<n>] [--serial]
 ---
 
-Wave-based parallel execution. Each task in the current wave runs in its own git worktree under `.worktrees/<slug>-T<n>/` so developer agents can't collide.
+Wave-based parallel execution. Default behaviour: run **every remaining wave** end-to-end, stopping only on task failure, merge conflict, or user interrupt. TPM's dependency graph is the plan — no reason to pause between healthy waves.
 
 ## Steps
 
 1. Read `06-tasks.md`. Parse the **Tasks** list and **Wave schedule**.
-2. **Select target**:
-   - `--task T<n>` → run only that task (debugging / retry).
-   - `--serial` → run the next unchecked task serially in main repo (fallback if worktree isn't usable).
-   - Default: determine the **current wave** = the first wave whose tasks are all either checked or in the unchecked set with all deps satisfied. Run every unchecked task in that wave in parallel.
-3. **Pre-flight**:
-   - Verify we're in a git repo. If not, warn and fall back to `--serial` in main working tree.
-   - Verify feature branch exists: `<slug>`. If not, create it from current HEAD: `git checkout -b <slug>`.
-   - Confirm no uncommitted changes (worktree creation is safe but developer agents need a clean slate).
-4. **Spawn parallel developers**:
+2. **Select mode**:
+   - `--task T<n>` → run only that task (debug / retry single task in its own worktree).
+   - `--serial` → run the next unchecked task serially in the main working tree (fallback if worktrees aren't usable).
+   - `--one-wave` → run just the next wave, then stop and report.
+   - Default: loop waves until all tasks done or something stops us.
+3. **Pre-flight** (once, before the loop):
+   - Verify git repo. If not, fall back to `--serial`.
+   - Ensure feature branch `<slug>` exists; create from current HEAD if missing.
+   - Confirm clean working tree.
+   - Ensure `.worktrees/` is in `.gitignore`.
+
+## Per-wave loop
+
+4. Identify the **current wave** = first wave whose tasks are all either checked OR unchecked-with-all-deps-checked.
+5. **Spawn parallel developers**:
    - For each task T<n> in the wave:
-     - `git worktree add .worktrees/<slug>-T<n> -b <slug>/T<n> <slug>` (branches from current feature head)
-     - Invoke **YHTW-developer** subagent with parameters:
-       - `WORKTREE=.worktrees/<slug>-T<n>` (absolute path preferred)
-       - `TASK_ID=T<n>`
-       - `SLUG=<slug>`
-     - All developer invocations go in **one message with multiple Agent tool calls** so they run concurrently.
-5. **Wave collection** (after all developers return):
+     - `git worktree add .worktrees/<slug>-T<n> -b <slug>-T<n> <slug>` (note branch name: `<slug>-T<n>`, flat — **not** `<slug>/T<n>`, which collides with the `<slug>` leaf ref)
+     - Invoke **YHTW-developer** subagent with parameters `WORKTREE`, `TASK_ID`, `SLUG`.
+     - All developer invocations in **one message with multiple Agent tool calls** → concurrent execution.
+6. **Wave collection** (after all developers return):
    - `git checkout <slug>`
-   - For each completed task in merge-any-order:
-     - `git merge --no-ff <slug>/T<n> -m "Merge T<n>: <title>"`
-     - If merge conflicts: stop, surface the conflict, ask user — conflicts mean TPM's parallel-safety analysis was wrong. Suggest `/YHTW:update-task` to revise wave schedule.
+   - For each completed task (any order):
+     - `git merge --no-ff <slug>-T<n> -m "Merge T<n>: <title>"`
+     - On conflict: STOP the whole loop. Surface conflicting files. TPM's parallel-safety analysis was wrong → recommend `/YHTW:update-task`.
      - `git worktree remove .worktrees/<slug>-T<n>`
-     - `git branch -d <slug>/T<n>`
-6. **Status update (orchestrator, not developers)**:
-   - In the main working tree, edit `.spec-workflow/features/<slug>/06-tasks.md` to check `[x]` for every task that just completed.
-   - Append to `STATUS.md` Notes: `YYYY-MM-DD implement wave <N> done — T<a>, T<b>, T<c>`.
-   - `git add -A && git commit -m "wave <N>: check off completed tasks"`.
-7. Report: wave completed, task count, next wave preview. If all waves done, check `[x] implement` in STATUS and tell user next is `/YHTW:next <slug>` (→ gap-check).
+     - `git branch -d <slug>-T<n>`
+7. **Status update** (orchestrator):
+   - In main tree, check off `[x]` for every completed task in `06-tasks.md`.
+   - Append STATUS Notes: `YYYY-MM-DD implement wave <N> done — T<a>, T<b>, …`.
+   - Commit: `wave <N>: check off completed tasks`.
+8. **Continue or stop**:
+   - If `--one-wave` → stop. Report current state + preview next wave.
+   - If any task failed or merge conflicted → stop. Report failure + recovery command.
+   - Else if more waves remain → loop to step 4 for the next wave.
+   - Else all done → check `[x] implement` in STATUS, commit, tell user next is `/YHTW:next <slug>`.
 
 ## Failures
 
-- One developer fails → keep the others' worktrees; report which succeeded. User can retry the failed task with `/YHTW:implement <slug> --task T<n>` after fixing the cause.
-- Merge conflict → surface the conflicting files; do NOT auto-resolve. Escalate to TPM for wave-schedule revision.
+- **One developer fails** → stop the wave loop immediately (other completed tasks in this wave still merged). Report which task failed + how to retry: `/YHTW:implement <slug> --task T<n>`.
+- **Merge conflict** → stop. Conflicts during a wave = TPM's parallel-safety analysis was wrong. Don't auto-resolve.
+- **Interrupted mid-wave** → clean up any hanging worktrees before exiting.
 
 ## Rules
-- Never skip `Parallel-safe-with:` constraints — if TPM said they can't run together, they can't, even if user forces it.
-- Never run two waves concurrently — wave N+1 depends on wave N's merge state.
-- Clean up worktrees even on failure. Never leave orphan `.worktrees/<slug>-T<n>/` around.
-- Add `.worktrees/` to `.gitignore` if not already.
+- Never skip `Parallel-safe-with:` constraints.
+- Never run two waves concurrently — wave N+1 depends on wave N's merged state.
+- Clean up worktrees even on failure. No orphan `.worktrees/<slug>-T<n>/`.
+- Branch naming: **flat** `<slug>-T<n>` to avoid colliding with the feature branch `<slug>` leaf ref.
