@@ -15,7 +15,7 @@
 
 set -u -o pipefail
 
-WORKTREE="/Users/yanghungtw/Tools/spec-workflow/.worktrees/symlink-operation-T10"
+WORKTREE="/Users/yanghungtw/Tools/spec-workflow/.worktrees/symlink-operation-T13"
 SCRIPT="$WORKTREE/bin/claude-symlink"
 REPO="$WORKTREE"
 PASS=0
@@ -320,6 +320,63 @@ echo "--- Scenario E2: Non-empty team-memory subdir left alone ---"
     pass "E2: unrelated file in shared/ is untouched"
   else
     fail "E2: unrelated file in shared/ was removed"
+  fi
+}
+
+echo
+
+# ---------------------------------------------------------------------------
+# SCENARIO F — uninstall --dry-run produces no [removed] lines; each managed
+#              path appears EXACTLY ONCE with a [would-*] verb; exit code 0;
+#              filesystem byte-identical before/after.
+# ---------------------------------------------------------------------------
+echo "--- Scenario F: uninstall --dry-run — no double-report, no [removed], exit 0 ---"
+{
+  SANDBOX_HOME=$(make_sandbox_home "scenario_f")
+  export HOME="$SANDBOX_HOME"
+
+  # Install first so there are managed symlinks to dry-run remove
+  "$SCRIPT" install > /dev/null 2>&1
+  install_exit=$?
+  if [ "$install_exit" -ne 0 ]; then
+    fail "F: install pre-condition failed (exit $install_exit)"
+  else
+    pass "F: install pre-condition ok"
+  fi
+
+  # Snapshot filesystem state before dry-run
+  snap_before=$(find "$SANDBOX_HOME/.claude" -type l 2>/dev/null | sort | xargs -I{} readlink -f {} 2>/dev/null | sort || true)
+
+  # Run uninstall --dry-run and capture output
+  dry_output=$("$SCRIPT" uninstall --dry-run 2>&1)
+  dry_exit=$?
+
+  assert_zero "F: uninstall --dry-run exit code is 0" "$dry_exit"
+
+  # Count [would-*] lines
+  would_count=$(echo "$dry_output" | grep -c '^\[would-' || true)
+
+  # Count [removed] lines (must be 0)
+  removed_count=$(echo "$dry_output" | grep -c '^\[removed\]' || true)
+
+  # Expected: 12 managed paths (2 dir-level + 10 team-memory files)
+  expected_managed=$(( 2 + $(find "$REPO/.claude/team-memory" -type f | wc -l | tr -d ' ') ))
+
+  if [ "$would_count" -eq "$expected_managed" ]; then
+    pass "F: [would-*] lines count equals managed path count ($expected_managed)"
+  else
+    fail "F: [would-*] count=$would_count, expected $expected_managed. Output: $dry_output"
+  fi
+
+  assert_zero "F: zero [removed] lines in dry-run output" "$removed_count"
+
+  # Snapshot filesystem state after dry-run — must be identical
+  snap_after=$(find "$SANDBOX_HOME/.claude" -type l 2>/dev/null | sort | xargs -I{} readlink -f {} 2>/dev/null | sort || true)
+
+  if [ "$snap_before" = "$snap_after" ]; then
+    pass "F: filesystem byte-identical before/after dry-run (no actual removal)"
+  else
+    fail "F: filesystem changed during dry-run"
   fi
 }
 

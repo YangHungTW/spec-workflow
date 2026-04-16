@@ -662,7 +662,9 @@ cmd_uninstall() {
       local dl_parent
       dl_parent=$(dirname "$dl")
       if remove_link "$dl"; then
-        report "removed" "$dl"
+        if [ "$DRY_RUN" != "1" ]; then
+          report "removed" "$dl"
+        fi
         candidate_parents+=("$dl_parent")
       else
         MAX_CODE=1
@@ -684,7 +686,9 @@ cmd_uninstall() {
         local link_parent
         link_parent=$(dirname "$link")
         if remove_link "$link"; then
-          report "removed" "$link"
+          if [ "$DRY_RUN" != "1" ]; then
+            report "removed" "$link"
+          fi
           candidate_parents+=("$link_parent")
           # Also walk up toward tm_dir (not inclusive of $HOME/.claude/)
           local up="$link_parent"

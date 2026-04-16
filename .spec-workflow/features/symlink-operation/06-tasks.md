@@ -431,7 +431,7 @@ it means `bin/claude-symlink` per D3.
     managed links present; count of lines with `[removed]` is `0`.
 - **Depends on**: T12
 - **Parallel-safe-with**: —
-- [ ]
+- [x]
 
 ---
 
@@ -472,6 +472,7 @@ Developer finds them slipping. Split and renumber only via
 - 2026-04-16 Developer — T10 done (summary, exit codes finalized; __probe gated behind YHTW_PROBE=1)
 - 2026-04-16 developer T11 done — smoke harness covering AC1–AC12 with sandbox-HOME preflight
 - 2026-04-16 Developer — T12 done (script header + README section, parity with --help)
+- 2026-04-16 Developer — T13 done (cmd_uninstall dry-run double-report fixed; resolves SF-2)
 
 ---
 
