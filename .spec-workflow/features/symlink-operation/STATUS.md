@@ -1,15 +1,15 @@
 # STATUS
 
-- **slug**: <slug>
+- **slug**: symlink-operation
 - **has-ui**: false
-- **stage**: request
-- **created**: <YYYY-MM-DD>
-- **updated**: <YYYY-MM-DD>
+- **stage**: prd
+- **created**: 2026-04-16
+- **updated**: 2026-04-16
 
 ## Stage checklist
-- [ ] request       (00-request.md)              — PM
-- [ ] brainstorm    (01-brainstorm.md)           — PM
-- [ ] design        (02-design/)                 — Designer (skip if has-ui: false)
+- [x] request       (00-request.md)              — PM
+- [x] brainstorm    (01-brainstorm.md)           — PM
+- [x] design        (02-design/)                 — Designer (skip if has-ui: false)
 - [ ] prd           (03-prd.md)                  — PM
 - [ ] tech          (04-tech.md)                 — Architect
 - [ ] plan          (05-plan.md)                 — TPM
@@ -21,3 +21,5 @@
 
 ## Notes
 <!-- date + role + what changed -->
+- 2026-04-16 PM — intake complete, has-ui=false
+- 2026-04-16 PM — brainstorm complete, recommending hybrid granularity (dir-level for agents/commands, file-level for team-memory) with a reconciling POSIX bash CLI
