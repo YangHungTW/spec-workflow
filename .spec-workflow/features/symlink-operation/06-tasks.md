@@ -311,7 +311,7 @@ it means `bin/claude-symlink` per D3.
     unknown subcommand.
 - **Depends on**: T7, T8, T9
 - **Parallel-safe-with**: —
-- [ ]
+- [x]
 
 ## T11 — Smoke harness `test/smoke.sh` covering AC1–AC12
 - **Milestone**: M9
@@ -421,6 +421,7 @@ Developer finds them slipping. Split and renumber only via
 - 2026-04-16 developer T7 done — cmd_install with ensure_parent/create_link/report helpers; 17 tests across 4 scenarios all green
 - 2026-04-16 Developer — T8 done (cmd_uninstall with ownership-gated removal and empty-parent cleanup)
 - 2026-04-16 Developer — T9 done (cmd_update reconciler with orphan pruning)
+- 2026-04-16 Developer — T10 done (summary, exit codes finalized; __probe gated behind YHTW_PROBE=1)
 
 ---
 
