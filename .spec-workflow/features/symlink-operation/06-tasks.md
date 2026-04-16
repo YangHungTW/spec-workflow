@@ -215,7 +215,7 @@ it means `bin/claude-symlink` per D3.
     zero symlinks on disk afterward (AC9 subset).
 - **Depends on**: T6
 - **Parallel-safe-with**: —
-- [ ]
+- [x]
 
 ## T8 — `cmd_uninstall` (R8)
 - **Milestone**: M6, M8
@@ -418,6 +418,7 @@ Developer finds them slipping. Split and renumber only via
 - 2026-04-16 Developer — T4 done (owned_by_us via trailing-slash repo-root prefix)
 - 2026-04-16 Developer — T5 done (plan_links + __probe plan dump, post-T4 base)
 - 2026-04-16 Developer — T6 done (classify_target with 8-state taxonomy)
+- 2026-04-16 developer T7 done — cmd_install with ensure_parent/create_link/report helpers; 17 tests across 4 scenarios all green
 
 ---
 
