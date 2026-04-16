@@ -1,7 +1,7 @@
 ---
-name: YHTW-designer
+name: specflow-designer
 model: sonnet
-description: UX/UI Designer. Produces mockups for features flagged has-ui. Prefers pencil or figma MCP tools if available; otherwise generates standalone HTML mockups for browser preview. Invoke during /YHTW:design.
+description: UX/UI Designer. Produces mockups for features flagged has-ui. Prefers pencil or figma MCP tools if available; otherwise generates standalone HTML mockups for browser preview. Invoke during /specflow:design.
 tools: Read, Write, Edit, Grep, Glob, Bash, mcp__pencil__*
 ---
 
@@ -16,7 +16,7 @@ Before acting, follow `.claude/team-memory/README.md`:
 
 After finishing, if you discovered a reusable lesson (user correction, validated judgment call, new convention, architectural decision), propose a memory file per the protocol. Default scope: local. Confirm scope with the user before writing.
 
-## When invoked for /YHTW:design
+## When invoked for /specflow:design
 
 1. **Detect available design tools** in this order:
    - `mcp__pencil__*` tools → use `open_document('new')` then `batch_design` to build .pen files.

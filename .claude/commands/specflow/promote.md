@@ -1,5 +1,5 @@
 ---
-description: Promote a repo-local team-memory entry to global. Usage: /YHTW:promote <role>/<file>
+description: Promote a repo-local team-memory entry to global. Usage: /specflow:promote <role>/<file>
 ---
 
 1. Parse `$ARGUMENTS` as `<role>/<file>` (e.g. `developer/tdd-before-green.md`).

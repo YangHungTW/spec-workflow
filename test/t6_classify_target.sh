@@ -56,7 +56,7 @@ assert_classify() {
   local expected_src="$4"
 
   local actual_class
-  actual_class=$(YHTW_PROBE=1 "$SCRIPT" __probe classify "$tgt" "$expected_src" 2>/dev/null)
+  actual_class=$(SPECFLOW_PROBE=1 "$SCRIPT" __probe classify "$tgt" "$expected_src" 2>/dev/null)
   local exit_code=$?
 
   if [ "$actual_class" = "$expected_class" ]; then
@@ -70,9 +70,9 @@ assert_classify() {
 
 # We need a real source path inside REPO/.claude/ for "ours" tests.
 # Use a real file/dir that exists (team-memory is walked by plan_links, so it exists).
-OUR_SRC="$REPO/.claude/agents/YHTW"
+OUR_SRC="$REPO/.claude/agents/specflow"
 # An expected_src that is ours but different from what the link actually points to
-OUR_ALT_SRC="$REPO/.claude/commands/YHTW"
+OUR_ALT_SRC="$REPO/.claude/commands/specflow"
 # A foreign source (not inside this repo's .claude/)
 FOREIGN_SRC="/tmp/foreign-target-$$"
 

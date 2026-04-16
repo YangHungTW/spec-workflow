@@ -1,6 +1,6 @@
 ---
 name: Tasks-doc format migration — minimal edits only
-description: When a downstream command (e.g. `/YHTW:implement`) changes its required task-doc format mid-feature, do minimal edits — don't re-litigate scope.
+description: When a downstream command (e.g. `/specflow:implement`) changes its required task-doc format mid-feature, do minimal edits — don't re-litigate scope.
 type: pattern
 created: 2026-04-16
 updated: 2026-04-16
@@ -41,7 +41,7 @@ or a downstream slash-command now expects:
 2. Apply those deltas mechanically: add missing field to each block,
    add missing top-level section with derived values.
 3. In STATUS Notes, write `TPM — added <field> and <section>
-   (mid-stream tasks-doc update for new /YHTW:<command>)`. Explicit
+   (mid-stream tasks-doc update for new /specflow:<command>)`. Explicit
    framing as a migration keeps the retro honest.
 4. If the migration surfaces a genuine scope question (a new field
    can't be populated without a real decision), stop and escalate to
@@ -49,7 +49,7 @@ or a downstream slash-command now expects:
 
 ## Example
 
-Feature `symlink-operation`, 2026-04-16: `/YHTW:implement` went
+Feature `symlink-operation`, 2026-04-16: `/specflow:implement` went
 wave-based and required `Parallel-safe-with:` on every task plus a
 top-level `## Wave schedule`. TPM added both in place without
 renumbering or touching deps. Later, when Wave 2 hit a merge

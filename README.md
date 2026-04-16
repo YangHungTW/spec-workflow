@@ -5,39 +5,39 @@ Role-based spec-driven development workflow for Claude Code. A small virtual tea
 ## Flow
 
 ```
-/YHTW:request      → PM intake
-/YHTW:brainstorm   → PM explores approaches
-/YHTW:design       → Designer (only if has-ui: true) — uses pencil/figma MCP if available, else HTML mockup
-/YHTW:prd          → PM writes requirements
-/YHTW:tech         → Architect picks tech + designs system architecture
-/YHTW:plan         → TPM produces implementation plan
-/YHTW:tasks        → TPM decomposes into ordered tasks
-/YHTW:implement    → Developer runs each wave of tasks in parallel via git worktrees (TDD per task)
-/YHTW:gap-check    → QA-analyst: PRD/tech ↔ tasks ↔ diff
-/YHTW:verify       → QA-tester: runs acceptance criteria
-/YHTW:archive      → TPM closes out
+/specflow:request      → PM intake
+/specflow:brainstorm   → PM explores approaches
+/specflow:design       → Designer (only if has-ui: true) — uses pencil/figma MCP if available, else HTML mockup
+/specflow:prd          → PM writes requirements
+/specflow:tech         → Architect picks tech + designs system architecture
+/specflow:plan         → TPM produces implementation plan
+/specflow:tasks        → TPM decomposes into ordered tasks
+/specflow:implement    → Developer runs each wave of tasks in parallel via git worktrees (TDD per task)
+/specflow:gap-check    → QA-analyst: PRD/tech ↔ tasks ↔ diff
+/specflow:verify       → QA-tester: runs acceptance criteria
+/specflow:archive      → TPM closes out
 ```
 
 Shortcut — advance one stage at a time based on STATUS:
 
 ```
-/YHTW:next <slug>
+/specflow:next <slug>
 ```
 
 Revisions:
 
 ```
-/YHTW:update-req    /YHTW:update-tech    /YHTW:update-plan    /YHTW:update-task
+/specflow:update-req    /specflow:update-tech    /specflow:update-plan    /specflow:update-task
 ```
 
 Team memory:
 
 ```
-/YHTW:remember <role> "<lesson>"   # manual save
-/YHTW:promote <role>/<file>        # local → global
+/specflow:remember <role> "<lesson>"   # manual save
+/specflow:promote <role>/<file>        # local → global
 ```
 
-Two-tier memory: `~/.claude/team-memory/<role>/` (global) + `<repo>/.claude/team-memory/<role>/` (local). Agents read both on every invocation. `/YHTW:archive` runs a retro that polls each role for lessons. See `.claude/team-memory/README.md` for the full protocol.
+Two-tier memory: `~/.claude/team-memory/<role>/` (global) + `<repo>/.claude/team-memory/<role>/` (local). Agents read both on every invocation. `/specflow:archive` runs a retro that polls each role for lessons. See `.claude/team-memory/README.md` for the full protocol.
 
 ## Layout
 
@@ -72,7 +72,7 @@ Symlink or copy `.claude/` and `.spec-workflow/features/_template/` into the tar
 
 `bin/claude-symlink` is a zero-dependency bash script that creates, removes, and
 reconciles symlinks from `~/.claude/` back to this repo's `.claude/` tree. It lets
-Claude Code in any other project pick up the YHTW agents, commands, and team-memory
+Claude Code in any other project pick up the specflow agents, commands, and team-memory
 without copying files.
 
 ### What it does
@@ -81,8 +81,8 @@ The tool manages exactly three kinds of targets under `~/.claude/`:
 
 | Target (under `~/.claude/`) | Source (under `<repo>/.claude/`) |
 |-----------------------------|----------------------------------|
-| `agents/YHTW`               | `agents/YHTW` (directory symlink) |
-| `commands/YHTW`             | `commands/YHTW` (directory symlink) |
+| `agents/specflow`               | `agents/specflow` (directory symlink) |
+| `commands/specflow`             | `commands/specflow` (directory symlink) |
 | `team-memory/<relpath>`     | one file symlink per regular file under `team-memory/` |
 
 Every symlink points at an **absolute path** inside the repo, so `ls -l` is always

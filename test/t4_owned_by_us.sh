@@ -33,7 +33,7 @@ assert_owned() {
   local description="$1"
   local expected_exit="$2"
   local path="$3"
-  YHTW_PROBE=1 "$SCRIPT" __probe owned "$path"
+  SPECFLOW_PROBE=1 "$SCRIPT" __probe owned "$path"
   local actual_exit=$?
   if [ "$actual_exit" -eq "$expected_exit" ]; then
     echo "PASS: $description (exit $actual_exit)"
@@ -44,28 +44,28 @@ assert_owned() {
   fi
 }
 
-# Case 1: Symlink whose target is inside $REPO/.claude/agents/YHTW → returns 0 (ours)
+# Case 1: Symlink whose target is inside $REPO/.claude/agents/specflow → returns 0 (ours)
 # We create a real directory to point to, then a symlink pointing at it.
-mkdir -p "$WORKTREE/.claude/agents/YHTW"
+mkdir -p "$WORKTREE/.claude/agents/specflow"
 LINK1="$SANDBOX/link_ours"
-ln -s "$WORKTREE/.claude/agents/YHTW" "$LINK1"
+ln -s "$WORKTREE/.claude/agents/specflow" "$LINK1"
 assert_owned \
-  "1. symlink into repo .claude/agents/YHTW → owned (exit 0)" \
+  "1. symlink into repo .claude/agents/specflow → owned (exit 0)" \
   0 \
   "$LINK1"
 
-# Case 2: Symlink whose target is /tmp/fake/.claude/agents/YHTW → returns 1 (foreign)
+# Case 2: Symlink whose target is /tmp/fake/.claude/agents/specflow → returns 1 (foreign)
 # The target doesn't need to exist; owned_by_us checks the path prefix only.
 LINK2="$SANDBOX/link_foreign"
-ln -s "/tmp/fake/.claude/agents/YHTW" "$LINK2"
+ln -s "/tmp/fake/.claude/agents/specflow" "$LINK2"
 assert_owned \
-  "2. symlink into /tmp/fake/.claude/agents/YHTW → foreign (exit 1)" \
+  "2. symlink into /tmp/fake/.claude/agents/specflow → foreign (exit 1)" \
   1 \
   "$LINK2"
 
 # Case 3: Sibling-repo path — shares string prefix WITHOUT trailing slash boundary
-# e.g. ${REPO}-fork/.claude/agents/YHTW. With trailing slash this must NOT match.
-SIBLING_TARGET="${WORKTREE}-fork/.claude/agents/YHTW"
+# e.g. ${REPO}-fork/.claude/agents/specflow. With trailing slash this must NOT match.
+SIBLING_TARGET="${WORKTREE}-fork/.claude/agents/specflow"
 LINK3="$SANDBOX/link_sibling"
 ln -s "$SIBLING_TARGET" "$LINK3"
 assert_owned \

@@ -81,10 +81,10 @@ EXPECTED_REPO="$WORKTREE"
 assert_stdout_equals \
   "1. __probe prints REPO=<worktree>" \
   "REPO=$EXPECTED_REPO" \
-  env YHTW_PROBE=1 "$SCRIPT" __probe
+  env SPECFLOW_PROBE=1 "$SCRIPT" __probe
 
 # T3 Verify 2: __probe from different cwd prints the same REPO
-actual_output=$(cd /tmp && YHTW_PROBE=1 "$SCRIPT" __probe 2>/dev/null)
+actual_output=$(cd /tmp && SPECFLOW_PROBE=1 "$SCRIPT" __probe 2>/dev/null)
 expected_output="REPO=$EXPECTED_REPO"
 if [ "$actual_output" = "$expected_output" ]; then
   echo "PASS: 2. __probe from /tmp cwd prints same REPO"
@@ -98,7 +98,7 @@ fi
 
 # T3 Verify 3: __probe via symlink still prints worktree REPO (not /tmp)
 ln -sfn "$SCRIPT" /tmp/cs-link
-actual_output=$(YHTW_PROBE=1 /tmp/cs-link __probe 2>/dev/null)
+actual_output=$(SPECFLOW_PROBE=1 /tmp/cs-link __probe 2>/dev/null)
 if [ "$actual_output" = "$expected_output" ]; then
   echo "PASS: 3. __probe via symlink prints correct REPO"
   PASS=$((PASS + 1))
@@ -118,7 +118,7 @@ ln -sfn /tmp/cycle_A /tmp/cycle_B 2>/dev/null || true
 # (Script must implement __probe resolve <path> for this check)
 assert_exit_nonzero \
   "4. cycle detection: __probe resolve A->B->A exits non-zero" \
-  env YHTW_PROBE=1 "$SCRIPT" __probe resolve /tmp/cycle_A
+  env SPECFLOW_PROBE=1 "$SCRIPT" __probe resolve /tmp/cycle_A
 
 rm -f /tmp/cycle_A /tmp/cycle_B
 

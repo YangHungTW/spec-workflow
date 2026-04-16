@@ -7,7 +7,7 @@
 #             with absolute path starting with the repo root (AC10).
 # Scenario B: Second install → all verbs are "already"; exit 0; filesystem
 #             byte-identical between runs.
-# Scenario C: Pre-placed real file at $HOME/.claude/agents/YHTW →
+# Scenario C: Pre-placed real file at $HOME/.claude/agents/specflow →
 #             skipped:real-file for that path; other links still created; exit 1.
 # Scenario D: install --dry-run on clean sandbox → every verb is "would-create";
 #             zero symlinks on disk afterward (AC9 subset).
@@ -92,7 +92,7 @@ assert_nonzero() {
 # ---------------------------------------------------------------------------
 get_plan_targets() {
   export HOME="$1"
-  YHTW_PROBE=1 "$SCRIPT" __probe plan 2>/dev/null | cut -f2
+  SPECFLOW_PROBE=1 "$SCRIPT" __probe plan 2>/dev/null | cut -f2
 }
 
 # ---------------------------------------------------------------------------
@@ -132,7 +132,7 @@ echo "--- Scenario A: Clean install ---"
           ;;
       esac
     fi
-  done < <(YHTW_PROBE=1 "$SCRIPT" __probe plan 2>/dev/null)
+  done < <(SPECFLOW_PROBE=1 "$SCRIPT" __probe plan 2>/dev/null)
 
   [ "$all_symlinks" -eq 1 ] && pass "A: every managed target is a symlink"
   [ "$all_absolute" -eq 1 ] && pass "A: every symlink target is absolute and starts with repo root"
@@ -192,13 +192,13 @@ echo
 # ---------------------------------------------------------------------------
 # SCENARIO C — Real-file conflict
 # ---------------------------------------------------------------------------
-echo "--- Scenario C: Real-file conflict at agents/YHTW ---"
+echo "--- Scenario C: Real-file conflict at agents/specflow ---"
 {
   SANDBOX_HOME=$(make_sandbox_home "scenario_c")
   export HOME="$SANDBOX_HOME"
 
-  # Pre-place a real file at the agents/YHTW managed target
-  conflict_path="$SANDBOX_HOME/.claude/agents/YHTW"
+  # Pre-place a real file at the agents/specflow managed target
+  conflict_path="$SANDBOX_HOME/.claude/agents/specflow"
   mkdir -p "$(dirname "$conflict_path")"
   echo "user content — do not overwrite" > "$conflict_path"
 
@@ -225,12 +225,12 @@ echo "--- Scenario C: Real-file conflict at agents/YHTW ---"
   content=$(cat "$conflict_path")
   assert_eq "C: real file content intact" "user content — do not overwrite" "$content"
 
-  # Other links (commands/YHTW) must still be created
-  commands_link="$SANDBOX_HOME/.claude/commands/YHTW"
+  # Other links (commands/specflow) must still be created
+  commands_link="$SANDBOX_HOME/.claude/commands/specflow"
   if [ -L "$commands_link" ]; then
-    pass "C: other links (commands/YHTW) still created despite conflict"
+    pass "C: other links (commands/specflow) still created despite conflict"
   else
-    fail "C: commands/YHTW was not created — install should continue past conflicts"
+    fail "C: commands/specflow was not created — install should continue past conflicts"
   fi
 }
 

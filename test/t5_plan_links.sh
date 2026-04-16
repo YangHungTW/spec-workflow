@@ -35,7 +35,7 @@ echo
 expected_tm_files=$(find "$REPO/.claude/team-memory" -type f | wc -l | tr -d ' ')
 expected_lines=$((2 + expected_tm_files))
 
-actual_lines=$(HOME="$FAKE_HOME" YHTW_PROBE=1 "$SCRIPT" __probe plan 2>/dev/null | wc -l | tr -d ' ')
+actual_lines=$(HOME="$FAKE_HOME" SPECFLOW_PROBE=1 "$SCRIPT" __probe plan 2>/dev/null | wc -l | tr -d ' ')
 
 if [ "$actual_lines" -eq "$expected_lines" ]; then
   echo "PASS: 1. line count = 2 + team-memory file count ($actual_lines lines, expected $expected_lines)"
@@ -48,15 +48,15 @@ fi
 # -----------------------------------------------------------------------
 # Case 2: first two lines end with expected targets
 # -----------------------------------------------------------------------
-first_line=$(HOME="$FAKE_HOME" YHTW_PROBE=1 "$SCRIPT" __probe plan 2>/dev/null | sed -n '1p')
-second_line=$(HOME="$FAKE_HOME" YHTW_PROBE=1 "$SCRIPT" __probe plan 2>/dev/null | sed -n '2p')
+first_line=$(HOME="$FAKE_HOME" SPECFLOW_PROBE=1 "$SCRIPT" __probe plan 2>/dev/null | sed -n '1p')
+second_line=$(HOME="$FAKE_HOME" SPECFLOW_PROBE=1 "$SCRIPT" __probe plan 2>/dev/null | sed -n '2p')
 
 # Extract target (second tab-separated field)
 first_tgt=$(printf '%s' "$first_line" | cut -f2)
 second_tgt=$(printf '%s' "$second_line" | cut -f2)
 
-expected_first_tgt="$FAKE_HOME/.claude/agents/YHTW"
-expected_second_tgt="$FAKE_HOME/.claude/commands/YHTW"
+expected_first_tgt="$FAKE_HOME/.claude/agents/specflow"
+expected_second_tgt="$FAKE_HOME/.claude/commands/specflow"
 
 if [ "$first_tgt" = "$expected_first_tgt" ]; then
   echo "PASS: 2a. first line target = $expected_first_tgt"
@@ -87,7 +87,7 @@ while IFS= read -r line; do
       bad_tm_targets=$((bad_tm_targets + 1))
       ;;
   esac
-done < <(HOME="$FAKE_HOME" YHTW_PROBE=1 "$SCRIPT" __probe plan 2>/dev/null | tail -n +"$((2 + 1))")
+done < <(HOME="$FAKE_HOME" SPECFLOW_PROBE=1 "$SCRIPT" __probe plan 2>/dev/null | tail -n +"$((2 + 1))")
 
 if [ "$bad_tm_targets" -eq 0 ]; then
   echo "PASS: 3. all team-memory targets start with $FAKE_HOME/.claude/team-memory/"
@@ -110,7 +110,7 @@ while IFS= read -r line; do
       bad_srcs=$((bad_srcs + 1))
       ;;
   esac
-done < <(HOME="$FAKE_HOME" YHTW_PROBE=1 "$SCRIPT" __probe plan 2>/dev/null)
+done < <(HOME="$FAKE_HOME" SPECFLOW_PROBE=1 "$SCRIPT" __probe plan 2>/dev/null)
 
 if [ "$bad_srcs" -eq 0 ]; then
   echo "PASS: 4. all sources are absolute and start with $REPO"

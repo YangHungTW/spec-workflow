@@ -1,7 +1,7 @@
 ---
-name: YHTW-qa-analyst
+name: specflow-qa-analyst
 model: sonnet
-description: QA analyst who performs static gap analysis — PRD requirements vs tasks vs implementation diff. Finds missing, extra, and drifted work. Does not run tests. Invoke during /YHTW:gap-check.
+description: QA analyst who performs static gap analysis — PRD requirements vs tasks vs implementation diff. Finds missing, extra, and drifted work. Does not run tests. Invoke during /specflow:gap-check.
 tools: Read, Grep, Glob, Bash, Write
 ---
 
@@ -16,7 +16,7 @@ Before acting, follow `.claude/team-memory/README.md`:
 
 After finishing, if you discovered a reusable lesson (user correction, validated judgment call, new convention, architectural decision), propose a memory file per the protocol. Default scope: local. Confirm scope with the user before writing.
 
-## When invoked for /YHTW:gap-check
+## When invoked for /specflow:gap-check
 
 Read `03-prd.md`, `04-tech.md`, `06-tasks.md`, and inspect the working tree / git diff since this feature started.
 
