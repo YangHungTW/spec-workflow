@@ -35,6 +35,7 @@ it means `bin/claude-symlink` per D3.
   - `bin/claude-symlink install` exits 0 and prints `stub: install`.
   - `test -x bin/claude-symlink` succeeds.
 - **Depends on**: —
+- **Parallel-safe-with**: —
 - [x]
 
 ## T2 — Flag parsing: `--dry-run`, `--help`, `-h`
@@ -60,6 +61,7 @@ it means `bin/claude-symlink` per D3.
   - `bin/claude-symlink install --force` exits 2 with a "unknown flag"
     message on stderr.
 - **Depends on**: T1
+- **Parallel-safe-with**: —
 - [x]
 
 ## T3 — `resolve_path` + `resolve_repo_root` (D2, R1)
@@ -91,6 +93,7 @@ it means `bin/claude-symlink` per D3.
   - Cycle test: create `A -> B`, `B -> A` in `/tmp`, assert
     `resolve_path` exits non-zero within 40 iterations, not a hang.
 - **Depends on**: T2
+- **Parallel-safe-with**: —
 - [ ]
 
 ## T4 — `owned_by_us` (D6)
@@ -114,6 +117,7 @@ it means `bin/claude-symlink` per D3.
     → returns 1 (NOT a prefix match because of trailing slash).
   - Real file (not a symlink) → returns 1.
 - **Depends on**: T3
+- **Parallel-safe-with**: T5
 - [ ]
 
 ## T5 — `plan_links` (R4, R5)
@@ -140,6 +144,7 @@ it means `bin/claude-symlink` per D3.
   - Every subsequent target starts with `/tmp/fakehome/.claude/team-memory/`.
   - Sources are absolute and all begin with the repo root.
 - **Depends on**: T3
+- **Parallel-safe-with**: T4
 - [ ]
 
 ## T6 — `classify_target` (R10, D5)
@@ -165,6 +170,7 @@ it means `bin/claude-symlink` per D3.
     against the real `$HOME` (preflight guard; same shape we'll reuse in
     T11).
 - **Depends on**: T4, T5
+- **Parallel-safe-with**: —
 - [ ]
 
 ## T7 — `cmd_install` (R6, R7, R10, R12, R13)
@@ -198,6 +204,7 @@ it means `bin/claude-symlink` per D3.
   - `install --dry-run` on clean sandbox → every verb is `would-create`,
     zero symlinks on disk afterward (AC9 subset).
 - **Depends on**: T6
+- **Parallel-safe-with**: —
 - [ ]
 
 ## T8 — `cmd_uninstall` (R8)
@@ -229,6 +236,7 @@ it means `bin/claude-symlink` per D3.
   - If `$HOME/.claude/team-memory/shared/` is empty after removals, it
     is `rmdir`ed (AC5); if it contains an unrelated file, it is left.
 - **Depends on**: T4, T5, T7 (for `remove_link` primitive & `report` helper reuse)
+- **Parallel-safe-with**: —
 - [ ]
 
 ## T9 — `cmd_update` (R9)
@@ -262,6 +270,7 @@ it means `bin/claude-symlink` per D3.
   - Real-file conflict at a managed path → `update` skips that path,
     still reconciles others, exit 1 (AC8).
 - **Depends on**: T7, T8
+- **Parallel-safe-with**: —
 - [ ]
 
 ## T10 — `emit_summary` + final exit code wiring (R13, R14, R15)
@@ -291,6 +300,7 @@ it means `bin/claude-symlink` per D3.
   - `bin/claude-symlink __probe` (if not env-gated) exits 2 as an
     unknown subcommand.
 - **Depends on**: T7, T8, T9
+- **Parallel-safe-with**: —
 - [ ]
 
 ## T11 — Smoke harness `test/smoke.sh` covering AC1–AC12
@@ -327,6 +337,7 @@ it means `bin/claude-symlink` per D3.
   - Every scenario prints `AC<n>: PASS` or `AC<n>: FAIL`; non-zero exit
     iff any FAIL.
 - **Depends on**: T10
+- **Parallel-safe-with**: —
 - [ ]
 
 ## T12 — Docs: script header + README section
@@ -361,6 +372,7 @@ it means `bin/claude-symlink` per D3.
     skimmed by QA-analyst in T-next gap-check.
   - No content changes to `.claude/` source trees.
 - **Depends on**: T11
+- **Parallel-safe-with**: —
 - [ ]
 
 ---
@@ -392,3 +404,23 @@ Developer finds them slipping. Split and renumber only via
 
 - 2026-04-16 Developer — T1 done (script skeleton, OS guard, dispatch stubs)
 - 2026-04-16 Developer — T2 done (flag parsing: --dry-run, --help/-h, unknown-flag rejection)
+
+---
+
+## Wave schedule
+
+- Wave 0 (done): T1, T2
+- Wave 1: T3
+- Wave 2: T4, T5         (parallel — both depend only on T3)
+- Wave 3: T6
+- Wave 4: T7
+- Wave 5: T8
+- Wave 6: T9
+- Wave 7: T10
+- Wave 8: T11
+- Wave 9: T12
+
+Single-task waves (3, 6+) reflect the strict-spine sequencing. Only the
+T7/T8/T9 chain could be re-flattened into earlier waves if the shared
+`report` / `emit_summary` skeleton lands first; that refactor is out of
+scope for this revision — see "Sequencing notes" above.

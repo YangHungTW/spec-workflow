@@ -29,3 +29,4 @@
 - 2026-04-16 TPM — plan written, M-count=10
 - 2026-04-16 TPM — tasks broken down, T-count=12, first=T1
 - 2026-04-16 Developer — T1 done (script skeleton, OS guard, dispatch stubs)
+- 2026-04-16 TPM — added Parallel-safe-with fields and Wave schedule (mid-stream tasks-doc update for new /YHTW:implement)
