@@ -44,3 +44,5 @@
 - 2026-04-16 implement wave 6 done — T8
 - 2026-04-16 Developer — T9 done (cmd_update reconciler with orphan pruning)
 - 2026-04-16 implement wave 7 done — T9
+- 2026-04-16 Developer — T10 done (summary, exit codes finalized; __probe gated behind YHTW_PROBE=1)
+- 2026-04-16 implement wave 8 done — T10
