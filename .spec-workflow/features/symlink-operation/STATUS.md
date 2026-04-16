@@ -42,3 +42,5 @@
 - 2026-04-16 implement wave 5 done — T7
 - 2026-04-16 Developer — T8 done (cmd_uninstall with ownership-gated removal and empty-parent cleanup)
 - 2026-04-16 implement wave 6 done — T8
+- 2026-04-16 Developer — T9 done (cmd_update reconciler with orphan pruning)
+- 2026-04-16 implement wave 7 done — T9
