@@ -9,7 +9,7 @@
 
 set -u -o pipefail
 
-WORKTREE="/Users/yanghungtw/Tools/spec-workflow/.worktrees/symlink-operation-T6"
+WORKTREE="/Users/yanghungtw/Tools/spec-workflow/.worktrees/symlink-operation-T10"
 SCRIPT="$WORKTREE/bin/claude-symlink"
 REPO="$WORKTREE"
 PASS=0
@@ -56,7 +56,7 @@ assert_classify() {
   local expected_src="$4"
 
   local actual_class
-  actual_class=$("$SCRIPT" __probe classify "$tgt" "$expected_src" 2>/dev/null)
+  actual_class=$(YHTW_PROBE=1 "$SCRIPT" __probe classify "$tgt" "$expected_src" 2>/dev/null)
   local exit_code=$?
 
   if [ "$actual_class" = "$expected_class" ]; then
