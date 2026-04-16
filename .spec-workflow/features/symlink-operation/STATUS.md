@@ -36,3 +36,5 @@
 - 2026-04-16 TPM — revised wave schedule (T4/T5 de-paired after Wave 2 merge conflict; now single-task waves end-to-end)
 - 2026-04-16 Developer — T5 done (plan_links + __probe plan dump, post-T4 base)
 - 2026-04-16 implement wave 3 done — T5
+- 2026-04-16 Developer — T6 done (classify_target 8-state taxonomy)
+- 2026-04-16 implement wave 4 done — T6
