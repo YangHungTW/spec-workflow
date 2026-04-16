@@ -47,7 +47,7 @@ Rules:
 1. Require `08-verify.md` verdict = PASS.
 2. **Run retrospective** — identify which roles participated (check STATUS Notes). For each, ask: "Any reusable lesson from this feature?" Facilitate, do not invent lessons. User approves each entry, picks scope (local/global) and type. Write approved entries per `.claude/team-memory/README.md` protocol.
 3. Update STATUS: stage=archive checked, closing Notes line with date.
-4. `git mv specs/features/<slug> specs/archive/<slug>` (or plain `mv` if not a git repo).
+4. `git mv .spec-workflow/features/<slug> .spec-workflow/archive/<slug>` (or plain `mv` if not a git repo).
 5. Report archived path and any memory entries added this round.
 
 ## When invoked for /YHTW:update-plan or /YHTW:update-task

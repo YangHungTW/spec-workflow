@@ -9,5 +9,5 @@ description: TPM archives a completed feature. Usage: /YHTW:archive <slug>
    - For each proposed lesson: user approves, picks scope (local/global) and type.
    - Write approved entries via the same protocol as `/YHTW:remember`.
    - Skip roles that say "nothing new".
-4. Check `[x] archive`, then `git mv specs/features/<slug> specs/archive/<slug>` (fall back to `mv` if not a git repo).
+4. Check `[x] archive`, then `git mv .spec-workflow/features/<slug> .spec-workflow/archive/<slug>` (fall back to `mv` if not a git repo).
 5. Report final archive path and any memory entries added.

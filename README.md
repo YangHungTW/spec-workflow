@@ -47,7 +47,7 @@ Two-tier memory: `~/.claude/team-memory/<role>/` (global) + `<repo>/.claude/team
   commands/ request.md brainstorm.md design.md prd.md tech.md plan.md tasks.md
             implement.md gap-check.md verify.md archive.md
             update-req.md update-tech.md update-plan.md update-task.md
-specs/
+.spec-workflow/
   features/<slug>/
     00-request.md
     01-brainstorm.md
@@ -64,4 +64,4 @@ specs/
 
 ## Using in another project
 
-Symlink or copy `.claude/` and `specs/features/_template/` into the target repo.
+Symlink or copy `.claude/` and `.spec-workflow/features/_template/` into the target repo.
