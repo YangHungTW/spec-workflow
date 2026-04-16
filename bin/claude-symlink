@@ -120,6 +120,34 @@ owned_by_us() {
   esac
 }
 
+# ---------------------------------------------------------------------------
+# plan_links — populate global indexed arrays PLAN_SRC and PLAN_TGT (D1)
+# Two fixed directory-level pairs (agents/YHTW, commands/YHTW) come first,
+# then one entry per file under $REPO/.claude/team-memory/ (walked via find).
+# Does NOT print anything; use __probe plan to dump pairs for debugging.
+# HOME must come from the environment (R2) — never hardcoded.
+# ---------------------------------------------------------------------------
+plan_links() {
+  PLAN_SRC=()
+  PLAN_TGT=()
+
+  # Fixed pair 1: agents/YHTW
+  PLAN_SRC+=("$REPO/.claude/agents/YHTW")
+  PLAN_TGT+=("$HOME/.claude/agents/YHTW")
+
+  # Fixed pair 2: commands/YHTW
+  PLAN_SRC+=("$REPO/.claude/commands/YHTW")
+  PLAN_TGT+=("$HOME/.claude/commands/YHTW")
+
+  # File-level pairs: walk team-memory with -print0 for filename safety
+  local prefix="$REPO/.claude/team-memory/"
+  while IFS= read -r -d '' src; do
+    local rel="${src#$prefix}"
+    PLAN_SRC+=("$src")
+    PLAN_TGT+=("$HOME/.claude/team-memory/$rel")
+  done < <(find "$REPO/.claude/team-memory" -type f -print0)
+}
+
 usage() {
   cat <<'EOF'
 Usage: claude-symlink <subcommand> [options]
@@ -189,6 +217,14 @@ main() {
       # Returns 0 if the path is owned by us, 1 otherwise (silent; caller checks $?)
       owned_by_us "$3"
       return $?
+    elif [ "${2:-}" = "plan" ]; then
+      # Dump plan pairs one-per-line as <src>\t<tgt> (literal tab)
+      plan_links
+      local i=0
+      while [ "$i" -lt "${#PLAN_SRC[@]}" ]; do
+        printf '%s\t%s\n' "${PLAN_SRC[$i]}" "${PLAN_TGT[$i]}"
+        i=$((i + 1))
+      done
     else
       echo "REPO=$REPO"
     fi
