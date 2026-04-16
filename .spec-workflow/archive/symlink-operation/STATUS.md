@@ -2,7 +2,7 @@
 
 - **slug**: symlink-operation
 - **has-ui**: false
-- **stage**: gap-check
+- **stage**: archive
 - **created**: 2026-04-16
 - **updated**: 2026-04-16
 
@@ -16,8 +16,8 @@
 - [x] tasks         (06-tasks.md)                — TPM
 - [x] implement     (tasks checked off)          — Developer
 - [x] gap-check     (07-gaps.md, verdict PASS)   — QA-analyst
-- [ ] verify        (08-verify.md, verdict PASS) — QA-tester
-- [ ] archive       (moved to .spec-workflow/archive/)     — TPM
+- [x] verify        (08-verify.md, verdict PASS) — QA-tester
+- [x] archive       (moved to .spec-workflow/archive/)     — TPM
 
 ## Notes
 <!-- date + role + what changed -->
@@ -57,3 +57,5 @@
 - 2026-04-16 Developer — T13 done (cmd_uninstall dry-run double-report fixed; resolves SF-2)
 - 2026-04-16 implement wave 11 done — T13
 - 2026-04-16 implement stage complete — all 13 tasks merged (T13 closes SF-2)
+- 2026-04-16 QA-tester — verify PASS (AC1–AC12, SF-2 fix confirmed)
+- 2026-04-16 TPM — archive: wrote 11 memory entries (A1–A4, T2, D1–D4, Q1, QT1); feature moved to .spec-workflow/archive/symlink-operation/

@@ -4,4 +4,7 @@
 - [Title](file.md) — one-line hook
 -->
 
-_No memories yet._
+- [Shell portability — no GNU readlink on macOS](shell-portability-readlink.md) — macOS bash 3.2 has no `readlink -f`; write a pure-bash `resolve_path` helper instead of depending on GNU coreutils.
+- [No --force by default on user-owned paths](no-force-by-default.md) — Tools that touch user-owned paths default to report-and-skip on conflict; no `--force` in v1.
+- [Script location convention — bin vs scripts](script-location-convention.md) — Repo executables go in `bin/<name>` (no extension, exec bit); `scripts/` is for dev-time helpers.
+- [Classification before mutation](classification-before-mutation.md) — Filesystem tools that can destroy data — classify every target into a closed enum first, then dispatch via a table. Never mutate inside the classifier.
