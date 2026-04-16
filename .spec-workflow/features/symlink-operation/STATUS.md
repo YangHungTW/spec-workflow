@@ -14,7 +14,7 @@
 - [x] tech          (04-tech.md)                 — Architect
 - [x] plan          (05-plan.md)                 — TPM
 - [x] tasks         (06-tasks.md)                — TPM
-- [ ] implement     (tasks checked off)          — Developer
+- [x] implement     (tasks checked off)          — Developer
 - [x] gap-check     (07-gaps.md, verdict PASS)   — QA-analyst
 - [ ] verify        (08-verify.md, verdict PASS) — QA-tester
 - [ ] archive       (moved to .spec-workflow/archive/)     — TPM
@@ -54,3 +54,6 @@
 - 2026-04-16 QA-analyst — gap-check verdict: PASS-WITH-NITS, 4 nits, 2 should-fix items, no blockers
 - 2026-04-16 PM — PRD R10 amended to accept tech-doc override (wrong-link-ours replaces, not skips); resolves gap-check SF-1
 - 2026-04-16 TPM — added T13 (cmd_uninstall dry-run double-report fix) as Wave 11; un-checked implement to re-enter stage; resolves gap-check SF-2
+- 2026-04-16 Developer — T13 done (cmd_uninstall dry-run double-report fixed; resolves SF-2)
+- 2026-04-16 implement wave 11 done — T13
+- 2026-04-16 implement stage complete — all 13 tasks merged (T13 closes SF-2)
