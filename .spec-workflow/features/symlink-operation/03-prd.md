@@ -84,12 +84,14 @@ Additionally, `update` walks the existing tool-owned links under `~/.claude/agen
 |-------------------------|--------|--------|
 | Nothing exists | Create symlink | `created` (or `would-create` under `--dry-run`) |
 | Symlink → correct source in this repo | No-op | `already` |
-| Symlink → wrong path in this repo | Skip | `skipped (conflict: wrong-source)` |
-| Symlink → outside this repo | Skip | `skipped (conflict: foreign-symlink)` |
+| Symlink → wrong path in this repo (tool-owned, `wrong-link-ours`) † | Remove and re-create with correct source | `created (replaced-broken)` |
+| Symlink → outside this repo (`wrong-link-foreign`) | Skip | `skipped (conflict: foreign-symlink)` |
 | Broken symlink → into this repo | Replace | `created (replaced-broken)` |
 | Broken symlink → outside this repo | Skip | `skipped (conflict: foreign-broken-symlink)` |
 | Real file | Skip | `skipped (conflict: real-file)` |
 | Real directory | Skip | `skipped (conflict: real-dir)` |
+
+† Amended 2026-04-16 to reflect Architect override in `04-tech.md` §3; aligned with R9 reconciler intent. A symlink whose link-target resolves inside this repo's root is tool-owned and safely replaceable — skipping would leave users with stale links after a repo move or plan change, with no recovery short of `uninstall + install`. Foreign symlinks (link-target outside the repo root) remain `skip`; ownership gate is unchanged.
 
 **R11 — No `--force` flag in v1.** The tool ships with **no** `--force` option. Conflicts are reported and skipped; the user resolves them manually by inspecting and removing the offending path. Rationale: the cost of a wrong automated overwrite (losing a user-authored file or another repo's symlink) is strictly higher than the cost of one extra manual `rm`. This is a deliberate trade-off — simplicity and safety over convenience. A future `--force-symlinks` (wrong-symlinks only, never real files) may be added in a later iteration if demand appears, but is explicitly out of scope for v1.
 
@@ -131,7 +133,7 @@ Each criterion is checkable end-to-end by QA-tester.
 ## 6. Edge cases explicitly addressed
 
 - **Target is correct symlink already** — reported `already`, not re-created (R10).
-- **Target is wrong symlink into another clone of this repo** — classified as `wrong-source` if the path matches the managed set but the source path differs; skipped with conflict (R10). The tool does not attempt to detect "another clone" heuristically; it compares absolute link-target to the expected source.
+- **Target is wrong symlink into another clone of this repo** [CHANGED 2026-04-16] — the symlink's link-target resolves under _this_ script's repo root check; if it does, the link is tool-owned and gets replaced with the correct source, reported `created (replaced-broken)` (R10). If the link-target is a different repo clone outside this repo's root, it falls under `foreign-symlink` and is skipped. The tool does not attempt to detect "another clone" heuristically; the ownership gate is purely "link-target path starts with this script's resolved repo root".
 - **Target is a symlink pointing outside this repo** — `foreign-symlink`, skipped (R10).
 - **Target is a broken symlink into this repo** (source deleted between installs) — replaced on `install`/`update`; reported `created (replaced-broken)` (R10) or pruned as orphan on `update` (R9) depending on whether the path is still in the managed plan.
 - **Target is a broken symlink pointing outside this repo** — skipped, not considered ours (R10).
@@ -141,7 +143,7 @@ Each criterion is checkable end-to-end by QA-tester.
 - **Tool run from a different cwd** — script resolves its own path and derives the repo root; cwd is irrelevant (R1).
 - **`team-memory/` gains a new role subdir** — discovered by the walk; parent dir auto-created under `~/.claude/team-memory/`; files linked (R4, R7).
 - **A user adds their own file under `~/.claude/team-memory/<role>/`** — ignored by the tool; not in the managed set, not a tool-owned link, never touched by `install`, `update`, or `uninstall` (R4, R8, R9).
-- **Two clones of this repo both try to `install`** — second clone's `install` will find the managed links already pointing into the first clone, classify them as `wrong-source`, skip them, and exit non-zero. The user must `uninstall` from the first clone (or manually remove) before installing the second. This is explicitly the intended behavior: the managed paths have a single source of truth.
+- **Two clones of this repo both try to `install`** [CHANGED 2026-04-16] — from the second clone's perspective, the existing managed links point into the _first_ clone, which is outside the second clone's resolved repo root; they are classified `foreign-symlink` and skipped, and the run exits non-zero. The user must `uninstall` from the first clone (or manually remove) before installing the second. The managed paths have a single source of truth per host, enforced by the ownership gate (R10).
 
 ## 7. Open questions / blockers
 
@@ -163,3 +165,7 @@ Nice-to-clarify (not blocking):
 - `--force` of any kind in v1 (may be revisited later, symlinks-only).
 - `--quiet` / log-level flags in v1.
 - A GUI or TUI.
+
+## Revisions
+
+- 2026-04-16 — R10 amended: wrong-link-ours now replaces (not skips) to align with tech doc §3 and R9 reconciler intent.

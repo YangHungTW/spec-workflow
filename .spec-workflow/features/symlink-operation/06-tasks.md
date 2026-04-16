@@ -385,6 +385,54 @@ it means `bin/claude-symlink` per D3.
 - **Parallel-safe-with**: —
 - [x]
 
+## T13 — Fix `cmd_uninstall` dry-run double-report  [ADDED 2026-04-16]
+- **Milestone**: M6 (extends T8's deliverable)
+- **Requirements**: R12
+- **Decisions**: D4
+- **Scope**: `cmd_uninstall` in `bin/claude-symlink` currently
+  double-reports each tool-owned symlink under `--dry-run`:
+  `remove_link` already emits `[would-remove]` when `DRY_RUN=1`, but the
+  callers in `cmd_uninstall` then unconditionally call `report "removed"
+  "$tgt"`, producing two lines per owned path. Restructure the two
+  removal loops in `cmd_uninstall` — the dir-level managed paths block
+  (around line 660) and the team-memory symlink walk (around line 685) —
+  to guard the `report "removed"` call with an inline
+  `if [ "$DRY_RUN" != "1" ]` check, matching the pattern `cmd_update`'s
+  orphan-prune section uses correctly (around line 759–778). Simplest
+  shape:
+  ```bash
+  if remove_link "$tgt"; then
+    if [ "$DRY_RUN" != "1" ]; then
+      report "removed" "$tgt"
+    fi
+  else
+    ...
+  fi
+  ```
+  Equivalent alternative: make `remove_link` never self-report and
+  always emit the verb from the caller — but that requires a matching
+  change in `cmd_update` to stay consistent, so prefer the inline-guard
+  delta unless the Developer finds a cleaner factoring. Do NOT introduce
+  any new verb tags; the closed R13 verb set is unchanged.
+- **Deliverables**: surgical edits to `cmd_uninstall`'s two removal
+  blocks in `bin/claude-symlink`; new scenario F appended to
+  `test/t8_cmd_uninstall.sh` that runs `uninstall --dry-run` after an
+  install and asserts (a) each managed path appears in the output
+  EXACTLY ONCE, (b) every verb on those lines is `[would-*]`, (c) zero
+  lines contain `[removed]`, (d) `MAX_CODE` stays 0.
+- **Verify**:
+  - `bash test/t8_cmd_uninstall.sh` — new scenario F exits green.
+  - All existing t8 scenarios (A–E) still pass (15/15 previously).
+  - `bash test/smoke.sh` — still 12/12 PASS.
+  - Sandbox grep audit: after
+    `HOME=$(mktemp -d) bin/claude-symlink install && \
+     HOME=<same> bin/claude-symlink uninstall --dry-run`,
+    count of output lines starting with `[would-` equals the number of
+    managed links present; count of lines with `[removed]` is `0`.
+- **Depends on**: T12
+- **Parallel-safe-with**: —
+- [ ]
+
 ---
 
 ## Sequencing notes
@@ -440,9 +488,12 @@ Developer finds them slipping. Split and renumber only via
 - Wave 8: T10                                 [CHANGED 2026-04-16]
 - Wave 9: T11                                 [CHANGED 2026-04-16]
 - Wave 10: T12                                [CHANGED 2026-04-16]
+- Wave 11: T13                                [ADDED 2026-04-16]
 
 All waves are now single-task; the parallel pair was de-paired after a
 textual merge conflict in Wave 2 (see T4/T5 notes). The T7/T8/T9 chain
 could still be re-flattened into earlier waves if the shared
 `report` / `emit_summary` skeleton lands first; that refactor is out of
-scope for this revision — see "Sequencing notes" above.
+scope for this revision — see "Sequencing notes" above. Wave 11 added
+post-gap-check to resolve SF-2 — dry-run double-report in
+`cmd_uninstall`.

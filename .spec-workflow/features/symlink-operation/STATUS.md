@@ -2,7 +2,7 @@
 
 - **slug**: symlink-operation
 - **has-ui**: false
-- **stage**: implement
+- **stage**: gap-check
 - **created**: 2026-04-16
 - **updated**: 2026-04-16
 
@@ -14,8 +14,8 @@
 - [x] tech          (04-tech.md)                 — Architect
 - [x] plan          (05-plan.md)                 — TPM
 - [x] tasks         (06-tasks.md)                — TPM
-- [x] implement     (tasks checked off)          — Developer
-- [ ] gap-check     (07-gaps.md, verdict PASS)   — QA-analyst
+- [ ] implement     (tasks checked off)          — Developer
+- [x] gap-check     (07-gaps.md, verdict PASS)   — QA-analyst
 - [ ] verify        (08-verify.md, verdict PASS) — QA-tester
 - [ ] archive       (moved to .spec-workflow/archive/)     — TPM
 
@@ -51,3 +51,6 @@
 - 2026-04-16 Developer — T12 done (script header + README section, parity with --help)
 - 2026-04-16 implement wave 10 done — T12
 - 2026-04-16 implement stage complete — all 12 tasks merged on `symlink-operation` branch
+- 2026-04-16 QA-analyst — gap-check verdict: PASS-WITH-NITS, 4 nits, 2 should-fix items, no blockers
+- 2026-04-16 PM — PRD R10 amended to accept tech-doc override (wrong-link-ours replaces, not skips); resolves gap-check SF-1
+- 2026-04-16 TPM — added T13 (cmd_uninstall dry-run double-report fix) as Wave 11; un-checked implement to re-enter stage; resolves gap-check SF-2
