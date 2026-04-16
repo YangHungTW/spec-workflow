@@ -8,7 +8,7 @@
 
 set -u -o pipefail
 
-WORKTREE="/Users/yanghungtw/Tools/spec-workflow/.worktrees/symlink-operation-T4"
+WORKTREE="/Users/yanghungtw/Tools/spec-workflow/.worktrees/symlink-operation-T10"
 SCRIPT="$WORKTREE/bin/claude-symlink"
 PASS=0
 FAIL=0
@@ -33,7 +33,7 @@ assert_owned() {
   local description="$1"
   local expected_exit="$2"
   local path="$3"
-  "$SCRIPT" __probe owned "$path"
+  YHTW_PROBE=1 "$SCRIPT" __probe owned "$path"
   local actual_exit=$?
   if [ "$actual_exit" -eq "$expected_exit" ]; then
     echo "PASS: $description (exit $actual_exit)"

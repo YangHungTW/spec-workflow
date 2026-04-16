@@ -14,7 +14,7 @@
 
 set -u -o pipefail
 
-WORKTREE="/Users/yanghungtw/Tools/spec-workflow/.worktrees/symlink-operation-T7"
+WORKTREE="/Users/yanghungtw/Tools/spec-workflow/.worktrees/symlink-operation-T10"
 SCRIPT="$WORKTREE/bin/claude-symlink"
 REPO="$WORKTREE"
 PASS=0
@@ -92,7 +92,7 @@ assert_nonzero() {
 # ---------------------------------------------------------------------------
 get_plan_targets() {
   export HOME="$1"
-  "$SCRIPT" __probe plan 2>/dev/null | cut -f2
+  YHTW_PROBE=1 "$SCRIPT" __probe plan 2>/dev/null | cut -f2
 }
 
 # ---------------------------------------------------------------------------
@@ -132,7 +132,7 @@ echo "--- Scenario A: Clean install ---"
           ;;
       esac
     fi
-  done < <("$SCRIPT" __probe plan 2>/dev/null)
+  done < <(YHTW_PROBE=1 "$SCRIPT" __probe plan 2>/dev/null)
 
   [ "$all_symlinks" -eq 1 ] && pass "A: every managed target is a symlink"
   [ "$all_absolute" -eq 1 ] && pass "A: every symlink target is absolute and starts with repo root"
