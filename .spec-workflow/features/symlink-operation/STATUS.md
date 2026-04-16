@@ -23,3 +23,4 @@
 <!-- date + role + what changed -->
 - 2026-04-16 PM — intake complete, has-ui=false
 - 2026-04-16 PM — brainstorm complete, recommending hybrid granularity (dir-level for agents/commands, file-level for team-memory) with a reconciling POSIX bash CLI
+- 2026-04-16 orchestrator — design skipped (has-ui: false)

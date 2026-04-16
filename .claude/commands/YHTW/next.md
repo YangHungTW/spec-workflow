@@ -6,7 +6,19 @@ Orchestrator. Reads STATUS and advances one stage. Stops at any point that needs
 
 ## Steps
 
-1. Parse `$ARGUMENTS` as `<slug>`. If missing, list features under `.spec-workflow/features/` with their current stage and ask which.
+1. **Resolve slug**:
+   - If `$ARGUMENTS` has a slug → use it.
+   - Else scan `.spec-workflow/features/*/STATUS.md`, keep features whose `archive` box is unchecked (i.e. still in progress). Sort by slug descending (newest date prefix first).
+     - **0 active** → tell user "No active features. Start one with `/YHTW:request \"<ask>\"`." Exit.
+     - **1 active** → use it silently. Report which and continue.
+     - **≥2 active** → show a numbered picker:
+       ```
+       Which feature to advance?
+         1. 20260416-unify-auth        → stage: plan
+         2. 20260415-dark-mode-toggle  → stage: implement (T3/T8)
+         3. 20260410-retry-upload      → stage: verify
+       ```
+       For `implement` stage, also count checked vs total tasks in `06-tasks.md`. Ask user to pick by number or by typing a slug. Default (pressing Enter) = option 1.
 2. Read `.spec-workflow/features/<slug>/STATUS.md`.
 3. Determine the **next unchecked stage** in the Stage checklist.
 4. Apply these rules:
