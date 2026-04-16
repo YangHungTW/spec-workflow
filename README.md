@@ -18,6 +18,12 @@ Role-based spec-driven development workflow for Claude Code. A small virtual tea
 /YHTW:archive      → TPM closes out
 ```
 
+Shortcut — advance one stage at a time based on STATUS:
+
+```
+/YHTW:next <slug>
+```
+
 Revisions:
 
 ```
