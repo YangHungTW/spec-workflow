@@ -2,7 +2,7 @@
 
 - **slug**: symlink-operation
 - **has-ui**: false
-- **stage**: tasks
+- **stage**: implement
 - **created**: 2026-04-16
 - **updated**: 2026-04-16
 
@@ -14,7 +14,7 @@
 - [x] tech          (04-tech.md)                 — Architect
 - [x] plan          (05-plan.md)                 — TPM
 - [x] tasks         (06-tasks.md)                — TPM
-- [ ] implement     (tasks checked off)          — Developer
+- [x] implement     (tasks checked off)          — Developer
 - [ ] gap-check     (07-gaps.md, verdict PASS)   — QA-analyst
 - [ ] verify        (08-verify.md, verdict PASS) — QA-tester
 - [ ] archive       (moved to .spec-workflow/archive/)     — TPM
@@ -48,3 +48,6 @@
 - 2026-04-16 implement wave 8 done — T10
 - 2026-04-16 Developer — T11 done (smoke harness covering AC1–AC12 with sandbox-HOME preflight)
 - 2026-04-16 implement wave 9 done — T11
+- 2026-04-16 Developer — T12 done (script header + README section, parity with --help)
+- 2026-04-16 implement wave 10 done — T12
+- 2026-04-16 implement stage complete — all 12 tasks merged on `symlink-operation` branch
