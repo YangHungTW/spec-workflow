@@ -34,7 +34,7 @@ Orchestrator. Reads STATUS and advances one stage. Stops at any point that needs
 | tech       | `.claude/commands/YHTW/tech.md` |
 | plan       | `.claude/commands/YHTW/plan.md` |
 | tasks      | `.claude/commands/YHTW/tasks.md` |
-| implement  | `.claude/commands/YHTW/implement.md` (runs one task per call) |
+| implement  | `.claude/commands/YHTW/implement.md` (runs one wave per call, tasks in parallel via worktrees) |
 | gap-check  | `.claude/commands/YHTW/gap-check.md` |
 | verify     | `.claude/commands/YHTW/verify.md` |
 | archive    | `.claude/commands/YHTW/archive.md` |
@@ -48,7 +48,7 @@ Never auto-advance past any of these — they need human judgment:
 - PRD has unresolved blocker questions (§7)
 - Tech doc has blocker questions (§5)
 - Design stage — user must approve the mockup before advancing
-- Implement stage — always one task per call
+- Implement stage — one wave per call (wave = all tasks whose deps are satisfied, run in parallel)
 - Gap-check verdict = BLOCKED
 - Verify verdict = FAIL
 - Archive retrospective — each memory proposal needs user approval

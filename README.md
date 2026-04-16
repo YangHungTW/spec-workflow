@@ -12,7 +12,7 @@ Role-based spec-driven development workflow for Claude Code. A small virtual tea
 /YHTW:tech         → Architect picks tech + designs system architecture
 /YHTW:plan         → TPM produces implementation plan
 /YHTW:tasks        → TPM decomposes into ordered tasks
-/YHTW:implement    → Developer executes tasks (TDD: red → green → refactor)
+/YHTW:implement    → Developer runs each wave of tasks in parallel via git worktrees (TDD per task)
 /YHTW:gap-check    → QA-analyst: PRD/tech ↔ tasks ↔ diff
 /YHTW:verify       → QA-tester: runs acceptance criteria
 /YHTW:archive      → TPM closes out

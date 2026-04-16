@@ -26,22 +26,45 @@ Read `03-prd.md` and `04-tech.md` (architecture and tech decisions are already m
 Do NOT make new tech decisions here. If a gap surfaces (PRD or tech-doc missing something), stop and escalate to PM or Architect.
 
 ## When invoked for /YHTW:tasks
-Read `03-prd.md` and `05-plan.md`. Write `06-tasks.md` as an ordered checklist:
+Read `03-prd.md` and `05-plan.md`. Tasks run **in parallel** inside per-task git worktrees, so the dependency graph is the core planning artifact — get it right here or the whole parallelism falls apart.
+
+Write `06-tasks.md` with two sections:
+
+### Tasks
 
 ```
 - [ ] T1. <verb-led title>
-      Files: <paths>
+      Files: <paths>               # exact file globs this task writes to
       Requirement: R<n>[, R<m>]
-      Acceptance: <concrete check a developer can run>
-      Depends on: —
+      Acceptance: <runnable test command>
+      Depends on: —                # or T<n>, T<m>
+      Parallel-safe-with: [T2, T3] # others in same wave that won't collide
 ```
 
-Rules:
-- Order by dependency. Roots have `Depends on: —`.
+### Wave schedule
+
+```
+Wave 1 (parallel): T1, T2, T3
+Wave 2 (after wave 1): T4, T5
+Wave 3 (serial — T6 touches shared config): T6
+Wave 4 (after wave 3, parallel): T7, T8
+```
+
+For each wave, include a **Parallel-safety analysis**:
+- File overlap check: no two tasks in the same wave write to the same file.
+- Test isolation: can tests run concurrently? (DB state, fixtures, ports, /tmp paths)
+- Shared infrastructure: migrations, schema changes, config files → must be serialized.
+- If a wave has size 1 because of these constraints, say why.
+
+### Rules
+- Every task has explicit `Depends on:` (roots use `—`) and `Parallel-safe-with:`.
+- `Files:` must be precise — overlap between same-wave tasks is a planning bug.
 - Each task ≤ ~1 hour of focused work.
 - Every task maps to ≥1 PRD Requirement ID. No orphan tasks.
-- No vague "refactor" or "cleanup" tasks without a concrete trigger.
-- **Acceptance MUST be a runnable test command** (e.g. `pytest tests/test_foo.py::test_bar` passes). Developer follows TDD — if the acceptance isn't test-shaped, they can't work. For tasks with no natural test surface (pure config, docs), say so explicitly and justify.
+- No vague "refactor" / "cleanup" tasks without a concrete trigger.
+- **Acceptance MUST be a runnable test command**. Developer does TDD in an isolated worktree — non-runnable acceptance means they can't verify green. For genuinely non-testable tasks (config, docs), say so and justify; those tasks serialize at wave end.
+- **Maximize wave width**. If you can split a big task into 2–3 parallel-safe ones, do it.
+- Merge order within a wave doesn't matter (by construction); between waves it does.
 
 ## When invoked for /YHTW:archive
 1. Require `08-verify.md` verdict = PASS.

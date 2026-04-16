@@ -1,0 +1,95 @@
+#!/usr/bin/env bash
+# claude-symlink — manage YHTW .claude/ symlinks (install/uninstall/update)
+set -u -o pipefail
+
+# OS guard: Windows shells are not supported
+_os=$(uname -s 2>/dev/null || true)
+case "$_os" in
+  MINGW*|MSYS*|CYGWIN*)
+    echo "unsupported OS: $_os — claude-symlink requires macOS or Linux" >&2
+    exit 2
+    ;;
+esac
+
+DRY_RUN=0
+
+usage() {
+  cat <<'EOF'
+Usage: claude-symlink <subcommand> [options]
+
+Subcommands:
+  install     Create managed symlinks under ~/.claude/
+  uninstall   Remove managed symlinks from ~/.claude/
+  update      Reconcile managed symlinks (add missing, prune orphans)
+
+Options:
+  --dry-run   Show what would be done without making any changes
+  --help, -h  Show this help message and exit 0
+EOF
+}
+
+parse_flags() {
+  # Single pass: pull out --dry-run / --help / -h anywhere in argv.
+  # Everything else goes into POSITIONALS array.
+  # Reject any unrecognized flag (starts with -) with exit 2.
+  POSITIONALS=()
+  local arg
+  for arg in "$@"; do
+    case "$arg" in
+      --dry-run)
+        DRY_RUN=1
+        ;;
+      --help|-h)
+        usage
+        exit 0
+        ;;
+      -*)
+        echo "unknown flag: $arg" >&2
+        usage >&2
+        exit 2
+        ;;
+      *)
+        POSITIONALS+=("$arg")
+        ;;
+    esac
+  done
+}
+
+cmd_install() {
+  echo "stub: install"
+  echo "dry-run=$DRY_RUN"
+}
+
+cmd_uninstall() {
+  echo "stub: uninstall"
+  echo "dry-run=$DRY_RUN"
+}
+
+cmd_update() {
+  echo "stub: update"
+  echo "dry-run=$DRY_RUN"
+}
+
+main() {
+  parse_flags "$@"
+
+  if [ "${#POSITIONALS[@]}" -eq 0 ]; then
+    usage >&2
+    exit 2
+  fi
+
+  local subcmd="${POSITIONALS[0]}"
+
+  case "$subcmd" in
+    install)   cmd_install   ;;
+    uninstall) cmd_uninstall ;;
+    update)    cmd_update    ;;
+    *)
+      echo "unknown subcommand: $subcmd" >&2
+      usage >&2
+      exit 2
+      ;;
+  esac
+}
+
+main "$@"
