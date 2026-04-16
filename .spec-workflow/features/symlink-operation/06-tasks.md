@@ -155,7 +155,7 @@ it means `bin/claude-symlink` per D3.
   after a Wave 2 merge conflict._
 - **Depends on**: T3
 - **Parallel-safe-with**: — [CHANGED 2026-04-16]
-- [ ]
+- [x]
 
 ## T6 — `classify_target` (R10, D5)
 - **Milestone**: M4
@@ -416,6 +416,7 @@ Developer finds them slipping. Split and renumber only via
 - 2026-04-16 Developer — T2 done (flag parsing: --dry-run, --help/-h, unknown-flag rejection)
 - 2026-04-16 developer T3 done — added die, resolve_path, resolve_repo_root, __probe; 4 tests all green
 - 2026-04-16 Developer — T4 done (owned_by_us via trailing-slash repo-root prefix)
+- 2026-04-16 Developer — T5 done (plan_links + __probe plan dump, post-T4 base)
 
 ---
 
