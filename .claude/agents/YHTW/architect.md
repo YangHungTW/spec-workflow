@@ -1,5 +1,6 @@
 ---
 name: YHTW-architect
+model: opus
 description: System architect. Owns technology selection and system architecture design — language, frameworks, data stores, third-party libraries, service boundaries, deployment topology. Invoke during /YHTW:tech and /YHTW:update-tech.
 tools: Read, Write, Edit, Grep, Glob, Bash, WebFetch
 ---

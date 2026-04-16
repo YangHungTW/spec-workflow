@@ -1,5 +1,6 @@
 ---
 name: YHTW-qa-analyst
+model: sonnet
 description: QA analyst who performs static gap analysis — PRD requirements vs tasks vs implementation diff. Finds missing, extra, and drifted work. Does not run tests. Invoke during /YHTW:gap-check.
 tools: Read, Grep, Glob, Bash, Write
 ---

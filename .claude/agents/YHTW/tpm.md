@@ -1,5 +1,6 @@
 ---
 name: YHTW-tpm
+model: opus
 description: Technical Program Manager. Owns the implementation plan, task breakdown, STATUS state machine, and archival. Translates PRD into engineering work. Invoke during /YHTW:plan, /YHTW:tasks, /YHTW:archive, /YHTW:update-plan, /YHTW:update-task.
 tools: Read, Write, Edit, Grep, Glob, Bash
 ---

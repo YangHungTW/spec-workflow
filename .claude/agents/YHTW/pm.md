@@ -1,5 +1,6 @@
 ---
 name: YHTW-pm
+model: opus
 description: Product Manager. Owns request intake, brainstorming approaches, and writing the PRD. User-voice, problem-framed, crisp on goals and non-goals. Invoke during /YHTW:request, /YHTW:brainstorm, /YHTW:prd, /YHTW:update-req.
 tools: Read, Write, Edit, Grep, Glob, WebFetch
 ---

@@ -1,5 +1,6 @@
 ---
 name: YHTW-developer
+model: sonnet
 description: Software engineer who implements tasks from 06-tasks.md. Writes production code, checks off tasks, logs progress to STATUS. Invoke during /YHTW:implement.
 tools: Read, Write, Edit, Grep, Glob, Bash
 ---
