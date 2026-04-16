@@ -1,13 +1,13 @@
 ---
-description: TPM archives a completed feature. Usage: /YHTW:archive <slug>
+description: TPM archives a completed feature. Usage: /specflow:archive <slug>
 ---
 
 1. Require `08-verify.md` verdict = PASS.
-2. Invoke **YHTW-tpm** subagent for archive mode.
+2. Invoke **specflow-tpm** subagent for archive mode.
 3. **Retrospective** — TPM polls each role that participated (check STATUS for who ran which stage):
    - Ask each: "Anything from this feature worth saving to team memory?"
    - For each proposed lesson: user approves, picks scope (local/global) and type.
-   - Write approved entries via the same protocol as `/YHTW:remember`.
+   - Write approved entries via the same protocol as `/specflow:remember`.
    - Skip roles that say "nothing new".
 4. Check `[x] archive`, then `git mv .spec-workflow/features/<slug> .spec-workflow/archive/<slug>` (fall back to `mv` if not a git repo).
 5. Report final archive path and any memory entries added.

@@ -47,11 +47,11 @@ echo "$HELP_OUT" | grep -qE "exit.*(0|1|2)|0.*1.*2"
 assert "--help mentions exit codes" $?
 
 # --help must mention managed set
-echo "$HELP_OUT" | grep -q "agents/YHTW"
-assert "--help mentions agents/YHTW" $?
+echo "$HELP_OUT" | grep -q "agents/specflow"
+assert "--help mentions agents/specflow" $?
 
-echo "$HELP_OUT" | grep -q "commands/YHTW"
-assert "--help mentions commands/YHTW" $?
+echo "$HELP_OUT" | grep -q "commands/specflow"
+assert "--help mentions commands/specflow" $?
 
 echo "$HELP_OUT" | grep -q "team-memory"
 assert "--help mentions team-memory" $?
@@ -85,11 +85,11 @@ echo "$HEADER" | grep -qE "exit.*(0|1|2)|0.*1.*2"
 assert "header mentions exit codes 0/1/2" $?
 
 # Header must mention managed set
-echo "$HEADER" | grep -q "agents/YHTW"
-assert "header mentions agents/YHTW" $?
+echo "$HEADER" | grep -q "agents/specflow"
+assert "header mentions agents/specflow" $?
 
-echo "$HEADER" | grep -q "commands/YHTW"
-assert "header mentions commands/YHTW" $?
+echo "$HEADER" | grep -q "commands/specflow"
+assert "header mentions commands/specflow" $?
 
 echo "$HEADER" | grep -q "team-memory"
 assert "header mentions team-memory" $?

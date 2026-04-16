@@ -118,20 +118,20 @@ echo "--- Scenario A: Install then uninstall — no owned symlinks remain ---"
   assert_zero "A: uninstall exit code is 0" "$exit_code"
 
   # No tool-owned symlinks should remain under managed roots
-  # Check agents/YHTW
-  agents_link="$SANDBOX_HOME/.claude/agents/YHTW"
+  # Check agents/specflow
+  agents_link="$SANDBOX_HOME/.claude/agents/specflow"
   if [ ! -L "$agents_link" ]; then
-    pass "A: agents/YHTW symlink removed"
+    pass "A: agents/specflow symlink removed"
   else
-    fail "A: agents/YHTW symlink still present after uninstall"
+    fail "A: agents/specflow symlink still present after uninstall"
   fi
 
-  # Check commands/YHTW
-  commands_link="$SANDBOX_HOME/.claude/commands/YHTW"
+  # Check commands/specflow
+  commands_link="$SANDBOX_HOME/.claude/commands/specflow"
   if [ ! -L "$commands_link" ]; then
-    pass "A: commands/YHTW symlink removed"
+    pass "A: commands/specflow symlink removed"
   else
-    fail "A: commands/YHTW symlink still present after uninstall"
+    fail "A: commands/specflow symlink still present after uninstall"
   fi
 
   # No owned symlinks remain under team-memory
@@ -191,10 +191,10 @@ echo "--- Scenario C: Foreign symlink at managed path → skipped:not-ours ---"
   SANDBOX_HOME=$(make_sandbox_home "scenario_c")
   export HOME="$SANDBOX_HOME"
 
-  # Ensure the agents dir exists but place a foreign symlink at agents/YHTW
+  # Ensure the agents dir exists but place a foreign symlink at agents/specflow
   agents_dir="$SANDBOX_HOME/.claude/agents"
   mkdir -p "$agents_dir"
-  decoy_link="$agents_dir/YHTW"
+  decoy_link="$agents_dir/specflow"
   ln -s /tmp/decoy "$decoy_link"
 
   # Uninstall

@@ -28,7 +28,7 @@ check passes and the bug ships.
 
 ## How to apply
 
-During gap-check (`/YHTW:gap-check`) on any CLI that looks like
+During gap-check (`/specflow:gap-check`) on any CLI that looks like
 this:
 
 ```bash

@@ -133,18 +133,18 @@ ac1_clean_install() {
     ac_fail 1 "install exited $exit_code (expected 0). Output: $output"
   fi
 
-  # agents/YHTW must be a symlink
-  if [ -L "$H/.claude/agents/YHTW" ]; then
-    ac_pass 1 "agents/YHTW is a symlink"
+  # agents/specflow must be a symlink
+  if [ -L "$H/.claude/agents/specflow" ]; then
+    ac_pass 1 "agents/specflow is a symlink"
   else
-    ac_fail 1 "agents/YHTW is not a symlink"
+    ac_fail 1 "agents/specflow is not a symlink"
   fi
 
-  # commands/YHTW must be a symlink
-  if [ -L "$H/.claude/commands/YHTW" ]; then
-    ac_pass 1 "commands/YHTW is a symlink"
+  # commands/specflow must be a symlink
+  if [ -L "$H/.claude/commands/specflow" ]; then
+    ac_pass 1 "commands/specflow is a symlink"
   else
-    ac_fail 1 "commands/YHTW is not a symlink"
+    ac_fail 1 "commands/specflow is not a symlink"
   fi
 
   # every team-memory file in the repo must be linked
@@ -203,7 +203,7 @@ ac2_idempotent_install() {
 
 # ---------------------------------------------------------------------------
 # AC3 — install with real-file conflict
-# Pre-place a real file at agents/YHTW; install exits non-zero, leaves file
+# Pre-place a real file at agents/specflow; install exits non-zero, leaves file
 # untouched, reports skipped:real-file, creates other managed links.
 # ---------------------------------------------------------------------------
 ac3_real_file_conflict() {
@@ -213,7 +213,7 @@ ac3_real_file_conflict() {
   local H
   H=$(make_home "ac3")
   mkdir -p "$H/.claude/agents"
-  echo "user content — do not overwrite" > "$H/.claude/agents/YHTW"
+  echo "user content — do not overwrite" > "$H/.claude/agents/specflow"
 
   output=$(HOME="$H" "$CS" install 2>&1)
   exit_code=$?
@@ -225,7 +225,7 @@ ac3_real_file_conflict() {
   fi
 
   # Real file must be untouched
-  if [ -f "$H/.claude/agents/YHTW" ] && [ ! -L "$H/.claude/agents/YHTW" ]; then
+  if [ -f "$H/.claude/agents/specflow" ] && [ ! -L "$H/.claude/agents/specflow" ]; then
     ac_pass 3 "conflicting real file untouched"
   else
     ac_fail 3 "conflicting real file was modified or removed"
@@ -238,11 +238,11 @@ ac3_real_file_conflict() {
     ac_fail 3 "skipped:real-file not found in output"
   fi
 
-  # Other links still created (commands/YHTW)
-  if [ -L "$H/.claude/commands/YHTW" ]; then
-    ac_pass 3 "commands/YHTW still created despite conflict"
+  # Other links still created (commands/specflow)
+  if [ -L "$H/.claude/commands/specflow" ]; then
+    ac_pass 3 "commands/specflow still created despite conflict"
   else
-    ac_fail 3 "commands/YHTW not created after conflict scenario"
+    ac_fail 3 "commands/specflow not created after conflict scenario"
   fi
 
   finish_scenario 3
@@ -517,9 +517,9 @@ ac8_update_conflict() {
   local H
   H=$(make_home "ac8")
 
-  # Pre-place a real file at agents/YHTW
+  # Pre-place a real file at agents/specflow
   mkdir -p "$H/.claude/agents"
-  echo "user content — do not overwrite" > "$H/.claude/agents/YHTW"
+  echo "user content — do not overwrite" > "$H/.claude/agents/specflow"
 
   output=$(HOME="$H" "$CS" update 2>&1)
   exit_code=$?
@@ -537,17 +537,17 @@ ac8_update_conflict() {
   fi
 
   # Real file untouched
-  if [ -f "$H/.claude/agents/YHTW" ] && [ ! -L "$H/.claude/agents/YHTW" ]; then
+  if [ -f "$H/.claude/agents/specflow" ] && [ ! -L "$H/.claude/agents/specflow" ]; then
     ac_pass 8 "conflicting real file untouched"
   else
     ac_fail 8 "conflicting real file was modified or removed"
   fi
 
   # Other managed links still created
-  if [ -L "$H/.claude/commands/YHTW" ]; then
-    ac_pass 8 "commands/YHTW created despite conflict at agents/YHTW"
+  if [ -L "$H/.claude/commands/specflow" ]; then
+    ac_pass 8 "commands/specflow created despite conflict at agents/specflow"
   else
-    ac_fail 8 "commands/YHTW not created — update must continue past conflicts"
+    ac_fail 8 "commands/specflow not created — update must continue past conflicts"
   fi
 
   finish_scenario 8
@@ -713,7 +713,7 @@ ac11_report_exit_consistency() {
   # Conflict run → exit 1 and summary says (exit 1)
   H=$(make_home "ac11_conflict")
   mkdir -p "$H/.claude/agents"
-  echo "conflict" > "$H/.claude/agents/YHTW"
+  echo "conflict" > "$H/.claude/agents/specflow"
   output=$(HOME="$H" "$CS" install 2>&1)
   actual_exit=$?
   last_line=$(echo "$output" | tail -1)
@@ -729,7 +729,7 @@ ac11_report_exit_consistency() {
   # Dry-run with would-skip does NOT bump exit code → exit 0
   H=$(make_home "ac11_dryrun")
   mkdir -p "$H/.claude/agents"
-  echo "conflict" > "$H/.claude/agents/YHTW"
+  echo "conflict" > "$H/.claude/agents/specflow"
   output=$(HOME="$H" "$CS" install --dry-run 2>&1)
   actual_exit=$?
   last_line=$(echo "$output" | tail -1)

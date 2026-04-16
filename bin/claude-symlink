@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# claude-symlink — manage YHTW .claude/ symlinks across projects
+# claude-symlink — manage specflow .claude/ symlinks across projects
 # =============================================================================
 #
 # USAGE
@@ -21,8 +21,8 @@
 #
 # MANAGED SET
 #   The tool manages exactly these paths under ~/.claude/:
-#     agents/YHTW          — directory symlink → <repo>/.claude/agents/YHTW
-#     commands/YHTW        — directory symlink → <repo>/.claude/commands/YHTW
+#     agents/specflow          — directory symlink → <repo>/.claude/agents/specflow
+#     commands/specflow        — directory symlink → <repo>/.claude/commands/specflow
 #     team-memory/**       — one file symlink per regular file under
 #                            <repo>/.claude/team-memory/ (walked at run time)
 #
@@ -213,7 +213,7 @@ owned_by_us() {
 
 # ---------------------------------------------------------------------------
 # plan_links — populate global indexed arrays PLAN_SRC and PLAN_TGT (D1)
-# Two fixed directory-level pairs (agents/YHTW, commands/YHTW) come first,
+# Two fixed directory-level pairs (agents/specflow, commands/specflow) come first,
 # then one entry per file under $REPO/.claude/team-memory/ (walked via find).
 # Does NOT print anything; use __probe plan to dump pairs for debugging.
 # HOME must come from the environment (R2) — never hardcoded.
@@ -222,13 +222,13 @@ plan_links() {
   PLAN_SRC=()
   PLAN_TGT=()
 
-  # Fixed pair 1: agents/YHTW
-  PLAN_SRC+=("$REPO/.claude/agents/YHTW")
-  PLAN_TGT+=("$HOME/.claude/agents/YHTW")
+  # Fixed pair 1: agents/specflow
+  PLAN_SRC+=("$REPO/.claude/agents/specflow")
+  PLAN_TGT+=("$HOME/.claude/agents/specflow")
 
-  # Fixed pair 2: commands/YHTW
-  PLAN_SRC+=("$REPO/.claude/commands/YHTW")
-  PLAN_TGT+=("$HOME/.claude/commands/YHTW")
+  # Fixed pair 2: commands/specflow
+  PLAN_SRC+=("$REPO/.claude/commands/specflow")
+  PLAN_TGT+=("$HOME/.claude/commands/specflow")
 
   # File-level pairs: walk team-memory with -print0 for filename safety
   local prefix="$REPO/.claude/team-memory/"
@@ -424,8 +424,8 @@ Subcommands:
               prune owned orphans.
 
 Managed set:
-  agents/YHTW          → <repo>/.claude/agents/YHTW   (directory symlink)
-  commands/YHTW        → <repo>/.claude/commands/YHTW  (directory symlink)
+  agents/specflow          → <repo>/.claude/agents/specflow   (directory symlink)
+  commands/specflow        → <repo>/.claude/commands/specflow  (directory symlink)
   team-memory/**       → one file symlink per file under <repo>/.claude/team-memory/
 
 Options:
@@ -650,11 +650,11 @@ cmd_uninstall() {
   local -a candidate_parents=()
 
   # ------------------------------------------------------------------
-  # Step 1: managed dir-level links (agents/YHTW, commands/YHTW)
+  # Step 1: managed dir-level links (agents/specflow, commands/specflow)
   # ------------------------------------------------------------------
   local dir_links=()
-  dir_links+=("$HOME/.claude/agents/YHTW")
-  dir_links+=("$HOME/.claude/commands/YHTW")
+  dir_links+=("$HOME/.claude/agents/specflow")
+  dir_links+=("$HOME/.claude/commands/specflow")
 
   local dl
   for dl in "${dir_links[@]}"; do
@@ -797,10 +797,10 @@ cmd_update() {
 
 main() {
   # Handle __probe before parse_flags to keep it hidden from normal dispatch.
-  # __probe is gated behind YHTW_PROBE=1; without it, fall through to unknown-subcommand.
+  # __probe is gated behind SPECFLOW_PROBE=1; without it, fall through to unknown-subcommand.
   # __probe              — prints REPO=<repo> for smoke-verification
   # __probe resolve <p>  — calls resolve_path and exits with its exit code
-  if [ "${1:-}" = "__probe" ] && [ "${YHTW_PROBE:-}" = "1" ]; then
+  if [ "${1:-}" = "__probe" ] && [ "${SPECFLOW_PROBE:-}" = "1" ]; then
     resolve_repo_root
     if [ "${2:-}" = "resolve" ] && [ -n "${3:-}" ]; then
       resolve_path "$3"

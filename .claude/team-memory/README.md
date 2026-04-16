@@ -1,6 +1,6 @@
 # Team memory protocol
 
-Per-role memory for the YHTW virtual team. Separate from per-feature artifacts under `.spec-workflow/features/` — those are work products; this is accumulated craft.
+Per-role memory for the specflow virtual team. Separate from per-feature artifacts under `.spec-workflow/features/` — those are work products; this is accumulated craft.
 
 ## Two-tier layout
 
@@ -68,13 +68,13 @@ Do NOT write:
 **Scope decision** (local vs global):
 - Default to **local**.
 - Propose global only if the lesson is repo-agnostic (e.g., "TDD before green").
-- Use `/YHTW:promote <role>/<file>` to move local → global after you've seen it apply in a second repo.
+- Use `/specflow:promote <role>/<file>` to move local → global after you've seen it apply in a second repo.
 
 ## Manual entry
 
-- `/YHTW:remember <role> "<lesson>"` — user-driven memory write.
-- `/YHTW:promote <role>/<file>` — move local memory to global.
+- `/specflow:remember <role> "<lesson>"` — user-driven memory write.
+- `/specflow:promote <role>/<file>` — move local memory to global.
 
 ## Retrospective
 
-`/YHTW:archive` runs a retro: the TPM polls each role that participated in this feature, asking "any memory worth saving from this one?" and writes approved entries.
+`/specflow:archive` runs a retro: the TPM polls each role that participated in this feature, asking "any memory worth saving from this one?" and writes approved entries.

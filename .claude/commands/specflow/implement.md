@@ -1,5 +1,5 @@
 ---
-description: Run all remaining waves in parallel until done or blocked. Usage: /YHTW:implement <slug> [--one-wave] [--task T<n>] [--serial]
+description: Run all remaining waves in parallel until done or blocked. Usage: /specflow:implement <slug> [--one-wave] [--task T<n>] [--serial]
 ---
 
 Wave-based parallel execution. Default behaviour: run **every remaining wave** end-to-end, stopping only on task failure, merge conflict, or user interrupt. TPM's dependency graph is the plan — no reason to pause between healthy waves.
@@ -24,13 +24,13 @@ Wave-based parallel execution. Default behaviour: run **every remaining wave** e
 5. **Spawn parallel developers**:
    - For each task T<n> in the wave:
      - `git worktree add .worktrees/<slug>-T<n> -b <slug>-T<n> <slug>` (note branch name: `<slug>-T<n>`, flat — **not** `<slug>/T<n>`, which collides with the `<slug>` leaf ref)
-     - Invoke **YHTW-developer** subagent with parameters `WORKTREE`, `TASK_ID`, `SLUG`.
+     - Invoke **specflow-developer** subagent with parameters `WORKTREE`, `TASK_ID`, `SLUG`.
      - All developer invocations in **one message with multiple Agent tool calls** → concurrent execution.
 6. **Wave collection** (after all developers return):
    - `git checkout <slug>`
    - For each completed task (any order):
      - `git merge --no-ff <slug>-T<n> -m "Merge T<n>: <title>"`
-     - On conflict: STOP the whole loop. Surface conflicting files. TPM's parallel-safety analysis was wrong → recommend `/YHTW:update-task`.
+     - On conflict: STOP the whole loop. Surface conflicting files. TPM's parallel-safety analysis was wrong → recommend `/specflow:update-task`.
      - `git worktree remove .worktrees/<slug>-T<n>`
      - `git branch -d <slug>-T<n>`
 7. **Status update** (orchestrator):
@@ -41,11 +41,11 @@ Wave-based parallel execution. Default behaviour: run **every remaining wave** e
    - If `--one-wave` → stop. Report current state + preview next wave.
    - If any task failed or merge conflicted → stop. Report failure + recovery command.
    - Else if more waves remain → loop to step 4 for the next wave.
-   - Else all done → check `[x] implement` in STATUS, commit, tell user next is `/YHTW:next <slug>`.
+   - Else all done → check `[x] implement` in STATUS, commit, tell user next is `/specflow:next <slug>`.
 
 ## Failures
 
-- **One developer fails** → stop the wave loop immediately (other completed tasks in this wave still merged). Report which task failed + how to retry: `/YHTW:implement <slug> --task T<n>`.
+- **One developer fails** → stop the wave loop immediately (other completed tasks in this wave still merged). Report which task failed + how to retry: `/specflow:implement <slug> --task T<n>`.
 - **Merge conflict** → stop. Conflicts during a wave = TPM's parallel-safety analysis was wrong. Don't auto-resolve.
 - **Interrupted mid-wave** → clean up any hanging worktrees before exiting.
 

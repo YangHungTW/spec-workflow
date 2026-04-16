@@ -7,8 +7,8 @@
 #   - install/uninstall/update: clean run → summary ends (exit 0), exit 0
 #   - install/uninstall/update: conflict run → summary ends (exit 1), exit 1
 #   - verb-set grep audit: every `report` call uses only the closed verb set
-#   - __probe gate: without YHTW_PROBE=1 → exits 2 (unknown subcommand)
-#                   with YHTW_PROBE=1 → works
+#   - __probe gate: without SPECFLOW_PROBE=1 → exits 2 (unknown subcommand)
+#                   with SPECFLOW_PROBE=1 → works
 
 set -u -o pipefail
 
@@ -119,7 +119,7 @@ echo "--- install: conflict run ---"
 {
   SBX=$(make_sandbox_home "install_conflict")
   mkdir -p "$SBX/.claude/agents"
-  echo "conflict" > "$SBX/.claude/agents/YHTW"
+  echo "conflict" > "$SBX/.claude/agents/specflow"
 
   output=$(HOME="$SBX" "$SCRIPT" install 2>/dev/null)
   exit_code=$?
@@ -178,9 +178,9 @@ echo "--- uninstall: conflict run (skipped:not-ours) ---"
 {
   SBX=$(make_sandbox_home "uninstall_conflict")
 
-  # Place a foreign symlink at agents/YHTW
+  # Place a foreign symlink at agents/specflow
   mkdir -p "$SBX/.claude/agents"
-  ln -s /tmp/decoy "$SBX/.claude/agents/YHTW"
+  ln -s /tmp/decoy "$SBX/.claude/agents/specflow"
 
   output=$(HOME="$SBX" "$SCRIPT" uninstall 2>/dev/null)
   exit_code=$?
@@ -239,7 +239,7 @@ echo "--- update: conflict run ---"
 {
   SBX=$(make_sandbox_home "update_conflict")
   mkdir -p "$SBX/.claude/agents"
-  echo "conflict" > "$SBX/.claude/agents/YHTW"
+  echo "conflict" > "$SBX/.claude/agents/specflow"
 
   output=$(HOME="$SBX" "$SCRIPT" update 2>/dev/null)
   exit_code=$?
@@ -317,33 +317,33 @@ echo "--- verb-set audit ---"
 echo
 
 # ---------------------------------------------------------------------------
-# __probe GATE: without YHTW_PROBE=1 → exits 2 (unknown subcommand)
+# __probe GATE: without SPECFLOW_PROBE=1 → exits 2 (unknown subcommand)
 # ---------------------------------------------------------------------------
 echo "--- __probe gate: ungated __probe exits 2 ---"
 {
-  # Unset YHTW_PROBE to ensure it's not set
-  unset YHTW_PROBE 2>/dev/null || true
+  # Unset SPECFLOW_PROBE to ensure it's not set
+  unset SPECFLOW_PROBE 2>/dev/null || true
 
   "$SCRIPT" __probe > /dev/null 2>&1
   exit_code=$?
 
-  assert_eq "__probe without YHTW_PROBE=1 exits 2" "2" "$exit_code"
+  assert_eq "__probe without SPECFLOW_PROBE=1 exits 2" "2" "$exit_code"
 }
 echo
 
 # ---------------------------------------------------------------------------
-# __probe GATE: with YHTW_PROBE=1 → works (prints REPO=...)
+# __probe GATE: with SPECFLOW_PROBE=1 → works (prints REPO=...)
 # ---------------------------------------------------------------------------
-echo "--- __probe gate: with YHTW_PROBE=1 works ---"
+echo "--- __probe gate: with SPECFLOW_PROBE=1 works ---"
 {
-  output=$(YHTW_PROBE=1 "$SCRIPT" __probe 2>/dev/null)
+  output=$(SPECFLOW_PROBE=1 "$SCRIPT" __probe 2>/dev/null)
   exit_code=$?
 
-  assert_zero "YHTW_PROBE=1 __probe exits 0" "$exit_code"
+  assert_zero "SPECFLOW_PROBE=1 __probe exits 0" "$exit_code"
 
   case "$output" in
-    "REPO=$REPO") pass "YHTW_PROBE=1 __probe prints REPO=<worktree>" ;;
-    *)            fail "YHTW_PROBE=1 __probe prints REPO=<worktree> — got: $output" ;;
+    "REPO=$REPO") pass "SPECFLOW_PROBE=1 __probe prints REPO=<worktree>" ;;
+    *)            fail "SPECFLOW_PROBE=1 __probe prints REPO=<worktree> — got: $output" ;;
   esac
 }
 echo
@@ -355,7 +355,7 @@ echo "--- dry-run: conflict does not bump exit code ---"
 {
   SBX=$(make_sandbox_home "dryrun_conflict")
   mkdir -p "$SBX/.claude/agents"
-  echo "conflict" > "$SBX/.claude/agents/YHTW"
+  echo "conflict" > "$SBX/.claude/agents/specflow"
 
   output=$(HOME="$SBX" "$SCRIPT" install --dry-run 2>/dev/null)
   exit_code=$?

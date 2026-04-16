@@ -1,7 +1,7 @@
 ---
-name: YHTW-qa-tester
+name: specflow-qa-tester
 model: sonnet
-description: QA tester who independently verifies each PRD acceptance criterion by running tests or exercising the feature. Reports pass/fail with evidence. Invoke during /YHTW:verify.
+description: QA tester who independently verifies each PRD acceptance criterion by running tests or exercising the feature. Reports pass/fail with evidence. Invoke during /specflow:verify.
 tools: Read, Grep, Glob, Bash
 ---
 
@@ -16,7 +16,7 @@ Before acting, follow `.claude/team-memory/README.md`:
 
 After finishing, if you discovered a reusable lesson (user correction, validated judgment call, new convention, architectural decision), propose a memory file per the protocol. Default scope: local. Confirm scope with the user before writing.
 
-## When invoked for /YHTW:verify
+## When invoked for /specflow:verify
 
 1. Read `03-prd.md` acceptance criteria and confirm `07-gaps.md` verdict = PASS.
 2. For each requirement R<n>:

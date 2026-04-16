@@ -272,8 +272,8 @@ echo "--- Scenario D: real-file conflict → skip conflicted path, reconcile oth
   SANDBOX_HOME=$(make_sandbox_home "scenario_d")
   export HOME="$SANDBOX_HOME"
 
-  # Pre-place a real file at the agents/YHTW managed target
-  conflict_path="$SANDBOX_HOME/.claude/agents/YHTW"
+  # Pre-place a real file at the agents/specflow managed target
+  conflict_path="$SANDBOX_HOME/.claude/agents/specflow"
   mkdir -p "$(dirname "$conflict_path")"
   echo "user content — do not overwrite" > "$conflict_path"
 
@@ -298,12 +298,12 @@ echo "--- Scenario D: real-file conflict → skip conflicted path, reconcile oth
     fail "D: real file was modified or removed"
   fi
 
-  # Other links must still be created (commands/YHTW should exist as a symlink)
-  commands_link="$SANDBOX_HOME/.claude/commands/YHTW"
+  # Other links must still be created (commands/specflow should exist as a symlink)
+  commands_link="$SANDBOX_HOME/.claude/commands/specflow"
   if [ -L "$commands_link" ]; then
-    pass "D: other links (commands/YHTW) reconciled despite conflict"
+    pass "D: other links (commands/specflow) reconciled despite conflict"
   else
-    fail "D: commands/YHTW was not created — update should continue past conflicts"
+    fail "D: commands/specflow was not created — update should continue past conflicts"
   fi
 }
 
