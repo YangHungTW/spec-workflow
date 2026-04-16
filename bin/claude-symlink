@@ -15,6 +15,47 @@ DRY_RUN=0
 REPO=""
 
 # ---------------------------------------------------------------------------
+# Globals for cmd_install / cmd_update / cmd_uninstall shared infrastructure
+# ---------------------------------------------------------------------------
+# PLAN_SRC / PLAN_TGT: populated by plan_links
+PLAN_SRC=()
+PLAN_TGT=()
+
+# CREATED_DIRS: indexed array tracking parent dirs we created (not pre-existing).
+# Populated by ensure_parent. Used by T8's try_remove_empty_parents.
+CREATED_DIRS=()
+
+# MAX_CODE: tracks the highest exit code seen so far.
+# 0 = fully converged; 1 = conflict or mutation failure; 2 = die()
+MAX_CODE=0
+
+# REPORT_LINES: ordered buffer of per-path report lines (flushed by emit_summary).
+REPORT_LINES=()
+
+# Per-verb counters for the final summary line.
+# Verb tags (closed set, R13 / 04-tech.md §2):
+#   created             — new symlink created
+#   created:replaced-broken — replaced a broken-ours or wrong-link-ours symlink
+#   already             — symlink already at desired state
+#   skipped:real-file   — target is a real file (conflict, not touched)
+#   skipped:real-dir    — target is a real dir (conflict, not touched)
+#   skipped:foreign-symlink    — live symlink not owned by us
+#   skipped:foreign-broken-symlink — broken symlink not owned by us
+#   would-create        — dry-run: would create
+#   would-replace       — dry-run: would replace broken/wrong-ours link
+#   would-skip:real-file       — dry-run: would skip real-file conflict
+#   would-skip:real-dir        — dry-run: would skip real-dir conflict
+#   would-skip:foreign-symlink — dry-run: would skip foreign symlink
+#   would-skip:foreign-broken-symlink — dry-run: would skip foreign broken
+COUNT_created=0
+COUNT_created_replaced_broken=0
+COUNT_already=0
+COUNT_skipped=0
+COUNT_would_create=0
+COUNT_would_replace=0
+COUNT_would_skip=0
+
+# ---------------------------------------------------------------------------
 # die <code> <msg> — print msg to stderr and exit with code
 # ---------------------------------------------------------------------------
 die() {
@@ -225,6 +266,99 @@ classify_target() {
   fi
 }
 
+# ---------------------------------------------------------------------------
+# report <verb> <tgt> [<src>]
+# Appends a formatted line to REPORT_LINES and bumps the matching counter.
+# Output format: [verb]   <tgt>  ←  <src>   (src omitted on skipped/removed)
+# ---------------------------------------------------------------------------
+report() {
+  local verb="$1"
+  local tgt="$2"
+  local src="${3:-}"
+
+  local line
+  if [ -n "$src" ]; then
+    line="[$verb]  $tgt  ←  $src"
+  else
+    line="[$verb]  $tgt"
+  fi
+
+  REPORT_LINES+=("$line")
+  echo "$line"
+
+  # Bump per-verb counter
+  case "$verb" in
+    created)                      COUNT_created=$((COUNT_created + 1)) ;;
+    created:replaced-broken)      COUNT_created_replaced_broken=$((COUNT_created_replaced_broken + 1)) ;;
+    already)                      COUNT_already=$((COUNT_already + 1)) ;;
+    skipped:*)                    COUNT_skipped=$((COUNT_skipped + 1)) ;;
+    would-create)                 COUNT_would_create=$((COUNT_would_create + 1)) ;;
+    would-replace)                COUNT_would_replace=$((COUNT_would_replace + 1)) ;;
+    would-skip:*)                 COUNT_would_skip=$((COUNT_would_skip + 1)) ;;
+  esac
+}
+
+# ---------------------------------------------------------------------------
+# emit_summary
+# Prints the final summary line with per-verb counts and the exit code.
+# Called at the end of every subcommand.
+# ---------------------------------------------------------------------------
+emit_summary() {
+  echo "summary: created=$COUNT_created already=$COUNT_already skipped=$COUNT_skipped  (exit $MAX_CODE)"
+}
+
+# ---------------------------------------------------------------------------
+# ensure_parent <tgt>
+# Computes dirname of <tgt>; if the directory does not yet exist, creates it
+# with mkdir -p and appends the path to CREATED_DIRS.
+# Under DRY_RUN=1, becomes a no-op (the directory is not created).
+# Idempotent: if the directory already exists, does nothing.
+# ---------------------------------------------------------------------------
+ensure_parent() {
+  local tgt="$1"
+  local parent
+  parent=$(dirname "$tgt")
+
+  # If the parent already exists, nothing to do
+  [ -d "$parent" ] && return 0
+
+  # Under dry-run, skip mutation
+  if [ "$DRY_RUN" -eq 1 ]; then
+    return 0
+  fi
+
+  if ! mkdir -p "$parent"; then
+    echo "error: could not create parent directory: $parent" >&2
+    return 1
+  fi
+
+  # Record the deepest newly-created directory for later uninstall cleanup.
+  # We record all ancestors up to but not including an already-existing one.
+  CREATED_DIRS+=("$parent")
+  return 0
+}
+
+# ---------------------------------------------------------------------------
+# create_link <src> <tgt>
+# Creates a symlink at <tgt> pointing to absolute <src>.
+# Under DRY_RUN=1, becomes a no-op.
+# Returns non-zero if ln -s fails.
+# ---------------------------------------------------------------------------
+create_link() {
+  local src="$1"
+  local tgt="$2"
+
+  if [ "$DRY_RUN" -eq 1 ]; then
+    return 0
+  fi
+
+  if ! ln -s "$src" "$tgt"; then
+    echo "error: could not create symlink: $tgt → $src" >&2
+    return 1
+  fi
+  return 0
+}
+
 usage() {
   cat <<'EOF'
 Usage: claude-symlink <subcommand> [options]
@@ -268,8 +402,101 @@ parse_flags() {
 }
 
 cmd_install() {
-  echo "stub: install"
-  echo "dry-run=$DRY_RUN"
+  plan_links
+
+  local i=0
+  while [ "$i" -lt "${#PLAN_SRC[@]}" ]; do
+    local src="${PLAN_SRC[$i]}"
+    local tgt="${PLAN_TGT[$i]}"
+    i=$((i + 1))
+
+    # ensure_parent: create parent dir (no-op under dry-run)
+    if ! ensure_parent "$tgt"; then
+      MAX_CODE=1
+      continue
+    fi
+
+    local class
+    class=$(classify_target "$tgt" "$src")
+
+    case "$class" in
+      missing)
+        if [ "$DRY_RUN" -eq 1 ]; then
+          report "would-create" "$tgt" "$src"
+        else
+          if ! create_link "$src" "$tgt"; then
+            MAX_CODE=1
+            continue
+          fi
+          report "created" "$tgt" "$src"
+        fi
+        ;;
+
+      ok)
+        report "already" "$tgt"
+        ;;
+
+      broken-ours|wrong-link-ours)
+        if [ "$DRY_RUN" -eq 1 ]; then
+          report "would-replace" "$tgt" "$src"
+        else
+          if ! rm "$tgt"; then
+            echo "error: could not remove existing link: $tgt" >&2
+            MAX_CODE=1
+            continue
+          fi
+          if ! create_link "$src" "$tgt"; then
+            MAX_CODE=1
+            continue
+          fi
+          report "created:replaced-broken" "$tgt" "$src"
+        fi
+        ;;
+
+      real-file)
+        if [ "$DRY_RUN" -eq 1 ]; then
+          report "would-skip:real-file" "$tgt"
+        else
+          report "skipped:real-file" "$tgt"
+          MAX_CODE=1
+        fi
+        ;;
+
+      real-dir)
+        if [ "$DRY_RUN" -eq 1 ]; then
+          report "would-skip:real-dir" "$tgt"
+        else
+          report "skipped:real-dir" "$tgt"
+          MAX_CODE=1
+        fi
+        ;;
+
+      wrong-link-foreign)
+        if [ "$DRY_RUN" -eq 1 ]; then
+          report "would-skip:foreign-symlink" "$tgt"
+        else
+          report "skipped:foreign-symlink" "$tgt"
+        fi
+        ;;
+
+      broken-foreign)
+        if [ "$DRY_RUN" -eq 1 ]; then
+          report "would-skip:foreign-broken-symlink" "$tgt"
+        else
+          report "skipped:foreign-broken-symlink" "$tgt"
+        fi
+        ;;
+
+      *)
+        echo "error: unexpected classification '$class' for $tgt" >&2
+        MAX_CODE=1
+        continue
+        ;;
+    esac
+  done
+
+  emit_summary
+  return "$MAX_CODE"
 }
 
 cmd_uninstall() {
