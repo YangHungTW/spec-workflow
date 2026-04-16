@@ -12,6 +12,76 @@ case "$_os" in
 esac
 
 DRY_RUN=0
+REPO=""
+
+# ---------------------------------------------------------------------------
+# die <code> <msg> — print msg to stderr and exit with code
+# ---------------------------------------------------------------------------
+die() {
+  local code="$1"
+  local msg="$2"
+  echo "$msg" >&2
+  exit "$code"
+}
+
+# ---------------------------------------------------------------------------
+# resolve_path <p> — pure-bash portable path resolution (no readlink -f)
+# Iteratively resolves symlinks by cd'ing into dirname and reading basename.
+# Caps at 40 iterations to detect cycles; calls die 2 on cycle.
+# ---------------------------------------------------------------------------
+resolve_path() {
+  local p="$1"
+  local iterations=0
+  local max_iterations=40
+
+  # Make path absolute if relative
+  case "$p" in
+    /*) ;;
+    *) p="$(pwd -P)/$p" ;;
+  esac
+
+  while [ "$iterations" -lt "$max_iterations" ]; do
+    # Normalize: cd into the dirname, reconstruct absolute path
+    local dir base
+    dir=$(dirname "$p")
+    base=$(basename "$p")
+
+    # cd into the directory (use subshell to avoid polluting caller)
+    local abs_dir
+    abs_dir=$(cd "$dir" 2>/dev/null && pwd -P) || die 2 "resolve_path: cannot cd into '$dir'"
+    p="$abs_dir/$base"
+
+    # If the basename is a symlink, read it and continue
+    if [ -L "$p" ]; then
+      local link_target
+      link_target=$(readlink "$p")
+      # If the link target is relative, resolve relative to the symlink's dir
+      case "$link_target" in
+        /*) p="$link_target" ;;
+        *)  p="$abs_dir/$link_target" ;;
+      esac
+      iterations=$((iterations + 1))
+    else
+      # Not a symlink — we have the real path
+      echo "$p"
+      return 0
+    fi
+  done
+
+  die 2 "symlink cycle at '$1'"
+}
+
+# ---------------------------------------------------------------------------
+# resolve_repo_root — resolves the repo root from the script's own path.
+# Caches the result in global REPO. Idempotent.
+# The script lives at <repo>/bin/<name>, so dirname twice strips /bin/<name>.
+# ---------------------------------------------------------------------------
+resolve_repo_root() {
+  [ -n "$REPO" ] && return 0
+  local script_path
+  script_path=$(resolve_path "${BASH_SOURCE[0]}")
+  REPO=$(dirname "$(dirname "$script_path")")
+}
 
 usage() {
   cat <<'EOF'
@@ -71,7 +141,21 @@ cmd_update() {
 }
 
 main() {
+  # Handle __probe before parse_flags to keep it hidden from normal dispatch.
+  # __probe              — prints REPO=<repo> for smoke-verification
+  # __probe resolve <p>  — calls resolve_path and exits with its exit code
+  if [ "${1:-}" = "__probe" ]; then
+    resolve_repo_root
+    if [ "${2:-}" = "resolve" ] && [ -n "${3:-}" ]; then
+      resolve_path "$3"
+    else
+      echo "REPO=$REPO"
+    fi
+    return 0
+  fi
+
   parse_flags "$@"
+  resolve_repo_root
 
   if [ "${#POSITIONALS[@]}" -eq 0 ]; then
     usage >&2
