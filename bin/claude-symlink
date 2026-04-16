@@ -148,6 +148,83 @@ plan_links() {
   done < <(find "$REPO/.claude/team-memory" -type f -print0)
 }
 
+# ---------------------------------------------------------------------------
+# classify_target <tgt> <expected_src> — pure classification function (D5, R10)
+# Echoes exactly one of:
+#   missing | ok | wrong-link-ours | wrong-link-foreign |
+#   broken-ours | broken-foreign | real-file | real-dir
+# No side effects. No stderr on expected states.
+#
+# Case ladder (04-tech.md §3):
+#   1. If not a symlink and doesn't exist → missing
+#   2. If symlink and broken (-L but ! -e):
+#      Ownership check uses raw readlink + prefix compare because resolve_path
+#      cannot traverse into a non-existent target path (it would die), so
+#      owned_by_us() always returns 1 for broken links. We work around this
+#      by reading the raw link target with `readlink` and resolving it manually
+#      relative to the link's parent dir, then checking the $REPO/.claude/ prefix.
+#      → broken-ours or broken-foreign
+#   3. If symlink and live (-L and -e):
+#      Use resolve_path to get the canonical target, compare to expected_src.
+#      owned_by_us determines ours vs foreign.
+#      → ok | wrong-link-ours | wrong-link-foreign
+#   4. -f and ! -L → real-file
+#   5. -d and ! -L → real-dir
+#   6. Otherwise → missing
+# ---------------------------------------------------------------------------
+classify_target() {
+  local tgt="$1"
+  local expected_src="$2"
+
+  if [ -L "$tgt" ]; then
+    # It is a symlink — check if it's alive or broken
+    if [ ! -e "$tgt" ]; then
+      # Broken symlink: owned_by_us cannot resolve the target (it would die
+      # on a non-existent path), so we manually check the raw link target's
+      # prefix against $REPO/.claude/ to distinguish broken-ours vs broken-foreign.
+      local raw_target
+      raw_target=$(readlink "$tgt")
+      local abs_raw_target
+      case "$raw_target" in
+        /*)
+          abs_raw_target="$raw_target"
+          ;;
+        *)
+          abs_raw_target="$(dirname "$tgt")/$raw_target"
+          ;;
+      esac
+      case "$abs_raw_target" in
+        "$REPO/.claude/"*)
+          echo "broken-ours"
+          ;;
+        *)
+          echo "broken-foreign"
+          ;;
+      esac
+    else
+      # Live symlink: resolve target and compare to expected_src
+      local resolved_target
+      resolved_target=$(resolve_path "$tgt" 2>/dev/null) || {
+        echo "broken-foreign"
+        return 0
+      }
+      if [ "$resolved_target" = "$expected_src" ]; then
+        echo "ok"
+      elif owned_by_us "$tgt"; then
+        echo "wrong-link-ours"
+      else
+        echo "wrong-link-foreign"
+      fi
+    fi
+  elif [ -f "$tgt" ]; then
+    echo "real-file"
+  elif [ -d "$tgt" ]; then
+    echo "real-dir"
+  else
+    echo "missing"
+  fi
+}
+
 usage() {
   cat <<'EOF'
 Usage: claude-symlink <subcommand> [options]
@@ -225,6 +302,9 @@ main() {
         printf '%s\t%s\n' "${PLAN_SRC[$i]}" "${PLAN_TGT[$i]}"
         i=$((i + 1))
       done
+    elif [ "${2:-}" = "classify" ] && [ -n "${3:-}" ] && [ -n "${4:-}" ]; then
+      # classify_target <tgt> <expected_src> — echoes the classification
+      classify_target "$3" "$4"
     else
       echo "REPO=$REPO"
     fi

@@ -181,7 +181,7 @@ it means `bin/claude-symlink` per D3.
     T11).
 - **Depends on**: T4, T5
 - **Parallel-safe-with**: —
-- [ ]
+- [x]
 
 ## T7 — `cmd_install` (R6, R7, R10, R12, R13)
 - **Milestone**: M5, M8
@@ -417,6 +417,7 @@ Developer finds them slipping. Split and renumber only via
 - 2026-04-16 developer T3 done — added die, resolve_path, resolve_repo_root, __probe; 4 tests all green
 - 2026-04-16 Developer — T4 done (owned_by_us via trailing-slash repo-root prefix)
 - 2026-04-16 Developer — T5 done (plan_links + __probe plan dump, post-T4 base)
+- 2026-04-16 Developer — T6 done (classify_target with 8-state taxonomy)
 
 ---
 
