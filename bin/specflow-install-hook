@@ -1,0 +1,156 @@
+#!/usr/bin/env bash
+# =============================================================================
+# specflow-install-hook — safe settings.json installer helper (D12)
+# =============================================================================
+#
+# USAGE
+#   bin/specflow-install-hook add    <event> <command>
+#   bin/specflow-install-hook remove <event> <command>
+#
+# Operates on settings.json in the CURRENT DIRECTORY (caller's cwd).
+# Uses Python 3 read-merge-write: never overwrites unrelated keys.
+# Backs up to settings.json.bak before each mutation.
+# Writes atomically via settings.json.tmp → os.replace.
+# Idempotent: running add twice leaves exactly one matching entry.
+# =============================================================================
+
+set -u -o pipefail
+# NOTE: deliberately NOT set -e so we can probe python3 cleanly
+
+# ---------------------------------------------------------------------------
+# Preflight: python3 required
+# ---------------------------------------------------------------------------
+command -v python3 >/dev/null 2>&1 || {
+  echo "python3 required; hand-edit settings.json per 04-tech.md D2" >&2
+  exit 2
+}
+
+# ---------------------------------------------------------------------------
+# Usage
+# ---------------------------------------------------------------------------
+usage() {
+  echo "Usage: specflow-install-hook add    <event> <command>" >&2
+  echo "       specflow-install-hook remove <event> <command>" >&2
+  exit 2
+}
+
+# ---------------------------------------------------------------------------
+# Arg validation
+# ---------------------------------------------------------------------------
+if [ "${1:-}" = "" ]; then
+  usage
+fi
+
+SUBCMD="$1"
+case "$SUBCMD" in
+  add|remove) ;;
+  *) usage ;;
+esac
+
+if [ "${2:-}" = "" ] || [ "${3:-}" = "" ]; then
+  usage
+fi
+
+EVENT="$2"
+CMD="$3"
+
+# ---------------------------------------------------------------------------
+# add: idempotent append of hook entry
+# ---------------------------------------------------------------------------
+do_add() {
+  python3 - "$EVENT" "$CMD" <<'PY'
+import json, os, shutil, sys
+
+event = sys.argv[1]
+cmd   = sys.argv[2]
+p     = "settings.json"
+
+try:
+    with open(p) as f:
+        data = json.load(f)
+except FileNotFoundError:
+    data = {}
+
+# Backup before mutation
+if os.path.exists(p):
+    shutil.copyfile(p, p + ".bak")
+else:
+    # Write empty backup so the file exists (signals "was missing")
+    open(p + ".bak", "w").close()
+
+# Idempotence check: does the entry already exist?
+hooks = data.setdefault("hooks", {})
+event_arr = hooks.setdefault(event, [])
+already = any(
+    any(h.get("command") == cmd for h in grp.get("hooks", []))
+    for grp in event_arr
+)
+if not already:
+    event_arr.append({"hooks": [{"type": "command", "command": cmd}]})
+
+# Atomic write
+tmp = p + ".tmp"
+with open(tmp, "w") as f:
+    json.dump(data, f, indent=2)
+    f.write("\n")
+os.replace(tmp, p)
+PY
+}
+
+# ---------------------------------------------------------------------------
+# remove: mirror of add — find and drop the entry
+# ---------------------------------------------------------------------------
+do_remove() {
+  python3 - "$EVENT" "$CMD" <<'PY'
+import json, os, shutil, sys
+
+event = sys.argv[1]
+cmd   = sys.argv[2]
+p     = "settings.json"
+
+try:
+    with open(p) as f:
+        data = json.load(f)
+except FileNotFoundError:
+    # Nothing to remove
+    sys.exit(0)
+
+# Backup before mutation
+shutil.copyfile(p, p + ".bak")
+
+hooks     = data.get("hooks", {})
+event_arr = hooks.get(event, [])
+
+new_event_arr = []
+for grp in event_arr:
+    new_hooks = [h for h in grp.get("hooks", []) if h.get("command") != cmd]
+    if new_hooks:
+        new_grp = dict(grp)
+        new_grp["hooks"] = new_hooks
+        new_event_arr.append(new_grp)
+    # If all hooks in this group were removed, drop the group entirely
+
+if new_event_arr != event_arr:
+    if new_event_arr:
+        hooks[event] = new_event_arr
+    else:
+        hooks.pop(event, None)
+    if not hooks:
+        data.pop("hooks", None)
+
+    # Atomic write
+    tmp = p + ".tmp"
+    with open(tmp, "w") as f:
+        json.dump(data, f, indent=2)
+        f.write("\n")
+    os.replace(tmp, p)
+PY
+}
+
+# ---------------------------------------------------------------------------
+# Dispatch
+# ---------------------------------------------------------------------------
+case "$SUBCMD" in
+  add)    do_add ;;
+  remove) do_remove ;;
+esac

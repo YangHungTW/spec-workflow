@@ -164,3 +164,18 @@ indistinguishable from one the tool created. If that path is not in the current
 managed plan, `update` will treat it as an orphan and remove it. This is documented
 behavior, not a bug — the ownership contract is prefix-based, and the remedy is to
 not place hand-crafted symlinks pointing into this repo under `~/.claude/team-memory/`.
+
+## `.claude/rules/` — session-wide guardrails
+
+This repo ships a SessionStart hook that injects a digest of `.claude/rules/`
+into every Claude Code session opened here. Rules are **hard** cross-role
+guardrails (bash 3.2 portability, sandbox-HOME in tests, no `--force` on user
+paths, etc.) — distinct from per-role `.claude/team-memory/` which is soft
+craft advisory. The hook is wired in `settings.json`:
+
+```json
+{"hooks":{"SessionStart":[{"hooks":[{"type":"command","command":".claude/hooks/session-start.sh"}]}]}}
+```
+
+Details (schema, severity vocabulary, authoring checklist): see
+[.claude/rules/README.md](.claude/rules/README.md).

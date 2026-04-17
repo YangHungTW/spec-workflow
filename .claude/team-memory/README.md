@@ -78,3 +78,7 @@ Do NOT write:
 ## Retrospective
 
 `/specflow:archive` runs a retro: the TPM polls each role that participated in this feature, asking "any memory worth saving from this one?" and writes approved entries.
+
+## Rules vs team-memory
+
+Team memory is **soft** per-role craft advisory consulted at task start. For **hard** cross-role guardrails loaded at session start (e.g. bash 3.2 portability, sandbox-HOME in tests, no `--force` on user paths), see `.claude/rules/` — separate layer, different enforcement semantics. Full contrast table and authoring conventions: [.claude/rules/README.md](../rules/README.md).

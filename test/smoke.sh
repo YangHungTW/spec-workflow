@@ -27,9 +27,15 @@ fi
 # Then verify the assignment is correct before any scenario runs.
 # If anything looks wrong, abort loudly with exit 2.
 # ---------------------------------------------------------------------------
+ORIG_HOME="${HOME:-}"
+export ORIG_HOME
 SANDBOX=$(mktemp -d 2>/dev/null || mktemp -d -t 'claude-symlink')
 export HOME="$SANDBOX/home"
 mkdir -p "$HOME"
+# If the real HOME has asdf .tool-versions, make it available so python3 shim works
+if [ -n "$ORIG_HOME" ] && [ -f "$ORIG_HOME/.tool-versions" ]; then
+  cp "$ORIG_HOME/.tool-versions" "$HOME/.tool-versions" 2>/dev/null || :
+fi
 
 # Verify: HOME must start with SANDBOX path
 case "$HOME" in
@@ -796,6 +802,27 @@ ac11_report_exit_consistency
 echo
 ac12_cross_platform
 echo
+
+# ---------------------------------------------------------------------------
+# B1 harness-upgrade tests (t13-t28) — registered by T23
+# Each test is self-contained with its own sandbox-HOME preflight.
+# ---------------------------------------------------------------------------
+for t in t13_settings_json t14_rules_dir_structure t15_rules_schema \
+         t16_hook_exec_bit t17_hook_happy_path t18_hook_failsafe \
+         t19_hook_bad_frontmatter t20_hook_lang_lazy t21_agent_line_count \
+         t22_agent_header_grep t23_memory_required t24_appendix_pointers \
+         t25_no_duplication t26_no_new_command t27_settings_json_preserves_keys \
+         t28_settings_json_idempotent; do
+  echo "--- $t ---"
+  if bash "$REPO_ROOT/test/${t}.sh" >/dev/null 2>&1; then
+    echo "  PASS"
+    PASS_COUNT=$((PASS_COUNT + 1))
+  else
+    echo "  FAIL"
+    FAIL_COUNT=$((FAIL_COUNT + 1))
+  fi
+  echo
+done
 
 # ---------------------------------------------------------------------------
 # Final summary
