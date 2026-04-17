@@ -37,7 +37,7 @@ installer", it means the Python 3 `add_hook` helper from D12.
   - `grep -q 'hard' .claude/rules/README.md && grep -q 'soft' .claude/rules/README.md` — the contrast table loaded.
 - **Depends on**: —
 - **Parallel-safe-with**: —
-- [ ]
+- [x]
 
 ## T2 — Rule: bash-32-portability
 - **Milestone**: M2
@@ -510,7 +510,7 @@ Target: each task ≤ 60 min of focused Developer work.
 
 ## STATUS Notes
 
-_(filled in by Developer as tasks complete)_
+- 2026-04-16 Developer — T1 done (rules scaffold + README/index + classify-before-mutate exemplar + git/.gitkeep)
 
 ---
 
