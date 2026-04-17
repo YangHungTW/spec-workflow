@@ -6,4 +6,5 @@ then name.
 
 | Name | Scope | Severity | File |
 |---|---|---|---|
+| absolute-symlink-targets | common | should | [common/absolute-symlink-targets.md](common/absolute-symlink-targets.md) |
 | classify-before-mutate | common | must | [common/classify-before-mutate.md](common/classify-before-mutate.md) |
