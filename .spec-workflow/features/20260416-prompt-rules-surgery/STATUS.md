@@ -30,3 +30,5 @@
 - 2026-04-16 Architect — amended tech doc with D12 (safe settings.json read-merge-write); user flagged late constraint
 - 2026-04-16 TPM — plan written, M-count=11, recommends fused agent-surgery tasks (slim + memory block per role)
 - 2026-04-16 TPM — tasks broken down, T-count=25, first=T1, wave count=9
+- 2026-04-16 Developer — T1 done (rules scaffold + README/index + classify-before-mutate exemplar)
+- 2026-04-16 implement wave 1 done — T1
