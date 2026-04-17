@@ -361,7 +361,7 @@ installer", it means the Python 3 `add_hook` helper from D12.
   - `bash test/t16_hook_exec_bit.sh` exits 0.
 - **Depends on**: T1, T2, T3, T4, T5, T6, T9
 - **Parallel-safe-with**: T19, T20, T21, T22
-- [ ]
+- [x]
 
 ## T19 — test/t17_hook_happy_path.sh + test/t18_hook_failsafe.sh + test/t19_hook_bad_frontmatter.sh + test/t20_hook_lang_lazy.sh
 - **Milestone**: M9 (hook integration test batch)
@@ -522,6 +522,7 @@ Target: each task ≤ 60 min of focused Developer work.
 - 2026-04-17 Developer — T13 done: tpm.md rewritten (39 non-empty lines, ceiling 44); tpm.appendix.md created; all 7 verify checks PASS; wave schedule/task format/STATUS notes/retrospective protocol moved to appendix
 - 2026-04-17 Developer — T14 done: developer.md rewritten to 24 non-empty lines (≤24 ceiling); developer.appendix.md created with TDD loop and commit section; all 7 verify checks PASS; cross-role content (bash-portability, sandbox-HOME) removed
 - 2026-04-17 Developer — T16 done: qa-tester.md rewritten to D10 six-block template; 21 non-empty lines (≤23 ceiling); all 6 verify checks PASS; no appendix needed (content fits in core)
+- 2026-04-17 Developer — T18 done: test/t13_settings_json.sh, test/t14_rules_dir_structure.sh, test/t15_rules_schema.sh, test/t16_hook_exec_bit.sh created; all 4 tests PASS; also created .claude/rules/markdown/ (missing from T1 deliverables)
 
 ---
 
