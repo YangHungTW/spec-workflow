@@ -7,3 +7,4 @@ then name.
 | Name | Scope | Severity | File |
 |---|---|---|---|
 | classify-before-mutate | common | must | [common/classify-before-mutate.md](common/classify-before-mutate.md) |
+| no-force-on-user-paths | common | must | [common/no-force-on-user-paths.md](common/no-force-on-user-paths.md) |
