@@ -102,7 +102,7 @@ installer", it means the Python 3 `add_hook` helper from D12.
   - `grep -q 'severity: should' .claude/rules/common/absolute-symlink-targets.md`.
 - **Depends on**: T1
 - **Parallel-safe-with**: T2, T3, T4
-- [ ]
+- [x]
 
 ## T6 — SessionStart hook script (pure bash, fail-safe)
 - **Milestone**: M3
@@ -513,6 +513,7 @@ Target: each task ≤ 60 min of focused Developer work.
 - 2026-04-16 Developer — T1 done (rules scaffold + README/index + classify-before-mutate exemplar + git/.gitkeep)
 - 2026-04-16 Developer — T2 done (bash-32-portability rule created; all 6 verify checks PASS; source memory file intact; bash/ dir created as T1 missed it)
 - 2026-04-16 Developer — T3 done: sandbox-home-in-tests rule created at .claude/rules/bash/sandbox-home-in-tests.md; sourced from qa-tester/sandbox-home-preflight-pattern.md (memory intact); all 7 verify checks PASS
+- 2026-04-16 Developer — T5 done (absolute-symlink-targets rule created; all 5 verify checks PASS; index.md updated)
 
 ---
 
