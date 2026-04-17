@@ -152,7 +152,7 @@ installer", it means the Python 3 `add_hook` helper from D12.
   - `settings.json.bak` exists after any `add`/`remove` that mutates.
 - **Depends on**: T1 (actually independent of T1 but we want scaffolding committed first so paths are unambiguous)
 - **Parallel-safe-with**: T6
-- [ ]
+- [x]
 
 ## T8 — Early-verify SessionStart hook against real Claude Code session [USER CHECKPOINT]
 - **Milestone**: M3 (verification gate)
@@ -511,6 +511,7 @@ Target: each task ≤ 60 min of focused Developer work.
 ## STATUS Notes
 
 - 2026-04-16 Developer — T1 done (rules scaffold + README/index + classify-before-mutate exemplar + git/.gitkeep)
+- 2026-04-16 Developer — T7 done: bin/specflow-install-hook created; all 7 verify checks pass (bash -n, exec bit, no-args exit 2, sandbox add, idempotence, preservation, .bak exists); smoke.sh 12/12 still green
 
 ---
 
