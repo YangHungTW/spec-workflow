@@ -2,7 +2,7 @@
 
 - **slug**: 20260416-prompt-rules-surgery
 - **has-ui**: false
-- **stage**: verify
+- **stage**: archive
 - **created**: 2026-04-16
 - **updated**: 2026-04-17
 
@@ -17,7 +17,7 @@
 - [x] implement     (tasks checked off)          — Developer
 - [x] gap-check     (07-gaps.md, verdict PASS)   — QA-analyst
 - [x] verify        (08-verify.md, verdict PASS) — QA-tester
-- [ ] archive       (moved to .spec-workflow/archive/)     — TPM
+- [x] archive       (moved to .spec-workflow/archive/)     — TPM
 
 ## Notes
 <!-- date + role + what changed -->
@@ -49,3 +49,4 @@
 - 2026-04-17 implement stage complete — all 25 tasks merged on feature branch
 - 2026-04-17 qa-analyst — gap-check PASS: 0 blockers, 1 should-fix (settings.json.bak committed without .gitignore entry), 4 notes (T4 STATUS note missing; unwired test/t7_specflow_install_hook.sh; $schema key absent from settings.json; STATUS notes missing for T8/T9/T17/T23-T25 in 06-tasks.md)
 - 2026-04-17 qa-tester — verify PASS: 18/18 ACs pass; smoke 28/28; hook emits valid JSON with all 5 rule names; open items from gap-check remain (M2 should-fix, 3 notes) — none are AC-level blockers
+- 2026-04-17 TPM — archive: wrote 4 memory entries (C1-C4: pm/split-by-blast-radius, architect/settings-json-safe-mutation, tpm/parallel-safe-append-sections, architect/hook-fail-safe-pattern); feature moved to archive/
