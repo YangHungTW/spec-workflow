@@ -54,7 +54,7 @@ installer", it means the Python 3 `add_hook` helper from D12.
   - Source memory file still exists: `test -f .claude/team-memory/architect/shell-portability-readlink.md`.
 - **Depends on**: T1
 - **Parallel-safe-with**: T3, T4, T5
-- [ ]
+- [x]
 
 ## T3 — Rule: sandbox-home-in-tests
 - **Milestone**: M2
@@ -511,6 +511,7 @@ Target: each task ≤ 60 min of focused Developer work.
 ## STATUS Notes
 
 - 2026-04-16 Developer — T1 done (rules scaffold + README/index + classify-before-mutate exemplar + git/.gitkeep)
+- 2026-04-16 Developer — T2 done (bash-32-portability rule created; all 6 verify checks PASS; source memory file intact; bash/ dir created as T1 missed it)
 
 ---
 

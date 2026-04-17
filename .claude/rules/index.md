@@ -6,4 +6,5 @@ then name.
 
 | Name | Scope | Severity | File |
 |---|---|---|---|
+| bash-32-portability | bash | must | [bash/bash-32-portability.md](bash/bash-32-portability.md) |
 | classify-before-mutate | common | must | [common/classify-before-mutate.md](common/classify-before-mutate.md) |
