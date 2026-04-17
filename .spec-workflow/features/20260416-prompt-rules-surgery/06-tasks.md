@@ -399,7 +399,7 @@ installer", it means the Python 3 `add_hook` helper from D12.
   - `bash test/t23_memory_required.sh` exits 0.
 - **Depends on**: T10, T11, T12, T13, T14, T15, T16
 - **Parallel-safe-with**: T18, T19, T21, T22
-- [ ]
+- [x]
 
 ## T21 — test/t24_appendix_pointers.sh + test/t25_no_duplication.sh + test/t26_no_new_command.sh
 - **Milestone**: M9 (cross-cutting test batch)
@@ -522,6 +522,7 @@ Target: each task ≤ 60 min of focused Developer work.
 - 2026-04-17 Developer — T13 done: tpm.md rewritten (39 non-empty lines, ceiling 44); tpm.appendix.md created; all 7 verify checks PASS; wave schedule/task format/STATUS notes/retrospective protocol moved to appendix
 - 2026-04-17 Developer — T14 done: developer.md rewritten to 24 non-empty lines (≤24 ceiling); developer.appendix.md created with TDD loop and commit section; all 7 verify checks PASS; cross-role content (bash-portability, sandbox-HOME) removed
 - 2026-04-17 Developer — T16 done: qa-tester.md rewritten to D10 six-block template; 21 non-empty lines (≤23 ceiling); all 6 verify checks PASS; no appendix needed (content fits in core)
+- 2026-04-17 Developer — T20 done: test batch C (agent shape); t21_agent_line_count.sh + t22_agent_header_grep.sh + t23_memory_required.sh created; all 3 scripts chmod+x; all PASS (7/7 line-count, 7/7 header-order, 21/21 memory-tokens)
 
 ---
 
