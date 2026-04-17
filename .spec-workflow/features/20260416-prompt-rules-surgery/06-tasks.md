@@ -152,7 +152,7 @@ installer", it means the Python 3 `add_hook` helper from D12.
   - `settings.json.bak` exists after any `add`/`remove` that mutates.
 - **Depends on**: T1 (actually independent of T1 but we want scaffolding committed first so paths are unambiguous)
 - **Parallel-safe-with**: T6
-- [ ]
+- [x]
 
 ## T8 — Early-verify SessionStart hook against real Claude Code session [USER CHECKPOINT]
 - **Milestone**: M3 (verification gate)
@@ -515,6 +515,7 @@ Target: each task ≤ 60 min of focused Developer work.
 - 2026-04-16 Developer — T3 done: sandbox-home-in-tests rule created at .claude/rules/bash/sandbox-home-in-tests.md; sourced from qa-tester/sandbox-home-preflight-pattern.md (memory intact); all 7 verify checks PASS
 - 2026-04-16 Developer — T5 done (absolute-symlink-targets rule created; all 5 verify checks PASS; index.md updated)
 - 2026-04-16 Developer — T6 done: .claude/hooks/session-start.sh created (pure bash 3.2, fail-safe, D7 dual-key JSON); all 6 verify checks PASS
+- 2026-04-16 Developer — T7 done: bin/specflow-install-hook created; all 7 verify checks pass (bash -n, exec bit, no-args exit 2, sandbox add, idempotence, preservation, .bak exists); smoke.sh 12/12 still green
 
 ---
 
