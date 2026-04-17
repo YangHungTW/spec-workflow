@@ -32,3 +32,4 @@
 - 2026-04-16 TPM — tasks broken down, T-count=25, first=T1, wave count=9
 - 2026-04-16 Developer — T1 done (rules scaffold + README/index + classify-before-mutate exemplar)
 - 2026-04-16 implement wave 1 done — T1
+- 2026-04-16 implement wave 2 done — T2, T3, T4, T5, T6, T7 (6 parallel; 5 merge conflicts resolved mechanically: adjacent STATUS notes + index rows)
