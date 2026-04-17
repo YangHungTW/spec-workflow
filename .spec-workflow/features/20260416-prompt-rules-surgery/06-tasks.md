@@ -170,7 +170,7 @@ installer", it means the Python 3 `add_hook` helper from D12.
   - STATUS Notes contains a `T8 blocked: <observed-behavior>` line and the feature is parked until TPM amends the tech doc and reissues T6.
 - **Depends on**: T6, T7
 - **Parallel-safe-with**: —
-- [ ]
+- [x]
 
 ## T9 — Wire SessionStart hook into repo-root settings.json
 - **Milestone**: M5
@@ -188,7 +188,7 @@ installer", it means the Python 3 `add_hook` helper from D12.
   - Running the install step again is a no-op (idempotent): byte-identical `settings.json` except possibly updated `settings.json.bak`.
 - **Depends on**: T7, T8
 - **Parallel-safe-with**: —
-- [ ]
+- [x]
 
 ## T10 — Agent surgery: pm.md (slim + memory block)
 - **Milestone**: M6+M7 (fused per plan §5)

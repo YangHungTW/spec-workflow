@@ -33,3 +33,7 @@
 - 2026-04-16 Developer — T1 done (rules scaffold + README/index + classify-before-mutate exemplar)
 - 2026-04-16 implement wave 1 done — T1
 - 2026-04-16 implement wave 2 done — T2, T3, T4, T5, T6, T7 (6 parallel; 5 merge conflicts resolved mechanically: adjacent STATUS notes + index rows)
+- 2026-04-17 Developer — T8 done: SessionStart hook fires; digest injection confirmed in real Claude Code session (5 rules visible incl. classify-before-mutate)
+- 2026-04-17 implement wave 3 done — T8 (USER CHECKPOINT passed)
+- 2026-04-17 Developer — T9 done: settings.json wired via T7 helper; all 5 verify checks pass incl. idempotence
+- 2026-04-17 implement wave 4 done — T9
