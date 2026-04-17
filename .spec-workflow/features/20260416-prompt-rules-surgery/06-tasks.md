@@ -233,7 +233,7 @@ installer", it means the Python 3 `add_hook` helper from D12.
   - Cross-role dedup: `grep -E 'readlink -f|--force|sandbox-HOME' .claude/agents/specflow/designer.md` returns zero matches.
 - **Depends on**: T1, T2, T3, T4, T5
 - **Parallel-safe-with**: T10, T12, T13, T14, T15, T16
-- [ ]
+- [x]
 
 ## T12 — Agent surgery: architect.md (slim + memory block)
 - **Milestone**: M6+M7
@@ -516,6 +516,7 @@ Target: each task ≤ 60 min of focused Developer work.
 - 2026-04-16 Developer — T5 done (absolute-symlink-targets rule created; all 5 verify checks PASS; index.md updated)
 - 2026-04-16 Developer — T6 done: .claude/hooks/session-start.sh created (pure bash 3.2, fail-safe, D7 dual-key JSON); all 6 verify checks PASS
 - 2026-04-16 Developer — T7 done: bin/specflow-install-hook created; all 7 verify checks pass (bash -n, exec bit, no-args exit 2, sandbox add, idempotence, preservation, .bak exists); smoke.sh 12/12 still green
+- 2026-04-17 Developer — T11 done: designer.md surgery; 32→22 non-empty lines (exact ceiling); all 6 verify checks PASS; no appendix needed (no cross-role content to extract); dir not present token present
 
 ---
 
