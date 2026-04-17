@@ -86,7 +86,7 @@ installer", it means the Python 3 `add_hook` helper from D12.
   - `grep -q 'severity: must' .claude/rules/common/no-force-on-user-paths.md`.
 - **Depends on**: T1
 - **Parallel-safe-with**: T2, T3, T5
-- [ ]
+- [x]
 
 ## T5 — Rule: absolute-symlink-targets
 - **Milestone**: M2
