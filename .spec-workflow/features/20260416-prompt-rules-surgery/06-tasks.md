@@ -216,7 +216,7 @@ installer", it means the Python 3 `add_hook` helper from D12.
   - If `pm.appendix.md` exists: every `section "X"` reference in `pm.md` core matches a `## X` or `### X` in the appendix.
 - **Depends on**: T1, T2, T3, T4, T5 (all 5 rules must exist before cross-role content is removed from prompts — D11 diff-traceability)
 - **Parallel-safe-with**: T11, T12, T13, T14, T15, T16
-- [ ]
+- [x]
 
 ## T11 — Agent surgery: designer.md (slim + memory block)
 - **Milestone**: M6+M7
@@ -516,6 +516,7 @@ Target: each task ≤ 60 min of focused Developer work.
 - 2026-04-16 Developer — T5 done (absolute-symlink-targets rule created; all 5 verify checks PASS; index.md updated)
 - 2026-04-16 Developer — T6 done: .claude/hooks/session-start.sh created (pure bash 3.2, fail-safe, D7 dual-key JSON); all 6 verify checks PASS
 - 2026-04-16 Developer — T7 done: bin/specflow-install-hook created; all 7 verify checks pass (bash -n, exec bit, no-args exit 2, sandbox add, idempotence, preservation, .bak exists); smoke.sh 12/12 still green
+- 2026-04-17 Developer — T10 done: pm.md rewritten to D10 six-block template; 22 non-empty lines (at ceiling); all 8 verify checks PASS; no appendix needed (no cross-role rules were present); PM team-memory dir exists but has no entries (only index.md with "No memories yet.")
 
 ---
 
