@@ -434,7 +434,7 @@ installer", it means the Python 3 `add_hook` helper from D12.
   - `bash test/t28_settings_json_idempotent.sh` exits 0.
 - **Depends on**: T7
 - **Parallel-safe-with**: T18, T19, T20, T21
-- [ ]
+- [x]
 
 ## T23 — Smoke test integration (register t13–t28 in test/smoke.sh)
 - **Milestone**: M10
@@ -522,6 +522,7 @@ Target: each task ≤ 60 min of focused Developer work.
 - 2026-04-17 Developer — T13 done: tpm.md rewritten (39 non-empty lines, ceiling 44); tpm.appendix.md created; all 7 verify checks PASS; wave schedule/task format/STATUS notes/retrospective protocol moved to appendix
 - 2026-04-17 Developer — T14 done: developer.md rewritten to 24 non-empty lines (≤24 ceiling); developer.appendix.md created with TDD loop and commit section; all 7 verify checks PASS; cross-role content (bash-portability, sandbox-HOME) removed
 - 2026-04-17 Developer — T16 done: qa-tester.md rewritten to D10 six-block template; 21 non-empty lines (≤23 ceiling); all 6 verify checks PASS; no appendix needed (content fits in core)
+- 2026-04-17 Developer — T22 done: test/t27_settings_json_preserves_keys.sh and test/t28_settings_json_idempotent.sh created; both PASS; asdf-sandbox fix applied (copy ~/.tool-versions to sandbox HOME so python3 shim resolves under overridden HOME)
 
 ---
 
