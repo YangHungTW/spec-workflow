@@ -7,3 +7,4 @@ then name.
 | Name | Scope | Severity | File |
 |---|---|---|---|
 | classify-before-mutate | common | must | [common/classify-before-mutate.md](common/classify-before-mutate.md) |
+| sandbox-home-in-tests | bash | must | [bash/sandbox-home-in-tests.md](bash/sandbox-home-in-tests.md) |

@@ -70,7 +70,7 @@ installer", it means the Python 3 `add_hook` helper from D12.
   - `grep -q 'mktemp' .claude/rules/bash/sandbox-home-in-tests.md`.
 - **Depends on**: T1
 - **Parallel-safe-with**: T2, T4, T5
-- [ ]
+- [x]
 
 ## T4 — Rule: no-force-on-user-paths
 - **Milestone**: M2
@@ -511,6 +511,7 @@ Target: each task ≤ 60 min of focused Developer work.
 ## STATUS Notes
 
 - 2026-04-16 Developer — T1 done (rules scaffold + README/index + classify-before-mutate exemplar + git/.gitkeep)
+- 2026-04-16 Developer — T3 done: sandbox-home-in-tests rule created at .claude/rules/bash/sandbox-home-in-tests.md; sourced from qa-tester/sandbox-home-preflight-pattern.md (memory intact); all 7 verify checks PASS
 
 ---
 
