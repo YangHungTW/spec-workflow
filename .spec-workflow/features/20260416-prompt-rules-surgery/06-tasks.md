@@ -128,7 +128,7 @@ installer", it means the Python 3 `add_hook` helper from D12.
   - Simulated failure: `mv .claude/rules .claude/rules.tmp; .claude/hooks/session-start.sh < /dev/null; echo $?; mv .claude/rules.tmp .claude/rules` — prints exit code `0` and emits a WARN line to stderr.
 - **Depends on**: T1
 - **Parallel-safe-with**: T7
-- [ ]
+- [x]
 
 ## T7 — Safe settings.json installer helper (D12)
 - **Milestone**: M4
@@ -511,6 +511,7 @@ Target: each task ≤ 60 min of focused Developer work.
 ## STATUS Notes
 
 - 2026-04-16 Developer — T1 done (rules scaffold + README/index + classify-before-mutate exemplar + git/.gitkeep)
+- 2026-04-16 Developer — T6 done: .claude/hooks/session-start.sh created (pure bash 3.2, fail-safe, D7 dual-key JSON); all 6 verify checks PASS
 
 ---
 
