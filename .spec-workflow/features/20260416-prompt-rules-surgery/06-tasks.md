@@ -318,7 +318,7 @@ installer", it means the Python 3 `add_hook` helper from D12.
   - Cross-role dedup: `grep -E 'readlink -f|--force|sandbox-HOME|mktemp -d' .claude/agents/specflow/qa-tester.md` returns zero matches.
 - **Depends on**: T1, T2, T3, T4, T5
 - **Parallel-safe-with**: T10, T11, T12, T13, T14, T15
-- [ ]
+- [x]
 
 ## T17 — Dedup audit across agent files
 - **Milestone**: M8
@@ -521,6 +521,7 @@ Target: each task ≤ 60 min of focused Developer work.
 - 2026-04-17 Developer — T12 done: architect.md rewritten to D10 six-block template; 32 non-empty lines (ceiling 37); all 6 verify checks PASS; appendix created at architect.appendix.md with "04-tech.md section outline" section; cross-role content (readlink-f, --force, sandbox-HOME, classification-before-mutation, absolute-symlink) removed — all traced to .claude/rules/ files from T2–T5
 - 2026-04-17 Developer — T13 done: tpm.md rewritten (39 non-empty lines, ceiling 44); tpm.appendix.md created; all 7 verify checks PASS; wave schedule/task format/STATUS notes/retrospective protocol moved to appendix
 - 2026-04-17 Developer — T14 done: developer.md rewritten to 24 non-empty lines (≤24 ceiling); developer.appendix.md created with TDD loop and commit section; all 7 verify checks PASS; cross-role content (bash-portability, sandbox-HOME) removed
+- 2026-04-17 Developer — T16 done: qa-tester.md rewritten to D10 six-block template; 21 non-empty lines (≤23 ceiling); all 6 verify checks PASS; no appendix needed (content fits in core)
 
 ---
 
