@@ -15,7 +15,7 @@
 - [x] plan          (05-plan.md)                 — TPM
 - [x] tasks         (06-tasks.md)                — TPM
 - [x] implement     (tasks checked off)          — Developer
-- [ ] gap-check     (07-gaps.md, verdict PASS)   — QA-analyst
+- [x] gap-check     (07-gaps.md, verdict PASS)   — QA-analyst
 - [ ] verify        (08-verify.md, verdict PASS) — QA-tester
 - [ ] archive       (moved to .spec-workflow/archive/)     — TPM
 
@@ -47,3 +47,4 @@
 - 2026-04-17 implement wave 8+9 done — T23 smoke, T24 T25 docs
 - 2026-04-17 T15 checkbox fix (lost in merge, surgery was correct)
 - 2026-04-17 implement stage complete — all 25 tasks merged on feature branch
+- 2026-04-17 qa-analyst — gap-check PASS: 0 blockers, 1 should-fix (settings.json.bak committed without .gitignore entry), 4 notes (T4 STATUS note missing; unwired test/t7_specflow_install_hook.sh; $schema key absent from settings.json; STATUS notes missing for T8/T9/T17/T23-T25 in 06-tasks.md)
