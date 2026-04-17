@@ -37,3 +37,4 @@
 - 2026-04-17 implement wave 3 done — T8 (USER CHECKPOINT passed)
 - 2026-04-17 Developer — T9 done: settings.json wired via T7 helper; all 5 verify checks pass incl. idempotence
 - 2026-04-17 implement wave 4 done — T9
+- 2026-04-17 implement wave 5 done — T10-T16 (7 parallel; all ≤ceiling; 5 appendix files created; 6 merge conflicts auto-resolved)
