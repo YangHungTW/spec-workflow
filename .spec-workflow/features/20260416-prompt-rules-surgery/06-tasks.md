@@ -399,7 +399,7 @@ installer", it means the Python 3 `add_hook` helper from D12.
   - `bash test/t23_memory_required.sh` exits 0.
 - **Depends on**: T10, T11, T12, T13, T14, T15, T16
 - **Parallel-safe-with**: T18, T19, T21, T22
-- [ ]
+- [x]
 
 ## T21 — test/t24_appendix_pointers.sh + test/t25_no_duplication.sh + test/t26_no_new_command.sh
 - **Milestone**: M9 (cross-cutting test batch)
@@ -524,6 +524,7 @@ Target: each task ≤ 60 min of focused Developer work.
 - 2026-04-17 Developer — T16 done: qa-tester.md rewritten to D10 six-block template; 21 non-empty lines (≤23 ceiling); all 6 verify checks PASS; no appendix needed (content fits in core)
 - 2026-04-17 Developer — T18 done: test/t13_settings_json.sh, test/t14_rules_dir_structure.sh, test/t15_rules_schema.sh, test/t16_hook_exec_bit.sh created; all 4 tests PASS; also created .claude/rules/markdown/ (missing from T1 deliverables)
 - 2026-04-17 Developer — T19 done: 4 hook integration tests created (t17_hook_happy_path.sh, t18_hook_failsafe.sh, t19_hook_bad_frontmatter.sh, t20_hook_lang_lazy.sh); all 4 pass (17 checks total); sandbox-HOME preflight in every script; chmod +x applied
+- 2026-04-17 Developer — T20 done: test batch C (agent shape); t21_agent_line_count.sh + t22_agent_header_grep.sh + t23_memory_required.sh created; all 3 scripts chmod+x; all PASS (7/7 line-count, 7/7 header-order, 21/21 memory-tokens)
 
 ---
 
