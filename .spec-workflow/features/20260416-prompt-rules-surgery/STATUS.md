@@ -38,3 +38,5 @@
 - 2026-04-17 Developer — T9 done: settings.json wired via T7 helper; all 5 verify checks pass incl. idempotence
 - 2026-04-17 implement wave 4 done — T9
 - 2026-04-17 implement wave 5 done — T10-T16 (7 parallel; all ≤ceiling; 5 appendix files created; 6 merge conflicts auto-resolved)
+- 2026-04-17 T17 done: 1 hit on no-force slug in architect.md was legitimate meta-reference in Team memory section (naming entries, not duplicating rule content); remaining audit checks all clean
+- 2026-04-17 implement wave 6 done — T17 (dedup audit)

@@ -341,7 +341,7 @@ installer", it means the Python 3 `add_hook` helper from D12.
   - `grep -lE 'classification before mutation|classify-before-mutate' .claude/agents/specflow/*.md` returns zero files (rule-name back-references allowed only under `## Rules` section pointing at the rule file — inspect manually).
 - **Depends on**: T10, T11, T12, T13, T14, T15, T16
 - **Parallel-safe-with**: —
-- [ ]
+- [x]
 
 ## T18 — test/t13_settings_json.sh + test/t14_rules_dir_structure.sh + test/t15_rules_schema.sh + test/t16_hook_exec_bit.sh
 - **Milestone**: M9 (unit test batch 1)
