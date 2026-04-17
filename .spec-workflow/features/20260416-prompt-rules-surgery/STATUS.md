@@ -2,9 +2,9 @@
 
 - **slug**: 20260416-prompt-rules-surgery
 - **has-ui**: false
-- **stage**: tasks
+- **stage**: implement
 - **created**: 2026-04-16
-- **updated**: 2026-04-16
+- **updated**: 2026-04-17
 
 ## Stage checklist
 - [x] request       (00-request.md)              — PM
@@ -14,7 +14,7 @@
 - [x] tech          (04-tech.md)                 — Architect
 - [x] plan          (05-plan.md)                 — TPM
 - [x] tasks         (06-tasks.md)                — TPM
-- [ ] implement     (tasks checked off)          — Developer
+- [x] implement     (tasks checked off)          — Developer
 - [ ] gap-check     (07-gaps.md, verdict PASS)   — QA-analyst
 - [ ] verify        (08-verify.md, verdict PASS) — QA-tester
 - [ ] archive       (moved to .spec-workflow/archive/)     — TPM
@@ -40,3 +40,10 @@
 - 2026-04-17 implement wave 5 done — T10-T16 (7 parallel; all ≤ceiling; 5 appendix files created; 6 merge conflicts auto-resolved)
 - 2026-04-17 T17 done: 1 hit on no-force slug in architect.md was legitimate meta-reference in Team memory section (naming entries, not duplicating rule content); remaining audit checks all clean
 - 2026-04-17 implement wave 6 done — T17 (dedup audit)
+- 2026-04-17 implement wave 7 done — T18-T22 (5 parallel test batches; 16 new tests all PASS)
+- 2026-04-17 T23 done: smoke.sh registers t13-t28; ORIG_HOME preserved for asdf python3 shim; 28/28 PASS
+- 2026-04-17 T24 done: rules/README contrast table + team-memory/README cross-ref
+- 2026-04-17 T25 done: top-level README SessionStart hook section
+- 2026-04-17 implement wave 8+9 done — T23 smoke, T24 T25 docs
+- 2026-04-17 T15 checkbox fix (lost in merge, surgery was correct)
+- 2026-04-17 implement stage complete — all 25 tasks merged on feature branch

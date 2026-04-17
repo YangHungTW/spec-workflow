@@ -301,7 +301,7 @@ installer", it means the Python 3 `add_hook` helper from D12.
   - Cross-role dedup: `grep -E 'readlink -f|--force|sandbox-HOME' .claude/agents/specflow/qa-analyst.md` returns zero matches.
 - **Depends on**: T1, T2, T3, T4, T5
 - **Parallel-safe-with**: T10, T11, T12, T13, T14, T16
-- [ ]
+- [x]
 
 ## T16 — Agent surgery: qa-tester.md (slim + memory block)
 - **Milestone**: M6+M7
@@ -449,7 +449,7 @@ installer", it means the Python 3 `add_hook` helper from D12.
   - Running `bash test/smoke.sh` with `HOME=/Users/yanghungtw` (real `$HOME`) still aborts with preflight exit 2 — the symlink-operation discipline is preserved.
 - **Depends on**: T18, T19, T20, T21, T22
 - **Parallel-safe-with**: —
-- [ ]
+- [x]
 
 ## T24 — Docs: .claude/rules/README.md + .claude/team-memory/README.md cross-ref
 - **Milestone**: M11
@@ -466,7 +466,7 @@ installer", it means the Python 3 `add_hook` helper from D12.
   - Both files render as valid markdown (no broken tables, no unclosed code fences).
 - **Depends on**: T23
 - **Parallel-safe-with**: T25
-- [ ]
+- [x]
 
 ## T25 — Docs: top-level README.md SessionStart hook note
 - **Milestone**: M11
@@ -480,7 +480,7 @@ installer", it means the Python 3 `add_hook` helper from D12.
   - `grep -q '\.claude/rules/' README.md` returns a match.
 - **Depends on**: T23
 - **Parallel-safe-with**: T24
-- [ ]
+- [x]
 
 ---
 
