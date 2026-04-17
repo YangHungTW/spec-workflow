@@ -267,7 +267,7 @@ installer", it means the Python 3 `add_hook` helper from D12.
   - Cross-role dedup: `grep -E 'readlink -f|--force|sandbox-HOME' .claude/agents/specflow/tpm.md` returns zero matches.
 - **Depends on**: T1, T2, T3, T4, T5
 - **Parallel-safe-with**: T10, T11, T12, T14, T15, T16
-- [ ]
+- [x]
 
 ## T14 — Agent surgery: developer.md (slim + memory block)
 - **Milestone**: M6+M7
@@ -519,6 +519,7 @@ Target: each task ≤ 60 min of focused Developer work.
 - 2026-04-17 Developer — T10 done: pm.md rewritten to D10 six-block template; 22 non-empty lines (at ceiling); all 8 verify checks PASS; no appendix needed (no cross-role rules were present); PM team-memory dir exists but has no entries (only index.md with "No memories yet.")
 - 2026-04-17 Developer — T11 done: designer.md surgery; 32→22 non-empty lines (exact ceiling); all 6 verify checks PASS; no appendix needed (no cross-role content to extract); dir not present token present
 - 2026-04-17 Developer — T12 done: architect.md rewritten to D10 six-block template; 32 non-empty lines (ceiling 37); all 6 verify checks PASS; appendix created at architect.appendix.md with "04-tech.md section outline" section; cross-role content (readlink-f, --force, sandbox-HOME, classification-before-mutation, absolute-symlink) removed — all traced to .claude/rules/ files from T2–T5
+- 2026-04-17 Developer — T13 done: tpm.md rewritten (39 non-empty lines, ceiling 44); tpm.appendix.md created; all 7 verify checks PASS; wave schedule/task format/STATUS notes/retrospective protocol moved to appendix
 
 ---
 
