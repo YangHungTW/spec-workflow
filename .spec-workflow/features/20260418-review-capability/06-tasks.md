@@ -467,7 +467,7 @@ When it says "reviewer agent" it means one of
   - `bash /Users/yanghungtw/Tools/spec-workflow/test/t37_review_oneshot.sh` exits 0 (requires T10 merged).
 - **Depends on**: T10.
 - **Parallel-safe-with**: T11, T12, T13, T15
-- [ ]
+- [x]
 
 ## T15 — Test: `test/t38_hook_skips_reviewer.sh`
 - **Milestone**: M6
@@ -558,6 +558,7 @@ _(populated by Developer as tasks complete; expected mechanical append-collision
 - 2026-04-17 T6 DONE — `.claude/agents/specflow/reviewer-security.md` created; all 8 verify checks PASS.
 - 2026-04-17 T7 DONE — reviewer-performance agent created; all 8 verify checks PASS (model=sonnet, 6 blocks, axis=performance, stay-in-lane, rubric ref, 2x when-invoked).
 - 2026-04-17 T8 DONE — `.claude/agents/specflow/reviewer-style.md` created; model=sonnet, 6 blocks, 2 when-invoked sections, axis: style verdict footer, stay-in-lane literal, rubric reference; all 8 verify checks PASS.
+- 2026-04-17 T14 DONE — `test/t37_review_oneshot.sh` created; 12 shape checks (file exists, frontmatter, /specflow:review slug, --axis security|performance|style, report filename pattern, never-advances-STATUS, exit-0/exit-1 semantics); syntax clean; exec bit set; all 12 checks PASS.
 
 ---
 
