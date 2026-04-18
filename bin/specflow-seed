@@ -119,11 +119,16 @@ usage() {
 }
 
 # ---------------------------------------------------------------------------
-# emit_summary — wired from cmd_init/update/migrate after the classifier and
-# dispatcher land; exit-code shape is stable across waves.
+# emit_summary — called after the dispatcher loop; reads counters set during
+# dispatch. Exit-code shape matches bin/claude-symlink (R7 AC7.c).
 # ---------------------------------------------------------------------------
+_CNT_CREATED=0
+_CNT_ALREADY=0
+_CNT_REPLACED=0
+_CNT_SKIPPED=0
+
 emit_summary() {
-  echo "summary: created=0 already=0 replaced=0 skipped=0 (exit $MAX_CODE)"
+  echo "summary: created=${_CNT_CREATED} already=${_CNT_ALREADY} replaced=${_CNT_REPLACED} skipped=${_CNT_SKIPPED} (exit ${MAX_CODE})"
 }
 
 # ---------------------------------------------------------------------------
@@ -485,8 +490,246 @@ preflight() {
 # Subcommand stubs (Wave 0 — no filesystem mutation)
 # ---------------------------------------------------------------------------
 cmd_init() {
-  echo "init: not-yet-implemented"
-  exit 0
+  # ---------------------------------------------------------------------------
+  # Step 1: Resolve source repo root via layered fallback (D7):
+  #   --from > $SPECFLOW_SRC > readlink ~/.claude/agents/specflow → strip suffix
+  # ---------------------------------------------------------------------------
+  local src_root=""
+
+  if [ -n "$SRC" ]; then
+    src_root="$SRC"
+  elif [ -n "${SPECFLOW_SRC:-}" ]; then
+    src_root="$SPECFLOW_SRC"
+  else
+    # Auto-discover: bare readlink (no -f) on the global agents symlink
+    local agent_link="$HOME/.claude/agents/specflow"
+    if [ -L "$agent_link" ]; then
+      local link_target
+      link_target=$(readlink "$agent_link")
+      # Make absolute if relative (symlink target may be relative to link dir)
+      case "$link_target" in
+        /*) ;;
+        *)  link_target="$(dirname "$agent_link")/$link_target" ;;
+      esac
+      # Strip the trailing /.claude/agents/specflow to recover the repo root
+      local candidate="${link_target%/.claude/agents/specflow}"
+      if [ "$candidate" != "$link_target" ] \
+         && [ -f "${candidate}/bin/specflow-seed" ] \
+         && [ -d "${candidate}/.claude/agents/specflow" ]; then
+        src_root="$candidate"
+      fi
+    fi
+  fi
+
+  [ -n "$src_root" ] || die "cannot resolve source repo; pass --from <path> or set SPECFLOW_SRC"
+
+  # Resolve to an absolute path using cd (no readlink -f / realpath)
+  src_root=$(cd "$src_root" 2>/dev/null && pwd -P) \
+    || die "source repo path not accessible: $src_root"
+
+  # ---------------------------------------------------------------------------
+  # Step 2: Resolve consumer repo root
+  # ---------------------------------------------------------------------------
+  local consumer_root
+  consumer_root=$(repo_root)
+
+  # ---------------------------------------------------------------------------
+  # Step 3: Preflight — verify source has required structural markers (D8)
+  # No filesystem mutation before preflight passes.
+  # ---------------------------------------------------------------------------
+  [ -f "${src_root}/bin/specflow-install-hook" ] \
+    || die "preflight: ${src_root}/bin/specflow-install-hook not found"
+  [ -d "${src_root}/.claude/agents/specflow" ] \
+    || die "preflight: ${src_root}/.claude/agents/specflow not found"
+  [ -d "${src_root}/.claude/commands/specflow" ] \
+    || die "preflight: ${src_root}/.claude/commands/specflow not found"
+  [ -d "${src_root}/.claude/hooks" ] \
+    || die "preflight: ${src_root}/.claude/hooks not found"
+  [ -d "${src_root}/.claude/rules" ] \
+    || die "preflight: ${src_root}/.claude/rules not found"
+  [ -d "${src_root}/.spec-workflow/features/_template" ] \
+    || die "preflight: ${src_root}/.spec-workflow/features/_template not found"
+
+  # ---------------------------------------------------------------------------
+  # Step 4: Resolve the ref to record in the manifest
+  # ---------------------------------------------------------------------------
+  local ref="${AT_REF}"
+  if [ -z "$ref" ]; then
+    ref=$(git -C "$src_root" rev-parse HEAD 2>/dev/null) \
+      || die "cannot resolve HEAD in source repo; pass --ref <ref>"
+  fi
+
+  # ---------------------------------------------------------------------------
+  # Step 5: Build the plan (classify-before-mutate: reads first, writes second)
+  # Enumerate relpaths and compute expected SHA for each.
+  # plan_lines is a newline-separated list of "relpath<TAB>expected_sha" pairs.
+  # ---------------------------------------------------------------------------
+  local plan_lines=""
+  local relpaths
+  relpaths=$(plan_copy "$src_root" init)
+
+  while IFS= read -r relpath; do
+    [ -n "$relpath" ] || continue
+    local src_file="${src_root}/${relpath}"
+    # Skip skeleton paths where the source file genuinely does not exist
+    # (plan_copy may emit shared/README.md even when the source repo lacks it)
+    if [ ! -f "$src_file" ]; then
+      continue
+    fi
+    local expected_sha
+    expected_sha=$(sha256_of "$src_file")
+    if [ -n "$plan_lines" ]; then
+      plan_lines="${plan_lines}
+${relpath}	${expected_sha}"
+    else
+      plan_lines="${relpath}	${expected_sha}"
+    fi
+  done <<EOF
+$relpaths
+EOF
+
+  # ---------------------------------------------------------------------------
+  # Step 6: Classify each planned relpath (pure; no mutations yet)
+  # Accumulate per-state lists for the dry-run report and the dispatch loop.
+  # baseline_sha is "" for init (no prior manifest baseline).
+  # ---------------------------------------------------------------------------
+  local classify_results=""
+  while IFS='	' read -r relpath expected_sha; do
+    [ -n "$relpath" ] || continue
+    local state
+    state=$(classify_copy_target "$consumer_root" "$relpath" "$expected_sha" "")
+    if [ -n "$classify_results" ]; then
+      classify_results="${classify_results}
+${relpath}	${expected_sha}	${state}"
+    else
+      classify_results="${relpath}	${expected_sha}	${state}"
+    fi
+  done <<EOF
+$plan_lines
+EOF
+
+  # ---------------------------------------------------------------------------
+  # Step 7: --dry-run early-return — emit would-* lines; no writes (R6 AC6.a)
+  # ---------------------------------------------------------------------------
+  if [ "$DRY_RUN" = "1" ]; then
+    while IFS='	' read -r relpath expected_sha state; do
+      [ -n "$relpath" ] || continue
+      case "$state" in
+        missing)            echo "would-create: ${relpath}" ;;
+        ok)                 echo "would-skip:already: ${relpath}" ;;
+        drifted-ours)       echo "would-replace:drifted: ${relpath}" ;;
+        user-modified)      echo "would-skip:user-modified: ${relpath}" ;;
+        real-file-conflict) echo "would-skip:real-file-conflict: ${relpath}" ;;
+        foreign)            echo "would-skip:foreign: ${relpath}" ;;
+        *)                  echo "would-skip:unknown: ${relpath}" ;;
+      esac
+    done <<EOF
+$classify_results
+EOF
+    return 0
+  fi
+
+  # ---------------------------------------------------------------------------
+  # Step 8: Dispatch — mutations live here (classify-before-mutate contract)
+  # Accumulate manifest TSV rows as we go.
+  # ---------------------------------------------------------------------------
+  local manifest_tsv=""
+
+  while IFS='	' read -r relpath expected_sha state; do
+    [ -n "$relpath" ] || continue
+    local src_file="${src_root}/${relpath}"
+    local dst_file="${consumer_root}/${relpath}"
+
+    case "$state" in
+      missing)
+        cat "$src_file" | write_atomic "$dst_file"
+        echo "created: ${relpath}"
+        _CNT_CREATED=$((_CNT_CREATED + 1))
+        if [ -n "$manifest_tsv" ]; then
+          manifest_tsv="${manifest_tsv}
+${relpath}	${expected_sha}"
+        else
+          manifest_tsv="${relpath}	${expected_sha}"
+        fi
+        ;;
+      ok)
+        echo "already: ${relpath}"
+        _CNT_ALREADY=$((_CNT_ALREADY + 1))
+        if [ -n "$manifest_tsv" ]; then
+          manifest_tsv="${manifest_tsv}
+${relpath}	${expected_sha}"
+        else
+          manifest_tsv="${relpath}	${expected_sha}"
+        fi
+        ;;
+      drifted-ours)
+        cp "$dst_file" "${dst_file}.bak"
+        cat "$src_file" | write_atomic "$dst_file"
+        echo "replaced:drifted: ${relpath}"
+        _CNT_REPLACED=$((_CNT_REPLACED + 1))
+        if [ -n "$manifest_tsv" ]; then
+          manifest_tsv="${manifest_tsv}
+${relpath}	${expected_sha}"
+        else
+          manifest_tsv="${relpath}	${expected_sha}"
+        fi
+        ;;
+      user-modified)
+        echo "skipped:user-modified: ${relpath}"
+        _CNT_SKIPPED=$((_CNT_SKIPPED + 1))
+        if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
+        ;;
+      real-file-conflict)
+        echo "skipped:real-file-conflict: ${relpath}"
+        _CNT_SKIPPED=$((_CNT_SKIPPED + 1))
+        if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
+        ;;
+      foreign)
+        echo "skipped:foreign: ${relpath}"
+        _CNT_SKIPPED=$((_CNT_SKIPPED + 1))
+        if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
+        ;;
+      *)
+        echo "skipped:unknown-state: ${relpath}"
+        _CNT_SKIPPED=$((_CNT_SKIPPED + 1))
+        if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
+        ;;
+    esac
+  done <<EOF
+$classify_results
+EOF
+
+  # ---------------------------------------------------------------------------
+  # Step 9: Write manifest (D3 schema v1) — only when no skips occurred per R8
+  # source_remote is best-effort; empty string if the source has no remote.
+  # ---------------------------------------------------------------------------
+  local source_remote
+  source_remote=$(git -C "$src_root" config --get remote.origin.url 2>/dev/null || echo "")
+  local applied_at
+  applied_at=$(date -u +%FT%TZ 2>/dev/null || echo "")
+
+  local manifest_path="${consumer_root}/.claude/specflow.manifest"
+
+  # Back up existing manifest before overwriting (no-force-on-user-paths rule)
+  if [ -f "$manifest_path" ]; then
+    cp "$manifest_path" "${manifest_path}.bak"
+  fi
+
+  printf '%s\n' "$manifest_tsv" | manifest_write "$manifest_path" "$ref" "$source_remote" "$applied_at"
+
+  # ---------------------------------------------------------------------------
+  # Step 10: Wire hooks via <src>/bin/specflow-install-hook (D8).
+  # Operate from the consumer root so settings.json is found by cwd.
+  # Consumer-local hook paths (never ~/.claude/hooks/…) per the D8 contract.
+  # ---------------------------------------------------------------------------
+  (
+    cd "$consumer_root"
+    "${src_root}/bin/specflow-install-hook" add SessionStart ".claude/hooks/session-start.sh"
+    "${src_root}/bin/specflow-install-hook" add Stop ".claude/hooks/stop.sh"
+  )
+
+  emit_summary
+  exit "$MAX_CODE"
 }
 
 cmd_update() {

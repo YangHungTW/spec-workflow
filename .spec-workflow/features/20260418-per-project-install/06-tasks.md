@@ -150,7 +150,8 @@ Wave schedule lives at the bottom; R↔T trace table immediately below it.
   - `bin/specflow-seed init --dry-run --from $(pwd) --ref HEAD` inside a fresh-consumer mktemp produces per-path `would-*` lines AND a byte-identical filesystem (`find "$CR" -type f | xargs shasum | sort | shasum` identical before/after).
 - **Depends on**: T2
 - **Parallel-safe-with**: T4, T5, T6 (tests are different new files)
-- [ ]
+- [x]
+- 2026-04-18 Developer — implement: cmd_init dispatcher + hook wiring; all verify assertions pass; 864 lines (+243 vs W1 close)
 
 ---
 
