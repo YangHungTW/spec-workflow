@@ -400,7 +400,7 @@ Wave schedule lives at the bottom; R↔T trace table immediately below it.
   - `bash test/t46_migrate_dry_run.sh` exits 0 (requires T11 merged).
 - **Depends on**: T2
 - **Parallel-safe-with**: T11, T12, T14
-- [ ]
+- [x] 2026-04-18 Developer — implement: created test/t46_migrate_dry_run.sh (200 lines); three-root hash capture present; bash -n + exec-bit verified; RED on stub (plan-empty)
 
 ---
 
