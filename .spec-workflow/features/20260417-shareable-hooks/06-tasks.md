@@ -217,7 +217,7 @@ tool", it means `bin/claude-symlink` per D7.
   - `/Users/yanghungtw/Tools/spec-workflow/bin/claude-symlink --help | grep -q 'hooks'` — usage still enumerates hooks (not regressed since T2).
 - **Depends on**: T1, T2, T3, T4, T5, T6, T7
 - **Parallel-safe-with**: —
-- [ ]
+- [x]
 
 ---
 
