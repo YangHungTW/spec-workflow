@@ -511,7 +511,8 @@ cmd_init() {
         /*) ;;
         *)  link_target="$(dirname "$agent_link")/$link_target" ;;
       esac
-      # Strip the trailing /.claude/agents/specflow to recover the repo root
+      # Suffix is a literal constant from the install path, so string
+      # truncation is the right shape here (vs dirname chain).
       local candidate="${link_target%/.claude/agents/specflow}"
       if [ "$candidate" != "$link_target" ] \
          && [ -f "${candidate}/bin/specflow-seed" ] \
@@ -528,7 +529,11 @@ cmd_init() {
     || die "source repo path not accessible: $src_root"
 
   # ---------------------------------------------------------------------------
-  # Step 2: Resolve consumer repo root
+  # Step 2: Resolve consumer repo root.
+  # Callers must cd into the consumer repo before invoking cmd_init
+  # (matching t39/t41's shape). repo_root() resolves from CWD via
+  # git rev-parse --show-toplevel; callers must not invoke from the source
+  # repo's own CWD or the init will target the source repo itself.
   # ---------------------------------------------------------------------------
   local consumer_root
   consumer_root=$(repo_root)
@@ -561,7 +566,8 @@ cmd_init() {
 
   # ---------------------------------------------------------------------------
   # Step 5: Build the plan (classify-before-mutate: reads first, writes second)
-  # Enumerate relpaths and compute expected SHA for each.
+  # SHA is computed here rather than inside classify_copy_target because
+  # classify_copy_target is a pure classifier (no side-effectful source reads).
   # plan_lines is a newline-separated list of "relpath<TAB>expected_sha" pairs.
   # ---------------------------------------------------------------------------
   local plan_lines=""
@@ -631,7 +637,8 @@ EOF
 
   # ---------------------------------------------------------------------------
   # Step 8: Dispatch — mutations live here (classify-before-mutate contract)
-  # Accumulate manifest TSV rows as we go.
+  # manifest_tsv excludes skipped/failed paths — only successfully-written
+  # files enter the recorded baseline.
   # ---------------------------------------------------------------------------
   local manifest_tsv=""
 
@@ -642,14 +649,19 @@ EOF
 
     case "$state" in
       missing)
-        cat "$src_file" | write_atomic "$dst_file"
-        echo "created: ${relpath}"
-        _CNT_CREATED=$((_CNT_CREATED + 1))
-        if [ -n "$manifest_tsv" ]; then
-          manifest_tsv="${manifest_tsv}
+        if cat "$src_file" | write_atomic "$dst_file"; then
+          echo "created: ${relpath}"
+          _CNT_CREATED=$((_CNT_CREATED + 1))
+          if [ -n "$manifest_tsv" ]; then
+            manifest_tsv="${manifest_tsv}
 ${relpath}	${expected_sha}"
+          else
+            manifest_tsv="${relpath}	${expected_sha}"
+          fi
         else
-          manifest_tsv="${relpath}	${expected_sha}"
+          echo "FAIL: write failed for ${relpath}" >&2
+          _CNT_SKIPPED=$((_CNT_SKIPPED + 1))
+          if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
         fi
         ;;
       ok)
@@ -663,15 +675,26 @@ ${relpath}	${expected_sha}"
         fi
         ;;
       drifted-ours)
-        cp "$dst_file" "${dst_file}.bak"
-        cat "$src_file" | write_atomic "$dst_file"
-        echo "replaced:drifted: ${relpath}"
-        _CNT_REPLACED=$((_CNT_REPLACED + 1))
-        if [ -n "$manifest_tsv" ]; then
-          manifest_tsv="${manifest_tsv}
-${relpath}	${expected_sha}"
+        # Version the backup name when one already exists — never silently
+        # clobber a previous backup (no-force-on-user-paths.md rule 4).
+        if [ -e "${dst_file}.bak" ]; then
+          cp "$dst_file" "${dst_file}.bak.$(date +%Y%m%dT%H%M%S)"
         else
-          manifest_tsv="${relpath}	${expected_sha}"
+          cp "$dst_file" "${dst_file}.bak"
+        fi
+        if cat "$src_file" | write_atomic "$dst_file"; then
+          echo "replaced:drifted: ${relpath}"
+          _CNT_REPLACED=$((_CNT_REPLACED + 1))
+          if [ -n "$manifest_tsv" ]; then
+            manifest_tsv="${manifest_tsv}
+${relpath}	${expected_sha}"
+          else
+            manifest_tsv="${relpath}	${expected_sha}"
+          fi
+        else
+          echo "FAIL: write failed for ${relpath}" >&2
+          _CNT_SKIPPED=$((_CNT_SKIPPED + 1))
+          if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
         fi
         ;;
       user-modified)
@@ -700,6 +723,18 @@ $classify_results
 EOF
 
   # ---------------------------------------------------------------------------
+  # Idempotent path: nothing changed → skip state-file mutations entirely.
+  # Rewriting the manifest with a fresh applied_at would break AC2.b's
+  # byte-identical guarantee; rewiring hooks is also unnecessary.
+  if [ "$MAX_CODE" -eq 0 ] \
+     && [ "$_CNT_CREATED" -eq 0 ] \
+     && [ "$_CNT_REPLACED" -eq 0 ] \
+     && [ "$_CNT_SKIPPED" -eq 0 ]; then
+    emit_summary
+    exit 0
+  fi
+
+  # ---------------------------------------------------------------------------
   # Step 9: Write manifest (D3 schema v1) — only when no skips occurred per R8
   # source_remote is best-effort; empty string if the source has no remote.
   # ---------------------------------------------------------------------------
@@ -710,9 +745,14 @@ EOF
 
   local manifest_path="${consumer_root}/.claude/specflow.manifest"
 
-  # Back up existing manifest before overwriting (no-force-on-user-paths rule)
+  # Back up existing manifest before overwriting (no-force-on-user-paths rule).
+  # Version the backup when one already exists to avoid silent data loss.
   if [ -f "$manifest_path" ]; then
-    cp "$manifest_path" "${manifest_path}.bak"
+    if [ -e "${manifest_path}.bak" ]; then
+      cp "$manifest_path" "${manifest_path}.bak.$(date +%Y%m%dT%H%M%S)"
+    else
+      cp "$manifest_path" "${manifest_path}.bak"
+    fi
   fi
 
   printf '%s\n' "$manifest_tsv" | manifest_write "$manifest_path" "$ref" "$source_remote" "$applied_at"
