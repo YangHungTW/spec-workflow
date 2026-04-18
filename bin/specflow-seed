@@ -773,8 +773,263 @@ EOF
 }
 
 cmd_update() {
-  echo "update: not-yet-implemented"
-  exit 0
+  # ---------------------------------------------------------------------------
+  # Step 1: Validate required flag — --to <ref> is mandatory per D6.
+  # No default-HEAD fallback; callers must be explicit.
+  # ---------------------------------------------------------------------------
+  [ -n "$TO_REF" ] || die "--to <ref> required"
+
+  # ---------------------------------------------------------------------------
+  # Step 2: Resolve consumer repo root and require manifest early.
+  # Manifest check precedes source resolution so the error message is
+  # unambiguous even when --from is absent.
+  # ---------------------------------------------------------------------------
+  local consumer_root
+  consumer_root=$(repo_root)
+
+  local manifest_path="${consumer_root}/.claude/specflow.manifest"
+  [ -f "$manifest_path" ] || die "no manifest; run init or migrate first"
+
+  # ---------------------------------------------------------------------------
+  # Step 3: Resolve source repo root via layered fallback (D7):
+  #   --from > $SPECFLOW_SRC > readlink ~/.claude/agents/specflow → strip suffix
+  # ---------------------------------------------------------------------------
+  local src_root=""
+
+  if [ -n "$SRC" ]; then
+    src_root="$SRC"
+  elif [ -n "${SPECFLOW_SRC:-}" ]; then
+    src_root="$SPECFLOW_SRC"
+  else
+    local agent_link="$HOME/.claude/agents/specflow"
+    if [ -L "$agent_link" ]; then
+      local link_target
+      link_target=$(readlink "$agent_link")
+      case "$link_target" in
+        /*) ;;
+        *)  link_target="$(dirname "$agent_link")/$link_target" ;;
+      esac
+      local candidate="${link_target%/.claude/agents/specflow}"
+      if [ "$candidate" != "$link_target" ] \
+         && [ -f "${candidate}/bin/specflow-seed" ] \
+         && [ -d "${candidate}/.claude/agents/specflow" ]; then
+        src_root="$candidate"
+      fi
+    fi
+  fi
+
+  [ -n "$src_root" ] || die "cannot resolve source repo; pass --from <path> or set SPECFLOW_SRC"
+
+  src_root=$(cd "$src_root" 2>/dev/null && pwd -P) \
+    || die "source repo path not accessible: $src_root"
+
+  # ---------------------------------------------------------------------------
+  # Step 5: Read manifest — get previous_ref and per-file baseline SHA map.
+  # manifest_read emits relpath<TAB>sha256 rows; we also sniff the ref string.
+  # ---------------------------------------------------------------------------
+  local previous_ref
+  previous_ref=$(manifest_ref_sniff "$manifest_path")
+
+  local manifest_rows
+  manifest_rows=$(manifest_read "$manifest_path") || exit 2
+
+  # Build a lookup table: for a given relpath, return its baseline sha.
+  # We store rows as newline-delimited "<relpath><TAB><sha>" and grep at
+  # lookup time — O(n) per lookup makes the overall plan O(n²), but n
+  # (number of managed files, ~dozens) is small enough that this is fine.
+  # A hash-map would require bash 4 associative arrays (unavailable on 3.2).
+
+  echo "update: previous-ref ${previous_ref}; target-ref ${TO_REF}"
+
+  # ---------------------------------------------------------------------------
+  # Step 6: Build the plan — update never touches team-memory (R4/R8).
+  # ---------------------------------------------------------------------------
+  local relpaths
+  relpaths=$(plan_copy "$src_root" update)
+
+  # ---------------------------------------------------------------------------
+  # Step 7: For each planned relpath compute expected_sha + baseline_sha,
+  # then classify. Accumulate plan_lines as relpath<TAB>expected<TAB>baseline<TAB>state.
+  # Reads first; writes happen in Step 9.
+  # ---------------------------------------------------------------------------
+  local plan_lines=""
+
+  while IFS= read -r relpath; do
+    [ -n "$relpath" ] || continue
+    local src_file="${src_root}/${relpath}"
+    if [ ! -f "$src_file" ]; then
+      continue
+    fi
+
+    local expected_sha
+    expected_sha=$(sha256_of "$src_file")
+
+    # Baseline sha: grep the manifest rows for this exact relpath.
+    # grep exits non-zero when no match — that means absent from manifest.
+    local baseline_sha
+    baseline_sha=$(printf '%s\n' "$manifest_rows" \
+      | grep -F "	" \
+      | awk -F'	' -v rp="$relpath" '$1 == rp { print $2; exit }')
+
+    local state
+    state=$(classify_copy_target "$consumer_root" "$relpath" "$expected_sha" "$baseline_sha")
+
+    if [ -n "$plan_lines" ]; then
+      plan_lines="${plan_lines}
+${relpath}	${expected_sha}	${baseline_sha}	${state}"
+    else
+      plan_lines="${relpath}	${expected_sha}	${baseline_sha}	${state}"
+    fi
+  done <<EOF
+$relpaths
+EOF
+
+  # ---------------------------------------------------------------------------
+  # Step 8: --dry-run early-return — emit would-* lines; no writes.
+  # ---------------------------------------------------------------------------
+  if [ "$DRY_RUN" = "1" ]; then
+    while IFS='	' read -r relpath expected_sha baseline_sha state; do
+      [ -n "$relpath" ] || continue
+      case "$state" in
+        missing)            echo "would-create: ${relpath}" ;;
+        ok)                 echo "would-skip:already: ${relpath}" ;;
+        drifted-ours)       echo "would-replace:drifted: ${relpath}" ;;
+        user-modified)      echo "would-skip:user-modified: ${relpath}" ;;
+        real-file-conflict) echo "would-skip:real-file-conflict: ${relpath}" ;;
+        foreign)            echo "would-skip:foreign: ${relpath}" ;;
+        *)                  echo "would-skip:unknown: ${relpath}" ;;
+      esac
+    done <<EOF
+$plan_lines
+EOF
+    return 0
+  fi
+
+  # ---------------------------------------------------------------------------
+  # Step 9: Dispatch — mutations live here.
+  # manifest_tsv tracks only successfully-written paths for the new manifest.
+  # ---------------------------------------------------------------------------
+  local manifest_tsv=""
+
+  while IFS='	' read -r relpath expected_sha baseline_sha state; do
+    [ -n "$relpath" ] || continue
+    local src_file="${src_root}/${relpath}"
+    local dst_file="${consumer_root}/${relpath}"
+
+    case "$state" in
+      missing)
+        if cat "$src_file" | write_atomic "$dst_file"; then
+          echo "created: ${relpath}"
+          _CNT_CREATED=$((_CNT_CREATED + 1))
+          if [ -n "$manifest_tsv" ]; then
+            manifest_tsv="${manifest_tsv}
+${relpath}	${expected_sha}"
+          else
+            manifest_tsv="${relpath}	${expected_sha}"
+          fi
+        else
+          echo "FAIL: write failed for ${relpath}" >&2
+          _CNT_SKIPPED=$((_CNT_SKIPPED + 1))
+          if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
+        fi
+        ;;
+      ok)
+        echo "already: ${relpath}"
+        _CNT_ALREADY=$((_CNT_ALREADY + 1))
+        if [ -n "$manifest_tsv" ]; then
+          manifest_tsv="${manifest_tsv}
+${relpath}	${expected_sha}"
+        else
+          manifest_tsv="${relpath}	${expected_sha}"
+        fi
+        ;;
+      drifted-ours)
+        # Backup before replace; version when a .bak already exists.
+        if [ -e "${dst_file}.bak" ]; then
+          cp "$dst_file" "${dst_file}.bak.$(date +%Y%m%dT%H%M%S)"
+        else
+          cp "$dst_file" "${dst_file}.bak"
+        fi
+        if cat "$src_file" | write_atomic "$dst_file"; then
+          echo "replaced:drifted: ${relpath}"
+          _CNT_REPLACED=$((_CNT_REPLACED + 1))
+          if [ -n "$manifest_tsv" ]; then
+            manifest_tsv="${manifest_tsv}
+${relpath}	${expected_sha}"
+          else
+            manifest_tsv="${relpath}	${expected_sha}"
+          fi
+        else
+          echo "FAIL: write failed for ${relpath}" >&2
+          _CNT_SKIPPED=$((_CNT_SKIPPED + 1))
+          if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
+        fi
+        ;;
+      user-modified)
+        echo "skipped:user-modified: ${relpath}"
+        _CNT_SKIPPED=$((_CNT_SKIPPED + 1))
+        if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
+        ;;
+      real-file-conflict)
+        echo "skipped:real-file-conflict: ${relpath}"
+        _CNT_SKIPPED=$((_CNT_SKIPPED + 1))
+        if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
+        ;;
+      foreign)
+        echo "skipped:foreign: ${relpath}"
+        _CNT_SKIPPED=$((_CNT_SKIPPED + 1))
+        if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
+        ;;
+      *)
+        echo "skipped:unknown-state: ${relpath}"
+        _CNT_SKIPPED=$((_CNT_SKIPPED + 1))
+        if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
+        ;;
+    esac
+  done <<EOF
+$plan_lines
+EOF
+
+  # ---------------------------------------------------------------------------
+  # Ref-advance gate (AC8.b): if any skip/failure occurred, do NOT rewrite the
+  # manifest. The stale ref lets a subsequent update --to <ref> re-attempt after
+  # the user resolves conflicts.
+  # ---------------------------------------------------------------------------
+  if [ "$MAX_CODE" -ne 0 ]; then
+    emit_summary
+    exit "$MAX_CODE"
+  fi
+
+  # ---------------------------------------------------------------------------
+  # Idempotent-exit short-circuit (lesson #3): zero mutations → skip manifest
+  # rewrite entirely to preserve byte-identity of the manifest.
+  # ---------------------------------------------------------------------------
+  if [ "$_CNT_CREATED" -eq 0 ] && [ "$_CNT_REPLACED" -eq 0 ]; then
+    emit_summary
+    exit 0
+  fi
+
+  # ---------------------------------------------------------------------------
+  # Step 10: Rewrite manifest with the new ref and updated SHAs.
+  # Backup the existing manifest before overwriting.
+  # ---------------------------------------------------------------------------
+  local source_remote
+  source_remote=$(git -C "$src_root" config --get remote.origin.url 2>/dev/null || echo "")
+  local applied_at
+  applied_at=$(date -u +%FT%TZ 2>/dev/null || echo "")
+
+  if [ -f "$manifest_path" ]; then
+    if [ -e "${manifest_path}.bak" ]; then
+      cp "$manifest_path" "${manifest_path}.bak.$(date +%Y%m%dT%H%M%S)"
+    else
+      cp "$manifest_path" "${manifest_path}.bak"
+    fi
+  fi
+
+  printf '%s\n' "$manifest_tsv" | manifest_write "$manifest_path" "$TO_REF" "$source_remote" "$applied_at"
+
+  emit_summary
+  exit "$MAX_CODE"
 }
 
 cmd_migrate() {
