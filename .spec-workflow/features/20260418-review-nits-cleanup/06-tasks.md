@@ -58,7 +58,7 @@ All paths below are absolute under `/Users/yanghungtw/Tools/spec-workflow/`.
   - Not using bash-only regex: `! grep -q '\[\[ .* =~' /Users/yanghungtw/Tools/spec-workflow/.claude/commands/specflow/review.md` inside the new step (spot-check by inspection).
 - **Depends on**: —
 - **Parallel-safe-with**: T2, T3, T4, T5, T6, T7, T8, T9
-- [ ]
+- [x]
 
 ## T2 — R2 `awk`-fold refactor in `t35.sh` (R11 folded per D5)
 - **Milestone**: M2
@@ -423,6 +423,8 @@ All paths below are absolute under `/Users/yanghungtw/Tools/spec-workflow/`.
 _(populated by Developer as tasks complete; expected mechanical
 append-collisions on this section are resolved keep-both per
 `tpm/parallel-safe-append-sections.md`)_
+
+- T1 DONE 2026-04-17 — slug validator inserted in review.md Step 1 (sub-bullet after "If missing…"); bash 3.2 `case`-glob pattern, no `[[ =~ ]]`; all 6 verify checks pass.
 
 ---
 
