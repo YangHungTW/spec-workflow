@@ -188,7 +188,7 @@ All paths below are absolute under `/Users/yanghungtw/Tools/spec-workflow/`.
   - File syntactically intact — frontmatter still parses, body sections in order (visual inspection).
 - **Depends on**: —
 - **Parallel-safe-with**: T1, T2, T3, T5, T6, T7, T8, T9
-- [ ]
+- [x]
 
 ## T5 — R5 team-memory invocation block reshape in `reviewer-style.md` (D6)
 - **Milestone**: M3
@@ -423,6 +423,8 @@ All paths below are absolute under `/Users/yanghungtw/Tools/spec-workflow/`.
 _(populated by Developer as tasks complete; expected mechanical
 append-collisions on this section are resolved keep-both per
 `tpm/parallel-safe-append-sections.md`)_
+
+**T4 DONE** (2026-04-17) — Classifier grep before edit: 1 hit in `reviewer-security.md:12`, zero other files in `.claude/`. Applied rename `reviewer-security/` → `reviewer/` on that line. Post-edit: `grep -c 'reviewer-security/' reviewer-security.md` = 0; `grep -c 'reviewer/' reviewer-security.md` = 3. t34: 32/32 PASS. Commit: 9609756.
 
 ---
 
