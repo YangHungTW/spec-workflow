@@ -552,7 +552,8 @@ Wave schedule lives at the bottom; R↔T trace table immediately below it.
   - `grep -c '^t39_\|^t40_\|^t41_\|^t42_\|^t43_\|^t44_\|^t45_\|^t46_\|^t47_\|^t48_\|^t49_\|^t50_' test/smoke.sh` ≥ 12 (all new tests registered — pattern depends on existing registration shape; adjust the grep to match).
 - **Depends on**: T4, T5, T6, T8, T9, T10, T12, T13, T14, T16, T17, T18 (every test file must exist before registration; otherwise `bash test/smoke.sh` exits non-zero)
 - **Parallel-safe-with**: T15, T20 (different file; different editor)
-- [ ]
+- [x] implement
+- 2026-04-18 Developer — registered t39-t50 in test/smoke.sh for-loop; bash -n passes; grep count 12
 
 ---
 
