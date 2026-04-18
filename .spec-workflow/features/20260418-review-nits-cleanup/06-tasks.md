@@ -188,7 +188,7 @@ All paths below are absolute under `/Users/yanghungtw/Tools/spec-workflow/`.
   - File syntactically intact — frontmatter still parses, body sections in order (visual inspection).
 - **Depends on**: —
 - **Parallel-safe-with**: T1, T2, T3, T5, T6, T7, T8, T9
-- [ ]
+- [x]
 
 ## T5 — R5 team-memory invocation block reshape in `reviewer-style.md` (D6)
 - **Milestone**: M3
@@ -427,6 +427,7 @@ append-collisions on this section are resolved keep-both per
 - T1 DONE 2026-04-17 — slug validator inserted in review.md Step 1 (sub-bullet after "If missing…"); bash 3.2 `case`-glob pattern, no `[[ =~ ]]`; all 6 verify checks pass.
 - **T2 DONE** (2026-04-17): awk-fold refactor in `test/t35_reviewer_rubric_schema.sh`. Single awk pass per rubric file replaces 7 file reads (head, frontmatter-awk, 4 grep-n, checklist-awk). R11 WHAT comment at line 106 deleted. Byte-identical output verified: `diff /tmp/t35_before.txt /tmp/t35_after.txt` empty. bash 3.2 (`/bin/bash`) passes. All verify checks green.
 **T3 complete** (2026-04-17): R7 `set -u -o pipefail` applied at line 7; R3 read-once refactor applied to `check_agent()` — each agent file read once into `content` variable, all 6 greps replaced with `printf '%s\n' "$content" | grep ...`. Byte-identical D2 verify: `diff /tmp/t34_before.txt /tmp/t34_after.txt` empty (exit=0). Suite: 32/32 PASS.
+**T4 DONE** (2026-04-17) — Classifier grep before edit: 1 hit in `reviewer-security.md:12`, zero other files in `.claude/`. Applied rename `reviewer-security/` → `reviewer/` on that line. Post-edit: `grep -c 'reviewer-security/' reviewer-security.md` = 0; `grep -c 'reviewer/' reviewer-security.md` = 3. t34: 32/32 PASS. Commit: 9609756.
 
 ---
 
