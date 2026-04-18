@@ -50,6 +50,9 @@ AT_REF=""
 # 0 = fully converged; 1 = conflict or mutation failure; 2 = die()
 MAX_CODE=0
 
+# Cached uname for sha256 dispatch — populated once on first call to sha256_of
+_UNAME_S=""
+
 # ---------------------------------------------------------------------------
 # die <msg> — print msg to stderr and exit 2
 # ---------------------------------------------------------------------------
@@ -116,12 +119,290 @@ usage() {
 }
 
 # ---------------------------------------------------------------------------
-# emit_summary — TODO(W2-W4): wired from cmd_init/update/migrate after the
-# classifier and dispatcher land in W1; exit-code shape is scaffolded here so
-# the contract is stable across waves.
+# emit_summary — wired from cmd_init/update/migrate after the classifier and
+# dispatcher land; exit-code shape is stable across waves.
 # ---------------------------------------------------------------------------
 emit_summary() {
   echo "summary: created=0 already=0 replaced=0 skipped=0 (exit $MAX_CODE)"
+}
+
+# ---------------------------------------------------------------------------
+# sha256_of <path>
+# Dispatch by uname -s: Darwin/*BSD → shasum -a 256; Linux/* → sha256sum.
+# Python 3 hashlib fallback if neither binary is present.
+# Caches uname result in _UNAME_S to avoid repeated forks (performance rule).
+# ---------------------------------------------------------------------------
+sha256_of() {
+  local path="$1"
+  if [ -z "$_UNAME_S" ]; then
+    _UNAME_S="$(uname -s 2>/dev/null)"
+  fi
+  case "$_UNAME_S" in
+    Darwin|FreeBSD|OpenBSD|NetBSD)
+      if command -v shasum >/dev/null 2>&1; then
+        shasum -a 256 "$path" | awk '{print $1}'
+        return
+      fi
+      ;;
+    *)
+      if command -v sha256sum >/dev/null 2>&1; then
+        sha256sum "$path" | awk '{print $1}'
+        return
+      fi
+      ;;
+  esac
+  # Python 3 fallback — allowed on install-time paths (bash-32-portability rule)
+  python3 -c 'import hashlib,sys; print(hashlib.sha256(open(sys.argv[1],"rb").read()).hexdigest())' "$path"
+}
+
+# ---------------------------------------------------------------------------
+# manifest_ref_sniff <path>
+# Bash-only defensive ref reader — no Python 3.
+# Used when callers need only the ref string, not the full file map.
+# Exact awk form from D3 tradeoffs in 04-tech.md.
+# ---------------------------------------------------------------------------
+manifest_ref_sniff() {
+  awk -F'"' '/"specflow_ref"/ { print $4; exit }' "$1"
+}
+
+# ---------------------------------------------------------------------------
+# manifest_read <path>
+# Python 3 heredoc. Validates schema v1; emits relpath<TAB>sha256 rows on stdout.
+# Exits 2 with "manifest: corrupt" on stderr for any schema or parse failure.
+# ---------------------------------------------------------------------------
+manifest_read() {
+  local mpath="$1"
+  python3 - "$mpath" <<'PYEOF'
+import sys, json
+
+path = sys.argv[1]
+try:
+    with open(path, 'r') as f:
+        data = json.load(f)
+except Exception as e:
+    print("manifest: corrupt", file=sys.stderr)
+    sys.exit(2)
+
+if data.get("schema_version") != 1:
+    print("manifest: corrupt", file=sys.stderr)
+    sys.exit(2)
+if not isinstance(data.get("specflow_ref"), str) or not data["specflow_ref"]:
+    print("manifest: corrupt", file=sys.stderr)
+    sys.exit(2)
+if not isinstance(data.get("files"), dict):
+    print("manifest: corrupt", file=sys.stderr)
+    sys.exit(2)
+
+for relpath, sha in data["files"].items():
+    print("{}\t{}".format(relpath, sha))
+PYEOF
+}
+
+# ---------------------------------------------------------------------------
+# manifest_write <path> <ref> <source_remote> <applied_at>
+# Reads relpath<TAB>sha256 rows from stdin; builds D3 schema v1 JSON;
+# writes atomically to <path> via .tmp + os.replace (D11 discipline).
+# Caller must write .bak before invoking this when overwriting an existing
+# manifest (backup discipline applies at cmd_update / cmd_migrate call-sites).
+#
+# Implementation note: bash heredoc (<<'PYEOF') and piped stdin cannot both
+# feed into a single python3 invocation — heredoc wins as the script source.
+# We capture stdin to a temp file before invoking python3 so the TSV data is
+# available independently of the heredoc channel.
+# ---------------------------------------------------------------------------
+manifest_write() {
+  local mpath="$1" ref="$2" source_remote="$3" applied_at="$4"
+  # Capture TSV from caller's stdin; write to temp file for python3 to read
+  local tsv_tmp
+  tsv_tmp=$(mktemp)
+  cat > "$tsv_tmp"
+  python3 - "$mpath" "$ref" "$source_remote" "$applied_at" "$tsv_tmp" <<'PYEOF'
+import sys, json, os
+
+path          = sys.argv[1]
+ref           = sys.argv[2]
+source_remote = sys.argv[3]
+applied_at    = sys.argv[4]
+tsv_file      = sys.argv[5]
+
+files = {}
+with open(tsv_file, 'r') as fh:
+    for line in fh:
+        line = line.rstrip("\n")
+        if not line:
+            continue
+        parts = line.split("\t", 1)
+        if len(parts) == 2:
+            files[parts[0]] = parts[1]
+
+data = {
+    "schema_version": 1,
+    "specflow_ref": ref,
+    "source_remote": source_remote,
+    "applied_at": applied_at,
+    "files": files,
+}
+
+tmp = path + ".tmp"
+os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+with open(tmp, "w") as f:
+    json.dump(data, f, indent=2, sort_keys=False)
+    f.write("\n")
+os.replace(tmp, path)
+PYEOF
+  local rc=$?
+  rm -f "$tsv_tmp"
+  return $rc
+}
+
+# ---------------------------------------------------------------------------
+# classify_copy_target <consumer_root> <relpath> <expected_sha> <baseline_sha>
+#
+# Pure function; emits exactly one of five enum values on stdout:
+#   missing | ok | drifted-ours | user-modified | real-file-conflict
+#
+# Note on the 5-vs-6 state question: The D4 pseudocode (04-tech.md §3) has
+# exactly 5 return paths. The dispatcher table lists a 6th state "foreign"
+# which is emitted by the copy-phase dispatcher when a path falls outside the
+# managed set — not by this classifier. This function implements the D4
+# pseudocode branch-for-branch; "foreign" is NOT a return value here.
+#
+# <baseline_sha> == "" represents "absent from manifest" (pseudocode's None).
+# No side effects. No mutations.
+# ---------------------------------------------------------------------------
+classify_copy_target() {
+  local consumer_root="$1" relpath="$2" expected_sha="$3" baseline_sha="$4"
+  local dst="${consumer_root}/${relpath}"
+
+  # Branch 1: dst does not exist (neither as file nor as symlink)
+  if [ ! -e "$dst" ] && [ ! -L "$dst" ]; then
+    echo "missing"
+    return
+  fi
+
+  # Branch 2: dst is a symlink — we never create symlinks (R1)
+  if [ -L "$dst" ]; then
+    echo "real-file-conflict"
+    return
+  fi
+
+  # Branch 3: dst is a directory — file expected here
+  if [ -d "$dst" ]; then
+    echo "real-file-conflict"
+    return
+  fi
+
+  # Branch 4: dst is not a regular file (fifo, device, etc.)
+  if [ ! -f "$dst" ]; then
+    echo "real-file-conflict"
+    return
+  fi
+
+  # Branch 5: dst is a regular file — compare hashes
+  local actual_sha
+  actual_sha=$(sha256_of "$dst")
+
+  if [ "$actual_sha" = "$expected_sha" ]; then
+    echo "ok"
+    return
+  fi
+
+  # baseline_sha == "" means absent from manifest (pseudocode None branch)
+  if [ -z "$baseline_sha" ]; then
+    # File is new in the new ref but destination already has content —
+    # the user must have created it manually; cannot be ours.
+    echo "user-modified"
+    return
+  fi
+
+  if [ "$actual_sha" = "$baseline_sha" ]; then
+    echo "drifted-ours"
+    return
+  fi
+
+  echo "user-modified"
+}
+
+# ---------------------------------------------------------------------------
+# plan_copy <src_root> <mode>
+# Enumerates managed relpaths from the source tree.
+# mode=init|migrate: includes static subtrees + team-memory skeleton.
+# mode=update:       static subtrees only (update never touches team-memory).
+# Emits newline-separated relpaths on stdout.
+# ---------------------------------------------------------------------------
+plan_copy() {
+  local src_root="$1" mode="$2"
+
+  # Static managed subtrees — enumerate all regular files under each prefix
+  local prefix
+  for prefix in \
+    ".claude/agents/specflow" \
+    ".claude/commands/specflow" \
+    ".claude/hooks" \
+    ".claude/rules" \
+    ".spec-workflow/features/_template"
+  do
+    if [ -d "${src_root}/${prefix}" ]; then
+      # find with -type f; strip the src_root/ prefix to get relpath
+      find "${src_root}/${prefix}" -type f | while IFS= read -r fpath; do
+        # Strip leading src_root + slash
+        local rel="${fpath#${src_root}/}"
+        printf '%s\n' "$rel"
+      done
+    fi
+  done
+
+  # Team-memory skeleton — only for init or migrate modes
+  case "$mode" in
+    init|migrate)
+      # Enumerate role dirs (non-shared subdirs of .claude/team-memory)
+      local tm_root="${src_root}/.claude/team-memory"
+      if [ -d "$tm_root" ]; then
+        find "$tm_root" -maxdepth 1 -mindepth 1 -type d | sort | while IFS= read -r role_dir; do
+          local role_name
+          role_name=$(basename "$role_dir")
+          if [ "$role_name" != "shared" ]; then
+            # Synthesized: one index.md per role dir (empty-skeleton per R4)
+            printf '.claude/team-memory/%s/index.md\n' "$role_name"
+          fi
+        done
+        # shared dir always gets both README.md and index.md
+        printf '.claude/team-memory/shared/README.md\n'
+        printf '.claude/team-memory/shared/index.md\n'
+      fi
+      ;;
+  esac
+}
+
+# ---------------------------------------------------------------------------
+# write_atomic <dst>
+# Python 3 heredoc. Reads bytes from stdin; writes to <dst>.tmp; os.replace.
+# Ensures parent directory exists. No partial-write window (D11 discipline).
+#
+# Same stdin/heredoc conflict as manifest_write: capture bytes to temp file
+# first so the piped data and the Python heredoc don't compete for stdin.
+# ---------------------------------------------------------------------------
+write_atomic() {
+  local dst="$1"
+  local data_tmp
+  data_tmp=$(mktemp)
+  cat > "$data_tmp"
+  python3 - "$dst" "$data_tmp" <<'PYEOF'
+import sys, os
+
+dst      = sys.argv[1]
+src_file = sys.argv[2]
+with open(src_file, "rb") as f:
+    data = f.read()
+tmp = dst + ".tmp"
+os.makedirs(os.path.dirname(os.path.abspath(dst)), exist_ok=True)
+with open(tmp, "wb") as f:
+    f.write(data)
+os.replace(tmp, dst)
+PYEOF
+  local rc=$?
+  rm -f "$data_tmp"
+  return $rc
 }
 
 # ---------------------------------------------------------------------------
@@ -192,10 +473,81 @@ cmd_migrate() {
   exit 0
 }
 
-# Hidden classifier harness slot — reserved for Wave 1 __probe
+# ---------------------------------------------------------------------------
+# cmd_probe — hidden __probe subcommand for Wave 1 TDD harness.
+# Not listed in usage(). Exposes library functions for isolated testing.
+#
+# Verbs:
+#   classify <consumer_root> <relpath> <expected_sha> <baseline_sha>
+#   manifest-roundtrip <path>
+#   plan <src_root> <mode>
+# ---------------------------------------------------------------------------
 cmd_probe() {
-  echo "__probe: not-yet-implemented"
-  exit 0
+  local verb="${1:-}"
+  case "$verb" in
+    classify)
+      [ "$#" -eq 5 ] || die "__probe classify requires 4 arguments: <consumer_root> <relpath> <expected_sha> <baseline_sha>"
+      classify_copy_target "$2" "$3" "$4" "$5"
+      ;;
+    manifest-roundtrip)
+      [ "$#" -eq 2 ] || die "__probe manifest-roundtrip requires 1 argument: <path>"
+      local mpath="$2"
+      # Extract all fields from the manifest in one Python3 invocation
+      # Write to sibling .roundtrip.tmp and compare for byte-identity
+      local sibling="${mpath%.manifest}.roundtrip.tmp"
+      python3 - "$mpath" "$sibling" <<'PYEOF'
+import sys, json, os
+
+src  = sys.argv[1]
+dst  = sys.argv[2]
+
+with open(src, 'r') as f:
+    data = json.load(f)
+
+if data.get("schema_version") != 1:
+    print("manifest: corrupt", file=sys.stderr)
+    sys.exit(2)
+if not isinstance(data.get("specflow_ref"), str) or not data["specflow_ref"]:
+    print("manifest: corrupt", file=sys.stderr)
+    sys.exit(2)
+if not isinstance(data.get("files"), dict):
+    print("manifest: corrupt", file=sys.stderr)
+    sys.exit(2)
+
+# Re-assemble with same field order as manifest_write
+out = {
+    "schema_version": 1,
+    "specflow_ref": data["specflow_ref"],
+    "source_remote": data.get("source_remote", ""),
+    "applied_at": data.get("applied_at", ""),
+    "files": data["files"],
+}
+
+tmp = dst + ".tmp"
+os.makedirs(os.path.dirname(os.path.abspath(dst)), exist_ok=True)
+with open(tmp, "w") as f:
+    json.dump(out, f, indent=2, sort_keys=False)
+    f.write("\n")
+os.replace(tmp, dst)
+PYEOF
+      # Assert byte-identity
+      if cmp -s "$mpath" "$sibling"; then
+        rm -f "$sibling"
+        exit 0
+      else
+        echo "manifest-roundtrip: byte mismatch" >&2
+        rm -f "$sibling"
+        exit 1
+      fi
+      ;;
+    plan)
+      [ "$#" -eq 3 ] || die "__probe plan requires 2 arguments: <src_root> <mode>"
+      plan_copy "$2" "$3"
+      ;;
+    *)
+      die "__probe: unknown verb '${verb}' (classify|manifest-roundtrip|plan)"
+      ;;
+  esac
 }
 
 # ---------------------------------------------------------------------------
@@ -215,7 +567,7 @@ case "$_cmd" in
       init)    cmd_init ;;
       update)  cmd_update ;;
       migrate) cmd_migrate ;;
-      __probe) cmd_probe ;;
+      __probe) cmd_probe "$@" ;;
     esac
     ;;
   --dry-run|--from|--to|--ref)

@@ -126,7 +126,8 @@ Wave schedule lives at the bottom; R↔T trace table immediately below it.
   - `grep -En 'readlink -f|realpath|jq|mapfile|rm -rf| --force' /Users/yanghungtw/Tools/spec-workflow/bin/specflow-seed` returns empty.
 - **Depends on**: T1
 - **Parallel-safe-with**: — (sole task in W1; all code lives in `bin/specflow-seed` which collides with itself)
-- [ ]
+- [x]
+- 2026-04-18 Developer — implement: classifier + manifest IO + plan_copy library bundled into bin/specflow-seed; all 7 verify assertions pass; 581 lines
 
 ---
 
