@@ -1,5 +1,5 @@
 ---
-name: reviewer-style
+name: style
 scope: reviewer
 severity: should
 created: 2026-04-18

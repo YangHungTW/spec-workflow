@@ -345,7 +345,7 @@ When it says "reviewer agent" it means one of
   - Integration test t37 (T14) exits 0 once merged (deferred).
 - **Depends on**: T6, T7, T8.
 - **Parallel-safe-with**: T9
-- [ ]
+- [x]
 
 ---
 

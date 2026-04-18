@@ -1,5 +1,5 @@
 ---
-name: reviewer-performance
+name: performance
 scope: reviewer
 severity: should
 created: 2026-04-18
