@@ -322,7 +322,7 @@ All paths below are absolute under `/Users/yanghungtw/Tools/spec-workflow/`.
   - Test still passes: `bash /Users/yanghungtw/Tools/spec-workflow/test/t26_no_new_command.sh` exits 0.
 - **Depends on**: —
 - **Parallel-safe-with**: T1, T2, T3, T4, T5, T6, T7, T9
-- [ ]
+- [x]
 
 ## T9 — R12 `to_epoch()` removal in `stop.sh` (D4 pre-check + caller grep evidence)
 - **Milestone**: M6
@@ -423,6 +423,8 @@ All paths below are absolute under `/Users/yanghungtw/Tools/spec-workflow/`.
 _(populated by Developer as tasks complete; expected mechanical
 append-collisions on this section are resolved keep-both per
 `tpm/parallel-safe-append-sections.md`)_
+
+- **T8 done (2026-04-17)**: Deleted WHAT comment `# Count files only (not directories) in the commands dir` at line 57 of `test/t26_no_new_command.sh`. `grep -c 'Count files only'` = 0. `bash test/t26_no_new_command.sh` exits 0 (2/2 PASS).
 
 ---
 
