@@ -396,7 +396,7 @@ When it says "reviewer agent" it means one of
   - `bash /Users/yanghungtw/Tools/spec-workflow/test/t35_reviewer_rubric_schema.sh` exits 0 (requires T3–T5 merged).
 - **Depends on**: T3, T4, T5 (rubric files must exist for the test to pass green; red-first authoring is fine in parallel worktrees).
 - **Parallel-safe-with**: T11, T13, T14, T15
-- [ ]
+- [x]
 
 ## T13 — Test: `test/t36_inline_review_integration.sh`
 - **Milestone**: M6
@@ -559,6 +559,7 @@ _(populated by Developer as tasks complete; expected mechanical append-collision
 - 2026-04-17 T7 DONE — reviewer-performance agent created; all 8 verify checks PASS (model=sonnet, 6 blocks, axis=performance, stay-in-lane, rubric ref, 2x when-invoked).
 - 2026-04-17 T8 DONE — `.claude/agents/specflow/reviewer-style.md` created; model=sonnet, 6 blocks, 2 when-invoked sections, axis: style verdict footer, stay-in-lane literal, rubric reference; all 8 verify checks PASS.
 - 2026-04-17 T11 DONE — `test/t34_reviewer_verdict_contract.sh` created; 32 checks PASS (7 per axis × 3 axes + 5 round-trip severity classification); syntax clean, exec bit set, exits 0 standalone.
+- 2026-04-17 T12 DONE — `test/t35_reviewer_rubric_schema.sh` created; sandbox-HOME preflight, 5-key frontmatter, scope/name/severity/section-order/checklist checks for all 3 rubrics; syntax clean; exec bit set. NOTE: performance.md and style.md have name=reviewer-performance/reviewer-style (not matching filename stem per spec); test correctly catches this — rubric files need correction.
 
 ---
 
