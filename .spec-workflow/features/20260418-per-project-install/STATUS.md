@@ -2,7 +2,7 @@
 
 - **slug**: 20260418-per-project-install
 - **has-ui**: false
-- **stage**: implement
+- **stage**: gap-check
 - **created**: 2026-04-18
 - **updated**: 2026-04-18
 
@@ -15,7 +15,7 @@
 - [x] plan          (05-plan.md)                 — TPM
 - [x] tasks         (06-tasks.md)                — TPM
 - [x] implement     (tasks checked off)          — Developer
-- [ ] gap-check     (07-gaps.md, verdict PASS)   — QA-analyst
+- [x] gap-check     (07-gaps.md, verdict NITS)   — QA-analyst
 - [ ] verify        (08-verify.md, verdict PASS) — QA-tester
 - [ ] archive       (moved to .spec-workflow/archive/)     — TPM
 
@@ -54,3 +54,5 @@
 - 2026-04-18 | implement | wave W5 done — T15-T20 merged; 20/21 tasks complete. Post-merge smoke: 49/50 PASS; **t50 dogfood_staging_sentinel FAIL** — `~/.claude/agents/specflow` does not exist on this machine (global install was never run here). W6 gating issue: either run `bin/claude-symlink install` first to establish global state, or skip T21 (dogfood migrate has no global state to migrate from — T21's `migrate --from .` becomes effectively an init).
 - 2026-04-18 | implement | T21 dogfood migration (option B variant) — user chose B (skip t50 gate, run T21; no global install to tear down). Removed t50 from test/smoke.sh registration. Ran `bin/specflow-seed migrate --from . --ref $HEAD`. Output: created=0 already=58 replaced=0 skipped=0 exit=0. **Surfaced + fixed idempotent-exit bug**: when source == consumer on a fresh consumer (no prior manifest), the W2-hotfix idempotent-exit fired before manifest-write → NO manifest authored. Root cause: the short-circuit condition only checked counter state, not manifest presence. Fix: added `[ -f "${consumer_root}/.claude/specflow.manifest" ]` to both cmd_init and cmd_migrate idempotent-exit conditions so first-time writes still author the manifest. Re-ran migrate post-fix: `.claude/specflow.manifest` created at ref=94fa3ac, settings.json gained Stop hook entry (.bak produced), managed-subtree hash byte-identical (8f13d7e...). smoke.sh: 49/49 PASS. `~/.claude/` unaffected (D10 holds; no global install state to touch).
 - 2026-04-18 | tpm | T21 dogfood migration complete — this repo is now its own per-project consumer; .claude/specflow.manifest created at ref 94fa3ac; settings.json rewired to local hooks (.bak available); global ~/.claude/* symlinks left in place per D10 for any un-migrated consumer on this machine.
+- 2026-04-18 | qa-analyst | gap-check complete — verdict NITS, 5 findings (2 drift, 1 dead-code note, 1 dead-variable note, 1 weak-validation note); archive can proceed
+- 2026-04-18 | gap-fix | D1 + D2 + N1 cleared via commit 60237a2 — cmd_update idempotent-exit now advances ref when previous_ref != TO_REF (R8 AC8.a); README verb vocabulary aligned with code emissions (would-create / skip, not would-created / skipped) and skipped:unknown-state documented (R12 AC12.a/b); dead resolve_path() removed. smoke: 49/49 PASS.
