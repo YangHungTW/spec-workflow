@@ -177,7 +177,8 @@ Wave schedule lives at the bottom; R↔T trace table immediately below it.
   - `bash test/t39_init_fresh_sandbox.sh` exits 0 (requires T3 merged; RED pre-T3 for the right reason: init stub echoes "not-yet-implemented").
 - **Depends on**: T2 (classifier + manifest library exists)
 - **Parallel-safe-with**: T3, T5, T6
-- [ ]
+- [x]
+- 2026-04-18 Developer — implement: test/t39_init_fresh_sandbox.sh created; syntax OK, exec bit set, sandbox-HOME preflight present; RED on current HEAD (init stub not-yet-implemented)
 
 ---
 
