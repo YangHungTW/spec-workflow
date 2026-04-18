@@ -100,7 +100,7 @@ All paths below are absolute under `/Users/yanghungtw/Tools/spec-workflow/`.
   - Fork/exec reduction: the refactor folds multiple per-file reads into one `awk` (verified by code review — look for a single `awk` invocation per rubric in the inner loop body).
 - **Depends on**: —
 - **Parallel-safe-with**: T1, T3, T4, T5, T6, T7, T8, T9
-- [ ]
+- [x]
 
 ## T3 — R3 read-into-variable + R7 pipefail in `t34.sh` (bundled single-file)
 - **Milestone**: M2 + M4
@@ -425,6 +425,7 @@ append-collisions on this section are resolved keep-both per
 `tpm/parallel-safe-append-sections.md`)_
 
 - T1 DONE 2026-04-17 — slug validator inserted in review.md Step 1 (sub-bullet after "If missing…"); bash 3.2 `case`-glob pattern, no `[[ =~ ]]`; all 6 verify checks pass.
+- **T2 DONE** (2026-04-17): awk-fold refactor in `test/t35_reviewer_rubric_schema.sh`. Single awk pass per rubric file replaces 7 file reads (head, frontmatter-awk, 4 grep-n, checklist-awk). R11 WHAT comment at line 106 deleted. Byte-identical output verified: `diff /tmp/t35_before.txt /tmp/t35_after.txt` empty. bash 3.2 (`/bin/bash`) passes. All verify checks green.
 
 ---
 

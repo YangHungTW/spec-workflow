@@ -59,57 +59,127 @@ for stem in $RUBRICS; do
     continue
   fi
 
+  # Single awk pass: extract all needed values from the file in one traversal.
+  # Emits labeled key=value lines consumed below.
+  awk_out="$(awk '
+    BEGIN {
+      fm_open=0; fm_done=0; fm_keycount=0
+      fm_name=""; fm_scope=""; fm_severity=""
+      rule_line=0; why_line=0; apply_line=0; example_line=0
+      checklist_count=0; in_apply=0
+      dash_count=0
+    }
+    NR==1 {
+      print "first_line=" $0
+      if ($0 == "---") { dash_count=1; fm_open=1; next }
+      next
+    }
+    /^---$/ && (fm_open || dash_count==0) {
+      dash_count++
+      if (dash_count==2) { fm_open=0; fm_done=1; next }
+      if (dash_count==1) { fm_open=1; next }
+    }
+    fm_open {
+      if ($0 ~ /^name:/) {
+        val=substr($0, 6); gsub(/^ +/, "", val); fm_name=val
+        fm_keycount++
+      } else if ($0 ~ /^scope:/) {
+        val=substr($0, 7); gsub(/^ +/, "", val); fm_scope=val
+        fm_keycount++
+      } else if ($0 ~ /^severity:/) {
+        val=substr($0, 10); gsub(/^ +/, "", val); fm_severity=val
+        fm_keycount++
+      } else if ($0 ~ /^created:/) {
+        fm_keycount++
+      } else if ($0 ~ /^updated:/) {
+        fm_keycount++
+      }
+      next
+    }
+    fm_done {
+      if ($0 == "## Rule"         && rule_line==0)  { rule_line=NR }
+      if ($0 == "## Why"          && why_line==0)   { why_line=NR }
+      if ($0 == "## How to apply" && apply_line==0) { apply_line=NR; in_apply=1; next }
+      if ($0 == "## Example"      && example_line==0) { example_line=NR; in_apply=0 }
+      if (in_apply) {
+        if ($0 ~ /^## /) { in_apply=0 }
+        else if ($0 ~ /^[0-9]+\./ || $0 ~ /^[[:space:]]*[-*]/) { checklist_count++ }
+      }
+    }
+    END {
+      print "fm_keycount=" fm_keycount
+      print "fm_name="     fm_name
+      print "fm_scope="    fm_scope
+      print "fm_severity=" fm_severity
+      print "rule_line="   rule_line
+      print "why_line="    why_line
+      print "apply_line="  apply_line
+      print "example_line=" example_line
+      print "checklist_count=" checklist_count
+    }
+  ' "$filepath")"
+
+  # Parse awk output into shell variables
+  first_line=""
+  fm_keycount=0
+  fm_name=""
+  fm_scope=""
+  fm_severity=""
+  rule_line=0
+  why_line=0
+  apply_line=0
+  example_line=0
+  checklist_count=0
+
+  while IFS= read -r awkline; do
+    case "$awkline" in
+      first_line=*)      first_line="${awkline#first_line=}" ;;
+      fm_keycount=*)     fm_keycount="${awkline#fm_keycount=}" ;;
+      fm_name=*)         fm_name="${awkline#fm_name=}" ;;
+      fm_scope=*)        fm_scope="${awkline#fm_scope=}" ;;
+      fm_severity=*)     fm_severity="${awkline#fm_severity=}" ;;
+      rule_line=*)       rule_line="${awkline#rule_line=}" ;;
+      why_line=*)        why_line="${awkline#why_line=}" ;;
+      apply_line=*)      apply_line="${awkline#apply_line=}" ;;
+      example_line=*)    example_line="${awkline#example_line=}" ;;
+      checklist_count=*) checklist_count="${awkline#checklist_count=}" ;;
+    esac
+  done <<EOF
+$awk_out
+EOF
+
   # 2. Frontmatter: first line must be ---
-  first_line="$(head -1 "$filepath" 2>/dev/null)"
   if [ "$first_line" != "---" ]; then
     fail "$label: first line is not '---' (got: '$first_line')"
     continue
   fi
 
-  # Extract frontmatter block (between first and second ---)
-  frontmatter="$(awk '/^---$/{c++; next} c==1{print} c==2{exit}' "$filepath")"
-
   # 3. All 5 required keys present
-  key_count=0
-  for key in name scope severity created updated; do
-    if printf '%s\n' "$frontmatter" | grep -q "^${key}:"; then
-      key_count=$((key_count + 1))
-    fi
-  done
-  if [ "$key_count" -lt 5 ]; then
-    fail "$label: frontmatter missing keys (found $key_count/5; need name, scope, severity, created, updated)"
+  if [ "$fm_keycount" -lt 5 ]; then
+    fail "$label: frontmatter missing keys (found $fm_keycount/5; need name, scope, severity, created, updated)"
     continue
   fi
 
   # 4. scope: reviewer
-  scope_val="$(printf '%s\n' "$frontmatter" | awk '/^scope:/{print; exit}' | sed 's/^scope: *//')"
-  if [ "$scope_val" != "reviewer" ]; then
-    fail "$label: scope is '$scope_val', expected 'reviewer'"
+  if [ "$fm_scope" != "reviewer" ]; then
+    fail "$label: scope is '$fm_scope', expected 'reviewer'"
     continue
   fi
 
   # 5. name matches filename stem
-  name_val="$(printf '%s\n' "$frontmatter" | awk '/^name:/{print; exit}' | sed 's/^name: *//')"
-  if [ "$name_val" != "$stem" ]; then
-    fail "$label: name is '$name_val', expected '$stem'"
+  if [ "$fm_name" != "$stem" ]; then
+    fail "$label: name is '$fm_name', expected '$stem'"
     continue
   fi
 
   # 6. severity is one of must|should|avoid
-  sev_val="$(printf '%s\n' "$frontmatter" | awk '/^severity:/{print; exit}' | sed 's/^severity: *//')"
-  case "$sev_val" in
+  case "$fm_severity" in
     must|should|avoid) ;;
-    *) fail "$label: severity is '$sev_val', must be one of must|should|avoid"; continue ;;
+    *) fail "$label: severity is '$fm_severity', must be one of must|should|avoid"; continue ;;
   esac
 
   # 7. Body sections exist in correct order: ## Rule, ## Why, ## How to apply, ## Example
-  # Extract line numbers of each required heading
-  rule_line="$(grep -n '^## Rule$' "$filepath" | head -1 | cut -d: -f1)"
-  why_line="$(grep -n '^## Why$' "$filepath" | head -1 | cut -d: -f1)"
-  apply_line="$(grep -n '^## How to apply$' "$filepath" | head -1 | cut -d: -f1)"
-  example_line="$(grep -n '^## Example$' "$filepath" | head -1 | cut -d: -f1)"
-
-  if [ -z "$rule_line" ] || [ -z "$why_line" ] || [ -z "$apply_line" ] || [ -z "$example_line" ]; then
+  if [ "$rule_line" -eq 0 ] || [ "$why_line" -eq 0 ] || [ "$apply_line" -eq 0 ] || [ "$example_line" -eq 0 ]; then
     fail "$label: missing one or more required body sections (need ## Rule, ## Why, ## How to apply, ## Example)"
     continue
   fi
@@ -125,14 +195,12 @@ for stem in $RUBRICS; do
   fi
 
   # 8. >= 6 checklist entries in ## How to apply block
-  # Extract the block between ## How to apply and the next ## heading
-  checklist_count="$(awk '/^## How to apply$/{flag=1; next} /^## /{flag=0} flag' "$filepath" | grep -cE '^[0-9]+\.|^[[:space:]]*[-*]' || true)"
   if [ "$checklist_count" -lt 6 ]; then
     fail "$label: ## How to apply has only $checklist_count checklist entries (need >= 6)"
     continue
   fi
 
-  echo "PASS: $label (scope=reviewer name=$name_val severity=$sev_val sections=4 checklist=$checklist_count)"
+  echo "PASS: $label (scope=reviewer name=$fm_name severity=$fm_severity sections=4 checklist=$checklist_count)"
 done
 
 echo ""
