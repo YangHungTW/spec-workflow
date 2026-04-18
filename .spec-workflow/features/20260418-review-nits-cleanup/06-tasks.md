@@ -147,7 +147,7 @@ All paths below are absolute under `/Users/yanghungtw/Tools/spec-workflow/`.
   - R3 fork/exec reduction: code review confirms either (a) a single `cat`-to-variable per agent file, or (b) a single batched `awk` pass per agent file.
 - **Depends on**: —
 - **Parallel-safe-with**: T1, T2, T4, T5, T6, T7, T8, T9
-- [ ]
+- [x]
 
 ## T4 — R4 team-memory path rename in `reviewer-security.md` + R13 in-file verify (per D3)
 - **Milestone**: M3
@@ -423,6 +423,8 @@ All paths below are absolute under `/Users/yanghungtw/Tools/spec-workflow/`.
 _(populated by Developer as tasks complete; expected mechanical
 append-collisions on this section are resolved keep-both per
 `tpm/parallel-safe-append-sections.md`)_
+
+**T3 complete** (2026-04-17): R7 `set -u -o pipefail` applied at line 7; R3 read-once refactor applied to `check_agent()` — each agent file read once into `content` variable, all 6 greps replaced with `printf '%s\n' "$content" | grep ...`. Byte-identical D2 verify: `diff /tmp/t34_before.txt /tmp/t34_after.txt` empty (exit=0). Suite: 32/32 PASS.
 
 ---
 
