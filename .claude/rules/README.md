@@ -24,7 +24,7 @@ containing exactly these five keys (in any order):
 ```yaml
 ---
 name: <kebab-case slug, matches filename stem>
-scope: common | bash | markdown | git | <lang>
+scope: common | bash | markdown | git | reviewer | <lang>
 severity: must | should | avoid
 created: YYYY-MM-DD
 updated: YYYY-MM-DD
@@ -56,6 +56,7 @@ updated: YYYY-MM-DD
   bash/              ← scope: bash — loaded when bash/shell files are in scope
   markdown/          ← scope: markdown — loaded when .md files are in scope
   git/               ← scope: git — loaded when git files / operations are in scope
+  reviewer/          ← scope: reviewer — agent-triggered, NOT session-loaded
 ```
 
 ## Authoring checklist
@@ -63,7 +64,7 @@ updated: YYYY-MM-DD
 Before committing a new rule file:
 
 - [ ] Filename stem matches `name:` in frontmatter.
-- [ ] `scope:` is one of the four established dirs (or a new dir created to match).
+- [ ] `scope:` is one of the five established dirs (common/bash/markdown/git/reviewer) or a new dir created to match.
 - [ ] `severity:` is exactly `must`, `should`, or `avoid`.
 - [ ] All five frontmatter keys present.
 - [ ] Body has `## Rule`, `## Why`, `## How to apply` in that order.
