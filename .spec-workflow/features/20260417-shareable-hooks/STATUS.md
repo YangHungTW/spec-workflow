@@ -2,7 +2,7 @@
 
 - **slug**: 20260417-shareable-hooks
 - **has-ui**: false
-- **stage**: implement
+- **stage**: verify
 - **created**: 2026-04-17
 - **updated**: 2026-04-18
 
@@ -15,8 +15,8 @@
 - [x] plan          (05-plan.md)                 — TPM
 - [x] tasks         (06-tasks.md)                — TPM
 - [x] implement     (tasks checked off)          — Developer
-- [ ] gap-check     (07-gaps.md, verdict PASS)   — QA-analyst
-- [ ] verify        (08-verify.md, verdict PASS) — QA-tester
+- [x] gap-check     (07-gaps.md, verdict PASS)   — QA-analyst
+- [x] verify        (08-verify.md, verdict PASS) — QA-tester
 - [ ] archive       (moved to .spec-workflow/archive/)     — TPM
 
 ## Notes
@@ -33,3 +33,5 @@
 - 2026-04-18 implement wave 2 done — T8 (smoke register + README 4-pair managed set + opt-in flow docs); gitignore verified
 - 2026-04-18 implement stage complete — all 8 tasks merged; smoke 33/33 PASS (Wave 1: T1–T7 7-wide parallel; Wave 2: T8 serial); applied 2 tpm memory entries (parallel-safe-requires-different-files for disjoint-files analysis; parallel-safe-append-sections for expected STATUS note collisions in the 7-wide wave)
 - 2026-04-17 Developer — T4 done: created test/t30_stop_hook_happy_path.sh (sandbox-HOME preflight, git fixture, 4 assertions: exit 0, +1 stop-hook line, date format, sentinel epoch); test is RED (stop.sh absent in T4 worktree, as expected pre-merge); syntax clean, exec bit set
+- 2026-04-18 QA-analyst — gap-check complete; verdict PASS-WITH-NITS; 0 blockers, 3 notes; see 07-gaps.md
+- 2026-04-18 QA-tester — verify complete; 15/15 AC PASS; N1 ambiguous-branch exercised manually (6/6 checks PASS); verdict PASS
