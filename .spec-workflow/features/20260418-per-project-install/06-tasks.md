@@ -300,7 +300,7 @@ Wave schedule lives at the bottom; R↔T trace table immediately below it.
   - `bash test/t43_update_user_modified.sh` exits 0 (requires T7 merged).
 - **Depends on**: T2
 - **Parallel-safe-with**: T7, T8, T10
-- [ ]
+- [x] 2026-04-18 Developer — implement test/t43_update_user_modified.sh (R7 AC7.a + R8 AC8.b; two-file fixture, user-modified skip + revert-then-re-run)
 
 ---
 
