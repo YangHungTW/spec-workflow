@@ -94,7 +94,7 @@ Wave-based parallel execution. Default behaviour: run **every remaining wave** e
                WAVE_STATE="wave:NITS"
              fi
              NITS_LINES="$NITS_LINES
-   $TASK_LABEL($AXIS_VALUE): $line"
+  $TASK_LABEL($AXIS_VALUE): $line"
              ;;
          esac
        fi
