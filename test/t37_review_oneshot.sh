@@ -5,7 +5,7 @@
 # Usage: bash test/t37_review_oneshot.sh
 # Exits 0 iff all checks pass.
 
-set -u
+set -u -o pipefail
 
 # ---------------------------------------------------------------------------
 # Locate repo root relative to this script
