@@ -310,7 +310,7 @@ When it says "reviewer agent" it means one of
 - **Parallel-safe-with**: T10
 
   File-set check: T9 edits `.claude/commands/specflow/implement.md`; T10 creates a new file `.claude/commands/specflow/review.md`. Different files. No shared-file collision.
-- [ ]
+- [x]
 
 ## T10 — `/specflow:review` one-shot command
 - **Milestone**: M5
