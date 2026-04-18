@@ -1,0 +1,231 @@
+#!/usr/bin/env bash
+# =============================================================================
+# specflow-seed — seed per-project .claude/ scaffolding from the source repo
+# =============================================================================
+#
+# USAGE
+#   bin/specflow-seed <subcommand> [options]
+#   bin/specflow-seed --help
+#
+# SUBCOMMANDS
+#   init      Copy the managed .claude/ subtree into a consumer project.
+#             Safe to re-run (idempotent once implemented in Wave 1+).
+#
+#   update    Pull upstream changes from the source repo into the consumer.
+#             Respects the classify-before-mutate contract; skips user-modified
+#             files (no force flag in v1; skip-and-report is the conflict policy).
+#
+#   migrate   Migrate this repo (the source) to consume itself, staging the
+#             copy as a structural-only dry-run first.
+#
+# OPTIONS
+#   --dry-run         Compute the full plan; zero mutations; exit 0 unless
+#                     planning fails.
+#   --from <path>     Explicit path to the source repo root (default: cwd or
+#                     git rev-parse --show-toplevel).
+#   --to <ref>        Consumer project root path (init / update only).
+#   --ref <ref>       Pin copy to a specific git ref from the source repo.
+#   --help, -h        Print this message and exit 0.
+#
+# EXIT CODES
+#   0   All files converged to desired state (or dry-run produced a plan).
+#   1   At least one file was skipped or a mutation failed; tool reports all.
+#   2   Usage error, python3 missing, unresolvable source, or corrupt manifest.
+#
+# CONFLICT HANDLING (skip-and-report; no force flag in v1)
+#   Conflicts are reported and skipped; the user resolves them manually.
+#
+# =============================================================================
+set -u -o pipefail
+
+# ---------------------------------------------------------------------------
+# Globals
+# ---------------------------------------------------------------------------
+DRY_RUN=0
+SRC=""
+TO_REF=""
+AT_REF=""
+
+# MAX_CODE: tracks the highest exit code seen so far.
+# 0 = fully converged; 1 = conflict or mutation failure; 2 = die()
+MAX_CODE=0
+
+# ---------------------------------------------------------------------------
+# die <msg> — print msg to stderr and exit 2
+# ---------------------------------------------------------------------------
+die() {
+  local msg="$1"
+  echo "specflow-seed: $msg" >&2
+  exit 2
+}
+
+# ---------------------------------------------------------------------------
+# resolve_path <p> — BSD-safe portable path resolution (no GNU readlink flags)
+# Iteratively resolves symlinks; caps at 40 hops to detect cycles.
+# ---------------------------------------------------------------------------
+resolve_path() {
+  local p="$1" i=0
+  # Make path absolute if relative
+  case "$p" in
+    /*) ;;
+    *)  p="$(pwd -P)/$p" ;;
+  esac
+  while [ "$i" -lt 40 ]; do
+    local d b
+    d=$(cd "$(dirname "$p")" 2>/dev/null && pwd -P) || die "resolve_path: cannot cd into '$(dirname "$p")'"
+    b=$(basename "$p")
+    p="$d/$b"
+    if [ -L "$p" ]; then
+      local t
+      t=$(readlink "$p")
+      case "$t" in
+        /*) p="$t" ;;
+        *)  p="$d/$t" ;;
+      esac
+      i=$((i + 1))
+    else
+      printf '%s\n' "$p"
+      return 0
+    fi
+  done
+  die "symlink cycle at '$1'"
+}
+
+# ---------------------------------------------------------------------------
+# repo_root — resolves the source repo root.
+# Prefers git rev-parse --show-toplevel; falls back to pwd -P.
+# Result stored in REPO_ROOT (cached).
+# ---------------------------------------------------------------------------
+REPO_ROOT=""
+repo_root() {
+  if [ -n "$REPO_ROOT" ]; then
+    printf '%s\n' "$REPO_ROOT"
+    return 0
+  fi
+  local root
+  root=$(git rev-parse --show-toplevel 2>/dev/null) || root=$(pwd -P)
+  REPO_ROOT="$root"
+  printf '%s\n' "$REPO_ROOT"
+}
+
+# ---------------------------------------------------------------------------
+# usage — print the header comment block and exit 0
+# ---------------------------------------------------------------------------
+usage() {
+  sed -n '/^# USAGE/,/^# ===*/p' "$0" | sed 's/^# \{0,1\}//'
+  exit 0
+}
+
+# ---------------------------------------------------------------------------
+# emit_summary — stub; populated in Wave 2-4
+# ---------------------------------------------------------------------------
+emit_summary() {
+  echo "summary: created=0 already=0 replaced=0 skipped=0 (exit $MAX_CODE)"
+}
+
+# ---------------------------------------------------------------------------
+# Flag parser — no GNU getopt (portability)
+# ---------------------------------------------------------------------------
+parse_flags() {
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      --dry-run)
+        DRY_RUN=1
+        shift
+        ;;
+      --from)
+        [ "$#" -ge 2 ] || die "flag --from requires an argument"
+        SRC="$2"
+        shift 2
+        ;;
+      --to)
+        [ "$#" -ge 2 ] || die "flag --to requires an argument"
+        TO_REF="$2"
+        shift 2
+        ;;
+      --ref)
+        [ "$#" -ge 2 ] || die "flag --ref requires an argument"
+        AT_REF="$2"
+        shift 2
+        ;;
+      --help|-h)
+        usage
+        ;;
+      --)
+        shift
+        break
+        ;;
+      -*)
+        die "unknown flag: $1"
+        ;;
+      *)
+        # Non-flag argument: stop parsing flags, leave rest for subcommand
+        break
+        ;;
+    esac
+  done
+}
+
+# ---------------------------------------------------------------------------
+# Preflight — python3 required for manifest write (D4 tradeoff).
+# Called by each subcommand AFTER flag parsing; NOT called for --help / usage.
+# ---------------------------------------------------------------------------
+preflight() {
+  command -v python3 >/dev/null || die "python3 required"
+}
+
+# ---------------------------------------------------------------------------
+# Subcommand stubs (Wave 0 — no filesystem mutation)
+# ---------------------------------------------------------------------------
+cmd_init() {
+  echo "init: not-yet-implemented"
+  exit 0
+}
+
+cmd_update() {
+  echo "update: not-yet-implemented"
+  exit 0
+}
+
+cmd_migrate() {
+  echo "migrate: not-yet-implemented"
+  exit 0
+}
+
+# Hidden classifier harness slot — reserved for Wave 1 __probe
+cmd_probe() {
+  echo "__probe: not-yet-implemented"
+  exit 0
+}
+
+# ---------------------------------------------------------------------------
+# Main dispatcher
+# ---------------------------------------------------------------------------
+# Grab the first positional argument (subcommand or flag)
+_cmd="${1:-}"
+
+case "$_cmd" in
+  -h|--help|"")
+    usage
+    ;;
+  init|update|migrate|__probe)
+    # Consume subcommand, then parse remaining flags
+    shift
+    parse_flags "$@"
+    preflight
+    case "$_cmd" in
+      init)    cmd_init ;;
+      update)  cmd_update ;;
+      migrate) cmd_migrate ;;
+      __probe) cmd_probe ;;
+    esac
+    ;;
+  --dry-run|--from|--to|--ref)
+    # Flags before subcommand: parse all flags first, then re-dispatch
+    parse_flags "$@"
+    die "subcommand required (init, update, migrate)"
+    ;;
+  *)
+    die "unknown subcommand: $_cmd"
+    ;;
+esac
