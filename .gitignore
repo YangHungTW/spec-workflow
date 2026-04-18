@@ -2,3 +2,4 @@
 *.log
 .worktrees/
 settings.json.bak
+.spec-workflow/features/*/.stop-hook-last-epoch
