@@ -77,13 +77,34 @@ without copying files.
 
 ### What it does
 
-The tool manages exactly three kinds of targets under `~/.claude/`:
+The tool manages exactly four kinds of targets under `~/.claude/`:
 
 | Target (under `~/.claude/`) | Source (under `<repo>/.claude/`) |
 |-----------------------------|----------------------------------|
 | `agents/specflow`               | `agents/specflow` (directory symlink) |
 | `commands/specflow`             | `commands/specflow` (directory symlink) |
+| `hooks`                         | `hooks` (directory symlink — SessionStart + Stop scripts) |
 | `team-memory/<relpath>`     | one file symlink per regular file under `team-memory/` |
+
+### Per-project opt-in: wire the hooks
+
+The `hooks` symlink makes `~/.claude/hooks/session-start.sh` and
+`~/.claude/hooks/stop.sh` resolvable globally, but each consumer project
+still needs to wire them into its own `settings.json`:
+
+```sh
+# one-time per machine, run from this repo:
+bin/claude-symlink install
+
+# one-time per consumer project, run from the consumer's repo root:
+bin/specflow-install-hook add SessionStart ~/.claude/hooks/session-start.sh
+
+# (optional) enable STATUS auto-sync in the consumer project:
+bin/specflow-install-hook add Stop ~/.claude/hooks/stop.sh
+```
+
+Rules stay per-project: `session-start.sh` reads `<cwd>/.claude/rules/`, so
+each project maintains its own rule set.
 
 Every symlink points at an **absolute path** inside the repo, so `ls -l` is always
 diagnosable. Moving the repo requires re-running `install` (see Recovery below).

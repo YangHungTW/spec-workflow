@@ -812,7 +812,10 @@ for t in t13_settings_json t14_rules_dir_structure t15_rules_schema \
          t19_hook_bad_frontmatter t20_hook_lang_lazy t21_agent_line_count \
          t22_agent_header_grep t23_memory_required t24_appendix_pointers \
          t25_no_duplication t26_no_new_command t27_settings_json_preserves_keys \
-         t28_settings_json_idempotent; do
+         t28_settings_json_idempotent \
+         t29_claude_symlink_hooks_pair t30_stop_hook_happy_path \
+         t31_stop_hook_failsafe t32_stop_hook_dedup \
+         t33_claude_symlink_hooks_foreign; do
   echo "--- $t ---"
   if bash "$REPO_ROOT/test/${t}.sh" >/dev/null 2>&1; then
     echo "  PASS"

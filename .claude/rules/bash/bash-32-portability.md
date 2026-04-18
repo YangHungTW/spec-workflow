@@ -3,7 +3,7 @@ name: bash-32-portability
 scope: bash
 severity: must
 created: 2026-04-16
-updated: 2026-04-16
+updated: 2026-04-18
 ---
 
 ## Rule
@@ -79,3 +79,31 @@ both BSD and GNU. The `case "$t" in /*) ...` pattern from the architect
 memory is replaced above with a POSIX `[ "${t#/}" != "$t" ]` test that
 avoids nesting `case` inside a `while` subshell (see bash32 gotcha
 above).
+
+### BSD vs GNU `date` arithmetic — dispatch by `uname` once
+
+`date -d "<string>"` is GNU-only; `date -j -f "<fmt>" "<string>"` is
+BSD-only. Neither flag works on the other platform. Isolate the
+dialect choice in one wrapper so the rest of the script stays
+dialect-free:
+
+```bash
+# to_epoch "2026-04-18 11:30:00" → 1776500000
+to_epoch() {
+  local uname_s
+  uname_s="$(uname -s 2>/dev/null)"
+  if [ "$uname_s" = "Darwin" ] || [ "$uname_s" = "FreeBSD" ] || \
+     [ "$uname_s" = "OpenBSD" ] || [ "$uname_s" = "NetBSD" ]; then
+    date -j -f "%Y-%m-%d %H:%M:%S" "$1" +%s 2>/dev/null
+  else
+    date -d "$1" +%s 2>/dev/null
+  fi
+}
+```
+
+Never rely on GNU-only `-d` or BSD-only `-j -f` alone at call sites;
+`to_epoch` isolates the dialect choice. Source: `.claude/hooks/stop.sh`
+in feature `shareable-hooks` (the wrapper was authored during D4 and
+retained for future callers even after the implementation switched to
+a sentinel-file approach — see qa-analyst memory
+`dead-code-orphan-after-simplification` for the cleanup followup).
