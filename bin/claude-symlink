@@ -23,6 +23,7 @@
 #   The tool manages exactly these paths under ~/.claude/:
 #     agents/specflow          — directory symlink → <repo>/.claude/agents/specflow
 #     commands/specflow        — directory symlink → <repo>/.claude/commands/specflow
+#     hooks                    — directory symlink → <repo>/.claude/hooks
 #     team-memory/**       — one file symlink per regular file under
 #                            <repo>/.claude/team-memory/ (walked at run time)
 #
@@ -230,6 +231,10 @@ plan_links() {
   PLAN_SRC+=("$REPO/.claude/commands/specflow")
   PLAN_TGT+=("$HOME/.claude/commands/specflow")
 
+  # Fixed pair 3: hooks (NEW, feature 20260417-shareable-hooks)
+  PLAN_SRC+=("$REPO/.claude/hooks")
+  PLAN_TGT+=("$HOME/.claude/hooks")
+
   # File-level pairs: walk team-memory with -print0 for filename safety
   local prefix="$REPO/.claude/team-memory/"
   while IFS= read -r -d '' src; do
@@ -426,6 +431,7 @@ Subcommands:
 Managed set:
   agents/specflow          → <repo>/.claude/agents/specflow   (directory symlink)
   commands/specflow        → <repo>/.claude/commands/specflow  (directory symlink)
+  hooks                    → <repo>/.claude/hooks              (directory symlink)
   team-memory/**       → one file symlink per file under <repo>/.claude/team-memory/
 
 Options:
@@ -655,6 +661,7 @@ cmd_uninstall() {
   local dir_links=()
   dir_links+=("$HOME/.claude/agents/specflow")
   dir_links+=("$HOME/.claude/commands/specflow")
+  dir_links+=("$HOME/.claude/hooks")
 
   local dl
   for dl in "${dir_links[@]}"; do
