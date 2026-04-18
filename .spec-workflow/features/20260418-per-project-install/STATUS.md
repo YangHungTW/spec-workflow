@@ -2,7 +2,7 @@
 
 - **slug**: 20260418-per-project-install
 - **has-ui**: false
-- **stage**: tasks
+- **stage**: implement
 - **created**: 2026-04-18
 - **updated**: 2026-04-18
 
@@ -14,7 +14,7 @@
 - [x] tech          (04-tech.md)                 — Architect
 - [x] plan          (05-plan.md)                 — TPM
 - [x] tasks         (06-tasks.md)                — TPM
-- [ ] implement     (tasks checked off)          — Developer
+- [x] implement     (tasks checked off)          — Developer
 - [ ] gap-check     (07-gaps.md, verdict PASS)   — QA-analyst
 - [ ] verify        (08-verify.md, verdict PASS) — QA-tester
 - [ ] archive       (moved to .spec-workflow/archive/)     — TPM
