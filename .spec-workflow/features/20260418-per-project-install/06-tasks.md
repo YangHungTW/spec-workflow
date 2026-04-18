@@ -42,7 +42,7 @@ Wave schedule lives at the bottom; R↔T trace table immediately below it.
   - Sandbox invariant: invoke any stub under `HOME=$(mktemp -d)`; `find "$HOME" -mindepth 1` returns empty (stubs do not mutate).
 - **Depends on**: —
 - **Parallel-safe-with**: — (sole task in W0)
-- [ ]
+- [x]
 
 ---
 
