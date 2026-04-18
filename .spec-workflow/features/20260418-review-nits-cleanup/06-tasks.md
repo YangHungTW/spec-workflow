@@ -374,7 +374,7 @@ All paths below are absolute under `/Users/yanghungtw/Tools/spec-workflow/`.
   - Classifier evidence captured in STATUS note (see D4 procedure above).
 - **Depends on**: —
 - **Parallel-safe-with**: T1, T2, T3, T4, T5, T6, T7, T8
-- [ ]
+- [x]
 
 ---
 
@@ -430,6 +430,26 @@ append-collisions on this section are resolved keep-both per
 **T4 DONE** (2026-04-17) — Classifier grep before edit: 1 hit in `reviewer-security.md:12`, zero other files in `.claude/`. Applied rename `reviewer-security/` → `reviewer/` on that line. Post-edit: `grep -c 'reviewer-security/' reviewer-security.md` = 0; `grep -c 'reviewer/' reviewer-security.md` = 3. t34: 32/32 PASS. Commit: 9609756.
 - **T6 DONE** 2026-04-17 — R6: normalized 3-space → 2-space indent on line 97 of `.claude/commands/specflow/implement.md` (inside the `bash` pseudocode block fenced at lines 56–118). Single-line whitespace-only diff. Zero 3-space prefix hits remain in any code block. All verify checks pass.
 - **T8 done (2026-04-17)**: Deleted WHAT comment `# Count files only (not directories) in the commands dir` at line 57 of `test/t26_no_new_command.sh`. `grep -c 'Count files only'` = 0. `bash test/t26_no_new_command.sh` exits 0 (2/2 PASS).
+### T9 STATUS — 2026-04-17
+
+**PASS.** `to_epoch()` dead function removed from `.claude/hooks/stop.sh` (lines 102-117 plus section header comment).
+
+**Classifier grep evidence (D4 — pre-edit, zero live callers):**
+```
+.claude/hooks/stop.sh:103:# D4. to_epoch — BSD/GNU date dispatch, cached by uname -s
+.claude/hooks/stop.sh:106:# to_epoch "YYYY-MM-DD HH:MM:SS" → integer seconds on stdout
+.claude/hooks/stop.sh:108:to_epoch() {
+.claude/team-memory/qa-analyst/dead-code-orphan-after-simplification.md:49:`to_epoch()` inside `within_60s()` to parse STATUS.md timestamps for
+.claude/team-memory/qa-analyst/dead-code-orphan-after-simplification.md:52:`to_epoch()` at `.claude/hooks/stop.sh:108-117` an orphan with zero
+.claude/team-memory/qa-analyst/dead-code-orphan-after-simplification.md:53:callers. QA-analyst caught it via `grep -c to_epoch` during
+.claude/rules/bash/bash-32-portability.md:91:# to_epoch "2026-04-18 11:30:00" → 1776500000
+.claude/rules/bash/bash-32-portability.md:92:to_epoch() {
+.claude/rules/bash/bash-32-portability.md:105:`to_epoch` isolates the dialect choice. Source: `.claude/hooks/stop.sh`
+test/t32_stop_hook_dedup.sh:7:# current platform only.  The to_epoch() wrapper in stop.sh dispatches on
+```
+All occurrences classified as: definition (deleted), team-memory (stays), rule-example (stays), test comment (stays). No hits in `bin/` or any live caller. Proceeding per D4 was correct.
+
+**Verify results:** function gone (zero grep hits), `bash -n` syntax OK, t30/t31/t32 all PASS.
 
 ---
 
