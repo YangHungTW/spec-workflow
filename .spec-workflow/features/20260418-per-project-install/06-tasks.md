@@ -251,7 +251,7 @@ Wave schedule lives at the bottom; R↔T trace table immediately below it.
   - `bin/specflow-seed update --to HEAD` in a consumer missing the manifest exits 2 with `no manifest; run init or migrate first` on stderr.
 - **Depends on**: T2, T3 (init must land first so update has a consumer to operate against in tests)
 - **Parallel-safe-with**: T8, T9, T10
-- [ ]
+- [x]
 
 ---
 
