@@ -6,6 +6,11 @@ created: 2026-04-18
 updated: 2026-04-18
 ---
 
+<!-- 2026-04-18 update: added "How to detect at gap-check time"
+subsection with a concrete grep recipe, per second occurrence in
+feature 20260418-per-project-install. -->
+
+
 ## Rule
 
 During gap-check, grep every new/modified script for function
@@ -42,6 +47,34 @@ by the feature:
 
 Apply the same pattern for Python/Node helpers — language-specific
 definition regex, but the same one-caller-minimum invariant.
+
+## How to detect at gap-check time
+
+Concrete one-liner per function name:
+
+```bash
+grep -c '\b<function_name>\b' path/to/file
+```
+
+- Count == 1 → the sole hit is the definition line; zero callers;
+  this is a dead-code orphan.
+- Count == 2+ → at least one caller; not an orphan.
+
+Applied during feature `20260418-per-project-install`: the helper
+`resolve_path` was defined at `bin/specflow-seed:69-93` carried over
+from the tech-doc pseudocode, but the implementation took a
+simpler relative-path approach and never called it. `grep -c
+'\bresolve_path\b' bin/specflow-seed` returned `1` → orphan
+confirmed, removed in gap-fix commit 60237a2.
+
+Repeatable recipe for any gap-check:
+
+```bash
+for fn in $(grep -oE '^[a-zA-Z_][a-zA-Z0-9_]*\(\)' "$file" | tr -d '()'); do
+  count=$(grep -c "\\b${fn}\\b" "$file")
+  [ "$count" -eq 1 ] && echo "ORPHAN: $fn in $file"
+done
+```
 
 ## Example
 

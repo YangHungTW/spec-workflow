@@ -2,7 +2,7 @@
 
 - **slug**: 20260418-per-project-install
 - **has-ui**: false
-- **stage**: verify
+- **stage**: archive
 - **created**: 2026-04-18
 - **updated**: 2026-04-18
 
@@ -17,7 +17,7 @@
 - [x] implement     (tasks checked off)          — Developer
 - [x] gap-check     (07-gaps.md, verdict NITS)   — QA-analyst
 - [x] verify        (08-verify.md, verdict PASS) — QA-tester
-- [ ] archive       (moved to .spec-workflow/archive/)     — TPM
+- [x] archive       (moved to .spec-workflow/archive/)     — TPM
 
 ## Notes
 <!-- date + role + what changed -->
@@ -57,3 +57,4 @@
 - 2026-04-18 | qa-analyst | gap-check complete — verdict NITS, 5 findings (2 drift, 1 dead-code note, 1 dead-variable note, 1 weak-validation note); archive can proceed
 - 2026-04-18 | gap-fix | D1 + D2 + N1 cleared via commit 60237a2 — cmd_update idempotent-exit now advances ref when previous_ref != TO_REF (R8 AC8.a); README verb vocabulary aligned with code emissions (would-create / skip, not would-created / skipped) and skipped:unknown-state documented (R12 AC12.a/b); dead resolve_path() removed. smoke: 49/49 PASS.
 - 2026-04-18 | qa-tester | verify PASS — 13/13 R covered, 1 N/A (R10 AC10.a option-B dogfood variant)
+- 2026-04-18 | tpm | archive complete — 9 new memories written (3 local developer, 2 global tpm, 1 global qa-analyst, 1 global architect) + 1 update (qa-analyst/dead-code-orphan) + 1 shared update (dogfood-paradox)
