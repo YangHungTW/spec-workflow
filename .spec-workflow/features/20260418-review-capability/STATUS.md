@@ -2,7 +2,7 @@
 
 - **slug**: 20260418-review-capability
 - **has-ui**: false
-- **stage**: implement
+- **stage**: gap-check
 - **created**: 2026-04-18
 - **updated**: 2026-04-18
 
@@ -15,7 +15,7 @@
 - [x] plan          (05-plan.md)                 — TPM
 - [x] tasks         (06-tasks.md)                — TPM
 - [x] implement     (tasks checked off)          — Developer
-- [ ] gap-check     (07-gaps.md, verdict PASS)   — QA-analyst
+- [x] gap-check     (07-gaps.md, verdict PASS)   — QA-analyst
 - [ ] verify        (08-verify.md, verdict PASS) — QA-tester
 - [ ] archive       (moved to .spec-workflow/archive/)     — TPM
 
@@ -36,3 +36,4 @@
 - 2026-04-18 Dogfood paradox: this feature's own /specflow:implement runs use --skip-inline-review (reviewers + rubrics land HERE; can't self-review during bootstrapping). First real use is feature after B2.b archives.
 - 2026-04-18 implement wave 5 done — T16 (smoke 33→38; README Review-capability section; dogfood docs)
 - 2026-04-18 implement stage complete — all 16 tasks merged; smoke 38/38 PASS
+- 2026-04-18 QA-analyst — gap-check PASS (07-gaps.md written); 0 blockers, 1 should-fix (D1: reviewer-performance + reviewer-style agent name: fields don't match dispatch identifiers — fix before archive), 4 notes (E1 max-retry cap undocumented, D2 review.md date format doc, D3 reviewer-security naming convention, D4 index.md sort order)

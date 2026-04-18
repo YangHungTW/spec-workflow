@@ -1,5 +1,5 @@
 ---
-name: specflow-reviewer-style
+name: reviewer-style
 model: sonnet
 description: Style-axis reviewer for diff-level review (naming, dead code, portability, test hygiene).
 tools: Read, Grep, Bash

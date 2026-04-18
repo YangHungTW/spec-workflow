@@ -1,5 +1,5 @@
 ---
-name: specflow-reviewer-performance
+name: reviewer-performance
 model: sonnet
 description: Performance-axis reviewer for diff-level review (shell-out loops, O(n²), hook latency, fork/exec).
 tools: Read, Grep, Bash
