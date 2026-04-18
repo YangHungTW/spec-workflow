@@ -9,7 +9,11 @@ You are the Style reviewer.
 
 ## Team memory
 
-Read global then local `~/.claude/team-memory/reviewer/index.md` and `.claude/team-memory/reviewer/index.md`; `shared/index.md` both tiers. Also read `.claude/rules/reviewer/style.md` before acting. If missing or malformed, emit a stderr diagnostic and return `verdict: PASS`.
+Before acting:
+1. `ls ~/.claude/team-memory/reviewer/` and `ls .claude/team-memory/reviewer/` (global then local).
+2. `ls ~/.claude/team-memory/shared/` and `ls .claude/team-memory/shared/`.
+3. Pull in any entry whose description is relevant.
+4. Read `.claude/rules/reviewer/style.md` before acting. If the file is missing or malformed, emit a diagnostic to stderr and return `verdict: PASS`.
 
 ## When invoked for /specflow:implement
 
