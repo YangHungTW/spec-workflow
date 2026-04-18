@@ -259,7 +259,7 @@ When it says "reviewer agent" it means one of
 - **Verify**: same grep set as T6 but with `performance` substituted for `security` in `name:`, `axis:`, and rubric path.
 - **Depends on**: —
 - **Parallel-safe-with**: T3, T4, T5, T6, T8
-- [ ]
+- [x]
 
 ## T8 — Reviewer agent: `.claude/agents/specflow/reviewer-style.md`
 - **Milestone**: M3
@@ -552,6 +552,7 @@ Target: each task ≤ 60 min focused work.
 _(populated by Developer as tasks complete; expected mechanical append-collisions on this section are resolved keep-both per `tpm/parallel-safe-append-sections.md`)_
 
 - 2026-04-17 T1 DONE — scope enum admits `reviewer`; dir `.claude/rules/reviewer/` seeded with `.gitkeep`; all 4 verify checks PASS.
+- 2026-04-17 T7 DONE — reviewer-performance agent created; all 8 verify checks PASS (model=sonnet, 6 blocks, axis=performance, stay-in-lane, rubric ref, 2x when-invoked).
 
 ---
 
