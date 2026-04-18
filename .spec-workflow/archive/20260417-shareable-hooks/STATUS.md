@@ -17,7 +17,7 @@
 - [x] implement     (tasks checked off)          — Developer
 - [x] gap-check     (07-gaps.md, verdict PASS)   — QA-analyst
 - [x] verify        (08-verify.md, verdict PASS) — QA-tester
-- [ ] archive       (moved to .spec-workflow/archive/)     — TPM
+- [x] archive       (moved to .spec-workflow/archive/)     — TPM
 
 ## Notes
 <!-- date + role + what changed -->
@@ -35,3 +35,4 @@
 - 2026-04-17 Developer — T4 done: created test/t30_stop_hook_happy_path.sh (sandbox-HOME preflight, git fixture, 4 assertions: exit 0, +1 stop-hook line, date format, sentinel epoch); test is RED (stop.sh absent in T4 worktree, as expected pre-merge); syntax clean, exec bit set
 - 2026-04-18 QA-analyst — gap-check complete; verdict PASS-WITH-NITS; 0 blockers, 3 notes; see 07-gaps.md
 - 2026-04-18 QA-tester — verify complete; 15/15 AC PASS; N1 ambiguous-branch exercised manually (6/6 checks PASS); verdict PASS
+- 2026-04-18 TPM — archive: wrote 2 memory entries (tpm/checkbox-lost-in-parallel-merge, qa-analyst/dead-code-orphan-after-simplification); folded to_epoch template into bash/bash-32-portability rule; feature moved to archive/
