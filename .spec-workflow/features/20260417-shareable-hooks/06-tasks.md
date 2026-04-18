@@ -140,7 +140,7 @@ tool", it means `bin/claude-symlink` per D7.
   - `bash /Users/yanghungtw/Tools/spec-workflow/test/t31_stop_hook_failsafe.sh` exits 0 (requires T1 merged).
 - **Depends on**: —
 - **Parallel-safe-with**: T1, T2, T3, T4, T6, T7
-- [ ]
+- [x]
 
 ## T6 — `test/t32_stop_hook_dedup.sh`
 - **Milestone**: M3
@@ -242,6 +242,8 @@ Target: each task ≤ 60 min focused work.
 ## STATUS Notes
 
 _(populated by Developer as tasks complete; expected mechanical append-collisions on this section are resolved keep-both per `tpm/parallel-safe-append-sections.md`)_
+
+- **T5 done** 2026-04-17 — Created `test/t31_stop_hook_failsafe.sh` (exec bit set). Six fail-safe variants (A–F: empty stdin, malformed JSON, non-git cwd, branch-no-match, missing STATUS.md, missing Notes heading). Syntax clean; exec bit set; runs RED (exit 1) pre-T1 for the right reason (hook absent). Will go GREEN once T1 merges.
 
 ---
 
