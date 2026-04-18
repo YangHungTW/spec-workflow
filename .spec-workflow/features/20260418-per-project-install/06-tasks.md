@@ -200,7 +200,7 @@ Wave schedule lives at the bottom; R↔T trace table immediately below it.
   - `bash test/t40_init_idempotent.sh` exits 0 (requires T3 merged).
 - **Depends on**: T2
 - **Parallel-safe-with**: T3, T4, T6
-- [ ]
+- [x] 2026-04-18 Developer — implement: test/t40_init_idempotent.sh created (exec bit set); RED pre-T3 (init stub)
 
 ---
 
