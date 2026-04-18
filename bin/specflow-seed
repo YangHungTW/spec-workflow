@@ -63,37 +63,6 @@ die() {
 }
 
 # ---------------------------------------------------------------------------
-# resolve_path <p> — BSD-safe portable path resolution (no GNU readlink flags)
-# Iteratively resolves symlinks; caps at 40 hops to detect cycles.
-# ---------------------------------------------------------------------------
-resolve_path() {
-  local p="$1" i=0
-  case "$p" in
-    /*) ;;
-    *)  p="$(pwd -P)/$p" ;;
-  esac
-  while [ "$i" -lt 40 ]; do
-    local d b
-    d=$(cd "$(dirname "$p")" 2>/dev/null && pwd -P) || die "resolve_path: cannot cd into '$(dirname "$p")'"
-    b=$(basename "$p")
-    p="$d/$b"
-    if [ -L "$p" ]; then
-      local t
-      t=$(readlink "$p")
-      case "$t" in
-        /*) p="$t" ;;
-        *)  p="$d/$t" ;;
-      esac
-      i=$((i + 1))
-    else
-      printf '%s\n' "$p"
-      return 0
-    fi
-  done
-  die "symlink cycle at '$1'"
-}
-
-# ---------------------------------------------------------------------------
 # repo_root — resolves the source repo root.
 # Prefers git rev-parse --show-toplevel; falls back to pwd -P.
 # Result stored in REPO_ROOT (cached).
@@ -1005,10 +974,15 @@ EOF
   fi
 
   # ---------------------------------------------------------------------------
-  # Idempotent-exit short-circuit (lesson #3): zero mutations → skip manifest
-  # rewrite entirely to preserve byte-identity of the manifest.
+  # Idempotent-exit short-circuit (lesson #3): zero mutations AND the manifest
+  # already pins the target ref → skip manifest rewrite to preserve byte-
+  # identity. If the ref differs (consumer happens to hold ref-B content but
+  # manifest still pins ref-A), we must still advance the recorded ref per
+  # R8 AC8.a even though no files changed.
   # ---------------------------------------------------------------------------
-  if [ "$_CNT_CREATED" -eq 0 ] && [ "$_CNT_REPLACED" -eq 0 ]; then
+  if [ "$_CNT_CREATED" -eq 0 ] \
+     && [ "$_CNT_REPLACED" -eq 0 ] \
+     && [ "$previous_ref" = "$TO_REF" ]; then
     emit_summary
     exit 0
   fi

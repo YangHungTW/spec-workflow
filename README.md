@@ -282,7 +282,8 @@ The `specflow-seed` commands (`init`, `update`, `migrate`) emit exactly the foll
 | `skipped:user-modified` | Destination differs from source AND differs from the baseline — user edit preserved. | Decide whether to keep the edit (copy to `.bak`, then re-run `update`) or discard it (restore from baseline, then re-run). |
 | `skipped:real-file-conflict` | Destination is a directory, symlink, or non-regular file where a regular file is expected. | Remove the offending path manually, then re-run. |
 | `skipped:foreign` | Destination is outside the managed subtree. | Should not occur; file a bug if observed. |
-| `would-created` / `would-replaced:drifted` / `would-skipped:*` | `--dry-run` preview of the above; no mutation. | None. |
+| `skipped:unknown-state` | Classifier returned an unrecognised state (defensive wildcard arm). | Should not occur; file a bug if observed — indicates a classifier/dispatcher mismatch. |
+| `would-create` / `would-replace:drifted` / `would-skip:already` / `would-skip:user-modified` / `would-skip:real-file-conflict` / `would-skip:foreign` / `would-skip:unknown` | `--dry-run` preview of the above; no mutation. | None. |
 
 ## `.claude/rules/` — session-wide guardrails
 
