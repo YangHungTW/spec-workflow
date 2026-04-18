@@ -378,7 +378,7 @@ Wave schedule lives at the bottom; R↔T trace table immediately below it.
   - `bash test/t45_migrate_from_global.sh` exits 0 (requires T11 merged).
 - **Depends on**: T2
 - **Parallel-safe-with**: T11, T13, T14
-- [ ]
+- [ ] 2026-04-18 Developer — implement: created test/t45_migrate_from_global.sh (D10 shared-symlink abstention guard; RED until T11 merged)
 
 ---
 
