@@ -322,7 +322,7 @@ All paths below are absolute under `/Users/yanghungtw/Tools/spec-workflow/`.
   - Test still passes: `bash /Users/yanghungtw/Tools/spec-workflow/test/t26_no_new_command.sh` exits 0.
 - **Depends on**: —
 - **Parallel-safe-with**: T1, T2, T3, T4, T5, T6, T7, T9
-- [ ]
+- [x]
 
 ## T9 — R12 `to_epoch()` removal in `stop.sh` (D4 pre-check + caller grep evidence)
 - **Milestone**: M6
@@ -429,6 +429,7 @@ append-collisions on this section are resolved keep-both per
 **T3 complete** (2026-04-17): R7 `set -u -o pipefail` applied at line 7; R3 read-once refactor applied to `check_agent()` — each agent file read once into `content` variable, all 6 greps replaced with `printf '%s\n' "$content" | grep ...`. Byte-identical D2 verify: `diff /tmp/t34_before.txt /tmp/t34_after.txt` empty (exit=0). Suite: 32/32 PASS.
 **T4 DONE** (2026-04-17) — Classifier grep before edit: 1 hit in `reviewer-security.md:12`, zero other files in `.claude/`. Applied rename `reviewer-security/` → `reviewer/` on that line. Post-edit: `grep -c 'reviewer-security/' reviewer-security.md` = 0; `grep -c 'reviewer/' reviewer-security.md` = 3. t34: 32/32 PASS. Commit: 9609756.
 - **T6 DONE** 2026-04-17 — R6: normalized 3-space → 2-space indent on line 97 of `.claude/commands/specflow/implement.md` (inside the `bash` pseudocode block fenced at lines 56–118). Single-line whitespace-only diff. Zero 3-space prefix hits remain in any code block. All verify checks pass.
+- **T8 done (2026-04-17)**: Deleted WHAT comment `# Count files only (not directories) in the commands dir` at line 57 of `test/t26_no_new_command.sh`. `grep -c 'Count files only'` = 0. `bash test/t26_no_new_command.sh` exits 0 (2/2 PASS).
 
 ---
 
