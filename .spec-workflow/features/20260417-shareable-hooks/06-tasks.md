@@ -186,7 +186,7 @@ tool", it means `bin/claude-symlink` per D7.
   - `bash /Users/yanghungtw/Tools/spec-workflow/test/t33_claude_symlink_hooks_foreign.sh` exits 0 (requires T2 merged).
 - **Depends on**: —
 - **Parallel-safe-with**: T1, T2, T3, T4, T5, T6
-- [ ]
+- [x]
 
 ## T8 — Smoke integration + README docs + `.gitignore` verification
 - **Milestone**: M4
@@ -242,6 +242,8 @@ Target: each task ≤ 60 min focused work.
 ## STATUS Notes
 
 _(populated by Developer as tasks complete; expected mechanical append-collisions on this section are resolved keep-both per `tpm/parallel-safe-append-sections.md`)_
+
+- T7 done 2026-04-17: created `test/t33_claude_symlink_hooks_foreign.sh` (exec bit set, syntax clean). Test is RED until T2 merges (hooks pair not yet in plan_links/cmd_uninstall). Confirmed RED for right reason: install produces no `[skipped:real-dir]` because hooks pair absent from plan.
 
 ---
 
