@@ -13,3 +13,4 @@ then name.
 | performance | reviewer | should | [reviewer/performance.md](reviewer/performance.md) |
 | sandbox-home-in-tests | bash | must | [bash/sandbox-home-in-tests.md](bash/sandbox-home-in-tests.md) |
 | security | reviewer | must | [reviewer/security.md](reviewer/security.md) |
+| style | reviewer | should | [reviewer/style.md](reviewer/style.md) |
