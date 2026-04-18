@@ -161,7 +161,7 @@ When it says "reviewer agent" it means one of
 - **Parallel-safe-with**: T3, T5, T6, T7, T8
 
   File-set check: disjoint new rubric file; append-only collision on `index.md` is expected and mechanically resolvable.
-- [ ]
+- [x]
 
 ## T5 — Rubric: `.claude/rules/reviewer/style.md`
 - **Milestone**: M2
@@ -553,6 +553,7 @@ _(populated by Developer as tasks complete; expected mechanical append-collision
 
 - 2026-04-17 T1 DONE — scope enum admits `reviewer`; dir `.claude/rules/reviewer/` seeded with `.gitkeep`; all 4 verify checks PASS.
 - 2026-04-18 T3 DONE — `.claude/rules/reviewer/security.md` created (8-entry checklist, cross-refs no-force-on-user-paths + classify-before-mutate); index row appended; all 7 verify checks PASS.
+- 2026-04-18 T4 DONE — `.claude/rules/reviewer/performance.md` created; index.md row appended; all 6 verify checks PASS.
 
 ---
 
