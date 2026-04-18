@@ -28,3 +28,6 @@
 - 2026-04-18 | orchestrator | design skipped (has-ui: false)
 - 2026-04-18 | tpm | plan complete — 6 waves (incl W0 skeleton, W6 dogfood-final), 12–13 placeholder tasks, dogfood staging plan explicit (this repo stays on global-symlink through W5; W6 migrates-self as final act; runtime confirmation deferred to next feature after session restart per shared/dogfood-paradox-third-occurrence.md 6th occurrence)
 - 2026-04-18 | tpm | tasks decomposed — T1..T21, widest wave 6 parallel (W5) across 7 wave slots (W0 skeleton, W1 library bundle, W2 init+tests, W3 update+tests, W4 migrate+tests, W5 skill+smoke+docs, W6=dogfood-final); D3 manifest schema + D4 classifier pseudocode + D4 dispatcher table quoted verbatim into T2 per tpm/briefing-contradicts-schema.md; AC2.c split into T6 (t41 real-file-conflict); R↔T trace fully populated (every R1–R13 covered; every T1–T21 maps to ≥1 R)
+- 2026-04-18 | implement | review dispatched — slug=20260418-per-project-install wave=W0 tasks=T1 axes=security,performance,style
+- 2026-04-18 | implement | review result — wave W0 verdict=NITS (style: 5 should-findings re comment-restates-what + emit_summary dead-symbol; security PASS; performance PASS)
+- 2026-04-18 | implement | wave W0 done — T1 (--one-wave mode, orchestrator halts for user checkpoint)
