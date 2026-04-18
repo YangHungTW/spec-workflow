@@ -275,7 +275,7 @@ When it says "reviewer agent" it means one of
 - **Verify**: same grep set as T6/T7 with `style` substituted.
 - **Depends on**: —
 - **Parallel-safe-with**: T3, T4, T5, T6, T7
-- [ ]
+- [x]
 
 ---
 
@@ -552,6 +552,7 @@ Target: each task ≤ 60 min focused work.
 _(populated by Developer as tasks complete; expected mechanical append-collisions on this section are resolved keep-both per `tpm/parallel-safe-append-sections.md`)_
 
 - 2026-04-17 T1 DONE — scope enum admits `reviewer`; dir `.claude/rules/reviewer/` seeded with `.gitkeep`; all 4 verify checks PASS.
+- 2026-04-17 T8 DONE — `.claude/agents/specflow/reviewer-style.md` created; model=sonnet, 6 blocks, 2 when-invoked sections, axis: style verdict footer, stay-in-lane literal, rubric reference; all 8 verify checks PASS.
 
 ---
 
