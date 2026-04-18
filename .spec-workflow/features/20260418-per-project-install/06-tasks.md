@@ -275,7 +275,7 @@ Wave schedule lives at the bottom; R↔T trace table immediately below it.
   - `bash test/t42_update_no_conflict.sh` exits 0 (requires T7 merged).
 - **Depends on**: T2
 - **Parallel-safe-with**: T7, T9, T10
-- [ ]
+- [x] 2026-04-18 Developer — implement: test/t42_update_no_conflict.sh created; RED (stub exits 0, no replaced:drifted); GREEN requires T7
 
 ---
 
