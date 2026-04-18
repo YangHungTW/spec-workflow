@@ -160,6 +160,8 @@ sha256_of() {
 # Bash-only defensive ref reader — no Python 3.
 # Used when callers need only the ref string, not the full file map.
 # Exact awk form from D3 tradeoffs in 04-tech.md.
+# TODO(W2-W4): used by cmd_update as defensive fallback when full manifest
+# parse is overkill (only the ref string is needed for a quick staleness check).
 # ---------------------------------------------------------------------------
 manifest_ref_sniff() {
   awk -F'"' '/"specflow_ref"/ { print $4; exit }' "$1"
@@ -169,6 +171,9 @@ manifest_ref_sniff() {
 # manifest_read <path>
 # Python 3 heredoc. Validates schema v1; emits relpath<TAB>sha256 rows on stdout.
 # Exits 2 with "manifest: corrupt" on stderr for any schema or parse failure.
+# TODO(W3): consumed by cmd_update's classifier baseline lookup — maps each
+# relpath to its baseline sha256 so classify_copy_target can distinguish
+# drifted-ours from user-modified.
 # ---------------------------------------------------------------------------
 manifest_read() {
   local mpath="$1"
@@ -193,7 +198,19 @@ if not isinstance(data.get("files"), dict):
     print("manifest: corrupt", file=sys.stderr)
     sys.exit(2)
 
+# Boundary validation — reject traversal and absolute relpaths at the first
+# point of entry into the call tree so all downstream consumers can trust inputs.
 for relpath, sha in data["files"].items():
+    if not relpath:
+        print("manifest: corrupt", file=sys.stderr)
+        sys.exit(2)
+    if relpath.startswith("/"):
+        print("manifest: corrupt", file=sys.stderr)
+        sys.exit(2)
+    parts = relpath.replace("\\", "/").split("/")
+    if ".." in parts:
+        print("manifest: corrupt", file=sys.stderr)
+        sys.exit(2)
     print("{}\t{}".format(relpath, sha))
 PYEOF
 }
@@ -209,10 +226,11 @@ PYEOF
 # feed into a single python3 invocation — heredoc wins as the script source.
 # We capture stdin to a temp file before invoking python3 so the TSV data is
 # available independently of the heredoc channel.
+# TODO(W2,W3,W4): called after each successful init/update/migrate run to
+# record the new specflow_ref and file checksums in the consumer's manifest.
 # ---------------------------------------------------------------------------
 manifest_write() {
   local mpath="$1" ref="$2" source_remote="$3" applied_at="$4"
-  # Capture TSV from caller's stdin; write to temp file for python3 to read
   local tsv_tmp
   tsv_tmp=$(mktemp)
   cat > "$tsv_tmp"
@@ -272,6 +290,15 @@ PYEOF
 # ---------------------------------------------------------------------------
 classify_copy_target() {
   local consumer_root="$1" relpath="$2" expected_sha="$3" baseline_sha="$4"
+
+  # Defense-in-depth: reject traversal inputs even though manifest_read already
+  # validates at the boundary — belt-and-suspenders guards the classifier if ever
+  # called directly (e.g., from a future probe or unit test with raw inputs).
+  case "$relpath" in
+    ..*|*/..*|*/..|/*)
+      die "classify_copy_target: traversal rejected" ;;
+  esac
+
   local dst="${consumer_root}/${relpath}"
 
   # Branch 1: dst does not exist (neither as file nor as symlink)
@@ -333,7 +360,6 @@ classify_copy_target() {
 plan_copy() {
   local src_root="$1" mode="$2"
 
-  # Static managed subtrees — enumerate all regular files under each prefix
   local prefix
   for prefix in \
     ".claude/agents/specflow" \
@@ -343,9 +369,7 @@ plan_copy() {
     ".spec-workflow/features/_template"
   do
     if [ -d "${src_root}/${prefix}" ]; then
-      # find with -type f; strip the src_root/ prefix to get relpath
       find "${src_root}/${prefix}" -type f | while IFS= read -r fpath; do
-        # Strip leading src_root + slash
         local rel="${fpath#${src_root}/}"
         printf '%s\n' "$rel"
       done
@@ -381,6 +405,8 @@ plan_copy() {
 #
 # Same stdin/heredoc conflict as manifest_write: capture bytes to temp file
 # first so the piped data and the Python heredoc don't compete for stdin.
+# TODO(W2-W4): called from every D4 dispatcher arm that produces filesystem
+# writes (missing → create, drifted-ours → replace after .bak).
 # ---------------------------------------------------------------------------
 write_atomic() {
   local dst="$1"
@@ -492,8 +518,6 @@ cmd_probe() {
     manifest-roundtrip)
       [ "$#" -eq 2 ] || die "__probe manifest-roundtrip requires 1 argument: <path>"
       local mpath="$2"
-      # Extract all fields from the manifest in one Python3 invocation
-      # Write to sibling .roundtrip.tmp and compare for byte-identity
       local sibling="${mpath%.manifest}.roundtrip.tmp"
       python3 - "$mpath" "$sibling" <<'PYEOF'
 import sys, json, os
@@ -514,6 +538,18 @@ if not isinstance(data.get("files"), dict):
     print("manifest: corrupt", file=sys.stderr)
     sys.exit(2)
 
+# Boundary validation — same traversal check as manifest_read
+for relpath in data["files"]:
+    if not relpath:
+        print("manifest: corrupt", file=sys.stderr)
+        sys.exit(2)
+    if relpath.startswith("/"):
+        print("manifest: corrupt", file=sys.stderr)
+        sys.exit(2)
+    if ".." in relpath.replace("\\", "/").split("/"):
+        print("manifest: corrupt", file=sys.stderr)
+        sys.exit(2)
+
 # Re-assemble with same field order as manifest_write
 out = {
     "schema_version": 1,
@@ -530,7 +566,11 @@ with open(tmp, "w") as f:
     f.write("\n")
 os.replace(tmp, dst)
 PYEOF
-      # Assert byte-identity
+      local py_rc=$?
+      if [ "$py_rc" -ne 0 ]; then
+        rm -f "$sibling"
+        exit "$py_rc"
+      fi
       if cmp -s "$mpath" "$sibling"; then
         rm -f "$sibling"
         exit 0
