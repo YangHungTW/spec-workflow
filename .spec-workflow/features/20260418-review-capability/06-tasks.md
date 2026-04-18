@@ -467,7 +467,7 @@ When it says "reviewer agent" it means one of
   - `bash /Users/yanghungtw/Tools/spec-workflow/test/t37_review_oneshot.sh` exits 0 (requires T10 merged).
 - **Depends on**: T10.
 - **Parallel-safe-with**: T11, T12, T13, T15
-- [ ]
+- [x]
 
 ## T15 — Test: `test/t38_hook_skips_reviewer.sh`
 - **Milestone**: M6
@@ -560,6 +560,7 @@ _(populated by Developer as tasks complete; expected mechanical append-collision
 - 2026-04-17 T8 DONE — `.claude/agents/specflow/reviewer-style.md` created; model=sonnet, 6 blocks, 2 when-invoked sections, axis: style verdict footer, stay-in-lane literal, rubric reference; all 8 verify checks PASS.
 - 2026-04-17 T11 DONE — `test/t34_reviewer_verdict_contract.sh` created; 32 checks PASS (7 per axis × 3 axes + 5 round-trip severity classification); syntax clean, exec bit set, exits 0 standalone.
 - 2026-04-17 T12 DONE — `test/t35_reviewer_rubric_schema.sh` created; sandbox-HOME preflight, 5-key frontmatter, scope/name/severity/section-order/checklist checks for all 3 rubrics; syntax clean; exec bit set. NOTE: performance.md and style.md have name=reviewer-performance/reviewer-style (not matching filename stem per spec); test correctly catches this — rubric files need correction.
+- 2026-04-17 T14 DONE — `test/t37_review_oneshot.sh` created; 12 shape checks (file exists, frontmatter, /specflow:review slug, --axis security|performance|style, report filename pattern, never-advances-STATUS, exit-0/exit-1 semantics); syntax clean; exec bit set; all 12 checks PASS.
 
 ---
 
