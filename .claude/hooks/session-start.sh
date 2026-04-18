@@ -211,11 +211,18 @@ if [ -n "$lang_dirs" ]; then
   WALK_DIRS=$(printf '%s\n%s' "$WALK_DIRS" "$lang_dirs")
 fi
 
+# Subdirs that must never be session-loaded (space-separated list for easy extension)
+SKIP_SUBDIRS="reviewer"
+
 # Build digest
 digest=""
 
 while IFS= read -r subdir; do
   [ -z "$subdir" ] && continue
+  # Skip any subdir in the SKIP_SUBDIRS list (whole-word match via space-padding)
+  case " $SKIP_SUBDIRS " in
+    *" $subdir "*) continue ;;
+  esac
   dir_path="$RULES_DIR/$subdir"
   if [ ! -d "$dir_path" ]; then
     # Not every lang subdir may exist; silently skip
