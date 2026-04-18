@@ -147,7 +147,7 @@ All paths below are absolute under `/Users/yanghungtw/Tools/spec-workflow/`.
   - R3 fork/exec reduction: code review confirms either (a) a single `cat`-to-variable per agent file, or (b) a single batched `awk` pass per agent file.
 - **Depends on**: —
 - **Parallel-safe-with**: T1, T2, T4, T5, T6, T7, T8, T9
-- [ ]
+- [x]
 
 ## T4 — R4 team-memory path rename in `reviewer-security.md` + R13 in-file verify (per D3)
 - **Milestone**: M3
@@ -426,6 +426,7 @@ append-collisions on this section are resolved keep-both per
 
 - T1 DONE 2026-04-17 — slug validator inserted in review.md Step 1 (sub-bullet after "If missing…"); bash 3.2 `case`-glob pattern, no `[[ =~ ]]`; all 6 verify checks pass.
 - **T2 DONE** (2026-04-17): awk-fold refactor in `test/t35_reviewer_rubric_schema.sh`. Single awk pass per rubric file replaces 7 file reads (head, frontmatter-awk, 4 grep-n, checklist-awk). R11 WHAT comment at line 106 deleted. Byte-identical output verified: `diff /tmp/t35_before.txt /tmp/t35_after.txt` empty. bash 3.2 (`/bin/bash`) passes. All verify checks green.
+**T3 complete** (2026-04-17): R7 `set -u -o pipefail` applied at line 7; R3 read-once refactor applied to `check_agent()` — each agent file read once into `content` variable, all 6 greps replaced with `printf '%s\n' "$content" | grep ...`. Byte-identical D2 verify: `diff /tmp/t34_before.txt /tmp/t34_after.txt` empty (exit=0). Suite: 32/32 PASS.
 
 ---
 
