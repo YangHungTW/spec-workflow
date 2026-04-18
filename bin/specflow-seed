@@ -723,13 +723,17 @@ $classify_results
 EOF
 
   # ---------------------------------------------------------------------------
-  # Idempotent path: nothing changed → skip state-file mutations entirely.
-  # Rewriting the manifest with a fresh applied_at would break AC2.b's
-  # byte-identical guarantee; rewiring hooks is also unnecessary.
+  # Idempotent path: nothing changed AND manifest already exists → skip
+  # state-file mutations. Rewriting the manifest with a fresh applied_at
+  # would break AC2.b's byte-identical guarantee. But if the manifest is
+  # missing, this is a first-time init whose payload happened to be byte-
+  # identical (dogfood case: source == consumer) — we still need to author
+  # the manifest.
   if [ "$MAX_CODE" -eq 0 ] \
      && [ "$_CNT_CREATED" -eq 0 ] \
      && [ "$_CNT_REPLACED" -eq 0 ] \
-     && [ "$_CNT_SKIPPED" -eq 0 ]; then
+     && [ "$_CNT_SKIPPED" -eq 0 ] \
+     && [ -f "${consumer_root}/.claude/specflow.manifest" ]; then
     emit_summary
     exit 0
   fi
@@ -1266,13 +1270,17 @@ $classify_results
 EOF
 
   # ---------------------------------------------------------------------------
-  # Idempotent-exit short-circuit: nothing changed → skip all state-file
-  # mutations. Rewriting the manifest or rewiring settings.json on a no-op
-  # run would break byte-identity guarantees (AC9.b / AC9.c).
+  # Idempotent-exit short-circuit: nothing changed AND manifest already exists
+  # → skip state-file mutations. Rewriting the manifest or rewiring
+  # settings.json on a no-op run would break byte-identity guarantees
+  # (AC9.b / AC9.c). But if the manifest is missing, this is a first-time
+  # migrate whose copy was a no-op (dogfood case: source == consumer) —
+  # manifest authoring and settings.json rewiring still need to fire.
   if [ "$MAX_CODE" -eq 0 ] \
      && [ "$_CNT_CREATED" -eq 0 ] \
      && [ "$_CNT_REPLACED" -eq 0 ] \
-     && [ "$_CNT_SKIPPED" -eq 0 ]; then
+     && [ "$_CNT_SKIPPED" -eq 0 ] \
+     && [ -f "${consumer_root}/.claude/specflow.manifest" ]; then
     emit_summary
     exit 0
   fi

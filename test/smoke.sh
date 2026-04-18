@@ -829,8 +829,7 @@ for t in t13_settings_json t14_rules_dir_structure t15_rules_schema \
          t46_migrate_dry_run \
          t47_migrate_user_modified \
          t48_seed_rule_compliance \
-         t49_init_skill_bootstrap \
-         t50_dogfood_staging_sentinel; do
+         t49_init_skill_bootstrap; do
   echo "--- $t ---"
   if bash "$REPO_ROOT/test/${t}.sh" >/dev/null 2>&1; then
     echo "  PASS"

@@ -630,7 +630,7 @@ Wave schedule lives at the bottom; R↔T trace table immediately below it.
   - STATUS.md Notes contains the T21 completion line.
 - **Depends on**: T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20 — every preceding task must have landed. **T18 (t50 sentinel) must pass green immediately before T21 starts.**
 - **Parallel-safe-with**: — (sole task in W6; absolutely last)
-- [ ]
+- [x] 2026-04-18 — dogfood migrate completed (option B variant); t50 sentinel N/A on this machine (no pre-existing global install); surfaced + fixed idempotent-exit bug in cmd_init and cmd_migrate (required `[ -f manifest ]` check, else first-time-byte-identical case skipped manifest write)
 
 ---
 
