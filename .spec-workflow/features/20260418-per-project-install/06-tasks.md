@@ -533,7 +533,8 @@ Wave schedule lives at the bottom; R↔T trace table immediately below it.
   - `bash test/t50_dogfood_staging_sentinel.sh` exits 0 PRIOR TO T21 running on this repo.
 - **Depends on**: —
 - **Parallel-safe-with**: T15, T16, T17, T19, T20
-- [ ]
+- [x]
+  - 2026-04-18 Developer — created test/t50_dogfood_staging_sentinel.sh with sandbox-HOME exception comment block, pre/post hash read-only invariant, three dry-run assertions, and readlink AC10.a check; exec bit set; bash -n and test -x pass; runtime pass requires global install (bin/claude-symlink install) on the developer's machine prior to T21
 
 ---
 
