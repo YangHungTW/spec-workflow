@@ -323,7 +323,7 @@ Wave schedule lives at the bottom; R↔T trace table immediately below it.
   - `bash test/t44_update_never_touches_team_memory.sh` exits 0 (requires T7 merged).
 - **Depends on**: T2
 - **Parallel-safe-with**: T7, T8, T9
-- [ ]
+- [x] 2026-04-18 Developer — implement
 
 ---
 
