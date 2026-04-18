@@ -232,7 +232,7 @@ All paths below are absolute under `/Users/yanghungtw/Tools/spec-workflow/`.
   - Frontmatter untouched: `head -10 /Users/yanghungtw/Tools/spec-workflow/.claude/agents/specflow/reviewer-style.md | grep -q '^name: reviewer-style$'`.
 - **Depends on**: —
 - **Parallel-safe-with**: T1, T2, T3, T4, T6, T7, T8, T9
-- [ ]
+- [x]
 
 ## T6 — R6 pseudocode indent normalize in `implement.md` (around line 96)
 - **Milestone**: M3
@@ -298,7 +298,7 @@ All paths below are absolute under `/Users/yanghungtw/Tools/spec-workflow/`.
   - `bash /Users/yanghungtw/Tools/spec-workflow/test/t38_hook_skips_reviewer.sh` exits 0.
 - **Depends on**: —
 - **Parallel-safe-with**: T1, T2, T3, T4, T5, T6, T8, T9
-- [ ]
+- [x]
 
 ## T8 — R10 WHAT-comment delete in `t26.sh` line 57
 - **Milestone**: M5
@@ -414,7 +414,7 @@ All paths below are absolute under `/Users/yanghungtw/Tools/spec-workflow/`.
   - STATUS Notes line appended documenting both check outcomes.
 - **Depends on**: T1, T2, T3, T4, T5, T6, T7, T8, T9 (all of Wave 1 must be merged).
 - **Parallel-safe-with**: —
-- [ ]
+- [x]
 
 ---
 
