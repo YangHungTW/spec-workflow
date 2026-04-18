@@ -431,7 +431,7 @@ When it says "reviewer agent" it means one of
   - `bash /Users/yanghungtw/Tools/spec-workflow/test/t36_inline_review_integration.sh` exits 0 (requires T9 merged for the aggregator pseudocode; red-first pre-T9-merge is acceptable in worktree).
 - **Depends on**: T9 (aggregator under test lives in `implement.md`).
 - **Parallel-safe-with**: T11, T12, T14, T15
-- [ ]
+- [x]
 
 ## T14 — Test: `test/t37_review_oneshot.sh`
 - **Milestone**: M6
@@ -490,7 +490,7 @@ When it says "reviewer agent" it means one of
   - `bash /Users/yanghungtw/Tools/spec-workflow/test/t38_hook_skips_reviewer.sh` exits 0 (requires T2 merged for the hook patch; T3–T5 merged for populated reviewer dir).
 - **Depends on**: T2, T3, T4, T5.
 - **Parallel-safe-with**: T11, T12, T13, T14
-- [ ]
+- [x]
 
 ---
 
@@ -516,7 +516,7 @@ When it says "reviewer agent" it means one of
   - B1+B2.a regression — all 33 pre-feature tests still green (implicit in the smoke-0 above).
 - **Depends on**: T11, T12, T13, T14, T15 (all five test files must exist to register); T9, T10 (commands must exist for README to describe accurately).
 - **Parallel-safe-with**: —
-- [ ]
+- [x]
 
 ---
 

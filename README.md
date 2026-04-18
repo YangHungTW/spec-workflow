@@ -200,3 +200,32 @@ craft advisory. The hook is wired in `settings.json`:
 
 Details (schema, severity vocabulary, authoring checklist): see
 [.claude/rules/README.md](.claude/rules/README.md).
+
+## Review capability — multi-axis reviewer team
+
+`/specflow:implement` now includes **inline multi-axis review** between wave
+collection and per-task merge. For every completed task in a wave, three
+reviewer subagents run in parallel (security / performance / style). Each
+loads its own rubric from `.claude/rules/reviewer/<axis>.md`, stays in lane,
+and emits a severity-tagged verdict. Any `must` finding blocks the wave
+merge; `should` / `advisory` findings are logged to STATUS.
+
+```sh
+# one-shot multi-axis review of a feature branch, writes a timestamped report
+bin/claude-symlink install
+/specflow:review <slug>                  # all three axes in parallel
+/specflow:review <slug> --axis security  # single-axis targeted re-review
+```
+
+Reports land at `<feature-dir>/review-YYYYMMDD-HHMM.md`. The one-shot command
+never advances STATUS and is safe to run at any stage (implement, gap-check,
+archive, post-archive).
+
+Rubrics under `.claude/rules/reviewer/` are **agent-triggered**, not
+session-loaded — the SessionStart hook deliberately skips this subdir so
+rubric content only reaches the reviewer agents that invoke them.
+
+**Escape hatch**: `/specflow:implement --skip-inline-review` bypasses the
+inline reviewer dispatch entirely. Uses are logged to STATUS Notes for audit.
+Intended for emergencies and for features (like B2.b itself) that deliver the
+reviewer capability during their own implement waves.
