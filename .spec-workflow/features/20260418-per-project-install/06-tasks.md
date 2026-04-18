@@ -485,7 +485,7 @@ Wave schedule lives at the bottom; R↔T trace table immediately below it.
   - `bash test/t48_seed_rule_compliance.sh` exits 0 (requires T1, T2, T15 merged — but T15 may land in same wave; red-first OK).
 - **Depends on**: —
 - **Parallel-safe-with**: T15, T17, T18, T19, T20
-- [ ]
+- [x] 2026-04-18 Developer — implement: created test/t48_seed_rule_compliance.sh (static grep + bash -n; PASS pre-T15)
 
 ---
 
