@@ -115,7 +115,7 @@ tool", it means `bin/claude-symlink` per D7.
   - `bash /Users/yanghungtw/Tools/spec-workflow/test/t30_stop_hook_happy_path.sh` exits 0 (requires T1 merged).
 - **Depends on**: —
 - **Parallel-safe-with**: T1, T2, T3, T5, T6, T7
-- [ ]
+- [x]
 
 ## T5 — `test/t31_stop_hook_failsafe.sh`
 - **Milestone**: M3
