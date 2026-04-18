@@ -1033,8 +1033,298 @@ EOF
 }
 
 cmd_migrate() {
-  echo "migrate: not-yet-implemented"
-  exit 0
+  # ---------------------------------------------------------------------------
+  # Step 1: Resolve source repo root via layered fallback (D7):
+  #   --from > $SPECFLOW_SRC > readlink ~/.claude/agents/specflow → strip suffix
+  # Same resolution logic as cmd_init; no --to overload for migrate.
+  # ---------------------------------------------------------------------------
+  local src_root=""
+
+  if [ -n "$SRC" ]; then
+    src_root="$SRC"
+  elif [ -n "${SPECFLOW_SRC:-}" ]; then
+    src_root="$SPECFLOW_SRC"
+  else
+    # Auto-discover via bare readlink (no -f) on the global agents symlink.
+    # This is a READ-ONLY operation — D10 forbids any write to ~/.claude/.
+    local agent_link="$HOME/.claude/agents/specflow"
+    if [ -L "$agent_link" ]; then
+      local link_target
+      link_target=$(readlink "$agent_link")
+      # Make absolute if relative (symlink target may be relative to link dir)
+      case "$link_target" in
+        /*) ;;
+        *)  link_target="$(dirname "$agent_link")/$link_target" ;;
+      esac
+      # Suffix is a literal constant from the install path, so string
+      # truncation identifies the repo root cleanly.
+      local candidate="${link_target%/.claude/agents/specflow}"
+      if [ "$candidate" != "$link_target" ] \
+         && [ -f "${candidate}/bin/specflow-seed" ] \
+         && [ -d "${candidate}/.claude/agents/specflow" ]; then
+        src_root="$candidate"
+      fi
+    fi
+  fi
+
+  [ -n "$src_root" ] || die "no source repo; pass --from or set SPECFLOW_SRC or ensure ~/.claude/agents/specflow resolves"
+
+  # Resolve to an absolute path using cd (no readlink -f / realpath)
+  src_root=$(cd "$src_root" 2>/dev/null && pwd -P) \
+    || die "source repo path not accessible: $src_root"
+
+  # ---------------------------------------------------------------------------
+  # Step 2: Resolve consumer repo root.
+  # Callers must cd into the consumer repo before invoking cmd_migrate.
+  # repo_root() resolves from CWD via git rev-parse --show-toplevel.
+  # ---------------------------------------------------------------------------
+  local consumer_root
+  consumer_root=$(repo_root)
+
+  # ---------------------------------------------------------------------------
+  # Step 3: Preflight — verify source has required structural markers.
+  # Same checks as cmd_init; no filesystem mutation before preflight passes.
+  # ---------------------------------------------------------------------------
+  [ -f "${src_root}/bin/specflow-install-hook" ] \
+    || die "preflight: ${src_root}/bin/specflow-install-hook not found"
+  [ -d "${src_root}/.claude/agents/specflow" ] \
+    || die "preflight: ${src_root}/.claude/agents/specflow not found"
+  [ -d "${src_root}/.claude/commands/specflow" ] \
+    || die "preflight: ${src_root}/.claude/commands/specflow not found"
+  [ -d "${src_root}/.claude/hooks" ] \
+    || die "preflight: ${src_root}/.claude/hooks not found"
+  [ -d "${src_root}/.claude/rules" ] \
+    || die "preflight: ${src_root}/.claude/rules not found"
+  [ -d "${src_root}/.spec-workflow/features/_template" ] \
+    || die "preflight: ${src_root}/.spec-workflow/features/_template not found"
+
+  # ---------------------------------------------------------------------------
+  # Step 4: Resolve the ref to record in the manifest.
+  # Defaults to source-clone HEAD per D6 divergence for migrate.
+  # ---------------------------------------------------------------------------
+  local ref="${AT_REF}"
+  if [ -z "$ref" ]; then
+    ref=$(git -C "$src_root" rev-parse HEAD 2>/dev/null) \
+      || die "cannot resolve HEAD in source repo; pass --ref <ref>"
+  fi
+
+  # ---------------------------------------------------------------------------
+  # Step 5: Build the plan (classify-before-mutate: reads first, writes second).
+  # migrate uses same plan_copy mode as init — includes team-memory skeleton
+  # because the consumer coming from global-install has no team-memory dir yet.
+  # ---------------------------------------------------------------------------
+  local plan_lines=""
+  local relpaths
+  relpaths=$(plan_copy "$src_root" migrate)
+
+  while IFS= read -r relpath; do
+    [ -n "$relpath" ] || continue
+    local src_file="${src_root}/${relpath}"
+    # Skip skeleton paths where the source file does not exist
+    if [ ! -f "$src_file" ]; then
+      continue
+    fi
+    local expected_sha
+    expected_sha=$(sha256_of "$src_file")
+    if [ -n "$plan_lines" ]; then
+      plan_lines="${plan_lines}
+${relpath}	${expected_sha}"
+    else
+      plan_lines="${relpath}	${expected_sha}"
+    fi
+  done <<EOF
+$relpaths
+EOF
+
+  # ---------------------------------------------------------------------------
+  # Step 6: Classify each planned relpath (pure; no mutations yet).
+  # baseline_sha is "" for migrate (same as init — no prior managed baseline;
+  # any existing file that differs from expected counts as user-modified).
+  # ---------------------------------------------------------------------------
+  local classify_results=""
+  while IFS='	' read -r relpath expected_sha; do
+    [ -n "$relpath" ] || continue
+    local state
+    state=$(classify_copy_target "$consumer_root" "$relpath" "$expected_sha" "")
+    if [ -n "$classify_results" ]; then
+      classify_results="${classify_results}
+${relpath}	${expected_sha}	${state}"
+    else
+      classify_results="${relpath}	${expected_sha}	${state}"
+    fi
+  done <<EOF
+$plan_lines
+EOF
+
+  # ---------------------------------------------------------------------------
+  # Step 7: --dry-run early-return — emit would-* lines; no writes.
+  # Filesystem byte-identical before/after on dry-run (AC9.c).
+  # ---------------------------------------------------------------------------
+  if [ "$DRY_RUN" = "1" ]; then
+    while IFS='	' read -r relpath expected_sha state; do
+      [ -n "$relpath" ] || continue
+      case "$state" in
+        missing)            echo "would-create: ${relpath}" ;;
+        ok)                 echo "would-skip:already: ${relpath}" ;;
+        drifted-ours)       echo "would-replace:drifted: ${relpath}" ;;
+        user-modified)      echo "would-skip:user-modified: ${relpath}" ;;
+        real-file-conflict) echo "would-skip:real-file-conflict: ${relpath}" ;;
+        foreign)            echo "would-skip:foreign: ${relpath}" ;;
+        *)                  echo "would-skip:unknown: ${relpath}" ;;
+      esac
+    done <<EOF
+$classify_results
+EOF
+    return 0
+  fi
+
+  # ---------------------------------------------------------------------------
+  # Step 8: Dispatch — mutations live here (classify-before-mutate contract).
+  # manifest_tsv excludes skipped/failed paths — only successfully-written
+  # files enter the recorded baseline.
+  # ---------------------------------------------------------------------------
+  local manifest_tsv=""
+
+  while IFS='	' read -r relpath expected_sha state; do
+    [ -n "$relpath" ] || continue
+    local src_file="${src_root}/${relpath}"
+    local dst_file="${consumer_root}/${relpath}"
+
+    case "$state" in
+      missing)
+        if cat "$src_file" | write_atomic "$dst_file"; then
+          echo "created: ${relpath}"
+          _CNT_CREATED=$((_CNT_CREATED + 1))
+          if [ -n "$manifest_tsv" ]; then
+            manifest_tsv="${manifest_tsv}
+${relpath}	${expected_sha}"
+          else
+            manifest_tsv="${relpath}	${expected_sha}"
+          fi
+        else
+          echo "FAIL: write failed for ${relpath}" >&2
+          _CNT_SKIPPED=$((_CNT_SKIPPED + 1))
+          if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
+        fi
+        ;;
+      ok)
+        echo "already: ${relpath}"
+        _CNT_ALREADY=$((_CNT_ALREADY + 1))
+        if [ -n "$manifest_tsv" ]; then
+          manifest_tsv="${manifest_tsv}
+${relpath}	${expected_sha}"
+        else
+          manifest_tsv="${relpath}	${expected_sha}"
+        fi
+        ;;
+      drifted-ours)
+        # Version the backup name when one already exists — never silently
+        # clobber a previous backup (no-force-on-user-paths.md rule 4).
+        if [ -e "${dst_file}.bak" ]; then
+          cp "$dst_file" "${dst_file}.bak.$(date +%Y%m%dT%H%M%S)"
+        else
+          cp "$dst_file" "${dst_file}.bak"
+        fi
+        if cat "$src_file" | write_atomic "$dst_file"; then
+          echo "replaced:drifted: ${relpath}"
+          _CNT_REPLACED=$((_CNT_REPLACED + 1))
+          if [ -n "$manifest_tsv" ]; then
+            manifest_tsv="${manifest_tsv}
+${relpath}	${expected_sha}"
+          else
+            manifest_tsv="${relpath}	${expected_sha}"
+          fi
+        else
+          echo "FAIL: write failed for ${relpath}" >&2
+          _CNT_SKIPPED=$((_CNT_SKIPPED + 1))
+          if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
+        fi
+        ;;
+      user-modified)
+        echo "skipped:user-modified: ${relpath}"
+        _CNT_SKIPPED=$((_CNT_SKIPPED + 1))
+        if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
+        ;;
+      real-file-conflict)
+        echo "skipped:real-file-conflict: ${relpath}"
+        _CNT_SKIPPED=$((_CNT_SKIPPED + 1))
+        if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
+        ;;
+      foreign)
+        echo "skipped:foreign: ${relpath}"
+        _CNT_SKIPPED=$((_CNT_SKIPPED + 1))
+        if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
+        ;;
+      *)
+        echo "skipped:unknown-state: ${relpath}"
+        _CNT_SKIPPED=$((_CNT_SKIPPED + 1))
+        if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
+        ;;
+    esac
+  done <<EOF
+$classify_results
+EOF
+
+  # ---------------------------------------------------------------------------
+  # Idempotent-exit short-circuit: nothing changed → skip all state-file
+  # mutations. Rewriting the manifest or rewiring settings.json on a no-op
+  # run would break byte-identity guarantees (AC9.b / AC9.c).
+  if [ "$MAX_CODE" -eq 0 ] \
+     && [ "$_CNT_CREATED" -eq 0 ] \
+     && [ "$_CNT_REPLACED" -eq 0 ] \
+     && [ "$_CNT_SKIPPED" -eq 0 ]; then
+    emit_summary
+    exit 0
+  fi
+
+  # ---------------------------------------------------------------------------
+  # Step 9: Write manifest (D3 schema v1) — only when MAX_CODE == 0.
+  # On conflict run (any skipped:user-modified), skip manifest rewrite so the
+  # stale ref lets a subsequent migrate re-attempt after user resolves conflicts.
+  # ---------------------------------------------------------------------------
+  if [ "$MAX_CODE" -ne 0 ]; then
+    emit_summary
+    exit "$MAX_CODE"
+  fi
+
+  local source_remote
+  source_remote=$(git -C "$src_root" config --get remote.origin.url 2>/dev/null || echo "")
+  local applied_at
+  applied_at=$(date -u +%FT%TZ 2>/dev/null || echo "")
+
+  local manifest_path="${consumer_root}/.claude/specflow.manifest"
+
+  # Back up existing manifest before overwriting (versioned backup discipline).
+  if [ -f "$manifest_path" ]; then
+    if [ -e "${manifest_path}.bak" ]; then
+      cp "$manifest_path" "${manifest_path}.bak.$(date +%Y%m%dT%H%M%S)"
+    else
+      cp "$manifest_path" "${manifest_path}.bak"
+    fi
+  fi
+
+  printf '%s\n' "$manifest_tsv" | manifest_write "$manifest_path" "$ref" "$source_remote" "$applied_at"
+
+  # ---------------------------------------------------------------------------
+  # Step 10: Rewire settings.json from global hooks to consumer-local hooks (D8).
+  # Remove old global-install hook entries first (helper is idempotent — no-op
+  # when the entry is absent), then add the consumer-local equivalents.
+  #
+  # D10 abstention: the remove/add arguments below are STRINGS passed to the
+  # specflow-install-hook helper, which manipulates settings.json only. The
+  # helper does NOT touch the actual ~/.claude/hooks/* symlinks on disk.
+  # cmd_migrate MUST NOT perform any rm/mv/ln on paths under $HOME/.claude/.
+  # ---------------------------------------------------------------------------
+  (
+    cd "$consumer_root"
+    "${src_root}/bin/specflow-install-hook" remove SessionStart "~/.claude/hooks/session-start.sh"
+    "${src_root}/bin/specflow-install-hook" remove Stop "~/.claude/hooks/stop.sh"
+    "${src_root}/bin/specflow-install-hook" add SessionStart ".claude/hooks/session-start.sh"
+    "${src_root}/bin/specflow-install-hook" add Stop ".claude/hooks/stop.sh"
+  )
+
+  emit_summary
+  exit "$MAX_CODE"
 }
 
 # ---------------------------------------------------------------------------

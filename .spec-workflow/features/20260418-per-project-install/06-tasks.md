@@ -352,7 +352,7 @@ Wave schedule lives at the bottom; R↔T trace table immediately below it.
   - `grep -En 'HOME/\.claude|\$HOME/\.claude|~/.claude' bin/specflow-seed` shows only source-discovery read, no write.
 - **Depends on**: T2, T3 (init flow exists; migrate structurally mirrors init's copy path)
 - **Parallel-safe-with**: T12, T13, T14
-- [ ]
+- [x] 2026-04-18 Developer — implement
 
 ---
 
