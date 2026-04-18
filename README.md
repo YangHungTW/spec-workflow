@@ -2,6 +2,86 @@
 
 Role-based spec-driven development workflow for Claude Code. A small virtual team (PM, Designer, Architect, TPM, Developer, QA-analyst, QA-tester) drives every feature through numbered markdown artifacts.
 
+## Install
+
+### 1. One-time global bootstrap
+
+Copy the init skill from this repo into your global Claude skills directory:
+
+```sh
+cp -R .claude/skills/specflow-init ~/.claude/skills/
+```
+
+This makes the `/specflow-init` slash-command available in every Claude Code session on this machine.
+
+### 2. Per-consumer initialisation
+
+From inside the **target consumer repo**, run the init skill:
+
+```
+/specflow-init
+```
+
+For headless or scripted use, invoke the seed binary directly:
+
+```sh
+<src>/bin/specflow-seed init --from <src> --ref HEAD
+```
+
+Replace `<src>` with the absolute path to this repo and `<ref>` with the pinned commit or tag you want to track.
+
+**What `init` does:**
+
+- Seeds `.claude/agents/specflow`, `.claude/commands/specflow`, `.claude/hooks`, `.claude/rules`, and `.claude/team-memory` skeleton into the consumer repo.
+- Seeds `.spec-workflow/features/_template/` as the feature scaffold.
+- Records `specflow.manifest` at the repo root with the pinned source ref and a per-file baseline hash for future `update` comparisons.
+- Wires consumer-local hook paths into `settings.json` (SessionStart + Stop) using an atomic read-merge-write with `.bak` backup on any pre-existing file.
+
+### 3. Updating to a newer ref
+
+Re-run `update` whenever you want to adopt a newer specflow version:
+
+```sh
+bin/specflow-seed update --to <new-ref>
+```
+
+Behaviour per file:
+
+- Files byte-identical to the source at the new ref: reported `already`, untouched.
+- Files that match the **previous-ref baseline** stored in the manifest (i.e., not locally modified): replaced with new content and reported `replaced:drifted`; pre-replace bytes saved as `<path>.bak`.
+- Files that differ from **both** the source and the baseline (user-modified): skipped and reported `skipped:user-modified`; your edits are preserved.
+- The manifest ref only advances when the run completes with no `skipped:user-modified` outcomes. If any files are skipped, resolve conflicts first (see [Verb vocabulary](#verb-vocabulary) and [Recovery](#recovery)) then re-run.
+
+### 4. Migrating from the global-symlink model {#migrating-from-the-global-symlink-model}
+
+If this consumer repo currently uses the legacy `bin/claude-symlink` approach (symlinks in `~/.claude/`), run:
+
+```sh
+bin/specflow-seed migrate --from <src> --ref HEAD
+```
+
+`migrate` performs the same seeding as `init` but recognises that `.claude/agents/specflow` and related paths may already be present via symlinks. It does **not** tear down the shared `~/.claude/*` symlinks — those remain intact so other consumers on the same machine continue to work. Once **every** consumer on the machine has migrated, remove the shared symlinks manually:
+
+```sh
+bin/claude-symlink uninstall
+```
+
+### Per-project isolation guarantee
+
+Each consumer repo is pinned to its own ref in its own `specflow.manifest`. Team-memory files are local to the consumer and never travel back to the source repo. Two consumers on the same machine can run different specflow versions concurrently without interference.
+
+### Recovery
+
+If a run of `update` leaves `skipped:user-modified` files, the manifest ref is **not** advanced. To resolve:
+
+1. Inspect the diff between your file and the new source content.
+2. Either preserve your edit (copy the file to `<path>.bak` manually, then re-run `update` — the tool will treat it as baseline-matched and replace it) or discard it (restore from the manifest baseline, then re-run).
+3. After a conflict-free run the manifest advances to the new ref.
+
+If you need to roll back, restore from the `.bak` files the tool produced.
+
+---
+
 ## Flow
 
 ```
@@ -64,11 +144,13 @@ Two-tier memory: `~/.claude/team-memory/<role>/` (global) + `<repo>/.claude/team
 
 ## Using in another project
 
-Symlink or copy `.claude/` and `.spec-workflow/features/_template/` into the target repo.
+Use the `init` flow described in [Install](#install) above. The init skill seeds all necessary `.claude/` content and `.spec-workflow/features/_template/` into the consumer repo with a pinned ref.
 
 ---
 
 ## bin/claude-symlink — share .claude across projects
+
+> **Deprecated** — superseded by the per-project `migrate` flow (see [Install](#install) and [Migrating from the global-symlink model](#migrating-from-the-global-symlink-model)). `bin/claude-symlink` is retained only to maintain existing installs until every consumer on the machine has migrated.
 
 `bin/claude-symlink` is a zero-dependency bash script that creates, removes, and
 reconciles symlinks from `~/.claude/` back to this repo's `.claude/` tree. It lets
@@ -87,6 +169,8 @@ The tool manages exactly four kinds of targets under `~/.claude/`:
 | `team-memory/<relpath>`     | one file symlink per regular file under `team-memory/` |
 
 ### Per-project opt-in: wire the hooks
+
+> **Deprecated** — superseded by the per-project `init` / `migrate` flow (see [Install](#install)). The per-consumer `settings.json` wiring is now handled automatically by `specflow-seed init` / `specflow-seed migrate`.
 
 The `hooks` symlink makes `~/.claude/hooks/session-start.sh` and
 `~/.claude/hooks/stop.sh` resolvable globally, but each consumer project
@@ -185,6 +269,20 @@ indistinguishable from one the tool created. If that path is not in the current
 managed plan, `update` will treat it as an orphan and remove it. This is documented
 behavior, not a bug — the ownership contract is prefix-based, and the remedy is to
 not place hand-crafted symlinks pointing into this repo under `~/.claude/team-memory/`.
+
+## Verb vocabulary
+
+The `specflow-seed` commands (`init`, `update`, `migrate`) emit exactly the following verbs on stdout, one per managed file. No flow emits a verb outside this set; if a future verb is introduced, the table must be updated first (AC12.b).
+
+| Verb | Meaning | Remediation |
+|---|---|---|
+| `created` | New file written at a previously-missing path. | None — expected on first init. |
+| `already` | Destination is byte-identical to source at the chosen ref. | None. |
+| `replaced:drifted` | Destination differed from source but matched the previous-ref baseline in the manifest — replaced with new content; `<path>.bak` holds the pre-replace bytes. | Inspect `.bak`; delete once satisfied. |
+| `skipped:user-modified` | Destination differs from source AND differs from the baseline — user edit preserved. | Decide whether to keep the edit (copy to `.bak`, then re-run `update`) or discard it (restore from baseline, then re-run). |
+| `skipped:real-file-conflict` | Destination is a directory, symlink, or non-regular file where a regular file is expected. | Remove the offending path manually, then re-run. |
+| `skipped:foreign` | Destination is outside the managed subtree. | Should not occur; file a bug if observed. |
+| `would-created` / `would-replaced:drifted` / `would-skipped:*` | `--dry-run` preview of the above; no mutation. | None. |
 
 ## `.claude/rules/` — session-wide guardrails
 

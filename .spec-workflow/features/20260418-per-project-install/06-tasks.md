@@ -588,7 +588,7 @@ Wave schedule lives at the bottom; R↔T trace table immediately below it.
   - Spot-check sibling test `bash test/t49_init_skill_bootstrap.sh` passes (step 6 of that test greps the bootstrap line).
 - **Depends on**: —
 - **Parallel-safe-with**: T15, T16, T17, T18, T19 (all different files / different editors)
-- [ ]
+- [x] implement — 2026-04-18 Developer — README rewritten: Install/update/migrate sections, deprecation banners, verb vocabulary table, all verify greps pass
 
 ---
 
