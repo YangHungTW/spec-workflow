@@ -120,7 +120,7 @@ When it says "reviewer agent" it means one of
 - **Parallel-safe-with**: T4, T5, T6, T7, T8
 
   File-set check: T3 writes `.claude/rules/reviewer/security.md` (new) + appends one row to `.claude/rules/index.md`. T4/T5 write sibling rubric files (disjoint). T6–T8 write agent files in `.claude/agents/specflow/` (different dir). Expected append-only collision on `index.md` across T3/T4/T5 — mechanical keep-both resolution per `tpm/parallel-safe-append-sections.md`; do NOT serialize.
-- [ ]
+- [x]
 
 ## T4 — Rubric: `.claude/rules/reviewer/performance.md`
 - **Milestone**: M2
@@ -552,6 +552,7 @@ Target: each task ≤ 60 min focused work.
 _(populated by Developer as tasks complete; expected mechanical append-collisions on this section are resolved keep-both per `tpm/parallel-safe-append-sections.md`)_
 
 - 2026-04-17 T1 DONE — scope enum admits `reviewer`; dir `.claude/rules/reviewer/` seeded with `.gitkeep`; all 4 verify checks PASS.
+- 2026-04-18 T3 DONE — `.claude/rules/reviewer/security.md` created (8-entry checklist, cross-refs no-force-on-user-paths + classify-before-mutate); index row appended; all 7 verify checks PASS.
 
 ---
 
