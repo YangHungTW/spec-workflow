@@ -17,7 +17,7 @@
 - [x] implement     (tasks checked off)          — Developer
 - [x] gap-check     (07-gaps.md, verdict PASS)   — QA-analyst
 - [x] verify        (08-verify.md, verdict PASS) — QA-tester
-- [ ] archive       (moved to .spec-workflow/archive/)     — TPM
+- [x] archive       (moved to .spec-workflow/archive/)     — TPM
 
 ## Notes
 <!-- date + role + what changed -->
@@ -38,3 +38,4 @@
 - 2026-04-18 implement stage complete — all 16 tasks merged; smoke 38/38 PASS
 - 2026-04-18 QA-analyst — gap-check PASS (07-gaps.md written); 0 blockers, 1 should-fix (D1: reviewer-performance + reviewer-style agent name: fields don't match dispatch identifiers — fix before archive), 4 notes (E1 max-retry cap undocumented, D2 review.md date format doc, D3 reviewer-security naming convention, D4 index.md sort order)
 - 2026-04-18 QA-tester — verify PASS (08-verify.md written); 24/24 ACs pass; smoke 38/38; D1 should-fix from gap-check confirmed resolved (reviewer-performance + reviewer-style name: fields now match dispatch identifiers); 2 ACs structural-only (dogfood paradox); 4 notes (D2/D3/D4/E1) non-blocking carry-over
+- 2026-04-18 TPM — archive: wrote 7 memory entries (C1-C7); fixed E1 retry cap doc + D2 review.md date format + D4 index.md sort; feature moved to archive/

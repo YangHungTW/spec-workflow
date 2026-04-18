@@ -72,7 +72,7 @@ Run a one-shot parallel review of a feature branch. Spawns security, performance
    fi
    ```
 
-   The three tiers are: `review-YYYYMMDD-HHMM.md` → `review-YYYYMMDD-HHMMSS.md` → `review-YYYYMMDD-HHMMSS-<pid>.md`. The filename pattern documented here is `review-YYYYMMDD-HHMM.md` at the default tier.
+   The three tiers are: `review-YYYY-MM-DD-HHMM.md` → `review-YYYY-MM-DD-HHMMSS.md` → `review-YYYY-MM-DD-HHMMSS-<pid>.md`. The filename pattern documented here is `review-YYYY-MM-DD-HHMM.md` at the default tier.
 
 7. **Write report.** Compose the report in memory; write atomically (write to `<REPORT>.tmp`, then rename to `<REPORT>`). Report structure:
 
