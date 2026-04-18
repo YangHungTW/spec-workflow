@@ -42,7 +42,7 @@ fail() { echo "FAIL: $1"; FAIL=$((FAIL + 1)); }
 # Hard-coded baseline from feature branch (captured at task authoring time).
 # If the directory doesn't exist in git yet, baseline is 0.
 # ---------------------------------------------------------------------------
-BASELINE=18
+BASELINE=19  # 18 from B1 + 1 (review.md) from B2.b
 
 # ---------------------------------------------------------------------------
 # Current filesystem count

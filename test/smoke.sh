@@ -815,7 +815,10 @@ for t in t13_settings_json t14_rules_dir_structure t15_rules_schema \
          t28_settings_json_idempotent \
          t29_claude_symlink_hooks_pair t30_stop_hook_happy_path \
          t31_stop_hook_failsafe t32_stop_hook_dedup \
-         t33_claude_symlink_hooks_foreign; do
+         t33_claude_symlink_hooks_foreign \
+         t34_reviewer_verdict_contract t35_reviewer_rubric_schema \
+         t36_inline_review_integration t37_review_oneshot \
+         t38_hook_skips_reviewer; do
   echo "--- $t ---"
   if bash "$REPO_ROOT/test/${t}.sh" >/dev/null 2>&1; then
     echo "  PASS"

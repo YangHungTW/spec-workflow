@@ -1,8 +1,10 @@
 ---
-description: Run all remaining waves in parallel until done or blocked. Usage: /specflow:implement <slug> [--one-wave] [--task T<n>] [--serial]
+description: Run all remaining waves in parallel until done or blocked. Usage: /specflow:implement <slug> [--one-wave] [--task T<n>] [--serial] [--skip-inline-review]
 ---
 
 Wave-based parallel execution. Default behaviour: run **every remaining wave** end-to-end, stopping only on task failure, merge conflict, or user interrupt. TPM's dependency graph is the plan — no reason to pause between healthy waves.
+
+`--skip-inline-review` — bypasses reviewer dispatch entirely for this run (emergency / debug / dogfood-paradox use only). Every use is logged to STATUS Notes as `YYYY-MM-DD implement — skip-inline-review flag USED for wave <N>` so the skip is visible in the archive. Default is OFF (inline review runs).
 
 ## Steps
 
@@ -28,29 +30,146 @@ Wave-based parallel execution. Default behaviour: run **every remaining wave** e
      - All developer invocations in **one message with multiple Agent tool calls** → concurrent execution.
 6. **Wave collection** (after all developers return):
    - `git checkout <slug>`
+   - All developer branches are now ready (`<slug>-T<n>`); do NOT merge yet.
+7. **Inline review** (pre-merge gate — skipped if `--skip-inline-review` is set):
+
+   If `--skip-inline-review` is set: append `YYYY-MM-DD implement — skip-inline-review flag USED for wave <N>` to STATUS Notes and skip to step 8.
+
+   Otherwise:
+
+   **7a. Dispatch reviewers** — in a single orchestrator message, fire `3 × N_tasks` Agent tool calls (one per task-axis pair) — all parallel:
+   - For each completed task T<n>, spawn three reviewer subagents:
+     - `reviewer-security` — security axis
+     - `reviewer-performance` — performance axis
+     - `reviewer-style` — style axis
+   - Each reviewer receives **only**:
+     - The task-local diff: `git diff <slug>...<slug>-T<n>`
+     - The PRD R-ids linked to that task (read from `06-tasks.md`, `Requirements:` field)
+     - Its rubric path (`.claude/rules/reviewer/<axis>.md`) — the reviewer loads this itself per its own instructions
+   - Do NOT pass the whole-repo contents or the whole-feature diff. Per D5, task-local context only for inline review.
+   - Log to STATUS Notes: `YYYY-MM-DD review dispatched — slug=<slug> wave=<N> tasks=<T1,T2,...> axes=security,performance,style`
+
+   **7b. Aggregate verdicts** (pure classifier — no mutation here; apply classify-before-mutate rule):
+
+   After all `3 × N_tasks` reviewers return, run the following aggregator. The classifier emits exactly one of `wave:BLOCK`, `wave:NITS`, or `wave:PASS` on stdout. All mutation (merge or halt) lives in step 7c, not here.
+
+   ```bash
+   # Aggregator: parse all reviewer verdict footers and emit wave state.
+   # Input: $VERDICT_DIR — a scratch dir where each reviewer's raw output
+   #        was written as <task>-<axis>.txt before this block runs.
+   # Output (stdout): wave:BLOCK | wave:NITS | wave:PASS
+   # Error posture: missing or malformed verdict footer → treat as BLOCK (fail-loud).
+
+   WAVE_STATE="wave:PASS"
+   BLOCK_TASKS=""
+   NITS_LINES=""
+
+   for verdict_file in "$VERDICT_DIR"/*.txt; do
+     # Extract the ## Reviewer verdict section
+     IN_VERDICT=0
+     VERDICT_VALUE=""
+     TASK_LABEL=""
+     AXIS_VALUE=""
+     FOUND_HEADER=0
+
+     TASK_LABEL="$(basename "$verdict_file" .txt)"
+
+     while IFS= read -r line; do
+       case "$line" in
+         "## Reviewer verdict")
+           IN_VERDICT=1
+           FOUND_HEADER=1
+           ;;
+       esac
+       if [ "$IN_VERDICT" = "1" ]; then
+         case "$line" in
+           "axis: "*)   AXIS_VALUE="${line#axis: }" ;;
+           "verdict: "*) VERDICT_VALUE="${line#verdict: }" ;;
+           "  - severity: must"*)
+             WAVE_STATE="wave:BLOCK"
+             BLOCK_TASKS="$BLOCK_TASKS $TASK_LABEL"
+             ;;
+           "  - severity: should"*|"  - severity: advisory"*)
+             if [ "$WAVE_STATE" = "wave:PASS" ]; then
+               WAVE_STATE="wave:NITS"
+             fi
+             NITS_LINES="$NITS_LINES
+   $TASK_LABEL($AXIS_VALUE): $line"
+             ;;
+         esac
+       fi
+     done < "$verdict_file"
+
+     # Malformed footer (no ## Reviewer verdict header or no verdict: line) → BLOCK
+     if [ "$FOUND_HEADER" = "0" ] || [ -z "$VERDICT_VALUE" ]; then
+       echo "WARN: malformed or missing verdict footer in $verdict_file — treating as BLOCK" >&2
+       WAVE_STATE="wave:BLOCK"
+       BLOCK_TASKS="$BLOCK_TASKS $TASK_LABEL(malformed)"
+     fi
+
+     # verdict: BLOCK at the task level also forces wave:BLOCK
+     if [ "$VERDICT_VALUE" = "BLOCK" ]; then
+       WAVE_STATE="wave:BLOCK"
+       BLOCK_TASKS="$BLOCK_TASKS $TASK_LABEL($AXIS_VALUE)"
+     fi
+   done
+
+   echo "$WAVE_STATE"
+   ```
+
+   **7c. Dispatch on wave state** (mutation lives here, not in the classifier above):
+
+   - **`wave:BLOCK`** — do NOT run the `git merge --no-ff` loop:
+     1. Write per-task findings to STATUS Notes: `YYYY-MM-DD review result — wave <N> verdict=BLOCK blocking-tasks=<list>`
+     2. For each blocked task, surface the findings and the recovery command: `/specflow:implement <slug> --task T<n>`
+     3. STOP the implement loop. Do not proceed to step 8 or 9.
+     4. Leave the `<slug>-T<n>` branches and worktrees intact so the developer can inspect them.
+
+   - **`wave:NITS`** — proceed with the merge loop (step 8) but with enriched commit messages:
+     1. Log to STATUS Notes: `YYYY-MM-DD review result — wave <N> verdict=NITS`
+     2. For each task merge commit, append a `## Reviewer notes` section to the commit body listing all `should`/`advisory` findings for that task, grouped by axis.
+
+   - **`wave:PASS`** — proceed silently with the merge loop (step 8).
+
+8. **Merge loop** (runs only when wave state is `wave:NITS` or `wave:PASS`):
    - For each completed task (any order):
-     - `git merge --no-ff <slug>-T<n> -m "Merge T<n>: <title>"`
+     - `git merge --no-ff <slug>-T<n> -m "Merge T<n>: <title>[## Reviewer notes section if NITS]"`
      - On conflict: STOP the whole loop. Surface conflicting files. TPM's parallel-safety analysis was wrong → recommend `/specflow:update-task`.
      - `git worktree remove .worktrees/<slug>-T<n>`
      - `git branch -d <slug>-T<n>`
-7. **Status update** (orchestrator):
+9. **Status update** (orchestrator):
    - In main tree, check off `[x]` for every completed task in `06-tasks.md`.
    - Append STATUS Notes: `YYYY-MM-DD implement wave <N> done — T<a>, T<b>, …`.
    - Commit: `wave <N>: check off completed tasks`.
-8. **Continue or stop**:
-   - If `--one-wave` → stop. Report current state + preview next wave.
-   - If any task failed or merge conflicted → stop. Report failure + recovery command.
-   - Else if more waves remain → loop to step 4 for the next wave.
-   - Else all done → check `[x] implement` in STATUS, commit, tell user next is `/specflow:next <slug>`.
+10. **Continue or stop**:
+    - If `--one-wave` → stop. Report current state + preview next wave.
+    - If any task failed or merge conflicted → stop. Report failure + recovery command.
+    - Else if more waves remain → loop to step 4 for the next wave.
+    - Else all done → check `[x] implement` in STATUS, commit, tell user next is `/specflow:next <slug>`.
+
+## Retry semantics
+
+When a task is blocked by the review step and the developer re-runs it via `--task T<n>`:
+
+1. The developer fixes the flagged issue and commits to `<slug>-T<n>`.
+2. Orchestrator re-invokes **all 3 reviewers** on the new commit — not just the reviewer(s) that flagged originally.
+3. The aggregator runs from scratch on the new verdicts. No shortcuts based on prior verdicts (D6: classify the new state fresh).
+4. Max retries = 2 per task. If a task is still blocked after 2 retries, escalate to TPM via `/specflow:update-task`.
 
 ## Failures
 
 - **One developer fails** → stop the wave loop immediately (other completed tasks in this wave still merged). Report which task failed + how to retry: `/specflow:implement <slug> --task T<n>`.
 - **Merge conflict** → stop. Conflicts during a wave = TPM's parallel-safety analysis was wrong. Don't auto-resolve.
 - **Interrupted mid-wave** → clean up any hanging worktrees before exiting.
+- **Reviewer timeout or crash** → treat as BLOCK (fail-loud per D2 error posture). User can retry or invoke `--skip-inline-review`.
+- **All reviewers blocked after 2 retries** → escalate to TPM. Do not bypass the reviewer step silently.
 
 ## Rules
 - Never skip `Parallel-safe-with:` constraints.
 - Never run two waves concurrently — wave N+1 depends on wave N's merged state.
 - Clean up worktrees even on failure. No orphan `.worktrees/<slug>-T<n>/`.
 - Branch naming: **flat** `<slug>-T<n>` to avoid colliding with the feature branch `<slug>` leaf ref.
+- The reviewer step (step 7 above) fires before the per-task merge; the per-task merge command (`git merge --no-ff`) runs only after all reviewers return a non-blocking result.
+- The only legitimate bypass of the reviewer step is `--skip-inline-review`.
+- All other runs must complete the reviewer step without a BLOCK verdict before executing `git merge --no-ff`.
+- Retry re-runs **all 3 reviewers**, never just the one that flagged. Prior verdict state is discarded; classify from scratch.
