@@ -186,7 +186,7 @@ tool", it means `bin/claude-symlink` per D7.
   - `bash /Users/yanghungtw/Tools/spec-workflow/test/t33_claude_symlink_hooks_foreign.sh` exits 0 (requires T2 merged).
 - **Depends on**: —
 - **Parallel-safe-with**: T1, T2, T3, T4, T5, T6
-- [ ]
+- [x]
 
 ## T8 — Smoke integration + README docs + `.gitignore` verification
 - **Milestone**: M4
@@ -246,6 +246,7 @@ _(populated by Developer as tasks complete; expected mechanical append-collision
 - 2026-04-17 T3 DONE — created `test/t29_claude_symlink_hooks_pair.sh`; sandbox preflight + 5-step lifecycle (install/idempotent/update/uninstall); RED pre-T2-merge (hooks pair absent from plan — correct failure), syntax OK, exec bit set.
 - **T5 done** 2026-04-17 — Created `test/t31_stop_hook_failsafe.sh` (exec bit set). Six fail-safe variants (A–F: empty stdin, malformed JSON, non-git cwd, branch-no-match, missing STATUS.md, missing Notes heading). Syntax clean; exec bit set; runs RED (exit 1) pre-T1 for the right reason (hook absent). Will go GREEN once T1 merges.
 - 2026-04-17 T6 complete — `test/t32_stop_hook_dedup.sh` created (exec bit set, syntax clean, RED pending T1 for the right reason: hook not found); exercises 3-step dedup scenario + platform-dispatch note; date path exercised on this run: BSD Darwin.
+- T7 done 2026-04-17: created `test/t33_claude_symlink_hooks_foreign.sh` (exec bit set, syntax clean). Test is RED until T2 merges (hooks pair not yet in plan_links/cmd_uninstall). Confirmed RED for right reason: install produces no `[skipped:real-dir]` because hooks pair absent from plan.
 
 ---
 
