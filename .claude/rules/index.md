@@ -11,3 +11,4 @@ then name.
 | classify-before-mutate | common | must | [common/classify-before-mutate.md](common/classify-before-mutate.md) |
 | no-force-on-user-paths | common | must | [common/no-force-on-user-paths.md](common/no-force-on-user-paths.md) |
 | sandbox-home-in-tests | bash | must | [bash/sandbox-home-in-tests.md](bash/sandbox-home-in-tests.md) |
+| style | reviewer | should | [reviewer/style.md](reviewer/style.md) |
