@@ -71,7 +71,7 @@ When it says "reviewer agent" it means one of
 - **Parallel-safe-with**: T1
 
   File-set check: T1 edits `.claude/rules/README.md` + creates `.claude/rules/reviewer/.gitkeep`. T2 edits `.claude/hooks/session-start.sh`. Disjoint. The T2 manual dry-run step reads but does not write the subdir T1 created; sequencing inside Wave 1 resolves this when both land.
-- [ ]
+- [x]
 
 ---
 
