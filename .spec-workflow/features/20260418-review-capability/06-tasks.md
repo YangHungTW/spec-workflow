@@ -43,7 +43,7 @@ When it says "reviewer agent" it means one of
   - `test -d /Users/yanghungtw/Tools/spec-workflow/.claude/rules/reviewer` — subdir exists.
 - **Depends on**: —
 - **Parallel-safe-with**: T2
-- [ ]
+- [x]
 
 ## T2 — SessionStart hook: skip `reviewer/` subdir in walk
 - **Milestone**: M1
@@ -550,6 +550,8 @@ Target: each task ≤ 60 min focused work.
 ## STATUS Notes
 
 _(populated by Developer as tasks complete; expected mechanical append-collisions on this section are resolved keep-both per `tpm/parallel-safe-append-sections.md`)_
+
+- 2026-04-17 T1 DONE — scope enum admits `reviewer`; dir `.claude/rules/reviewer/` seeded with `.gitkeep`; all 4 verify checks PASS.
 
 ---
 
