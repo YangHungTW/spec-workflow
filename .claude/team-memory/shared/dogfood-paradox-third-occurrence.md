@@ -6,6 +6,12 @@ created: 2026-04-18
 updated: 2026-04-18
 ---
 
+<!-- 2026-04-18 update: added fifth and sixth occurrences from
+feature 20260418-per-project-install — the sixth reinforces that
+dogfood execution starts at whatever state the dev machine happens
+to hold, which synthetic sandboxes cannot model. -->
+
+
 <!-- NOTE: filename says "third-occurrence" but file now records 4+ occurrences (2026-04-18); kept filename stable to avoid breaking refs. -->
 
 ## Rule
@@ -138,4 +144,36 @@ Implication: the "next feature after archive" clause in *How to apply*
 should read "next feature after **session restart** following archive",
 not merely after archive. The opt-out flag (`--skip-inline-review`)
 and STATUS Notes trace are already in place and handled this cleanly.
+
+### Fifth and sixth occurrences (2026-04-18)
+
+**Fifth occurrence** — feature `20260418-per-project-install`: the
+entire plan was dogfood-staged. This repo stayed on the
+global-symlink model through W0–W5 and migrated to per-project only
+in W6 as the feature's final act. The structural-vs-runtime split
+held cleanly: structural verification was the archive gate
+(08-verify.md verdict PASS with 1 N/A for the option-B dogfood
+variant), and runtime confirmation is deferred to the next feature's
+first session after restart.
+
+**Sixth occurrence** — same feature, option-B execution variant:
+the developer's machine had no pre-existing global install of
+specflow, so running `migrate --from .` meant consumer == source
+tree. This surfaced a bug invisible to all synthetic sandboxes: the
+W2-hotfix idempotent-exit short-circuit fired when ALL files
+classified as `ok` AND the manifest didn't yet exist (the
+first-time-dogfood case). Net effect: migrate succeeded, but no
+manifest was written — the consumer looked like an unmanaged tree
+on the next run. Fix: add `[ -f "${consumer_root}/.claude/specflow.manifest" ]`
+to the short-circuit condition in both `cmd_init` and `cmd_migrate`,
+so first-time writes still author the manifest.
+
+Lesson reinforced: **dogfood execution always reveals something
+synthetic sandboxes miss**, because sandboxes start empty and
+dogfood starts at whatever state the dev machine happens to hold.
+The starting state distribution for dogfood runs is the set
+{never-installed, installed-at-current-ref, installed-at-stale-ref,
+partial-install}; test sandboxes only model the first and
+(sometimes) the second. Plan for at least one dogfood-surfaced fix
+per self-shipping feature; don't treat it as a process failure.
 

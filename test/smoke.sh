@@ -818,7 +818,18 @@ for t in t13_settings_json t14_rules_dir_structure t15_rules_schema \
          t33_claude_symlink_hooks_foreign \
          t34_reviewer_verdict_contract t35_reviewer_rubric_schema \
          t36_inline_review_integration t37_review_oneshot \
-         t38_hook_skips_reviewer; do
+         t38_hook_skips_reviewer \
+         t39_init_fresh_sandbox \
+         t40_init_idempotent \
+         t41_init_preserves_foreign \
+         t42_update_no_conflict \
+         t43_update_user_modified \
+         t44_update_never_touches_team_memory \
+         t45_migrate_from_global \
+         t46_migrate_dry_run \
+         t47_migrate_user_modified \
+         t48_seed_rule_compliance \
+         t49_init_skill_bootstrap; do
   echo "--- $t ---"
   if bash "$REPO_ROOT/test/${t}.sh" >/dev/null 2>&1; then
     echo "  PASS"
