@@ -2,7 +2,7 @@
 
 - **slug**: 20260418-per-project-install
 - **has-ui**: false
-- **stage**: gap-check
+- **stage**: verify
 - **created**: 2026-04-18
 - **updated**: 2026-04-18
 
@@ -16,7 +16,7 @@
 - [x] tasks         (06-tasks.md)                — TPM
 - [x] implement     (tasks checked off)          — Developer
 - [x] gap-check     (07-gaps.md, verdict NITS)   — QA-analyst
-- [ ] verify        (08-verify.md, verdict PASS) — QA-tester
+- [x] verify        (08-verify.md, verdict PASS) — QA-tester
 - [ ] archive       (moved to .spec-workflow/archive/)     — TPM
 
 ## Notes
@@ -56,3 +56,4 @@
 - 2026-04-18 | tpm | T21 dogfood migration complete — this repo is now its own per-project consumer; .claude/specflow.manifest created at ref 94fa3ac; settings.json rewired to local hooks (.bak available); global ~/.claude/* symlinks left in place per D10 for any un-migrated consumer on this machine.
 - 2026-04-18 | qa-analyst | gap-check complete — verdict NITS, 5 findings (2 drift, 1 dead-code note, 1 dead-variable note, 1 weak-validation note); archive can proceed
 - 2026-04-18 | gap-fix | D1 + D2 + N1 cleared via commit 60237a2 — cmd_update idempotent-exit now advances ref when previous_ref != TO_REF (R8 AC8.a); README verb vocabulary aligned with code emissions (would-create / skip, not would-created / skipped) and skipped:unknown-state documented (R12 AC12.a/b); dead resolve_path() removed. smoke: 49/49 PASS.
+- 2026-04-18 | qa-tester | verify PASS — 13/13 R covered, 1 N/A (R10 AC10.a option-B dogfood variant)
