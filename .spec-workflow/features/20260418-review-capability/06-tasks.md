@@ -373,7 +373,7 @@ When it says "reviewer agent" it means one of
 - **Parallel-safe-with**: T12, T13, T14, T15
 
   File-set check: T11 creates one new test file. T12–T15 each create their own new test file. Disjoint. No smoke.sh edits here.
-- [ ]
+- [x]
 
 ## T12 — Test: `test/t35_reviewer_rubric_schema.sh`
 - **Milestone**: M6
@@ -558,6 +558,7 @@ _(populated by Developer as tasks complete; expected mechanical append-collision
 - 2026-04-17 T6 DONE — `.claude/agents/specflow/reviewer-security.md` created; all 8 verify checks PASS.
 - 2026-04-17 T7 DONE — reviewer-performance agent created; all 8 verify checks PASS (model=sonnet, 6 blocks, axis=performance, stay-in-lane, rubric ref, 2x when-invoked).
 - 2026-04-17 T8 DONE — `.claude/agents/specflow/reviewer-style.md` created; model=sonnet, 6 blocks, 2 when-invoked sections, axis: style verdict footer, stay-in-lane literal, rubric reference; all 8 verify checks PASS.
+- 2026-04-17 T11 DONE — `test/t34_reviewer_verdict_contract.sh` created; 32 checks PASS (7 per axis × 3 axes + 5 round-trip severity classification); syntax clean, exec bit set, exits 0 standalone.
 
 ---
 
