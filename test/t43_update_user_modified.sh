@@ -143,7 +143,7 @@ if ! grep -q "replaced:drifted:.*architect\.md\|replaced:drifted: \.claude/agent
 fi
 
 # R8 AC8.b — manifest ref must NOT have advanced (still ref-A)
-MANIFEST="$CONSUMER/.spec-workflow/manifest.json"
+MANIFEST="$CONSUMER/.claude/specflow.manifest"
 if ! grep -q "$REF_A" "$MANIFEST"; then
   echo "FAIL: step 5d: manifest ref should still be REF_A ($REF_A) after conflicted update; got:" >&2
   cat "$MANIFEST" >&2
