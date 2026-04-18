@@ -243,7 +243,7 @@ When it says "reviewer agent" it means one of
 - **Parallel-safe-with**: T3, T4, T5, T7, T8
 
   File-set check: T6 writes a new file in `.claude/agents/specflow/`. T3–T5 write new rubric files in `.claude/rules/reviewer/`. T7/T8 write sibling agent files. All disjoint. No shared-file collisions.
-- [ ]
+- [x]
 
 ## T7 — Reviewer agent: `.claude/agents/specflow/reviewer-performance.md`
 - **Milestone**: M3
@@ -552,6 +552,7 @@ Target: each task ≤ 60 min focused work.
 _(populated by Developer as tasks complete; expected mechanical append-collisions on this section are resolved keep-both per `tpm/parallel-safe-append-sections.md`)_
 
 - 2026-04-17 T1 DONE — scope enum admits `reviewer`; dir `.claude/rules/reviewer/` seeded with `.gitkeep`; all 4 verify checks PASS.
+- 2026-04-17 T6 DONE — `.claude/agents/specflow/reviewer-security.md` created; all 8 verify checks PASS.
 
 ---
 
