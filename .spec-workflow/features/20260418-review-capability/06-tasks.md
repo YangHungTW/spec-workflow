@@ -259,7 +259,7 @@ When it says "reviewer agent" it means one of
 - **Verify**: same grep set as T6 but with `performance` substituted for `security` in `name:`, `axis:`, and rubric path.
 - **Depends on**: —
 - **Parallel-safe-with**: T3, T4, T5, T6, T8
-- [ ]
+- [x]
 
 ## T8 — Reviewer agent: `.claude/agents/specflow/reviewer-style.md`
 - **Milestone**: M3
@@ -556,6 +556,7 @@ _(populated by Developer as tasks complete; expected mechanical append-collision
 - 2026-04-18 T4 DONE — `.claude/rules/reviewer/performance.md` created; index.md row appended; all 6 verify checks PASS.
 - 2026-04-18 T5 DONE — `.claude/rules/reviewer/style.md` created (8 checklist entries, scope=reviewer, 2 cross-refs); index.md row appended; all verify checks PASS.
 - 2026-04-17 T6 DONE — `.claude/agents/specflow/reviewer-security.md` created; all 8 verify checks PASS.
+- 2026-04-17 T7 DONE — reviewer-performance agent created; all 8 verify checks PASS (model=sonnet, 6 blocks, axis=performance, stay-in-lane, rubric ref, 2x when-invoked).
 
 ---
 
