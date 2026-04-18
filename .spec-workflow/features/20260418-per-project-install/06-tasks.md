@@ -507,7 +507,7 @@ Wave schedule lives at the bottom; R↔T trace table immediately below it.
   - `bash test/t49_init_skill_bootstrap.sh` exits 0 (requires T15 + T20 merged).
 - **Depends on**: —
 - **Parallel-safe-with**: T15, T16, T18, T19, T20
-- [ ]
+- [x] 2026-04-18 Developer — implement: test/t49_init_skill_bootstrap.sh created; bash -n passes, exec bit set; RED at step 2 (SKILL.md missing, pre-T15)
 
 ---
 
