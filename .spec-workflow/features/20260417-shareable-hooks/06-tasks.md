@@ -162,7 +162,7 @@ tool", it means `bin/claude-symlink` per D7.
   - `bash /Users/yanghungtw/Tools/spec-workflow/test/t32_stop_hook_dedup.sh` exits 0 (requires T1 merged).
 - **Depends on**: —
 - **Parallel-safe-with**: T1, T2, T3, T4, T5, T7
-- [ ]
+- [x]
 
 ## T7 — `test/t33_claude_symlink_hooks_foreign.sh`
 - **Milestone**: M3
@@ -242,6 +242,8 @@ Target: each task ≤ 60 min focused work.
 ## STATUS Notes
 
 _(populated by Developer as tasks complete; expected mechanical append-collisions on this section are resolved keep-both per `tpm/parallel-safe-append-sections.md`)_
+
+- 2026-04-17 T6 complete — `test/t32_stop_hook_dedup.sh` created (exec bit set, syntax clean, RED pending T1 for the right reason: hook not found); exercises 3-step dedup scenario + platform-dispatch note; date path exercised on this run: BSD Darwin.
 
 ---
 
