@@ -37,3 +37,6 @@
 - 2026-04-18 | implement | T2 retry 1/2 — folded fix commit fa8c6dc; traversal guard at manifest_read boundary + defense-in-depth case-guard in classify_copy_target + 4 dead-symbol TODOs + 5 WHAT-comments cleaned; all 9 Verify assertions (7 original + 2 new traversal) pass; 621 LOC
 - 2026-04-18 | implement | review result (retry) — wave W1 verdict=NITS (security 1× should on __probe manifest-roundtrip mpath arg, hidden internal verb; performance PASS; style 2× advisory); BLOCK cleared, merged as 7a38ee0
 - 2026-04-18 | implement | wave W1 done — T2 (--one-wave mode, orchestrator halts for user checkpoint)
+- 2026-04-18 | implement | review dispatched — slug=20260418-per-project-install wave=W2 tasks=T3,T4,T5,T6 axes=security,performance,style (12 reviewer agents parallel)
+- 2026-04-18 | implement | review result — wave W2 verdict=NITS; T3 security 2× should (silent .bak clobber in drifted-ours + manifest paths) + performance 1× advisory (per-file python3 batch opportunity) + style 3× should (WHAT-comments); T4 all-PASS; T5 performance 1× advisory (find -exec); T6 style 1× advisory (WHAT-comment); no must findings, all 4 tasks merged
+- 2026-04-18 | implement | wave W2 done — T3,T4,T5,T6 (--one-wave mode, orchestrator halts for user checkpoint); 6/21 tasks complete
