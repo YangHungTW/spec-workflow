@@ -6,6 +6,8 @@ created: 2026-04-18
 updated: 2026-04-18
 ---
 
+<!-- NOTE: filename says "third-occurrence" but file now records 4+ occurrences (2026-04-18); kept filename stable to avoid breaking refs. -->
+
 ## Rule
 
 When a feature ships the mechanism it would invoke (SessionStart
@@ -117,3 +119,23 @@ Examples in this repo:
 Third occurrence confirms this is a pattern, not a one-off; promoted
 to `shared/` from the three role-specific observations accumulated
 in B1/B2.a/B2.b retrospectives.
+
+### Fourth occurrence (2026-04-18)
+
+Feature `20260418-review-nits-cleanup` skipped inline review because
+the B2.b reviewer subagents weren't yet in session dispatch cache
+(the session hadn't restarted since B2.b merged, so the newly-shipped
+agent files weren't yet resolvable as subagent targets).
+
+This is a **dispatch-layer variant** distinct from the original
+"mechanism not yet installed" failure mode: the file exists, the hook
+would fire, but the orchestrator's agent-dispatch cache hasn't
+refreshed to include the new reviewer names. Same root pattern —
+newly-shipped deliverable not yet live for the next feature — but
+here the failure mode is **cache refresh lag**, not install gap.
+
+Implication: the "next feature after archive" clause in *How to apply*
+should read "next feature after **session restart** following archive",
+not merely after archive. The opt-out flag (`--skip-inline-review`)
+and STATUS Notes trace are already in place and handled this cleanly.
+

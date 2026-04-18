@@ -100,23 +100,6 @@ case "$state" in
 esac
 
 # ---------------------------------------------------------------------------
-# D4. to_epoch — BSD/GNU date dispatch, cached by uname -s
-# ---------------------------------------------------------------------------
-
-# to_epoch "YYYY-MM-DD HH:MM:SS" → integer seconds on stdout
-# Cross-platform: BSD date on macOS (-j -f), GNU date on Linux (-d).
-to_epoch() {
-  local ts="$1"
-  local uname_s
-  uname_s=$(uname -s 2>/dev/null)
-  if [ "$uname_s" = "Darwin" ] || [ "$uname_s" = "FreeBSD" ] || [ "$uname_s" = "NetBSD" ] || [ "$uname_s" = "OpenBSD" ]; then
-    date -j -f "%Y-%m-%d %H:%M:%S" "$ts" +%s 2>/dev/null
-  else
-    date -d "$ts" +%s 2>/dev/null
-  fi
-}
-
-# ---------------------------------------------------------------------------
 # D4. within_60s — sentinel-based dedup check
 #
 # Returns 0 (skip) if a stop-hook note was appended within the last 60 seconds.

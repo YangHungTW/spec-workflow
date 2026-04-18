@@ -4,7 +4,7 @@
 # elements, and that the verdict footer parse logic classifies severity correctly.
 # Pure grep/awk — no invocation of the agents themselves.
 
-set -u
+set -u -o pipefail
 
 # ---------------------------------------------------------------------------
 # Sandbox — HOME isolation (sandbox-home-in-tests rule, NON-NEGOTIABLE)
@@ -86,29 +86,33 @@ check_agent() {
   fi
   pass "${axis}: agent file exists"
 
+  # Read the file once; all subsequent checks grep the variable (R3)
+  local content
+  content="$(cat "$agent_file")"
+
   # 2. model: sonnet frontmatter
-  if grep -q '^model: sonnet$' "$agent_file"; then
+  if printf '%s\n' "$content" | grep -q '^model: sonnet$'; then
     pass "${axis}: model: sonnet present"
   else
     fail "${axis}: model: sonnet missing or wrong"
   fi
 
   # 3. ## Reviewer verdict literal
-  if grep -q '^## Reviewer verdict' "$agent_file"; then
+  if printf '%s\n' "$content" | grep -q '^## Reviewer verdict'; then
     pass "${axis}: ## Reviewer verdict present"
   else
     fail "${axis}: ## Reviewer verdict missing"
   fi
 
   # 4. axis: <matching-axis>
-  if grep -q "^axis: ${axis}" "$agent_file"; then
+  if printf '%s\n' "$content" | grep -q "^axis: ${axis}"; then
     pass "${axis}: axis: ${axis} present"
   else
     fail "${axis}: axis: ${axis} missing or wrong"
   fi
 
   # 5. verdict: PASS | NITS | BLOCK shape
-  if grep -q 'verdict: PASS | NITS | BLOCK' "$agent_file"; then
+  if printf '%s\n' "$content" | grep -q 'verdict: PASS | NITS | BLOCK'; then
     pass "${axis}: verdict shape present"
   else
     fail "${axis}: verdict: PASS | NITS | BLOCK shape missing"
@@ -117,7 +121,7 @@ check_agent() {
   # 6. Findings schema keys: severity, file, line, rule, message
   local missing_keys=""
   for key in severity file line rule message; do
-    if ! grep -q "${key}:" "$agent_file"; then
+    if ! printf '%s\n' "$content" | grep -q "${key}:"; then
       missing_keys="${missing_keys} ${key}"
     fi
   done
@@ -128,7 +132,7 @@ check_agent() {
   fi
 
   # 7. Stay-in-lane instruction
-  if grep -q 'Comment only on findings against your axis rubric' "$agent_file"; then
+  if printf '%s\n' "$content" | grep -q 'Comment only on findings against your axis rubric'; then
     pass "${axis}: stay-in-lane instruction present"
   else
     fail "${axis}: stay-in-lane instruction missing"

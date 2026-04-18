@@ -8,6 +8,16 @@ Run a one-shot parallel review of a feature branch. Spawns security, performance
 
 1. **Parse args.**
    - `<slug>` is required. If missing, print usage and exit 2.
+   - **Validate slug** against regex `^[a-z0-9][a-z0-9-]*$` — kebab-case, starts with letter/digit — before any filesystem or git operation. On mismatch emit an error to stderr and exit with status 2. Reject slugs starting with `-` (git flag risk) or containing `..`/`/`. POSIX `case`-glob (bash 3.2 portable; no `[[ =~ ]]`):
+     ```
+[a-z0-9][a-z0-9-]*$   ← allowed pattern (case-glob: [a-z0-9][a-z0-9-]*)
+     ```
+     ```sh
+     case "$slug" in
+       [a-z0-9][a-z0-9-]*) : ;;   # OK — kebab-case
+       *) printf 'review: invalid slug "%s" (expected ^[a-z0-9][a-z0-9-]*$)\n' "$slug" >&2; exit 2 ;;
+     esac
+     ```
    - `--axis <security|performance|style>` is optional; if supplied, run only that single reviewer.
 
 2. **Resolve feature dir.**

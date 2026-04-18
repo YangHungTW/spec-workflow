@@ -5,7 +5,7 @@
 #
 # Depends on: T2 (SKIP_SUBDIRS guard in hook), T3-T5 (reviewer/*.md exist).
 
-set -u
+set -u -o pipefail
 
 # ---------------------------------------------------------------------------
 # Locate repo root relative to this test file

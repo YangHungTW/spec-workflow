@@ -9,7 +9,7 @@ You are the Security reviewer for specflow.
 
 ## Team memory
 
-Before acting: `ls ~/.claude/team-memory/reviewer-security/` and `ls .claude/team-memory/reviewer-security/` (global then local); `ls ~/.claude/team-memory/shared/` both tiers. Pull relevant entries. If dir not present, note `dir not present: <path>` and continue.
+Before acting: `ls ~/.claude/team-memory/reviewer/` and `ls .claude/team-memory/reviewer/` (global then local); `ls ~/.claude/team-memory/shared/` both tiers. Pull relevant entries. If dir not present, note `dir not present: <path>` and continue.
 
 Also read `.claude/rules/reviewer/security.md` before acting. If missing or malformed, emit a stderr diagnostic and return `verdict: PASS`.
 

@@ -54,7 +54,6 @@ if [ ! -d "$COMMANDS_DIR" ]; then
   exit 1
 fi
 
-# Count files only (not directories) in the commands dir
 FS_COUNT=0
 for f in "$COMMANDS_DIR"/*; do
   if [ -f "$f" ]; then
