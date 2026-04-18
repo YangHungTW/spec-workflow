@@ -34,3 +34,6 @@
 - 2026-04-18 | implement | W0 NITS hotfix — 5 style should-findings on bin/specflow-seed cleared via 20260418-per-project-install-T1-hotfix; comment-only changes, T1 Verify re-confirmed green, no re-review run
 - 2026-04-18 | implement | review dispatched — slug=20260418-per-project-install wave=W1 tasks=T2 axes=security,performance,style
 - 2026-04-18 | implement | review result — wave W1 verdict=BLOCK blocking-tasks=T2(security 2× must path-traversal on classify_copy_target:224 + manifest_read:163); performance PASS; style 9× should (4 dead-symbols, 5 WHAT-comments); worktree+branch 20260418-per-project-install-T2 preserved for retry via /specflow:implement 20260418-per-project-install --task T2
+- 2026-04-18 | implement | T2 retry 1/2 — folded fix commit fa8c6dc; traversal guard at manifest_read boundary + defense-in-depth case-guard in classify_copy_target + 4 dead-symbol TODOs + 5 WHAT-comments cleaned; all 9 Verify assertions (7 original + 2 new traversal) pass; 621 LOC
+- 2026-04-18 | implement | review result (retry) — wave W1 verdict=NITS (security 1× should on __probe manifest-roundtrip mpath arg, hidden internal verb; performance PASS; style 2× advisory); BLOCK cleared, merged as 7a38ee0
+- 2026-04-18 | implement | wave W1 done — T2 (--one-wave mode, orchestrator halts for user checkpoint)
