@@ -265,7 +265,7 @@ All paths below are absolute under `/Users/yanghungtw/Tools/spec-workflow/`.
     `awk '/^```/{f=!f; next} f && /^   \S/{print NR": "$0}' /Users/yanghungtw/Tools/spec-workflow/.claude/commands/specflow/implement.md` — zero hits in the affected block (other blocks may legitimately differ; inspect narrowly).
 - **Depends on**: —
 - **Parallel-safe-with**: T1, T2, T3, T4, T5, T7, T8, T9
-- [ ]
+- [x]
 
 ## T7 — R8 + R9 pipefail bundle (t37 + t38)
 - **Milestone**: M4
@@ -423,6 +423,8 @@ All paths below are absolute under `/Users/yanghungtw/Tools/spec-workflow/`.
 _(populated by Developer as tasks complete; expected mechanical
 append-collisions on this section are resolved keep-both per
 `tpm/parallel-safe-append-sections.md`)_
+
+- **T6 DONE** 2026-04-17 — R6: normalized 3-space → 2-space indent on line 97 of `.claude/commands/specflow/implement.md` (inside the `bash` pseudocode block fenced at lines 56–118). Single-line whitespace-only diff. Zero 3-space prefix hits remain in any code block. All verify checks pass.
 
 ---
 
