@@ -41,7 +41,7 @@ tool", it means `bin/claude-symlink` per D7.
   - `grep -q '^\.spec-workflow/features/\*/\.stop-hook-last-epoch$' /Users/yanghungtw/Tools/spec-workflow/.gitignore`.
 - **Depends on**: —
 - **Parallel-safe-with**: T2, T3, T4, T5, T6, T7
-- [ ]
+- [x]
 
 ## T2 — `bin/claude-symlink` 4-site extension (new `hooks` dir-pair)
 - **Milestone**: M2
@@ -68,7 +68,7 @@ tool", it means `bin/claude-symlink` per D7.
   - Backward compat: `bash /Users/yanghungtw/Tools/spec-workflow/test/smoke.sh` — all 28 existing B1 tests stay green (T8 will extend this to 33).
 - **Depends on**: —
 - **Parallel-safe-with**: T1, T3, T4, T5, T6, T7
-- [ ]
+- [x]
 
 ## T3 — `test/t29_claude_symlink_hooks_pair.sh`
 - **Milestone**: M3

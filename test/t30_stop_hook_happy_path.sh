@@ -80,7 +80,7 @@ git commit -q -m "fixture: seed STATUS.md for t30 test"
 # ---------------------------------------------------------------------------
 # 4. Run the stop hook with a valid JSON payload
 # ---------------------------------------------------------------------------
-PRE_COUNT=$(grep -c 'stop-hook' "$STATUS_FILE" 2>/dev/null || echo 0)
+PRE_COUNT=$(grep -c 'stop-hook' "$STATUS_FILE" 2>/dev/null; true)
 SENTINEL="$FEAT_DIR/.stop-hook-last-epoch"
 
 echo '{"event":"Stop"}' | "$HOOK"
@@ -98,7 +98,7 @@ fi
 # ---------------------------------------------------------------------------
 # 6. Assert exactly one new stop-hook line was appended
 # ---------------------------------------------------------------------------
-POST_COUNT=$(grep -c 'stop-hook' "$STATUS_FILE" 2>/dev/null || echo 0)
+POST_COUNT=$(grep -c 'stop-hook' "$STATUS_FILE" 2>/dev/null; true)
 NEW_COUNT=$(( POST_COUNT - PRE_COUNT ))
 
 if [ "$NEW_COUNT" -eq 1 ]; then

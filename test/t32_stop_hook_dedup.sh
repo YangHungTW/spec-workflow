@@ -73,7 +73,7 @@ git commit -q -m "seed fixture"
 
 # Helper: count stop-hook lines in STATUS.md
 count_lines() {
-  grep -c 'stop-hook — stop event observed' "$FEATURE_DIR/STATUS.md" 2>/dev/null || echo 0
+  grep -c 'stop-hook — stop event observed' "$FEATURE_DIR/STATUS.md" 2>/dev/null; true
 }
 
 # ---------------------------------------------------------------------------
