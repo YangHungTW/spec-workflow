@@ -90,7 +90,7 @@ tool", it means `bin/claude-symlink` per D7.
   - `bash /Users/yanghungtw/Tools/spec-workflow/test/t29_claude_symlink_hooks_pair.sh` exits 0 (requires T2 merged).
 - **Depends on**: —
 - **Parallel-safe-with**: T1, T2, T4, T5, T6, T7
-- [ ]
+- [x]
 
 ## T4 — `test/t30_stop_hook_happy_path.sh`
 - **Milestone**: M3
@@ -242,6 +242,8 @@ Target: each task ≤ 60 min focused work.
 ## STATUS Notes
 
 _(populated by Developer as tasks complete; expected mechanical append-collisions on this section are resolved keep-both per `tpm/parallel-safe-append-sections.md`)_
+
+- 2026-04-17 T3 DONE — created `test/t29_claude_symlink_hooks_pair.sh`; sandbox preflight + 5-step lifecycle (install/idempotent/update/uninstall); RED pre-T2-merge (hooks pair absent from plan — correct failure), syntax OK, exec bit set.
 
 ---
 
