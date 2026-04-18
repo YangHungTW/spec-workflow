@@ -465,7 +465,7 @@ Wave schedule lives at the bottom; R↔T trace table immediately below it.
   - `bash test/t49_init_skill_bootstrap.sh` exits 0 (requires T17 merged — but T17 is authored in this same wave; TDD shape: red-first OK).
 - **Depends on**: — (new directory, no code dependency on T1–T14)
 - **Parallel-safe-with**: T16, T17, T18, T19, T20 (all different files / different editor)
-- [ ]
+- [x] 2026-04-18 Developer — implement: created .claude/skills/specflow-init/SKILL.md + init.sh; all verifications pass
 
 ---
 
