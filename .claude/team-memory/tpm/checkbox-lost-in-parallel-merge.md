@@ -53,3 +53,10 @@ flips do not).
 Both features required dedicated fix-up commits after the wave
 merge; the pattern is predictable enough to automate as a post-merge
 audit step.
+
+Third instance: feature `20260418-review-nits-cleanup` Wave 1 (9
+parallel — widest wave ever in this repo). T5 (reviewer-style.md)
+and T7 (pipefail bundle) checkboxes lost during the merge; fix-up
+commit re-checked them per this rule. Pattern held; prediction
+confirmed at the new wave-width ceiling (9-way still loses ~2
+checkboxes, consistent with 7-way losing 1–2).

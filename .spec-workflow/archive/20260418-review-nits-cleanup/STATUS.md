@@ -2,7 +2,7 @@
 
 - **slug**: 20260418-review-nits-cleanup
 - **has-ui**: false
-- **stage**: implement
+- **stage**: archive
 - **created**: 2026-04-18
 - **updated**: 2026-04-18
 
@@ -15,9 +15,9 @@
 - [x] plan          (05-plan.md)                 — TPM
 - [x] tasks         (06-tasks.md)                — TPM
 - [x] implement     (tasks checked off)          — Developer
-- [ ] gap-check     (07-gaps.md, verdict PASS)   — QA-analyst
-- [ ] verify        (08-verify.md, verdict PASS) — QA-tester
-- [ ] archive       (moved to .spec-workflow/archive/)     — TPM
+- [x] gap-check     (07-gaps.md, verdict PASS)   — QA-analyst
+- [x] verify        (08-verify.md, verdict PASS) — QA-tester
+- [x] archive       (moved to .spec-workflow/archive/)     — TPM
 
 ## Notes
 <!-- date + role + what changed -->
@@ -33,3 +33,7 @@
 - 2026-04-18 Orchestrator — inline review skipped this run: session cache hasn't refreshed post-B2.b merge so native reviewer subagents aren't dispatchable; documented escape per plan §4
 - 2026-04-18 implement wave 2 done — T10 verify bundle: R13 repo-wide grep 0 hits, R14 smoke 38/38, all 14 items confirmed (S1/P1/P2/St1-St8/X1)
 - 2026-04-18 implement stage complete — 14/14 items resolved, 10/10 tasks checked, smoke 38/38
+- 2026-04-18 QA-analyst — gap-check PASS: 0 blockers, 1 note (N1: reviewer-security.md team-memory prose shape not updated to numbered-ls — pre-existing inconsistency, out of R4/R5 scope)
+
+- 2026-04-18 QA-tester — verify PASS: 14/14 AC PASS, AC15 N/A (dogfood paradox, documented escape), smoke 38/38
+- 2026-04-18 TPM — archive: 3 new memories (C4 pm/housekeeping-sweep-threshold, C5 architect/byte-identical-refactor-gate, C7 pm/ac-must-verify-existing-baseline); 3 extends (C1 shared/dogfood-paradox +4th occurrence, C2 tpm/checkbox-lost +3rd instance, C8 architect/classify-before-mutate +text-edit example); feature moved to archive/

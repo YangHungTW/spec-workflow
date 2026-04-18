@@ -3,7 +3,7 @@ name: Classification before mutation
 description: Filesystem tools that can destroy data — classify every target into a closed enum first, then dispatch via a table. Never mutate inside the classifier.
 type: pattern
 created: 2026-04-16
-updated: 2026-04-16
+updated: 2026-04-18
 ---
 
 ## Context
@@ -65,3 +65,22 @@ see at a glance which states lead to which writes.
 `symlink-operation`, T6). Eight-state enum, pure stdout emission,
 dispatched by `cmd_install` / `cmd_uninstall` / `cmd_update` via
 their own `case` tables.
+
+### Generalization to text edits (2026-04-18)
+
+The pattern is not filesystem-specific. In feature
+`20260418-review-nits-cleanup`, D3 (grep-before-rename for text
+references) and D4 (grep-before-delete for dead code) applied the
+same classify-then-dispatch discipline to **pure text edits**:
+
+1. Classify every reference site first (grep → list of matches,
+   each tagged `touch` / `skip` / `ambiguous`).
+2. Dispatch via an explicit arm per tag — rename / delete / flag for
+   human review.
+3. Never mutate during classification; build the full plan, then
+   execute.
+
+The enum-of-states pattern generalizes: classify every reference
+before mutating any of them. Works for symlinks, config files,
+text edits, and any sweep where "touch the wrong thing" costs more
+than "double-check before touching".

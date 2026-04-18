@@ -14,3 +14,4 @@
 - [Aggregator as classifier — reduce parallel verdicts by severity max](aggregator-as-classifier.md) — Reducing N parallel agent verdicts to one outcome is a severity max-reduce classifier; the same classify-before-mutate discipline applies to agent output reduction.
 - [Scope extension — minimal diff, not re-taxonomy](scope-extension-minimal-diff.md) — Extend a closed enum (scope, severity, state) by appending one value; never re-cut the taxonomy to accommodate one new case.
 - [Opt-out bypass flag — STATUS Notes trace required on use](opt-out-bypass-trace-required.md) — Any safety-gate bypass flag (--skip-X, --force, --no-verify) must append a STATUS Notes entry when used; silent bypasses create audit black holes.
+- [Byte-identical refactor gate](byte-identical-refactor-gate.md) — Pure-refactor tasks (zero behavior change) use byte-identical before/after diff as the acceptance gate — NOT "tests still pass".
