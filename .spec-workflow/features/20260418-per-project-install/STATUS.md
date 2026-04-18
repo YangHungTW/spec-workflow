@@ -31,3 +31,4 @@
 - 2026-04-18 | implement | review dispatched — slug=20260418-per-project-install wave=W0 tasks=T1 axes=security,performance,style
 - 2026-04-18 | implement | review result — wave W0 verdict=NITS (style: 5 should-findings re comment-restates-what + emit_summary dead-symbol; security PASS; performance PASS)
 - 2026-04-18 | implement | wave W0 done — T1 (--one-wave mode, orchestrator halts for user checkpoint)
+- 2026-04-18 | implement | W0 NITS hotfix — 5 style should-findings on bin/specflow-seed cleared via 20260418-per-project-install-T1-hotfix; comment-only changes, T1 Verify re-confirmed green, no re-review run
