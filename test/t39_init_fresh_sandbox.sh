@@ -17,7 +17,9 @@ SEED="${SEED:-$SPECFLOW_SRC/bin/specflow-seed}"
 
 # ---------------------------------------------------------------------------
 # Sandbox + HOME isolation (sandbox-home-in-tests.md — non-negotiable)
+# Capture real HOME before sandboxing so asdf .tool-versions can be copied in.
 # ---------------------------------------------------------------------------
+_REAL_HOME="$HOME"
 SANDBOX="$(mktemp -d 2>/dev/null || mktemp -d -t specflow-t39)"
 trap 'rm -rf "$SANDBOX"' EXIT
 
@@ -28,6 +30,12 @@ case "$HOME" in
   "$SANDBOX"*) ;;
   *) echo "FAIL: HOME not isolated: $HOME" >&2; exit 2 ;;
 esac
+
+# asdf compatibility: preserve the real user's python version config so the
+# shim can resolve python3 inside the sandboxed HOME. No-op on non-asdf setups.
+if [ -f "$_REAL_HOME/.tool-versions" ]; then
+  cp "$_REAL_HOME/.tool-versions" "$HOME/.tool-versions" 2>/dev/null || true
+fi
 
 # ---------------------------------------------------------------------------
 # Build a minimal consumer git repo so repo_root resolves inside cmd_init

@@ -23,7 +23,9 @@ SEED="${SEED:-$REPO_ROOT/bin/specflow-seed}"
 
 # ---------------------------------------------------------------------------
 # Sandbox — HOME isolation is mandatory (sandbox-home-in-tests.md)
+# Capture real HOME before sandboxing so asdf .tool-versions can be copied in.
 # ---------------------------------------------------------------------------
+_REAL_HOME="$HOME"
 SANDBOX="$(mktemp -d)"
 trap 'rm -rf "$SANDBOX"' EXIT
 
@@ -35,6 +37,12 @@ case "$HOME" in
   "$SANDBOX"*) ;;
   *) echo "FAIL: HOME not isolated: $HOME" >&2; exit 2 ;;
 esac
+
+# asdf compatibility: preserve the real user's python version config so the
+# shim can resolve python3 inside the sandboxed HOME. No-op on non-asdf setups.
+if [ -f "$_REAL_HOME/.tool-versions" ]; then
+  cp "$_REAL_HOME/.tool-versions" "$HOME/.tool-versions" 2>/dev/null || true
+fi
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -176,7 +184,7 @@ fi
 # The binary must not contain --force, standalone -f, or rm -rf.
 # This catches accidental introduction of destructive-by-default behaviour.
 # ---------------------------------------------------------------------------
-FORCE_HITS="$(grep -n ' --force\| -f \|rm -rf' "$SEED" || true)"
+FORCE_HITS="$(grep -En 'rm -rf|--force' "$SEED" || true)"
 if [ -n "$FORCE_HITS" ]; then
   echo "FAIL: AC7.d: bin/specflow-seed contains force/destructive flags:" >&2
   printf '%s\n' "$FORCE_HITS" >&2

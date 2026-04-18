@@ -24,7 +24,9 @@ fi
 # ---------------------------------------------------------------------------
 # Sandbox-HOME — mandatory per .claude/rules/bash/sandbox-home-in-tests.md.
 # All consumer and home mutations live inside SANDBOX; real $HOME never touched.
+# Capture real HOME before sandboxing so asdf .tool-versions can be copied in.
 # ---------------------------------------------------------------------------
+_REAL_HOME="$HOME"
 SANDBOX="$(mktemp -d)"
 trap 'rm -rf "$SANDBOX"' EXIT
 export HOME="$SANDBOX/home"
@@ -33,6 +35,12 @@ case "$HOME" in
   "$SANDBOX"*) ;;
   *) echo "FAIL: HOME not isolated: $HOME" >&2; exit 2 ;;
 esac
+
+# asdf compatibility: preserve the real user's python version config so the
+# shim can resolve python3 inside the sandboxed HOME. No-op on non-asdf setups.
+if [ -f "$_REAL_HOME/.tool-versions" ]; then
+  cp "$_REAL_HOME/.tool-versions" "$HOME/.tool-versions" 2>/dev/null || true
+fi
 
 # ---------------------------------------------------------------------------
 # Capture the source ref once so both init runs pin to the same SHA.
@@ -56,12 +64,10 @@ git -C "$CONSUMER" commit -q -m "init"
 # ---------------------------------------------------------------------------
 # First init — establish the baseline state.
 # We swallow output; a failure here is a pre-condition failure, not the AC.
+# cd into the consumer before invoking so repo_root() resolves there,
+# matching the same discipline as t39 (cd then call) and t41 (subshell).
 # ---------------------------------------------------------------------------
-if ! "$SEED" init --from "$REPO_ROOT" --ref "$SRC_REF" 2>&1 | grep -qv "not-yet-implemented"; then
-  # init stub still active; record the expected RED output for clarity
-  :
-fi
-"$SEED" init --from "$REPO_ROOT" --ref "$SRC_REF" > /dev/null 2>&1 || true
+(cd "$CONSUMER" && "$SEED" init --from "$REPO_ROOT" --ref "$SRC_REF") > /dev/null 2>&1 || true
 
 # ---------------------------------------------------------------------------
 # Hash the consumer tree AFTER the first init (before the second run).
@@ -70,7 +76,8 @@ fi
 # ---------------------------------------------------------------------------
 hash_tree() {
   local dir="$1"
-  find "$dir" -type f -not -path '*/.git/*' -exec shasum {} \; | sort | shasum | awk '{print $1}'
+  find "$dir" -type f -not -path '*/.git/*' \
+    -exec shasum {} \; | sort | shasum | awk '{print $1}'
 }
 
 FIND_HASH_1="$(hash_tree "$CONSUMER")"
@@ -82,7 +89,7 @@ FIND_HASH_1="$(hash_tree "$CONSUMER")"
 # ---------------------------------------------------------------------------
 SECOND_OUT="$SANDBOX/second_init.out"
 set +e
-"$SEED" init --from "$REPO_ROOT" --ref "$SRC_REF" > "$SECOND_OUT" 2>&1
+(cd "$CONSUMER" && "$SEED" init --from "$REPO_ROOT" --ref "$SRC_REF") > "$SECOND_OUT" 2>&1
 SECOND_RC=$?
 set -e
 
