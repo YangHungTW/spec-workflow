@@ -184,7 +184,7 @@ append_note() {
   local tmp="${status}.tmp"
   {
     cat "$status"
-    printf -- '- %s stop-hook -- stop event observed\n' "$today"
+    printf -- '- %s stop-hook \xe2\x80\x94 stop event observed\n' "$today"
   } > "$tmp" 2>/dev/null || { log_warn "tmp write failed for $status"; rm -f "$tmp"; return; }
 
   mv "$tmp" "$status" 2>/dev/null || { log_warn "atomic swap failed for $status"; rm -f "$tmp"; return; }
