@@ -10,31 +10,30 @@ vi.mock("../../i18n", () => ({
   }),
 }));
 
-// Stub Tauri IPC for stub tests
+// Stub Tauri IPC — route by command so MainWindow (list_sessions) and Settings (get_settings) both work
 vi.mock("@tauri-apps/api/core", () => ({
-  invoke: vi.fn().mockResolvedValue({ sessions: [], repos: [], polling_interval_secs: 3 }),
+  invoke: vi.fn((cmd: string) => {
+    if (cmd === "list_sessions") {
+      return Promise.resolve({ sessions: [], repos: [], polling_interval_secs: 3 });
+    }
+    return Promise.resolve({
+      theme: "light",
+      locale: "en",
+      polling_interval_secs: 3,
+      stale_threshold_mins: 10,
+      stalled_threshold_mins: 30,
+      notifications_enabled: true,
+      repositories: [],
+    });
+  }),
 }));
 
-// These imports will fail (red) until the stub files exist.
+// MainWindow, CardDetail, Settings still have stub/smoke tests here.
+// EmptyState and CompactPanel replaced by T24 — full tests in their own files.
 import MainWindow from "../MainWindow";
 import CardDetail from "../CardDetail";
 import Settings from "../Settings";
-import EmptyState from "../EmptyState";
-import CompactPanel from "../CompactPanel";
 import { I18nProvider } from "../../i18n";
-
-// Settings is no longer a stub — it uses IPC and i18n; mock for this smoke test.
-vi.mock("@tauri-apps/api/core", () => ({
-  invoke: vi.fn().mockResolvedValue({
-    theme: "light",
-    locale: "en",
-    polling_interval_secs: 3,
-    stale_threshold_mins: 10,
-    stalled_threshold_mins: 30,
-    notifications_enabled: true,
-    repositories: [],
-  }),
-}));
 
 describe("Route stub placeholders", () => {
   it("MainWindow renders the main window layout (T17 replaced stub)", () => {
@@ -57,15 +56,5 @@ describe("Route stub placeholders", () => {
     );
     // Settings renders a tablist — verify it mounts without throwing
     expect(document.body).toBeTruthy();
-  });
-
-  it("EmptyState renders placeholder text", () => {
-    render(<EmptyState />);
-    expect(screen.getByText("EmptyState")).toBeTruthy();
-  });
-
-  it("CompactPanel renders placeholder text", () => {
-    render(<CompactPanel />);
-    expect(screen.getByText("CompactPanel")).toBeTruthy();
   });
 });

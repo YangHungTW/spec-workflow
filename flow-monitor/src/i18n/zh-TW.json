@@ -30,6 +30,7 @@
   "empty.title": "尚無倉庫",
   "empty.body": "新增含有 .spec-workflow/ 資料夾的倉庫，以開始監控您的 specflow 工作階段。",
   "empty.cta": "新增倉庫…",
+  "empty.notificationPrompt": "當工作階段停滯時，您將收到通知。macOS 會在首次使用時詢問權限。",
 
   "settings.general": "一般",
   "settings.notifications": "通知",

@@ -3,11 +3,19 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import App from "../App";
 
-// Stub Tauri IPC — route by command so both MainWindow (list_sessions) and Settings (get_settings) can render
+// Mock i18n so components using useTranslation render without an I18nProvider in the tree
+vi.mock("../i18n", () => ({
+  useTranslation: () => ({ t: (key: string) => key }),
+}));
+
+// Stub Tauri IPC — route by command so MainWindow (list_sessions), Settings (get_settings), and CompactPanel (focus_main_window) all work
 vi.mock("@tauri-apps/api/core", () => ({
   invoke: vi.fn((cmd: string) => {
     if (cmd === "list_sessions") {
       return Promise.resolve({ sessions: [], repos: [], polling_interval_secs: 3 });
+    }
+    if (cmd === "focus_main_window") {
+      return Promise.resolve();
     }
     return Promise.resolve({
       theme: "light",
@@ -62,12 +70,14 @@ describe("App routing", () => {
     expect(screen.getByRole("tablist")).toBeTruthy();
   });
 
-  it("/compact renders CompactPanel placeholder", () => {
+  it("/compact renders CompactPanel (T24: stub replaced)", () => {
+    // CompactPanel renders an "Open main" button (i18n key returned as-is by mock).
     render(
       <MemoryRouter initialEntries={["/compact"]}>
         <App />
       </MemoryRouter>,
     );
-    expect(screen.getByText("CompactPanel")).toBeTruthy();
+    // The "Open main" button is always rendered regardless of session count.
+    expect(screen.getByRole("button", { name: "btn.openMain" })).toBeTruthy();
   });
 });
