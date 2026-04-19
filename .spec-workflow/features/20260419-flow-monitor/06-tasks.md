@@ -404,7 +404,8 @@ W2 may run concurrently with W1 once W0 is merged. Append-only collisions on `sr
   - reviewer-performance: theme apply happens synchronously on first paint, NOT lazily after mount (avoids flash).
 - **Depends on**: T5
 - **Parallel-safe-with**: T12, T14, T15, T16
-- [ ]
+- [x]
+- 2026-04-19 Developer — T13 theme system complete (light/dark, ink-green primary, first-paint)
 
 ---
 
