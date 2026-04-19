@@ -472,7 +472,8 @@ W2 may run concurrently with W1 once W0 is merged. Append-only collisions on `sr
   - reviewer-style: no `dangerouslySetInnerHTML` outside the sanitised path.
 - **Depends on**: T5
 - **Parallel-safe-with**: T12, T13, T14, T15
-- [ ]
+- [x]
+- 2026-04-19 Developer — T16 MarkdownPane complete (lazy markdown-it + DOMPurify default profile)
 
 ---
 
