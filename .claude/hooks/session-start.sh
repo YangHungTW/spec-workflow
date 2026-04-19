@@ -255,6 +255,37 @@ if [ -z "$digest" ]; then
   log_info "no valid rules found in $RULES_DIR"
 fi
 
+# New: read lang.chat from config, append marker line if set
+cfg_file=".spec-workflow/config.yml"
+if [ -r "$cfg_file" ]; then
+  cfg_chat=$(awk '/^lang:/        {in_lang=1; next}
+    in_lang && /^  chat:/ {
+      sub(/^  chat:[[:space:]]*/, "")
+      gsub(/"/, ""); gsub(/#.*$/, "")
+      gsub(/[[:space:]]+$/, "")
+      print; exit
+    }
+    /^[^ ]/         {in_lang=0}
+  ' "$cfg_file" 2>/dev/null)
+
+  case "$cfg_chat" in
+    zh-TW|en)
+      if [ -n "$digest" ]; then
+        digest=$(printf '%s\nLANG_CHAT=%s' "$digest" "$cfg_chat")
+      else
+        digest="LANG_CHAT=$cfg_chat"
+      fi
+      ;;
+    "")
+      # Empty / absent key — default-off, no warning
+      :
+      ;;
+    *)
+      log_warn "config.yml: lang.chat has unknown value '$cfg_chat' — ignored"
+      ;;
+  esac
+fi
+
 # JSON-escape the digest
 escaped=$(json_escape "$digest")
 
