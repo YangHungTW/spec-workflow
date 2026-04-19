@@ -277,7 +277,8 @@ Every W1 task owns a primary file under `src-tauri/src/`. Append-only collisions
   - reviewer-style: B2 boundary — explicit verdict footer note "no `send_instruction` / `invoke_specflow` / write-side command exists in B1".
 - **Depends on**: T5
 - **Parallel-safe-with**: T6, T7, T8, T9, T10 (different primary files)
-- [ ]
+- [x]
+- STATUS: - 2026-04-19 Developer — T11 ipc complete (read-only commands, path-traversal guard, no B2 leakage)
 
 ---
 
