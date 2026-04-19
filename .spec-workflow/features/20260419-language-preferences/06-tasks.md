@@ -91,7 +91,7 @@ Wave schedule and R↔T trace at the bottom.
 - **Dependencies**: none
 - **Parallel-safe-with**: T2, T3 (different files; T1 is the sole editor of both the new rule file and `.claude/rules/index.md` in W1)
 - **Notes**: bundles both rule-file create and index row append because they are paired logically (new rule implies new row) and `.claude/rules/index.md` has no other editor this feature. Structural verification of AC1.b / AC5.a / AC7.* is deferred to W3 tests + post-archive manual smoke per `shared/dogfood-paradox-third-occurrence.md` (7th occurrence).
-- [ ]
+- [x] T1
 
 ---
 
@@ -174,7 +174,7 @@ Wave schedule and R↔T trace at the bottom.
 - **Dependencies**: none (T1 and T2 are paired logically via the marker string, but there is no file-edit dependency between them; t53 in W3 validates the coupling).
 - **Parallel-safe-with**: T1, T3 (different files)
 - **Notes**: Dogfood paradox — this hook edit cannot fire on the session that implemented it. AC1.a / AC1.b / AC7.* get structural PASS via t54–t57 in W3; runtime confirmation deferred to first session after archive + restart per `shared/dogfood-paradox-third-occurrence.md`. Performance: `awk` is single-file single-pass; well under the 200 ms hook budget per `.claude/rules/reviewer/performance.md`.
-- [ ]
+- [x] T2
 
 ---
 
@@ -265,7 +265,7 @@ Wave schedule and R↔T trace at the bottom.
 - **Dependencies**: none (B4 in W2 consumes this; t58–t62 in W3 consume this)
 - **Parallel-safe-with**: T1, T2 (different files)
 - **Notes**: This is the single-purpose CLI; no existing dispatcher to collide with. Scanner is pure classifier (no mutation) per `.claude/rules/common/classify-before-mutate.md`. Dogfood paradox: real-commit rejection cannot be exercised on this feature's own commits (the pre-commit shim isn't installed until T10); structural PASS via t58–t62 sandbox commits in W3.
-- [ ]
+- [x] T3
 
 ---
 
