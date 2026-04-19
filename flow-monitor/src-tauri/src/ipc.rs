@@ -215,7 +215,8 @@ pub fn remove_repo(
 ///      `Path::canonicalize`.
 ///   3. The canonical path must still sit under the same registered root
 ///      (path-traversal boundary — security rule check 2).
-/// Read-only: uses `std::fs::read_to_string` only.
+/// Read-only: delegates to `read_artefact_inner` which uses
+/// `std::fs::read_to_string` only.
 #[tauri::command]
 pub fn read_artefact(
     repo: String,
@@ -232,37 +233,9 @@ pub fn read_artefact(
         guard.repos.clone()
     };
 
-    // Step 1 — validate that `repo` is a registered root.
-    let repo_path = PathBuf::from(&repo);
-    let canonical_repo = repo_path.canonicalize().map_err(|e| IpcError {
-        code: "INVALID_REPO",
-        message: format!("cannot canonicalise repo path {repo}: {e}"),
-    })?;
-    assert_under_registered_root(&canonical_repo, &registered_roots)?;
-
-    // Step 2 — build the full artefact path and canonicalise it.
-    // Confine to `.spec-workflow/features/<slug>/<file>` under the repo root.
-    let artefact_path = canonical_repo
-        .join(".spec-workflow")
-        .join("features")
-        .join(&slug)
-        .join(&file);
-    let canonical_artefact = artefact_path.canonicalize().map_err(|e| IpcError {
-        code: "ARTEFACT_NOT_FOUND",
-        message: format!(
-            "cannot resolve artefact path {}/{}/{}: {e}",
-            slug, file, e
-        ),
-    })?;
-
-    // Step 3 — verify the canonical artefact is still under the registered root.
-    assert_under_registered_root(&canonical_artefact, &registered_roots)?;
-
-    // Step 4 — read-only: std::fs::read_to_string only.
-    std::fs::read_to_string(&canonical_artefact).map_err(|e| IpcError {
-        code: "READ_ERROR",
-        message: format!("cannot read artefact: {e}"),
-    })
+    // Delegate to the inner function — single source of truth for the
+    // path-traversal guard (security rule check 2).
+    read_artefact_inner(repo, slug, file, &registered_roots)
 }
 
 /// Toggle the compact panel window open/closed state in settings.
@@ -611,30 +584,57 @@ pub fn read_artefact_inner(
 /// Inner implementation of `update_settings`, extracted for unit testability.
 /// Takes the shared `Mutex<Settings>` directly so tests can inspect state after
 /// the call without needing a live Tauri app instance.
+///
+/// Uses field-level merge (Option A) instead of full-struct clobber so that:
+/// - `patch.repos.is_empty()` when `guard.repos` is non-empty skips the
+///   repos assignment, preserving the registered-root list.
+/// - All other scalar fields are always written from `patch`.
+/// This prevents the renderer from accidentally zeroing the repo list by
+/// sending a partial settings patch.
 pub fn update_settings_inner(
-    mut patch: Settings,
+    patch: Settings,
     store: &std::sync::Mutex<Settings>,
 ) -> Result<(), IpcError> {
     // Canonicalise every repo path before acquiring the write lock.
     // Collect all results first — if any entry fails we return early without
     // mutating the stored settings (all-or-nothing atomicity).
-    let mut canonical_repos: Vec<PathBuf> = Vec::with_capacity(patch.repos.len());
-    for raw in &patch.repos {
-        let canonical = raw.canonicalize().map_err(|e| IpcError {
-            code: "INVALID_PATH",
-            message: format!(
-                "cannot canonicalise repo path in settings patch {}: {e}",
-                raw.display()
-            ),
-        })?;
-        canonical_repos.push(canonical);
-    }
-    patch.repos = canonical_repos;
+    let canonical_repos: Vec<PathBuf> = if !patch.repos.is_empty() {
+        let mut out = Vec::with_capacity(patch.repos.len());
+        for raw in &patch.repos {
+            let canonical = raw.canonicalize().map_err(|e| IpcError {
+                code: "INVALID_PATH",
+                message: format!(
+                    "cannot canonicalise repo path in settings patch {}: {e}",
+                    raw.display()
+                ),
+            })?;
+            out.push(canonical);
+        }
+        out
+    } else {
+        Vec::new() // sentinel — will be skipped below if guard.repos is non-empty
+    };
 
     let mut guard = store.lock().map_err(|_| IpcError {
         code: "LOCK_POISONED",
         message: "settings lock is poisoned".into(),
     })?;
-    *guard = patch;
+
+    // Field-level merge: overwrite each field individually.
+    // `repos` is only overwritten when the patch carries a non-empty list OR
+    // when the current stored list is also empty (safe to clear an empty list).
+    if !canonical_repos.is_empty() || guard.repos.is_empty() {
+        guard.repos = canonical_repos;
+    }
+    guard.schema_version = patch.schema_version;
+    guard.polling_interval_secs = patch.polling_interval_secs;
+    guard.stale_threshold_mins = patch.stale_threshold_mins;
+    guard.stalled_threshold_mins = patch.stalled_threshold_mins;
+    guard.notifications_enabled = patch.notifications_enabled;
+    guard.always_on_top = patch.always_on_top;
+    guard.compact_panel_open = patch.compact_panel_open;
+    guard.notification_title = patch.notification_title;
+    guard.notification_body = patch.notification_body;
+
     Ok(())
 }

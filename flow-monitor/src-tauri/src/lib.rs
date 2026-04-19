@@ -2,6 +2,7 @@ pub mod ipc;
 pub mod poller;
 pub mod repo_discovery;
 pub mod settings;
+pub mod status_parse;
 pub mod store;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

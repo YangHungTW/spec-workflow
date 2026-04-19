@@ -10,29 +10,8 @@ use std::time::{Duration, SystemTime};
 
 // ---------------------------------------------------------------------------
 // Types imported from status_parse (T6).
-// Until T6 merges we define a minimal stub so this module compiles standalone.
-// The orchestrator will align the real type at wave-merge time.
 // ---------------------------------------------------------------------------
 
-#[cfg(not(feature = "status_parse_real"))]
-mod status_parse_stub {
-    use std::path::PathBuf;
-    use std::time::SystemTime;
-
-    /// Minimal stub for SessionState — replaced by T6's real definition at merge.
-    #[derive(Debug, Clone, PartialEq)]
-    pub struct SessionState {
-        pub slug: String,
-        pub stage: String,
-        pub last_activity: SystemTime,
-        pub raw_status_path: PathBuf,
-    }
-}
-
-#[cfg(not(feature = "status_parse_real"))]
-pub use status_parse_stub::SessionState;
-
-#[cfg(feature = "status_parse_real")]
 pub use crate::status_parse::SessionState;
 
 // ---------------------------------------------------------------------------
@@ -89,15 +68,17 @@ pub struct DiffEvent {
 /// - AC6.c: if a session leaves stalled (last_activity refreshes) and later
 ///   re-crosses the threshold, it fires again (handled naturally because
 ///   `prev_stalled_set` is updated each tick by the caller).
+///
+/// Note: stale visual-tier logic (as opposed to stalled notification logic)
+/// is a UI-only concern handled by the renderer; the store layer does not
+/// need a separate UI-visual threshold parameter.
 pub fn diff(
     prev: &SessionMap,
     new: &SessionMap,
-    stale_threshold: Duration,
     stalled_threshold: Duration,
     prev_stalled_set: &HashSet<SessionKey>,
 ) -> DiffEvent {
     let now = SystemTime::now();
-    let _ = stale_threshold; // available for callers who want to layer stale logic
 
     let mut added = Vec::new();
     let mut removed = Vec::new();
@@ -207,19 +188,15 @@ pub fn sort_by(axis: SortAxis, map: &SessionMap) -> Vec<SessionKey> {
             });
         }
         SortAxis::StalledFirst => {
-            // Stalled sessions come first; within each tier sort by slug A-Z
-            // so the order is deterministic.
-            let now = SystemTime::now();
-            // Use a large stalled threshold placeholder; callers who want
-            // threshold-aware stalling should pre-classify and call diff().
-            // Here we compare last_activity age: older first.
+            // Sort by oldest last_activity first (stalled sessions tend to be
+            // oldest); within each tier sort by slug A-Z for determinism.
+            // Callers who need threshold-aware stalling should pre-classify
+            // via diff() rather than deriving stall state inside the sort.
             keys.sort_by(|a, b| {
                 let ta = map[a].last_activity;
                 let tb = map[b].last_activity;
-                // Oldest activity first (stalled sessions tend to be oldest).
                 ta.cmp(&tb).then_with(|| a.1.cmp(&b.1))
             });
-            let _ = now; // suppress unused-variable lint
         }
     }
 
