@@ -124,7 +124,8 @@ Every W0 task touches the scaffold or pinned-deps blocks; they MUST run sequenti
   - reviewer-security: workflow uses pinned action versions (no `@main` floats).
 - **Depends on**: T3
 - **Parallel-safe-with**: —
-- [ ]
+- [x]
+- STATUS: - 2026-04-19 Developer — T4 macOS CI workflow created
 
 ---
 
