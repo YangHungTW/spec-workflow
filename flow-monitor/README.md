@@ -1,7 +1,20 @@
-# Tauri + React + Typescript
+# Flow Monitor
 
-This template should help get you started developing with Tauri, React and Typescript in Vite.
+Native macOS desktop application for monitoring multiple parallel specflow
+sessions across one or more git repositories. Read-only dashboard (B1 scope);
+control plane is a separate follow-up feature (B2).
 
-## Recommended IDE Setup
+## Status
 
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+In active development. See `.spec-workflow/features/20260419-flow-monitor/`
+for full specs.
+
+## Build
+
+```sh
+cd flow-monitor
+npm install
+npm run tauri build
+```
+
+Output: `src-tauri/target/release/bundle/dmg/Flow Monitor_*.dmg`
