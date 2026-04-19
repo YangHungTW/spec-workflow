@@ -37,6 +37,7 @@
   "tab.tasks": "06 任務",
   "tab.gaps": "07 差異分析",
   "tab.verify": "08 驗證",
+  "tab.notYetGenerated": "尚未產生",
 
   "empty.title": "尚無倉庫",
   "empty.body": "新增含有 .spec-workflow/ 資料夾的倉庫，以開始監控您的 specflow 工作階段。",

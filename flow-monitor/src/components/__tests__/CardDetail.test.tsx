@@ -109,6 +109,8 @@ function renderCardDetail(
 describe("CardDetail — master-detail skeleton", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // TabStrip calls scrollIntoView on mount; jsdom does not implement it.
+    window.HTMLElement.prototype.scrollIntoView = vi.fn();
   });
 
   it("renders without crashing", () => {
@@ -134,9 +136,10 @@ describe("CardDetail — master-detail skeleton", () => {
     expect(leftRail?.querySelector("[data-testid='stage-checklist']")).toBeTruthy();
   });
 
-  it("renders 9 tab button stubs in right pane (T19 placeholder)", () => {
+  it("renders 9 tabs in a tablist in the right pane (T19 — TabStrip)", () => {
     renderCardDetail();
-    const tabStrip = document.querySelector("[data-testid='tab-strip-placeholder']");
+    // T19 replaced the stub placeholder with the real TabStrip component.
+    const tabStrip = document.querySelector("[role='tablist']");
     expect(tabStrip).toBeTruthy();
     const tabs = tabStrip?.querySelectorAll("[role='tab']");
     expect(tabs?.length).toBe(9);
