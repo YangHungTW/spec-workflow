@@ -687,7 +687,7 @@ W4 wires Tauri OS plugins. Append-only collisions on `src-tauri/Cargo.toml` (plu
   - reviewer-style: closed-enum dispatch on icon-state transitions.
 - **Depends on**: T8, T9, T11
 - **Parallel-safe-with**: T26, T27, T28, T29 (different primary files; Cargo.toml + main.rs are append-only)
-- [ ]
+- [x]
 
 ---
 
@@ -708,7 +708,7 @@ W4 wires Tauri OS plugins. Append-only collisions on `src-tauri/Cargo.toml` (plu
   - reviewer-security: title/body strings sanitised (no shell-execution risk; the plugin handles escaping but document the assumption).
 - **Depends on**: T8, T9, T11, T23 (settings indicator surfaces denied permission)
 - **Parallel-safe-with**: T25, T27, T28, T29
-- [ ]
+- [x]
 
 ---
 
@@ -729,7 +729,7 @@ W4 wires Tauri OS plugins. Append-only collisions on `src-tauri/Cargo.toml` (plu
   - reviewer-style: watch for B2 leakage — no `Command::new("git")`, no `Command::new("bin/specflow-*")`.
 - **Depends on**: T11, T17, T20
 - **Parallel-safe-with**: T25, T26, T28, T29
-- [ ]
+- [x]
 
 ---
 
@@ -751,7 +751,7 @@ W4 wires Tauri OS plugins. Append-only collisions on `src-tauri/Cargo.toml` (plu
   - reviewer-style: if cut, explicit STATUS Notes line.
 - **Depends on**: T11, T24
 - **Parallel-safe-with**: T25, T26, T27, T29
-- [ ]
+- [x]
 
 ---
 
@@ -771,7 +771,7 @@ W4 wires Tauri OS plugins. Append-only collisions on `src-tauri/Cargo.toml` (plu
   - reviewer-style: watch for B2 leakage — no extra commands.
 - **Depends on**: T11, T17, T24
 - **Parallel-safe-with**: T25, T26, T27, T28
-- [ ]
+- [x]
 
 ---
 
