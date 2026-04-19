@@ -36,9 +36,11 @@ function MarkdownPane({ content }: MarkdownPaneProps) {
       if (cancelled) return;
 
       const md = new MarkdownIt({
-        // HTML passthrough is disabled — raw HTML tags in source are escaped,
-        // never inserted verbatim (XSS-safe default).
-        html: false,
+        // HTML passthrough is enabled so that raw HTML blocks like <details>/
+        // <summary> survive the markdown-it render step.  DOMPurify.sanitize
+        // is the last step before dangerouslySetInnerHTML, so any malicious
+        // raw HTML is stripped before it reaches the DOM (XSS-safe).
+        html: true,
         // Linkify plain-text URLs so they become clickable anchors.
         linkify: true,
         // Smart typography (curly quotes, em-dashes). Safe; no HTML involved.
