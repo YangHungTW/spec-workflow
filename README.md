@@ -100,6 +100,18 @@ lang:
 
 The SessionStart hook reads this file and, when `lang.chat: zh-TW` is set, injects a `LANG_CHAT=zh-TW` marker into the session context so every specflow subagent role honours the preference without per-agent duplication. The full conditional and carve-out rules (file content, CLI stdout, commit messages, and team-memory files always stay English regardless of config value) are documented in `.claude/rules/common/language-preferences.md`.
 
+### Precedence
+
+The hook walks these candidates in order and stops at the first file whose `lang.chat` key is present (even if the value is invalid):
+
+1. `.spec-workflow/config.yml` — project-level (repo-local).
+2. `$XDG_CONFIG_HOME/specflow/config.yml` — only when `$XDG_CONFIG_HOME` is set and non-empty.
+3. `~/.config/specflow/config.yml` — user-home fallback.
+
+Invalid values (outside `{zh-TW, en}`) in an earlier candidate produce a single stderr warning naming the path, and the hook falls back to English default for the session. Iteration does **not** cascade past an invalid early candidate to a later one — the invalid file is treated as a deliberate "this is the setting, please fix the typo" signal, not an oversight to route around.
+
+For most users, `~/.config/specflow/config.yml` is the right file to set once and forget; project-level is for team-shared overrides.
+
 ### Bypass discipline
 
 Two escape hatches are available when the language preference must be suppressed on a specific commit or file:
