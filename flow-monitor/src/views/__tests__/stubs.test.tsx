@@ -5,8 +5,9 @@ import { render, screen } from "@testing-library/react";
 import MainWindow from "../MainWindow";
 import CardDetail from "../CardDetail";
 import Settings from "../Settings";
-import EmptyState from "../EmptyState";
-import CompactPanel from "../CompactPanel";
+
+// EmptyState and CompactPanel replaced by T24 — full tests in
+// src/components/__tests__/EmptyState.test.tsx and CompactPanel.test.tsx.
 
 describe("Route stub placeholders", () => {
   it("MainWindow renders placeholder text", () => {
@@ -22,15 +23,5 @@ describe("Route stub placeholders", () => {
   it("Settings renders placeholder text", () => {
     render(<Settings />);
     expect(screen.getByText("Settings")).toBeTruthy();
-  });
-
-  it("EmptyState renders placeholder text", () => {
-    render(<EmptyState />);
-    expect(screen.getByText("EmptyState")).toBeTruthy();
-  });
-
-  it("CompactPanel renders placeholder text", () => {
-    render(<CompactPanel />);
-    expect(screen.getByText("CompactPanel")).toBeTruthy();
   });
 });

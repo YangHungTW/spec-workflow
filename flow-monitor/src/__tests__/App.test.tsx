@@ -1,7 +1,20 @@
-import { afterEach, describe, it, expect } from "vitest";
+import { afterEach, describe, it, expect, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import App from "../App";
+
+// CompactPanel and EmptyState now use useTranslation (T24 — stubs replaced).
+// Mock i18n so App.test.tsx renders without an I18nProvider in the tree.
+vi.mock("../i18n", () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+  }),
+}));
+
+// CompactPanel invokes focus_main_window IPC; mock the Tauri core.
+vi.mock("@tauri-apps/api/core", () => ({
+  invoke: vi.fn(),
+}));
 
 afterEach(() => cleanup());
 
@@ -42,12 +55,14 @@ describe("App routing", () => {
     expect(screen.getByText("Settings")).toBeTruthy();
   });
 
-  it("/compact renders CompactPanel placeholder", () => {
+  it("/compact renders CompactPanel (T24: stub replaced)", () => {
+    // CompactPanel renders an "Open main" button (i18n key returned as-is by mock).
     render(
       <MemoryRouter initialEntries={["/compact"]}>
         <App />
       </MemoryRouter>,
     );
-    expect(screen.getByText("CompactPanel")).toBeTruthy();
+    // The "Open main" button is always rendered regardless of session count.
+    expect(screen.getByRole("button", { name: "btn.openMain" })).toBeTruthy();
   });
 });
