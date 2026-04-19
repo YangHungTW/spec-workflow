@@ -12,6 +12,12 @@ dist
 dist-ssr
 *.local
 
+# Rust build artifacts
+target/
+
+# macOS app bundles and disk images
+*.dmg
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

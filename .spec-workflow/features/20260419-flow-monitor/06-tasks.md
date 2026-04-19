@@ -145,7 +145,8 @@ Every W0 task touches the scaffold or pinned-deps blocks; they MUST run sequenti
   - reviewer-style: watch for B2 leakage — the smoke-launched blank window MUST NOT show any "Send instruction" / "Advance stage" demo widget.
 - **Depends on**: T4
 - **Parallel-safe-with**: —
-- [ ]
+- [x]
+- STATUS: - 2026-04-19 Developer — T5 smoke build verified (.dmg at flow-monitor/src-tauri/target/universal-apple-darwin/release/bundle/dmg/flow-monitor_0.1.0_universal.dmg; universal-apple-darwin target; note: tauri bundle_dmg.sh failed due to missing create-dmg args so DMG was finalized via hdiutil directly; .app bundle verified inside mounted DMG)
 
 ---
 
