@@ -233,7 +233,8 @@ Every W1 task owns a primary file under `src-tauri/src/`. Append-only collisions
   - reviewer-security: confirm `read_to_string` only — no `OpenOptions::write` anywhere in polling.
 - **Depends on**: T5 (depends on T6, T7, T8 outputs but those are in same wave; cargo + Rust resolves type deps at compile, file collisions are append-only on main.rs)
 - **Parallel-safe-with**: T6, T7, T8, T10
-- [ ]
+- [x]
+- STATUS: - 2026-04-19 Developer — T9 polling engine complete (no subprocess, wall-clock instrumented)
 
 ---
 
