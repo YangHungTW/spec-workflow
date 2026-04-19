@@ -829,7 +829,23 @@ for t in t13_settings_json t14_rules_dir_structure t15_rules_schema \
          t46_migrate_dry_run \
          t47_migrate_user_modified \
          t48_seed_rule_compliance \
-         t49_init_skill_bootstrap; do
+         t49_init_skill_bootstrap \
+         t51_rule_file_shape \
+         t52_rule_index_row \
+         t53_marker_rule_coupling \
+         t54_hook_config_absent \
+         t55_hook_config_zh_tw \
+         t56_hook_config_unknown \
+         t57_hook_config_malformed \
+         t58_lint_clean_diff \
+         t59_lint_cjk_hit \
+         t60_lint_request_quote_allowlist \
+         t61_lint_inline_marker_allowlist \
+         t62_lint_archive_ignored \
+         t63_lint_no_jq_no_readlink_f \
+         t64_precommit_shim_wiring \
+         t65_subagent_diff_empty \
+         t66_readme_doc_section; do
   echo "--- $t ---"
   if bash "$REPO_ROOT/test/${t}.sh" >/dev/null 2>&1; then
     echo "  PASS"
