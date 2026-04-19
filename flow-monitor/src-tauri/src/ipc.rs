@@ -290,6 +290,15 @@ pub fn open_in_finder(_path: String) -> Result<(), String> {
     Err("not yet implemented".into())
 }
 
+/// Stub: reveal the given path in macOS Finder (selects the file).
+/// Corresponds to `open -R <path>` on macOS.
+/// Wired to actual OS shell-out in W4 T35; for now returns an error so the
+/// frontend call-site can be tested independently of OS integration.
+#[tauri::command]
+pub fn reveal_in_finder(_path: String) -> Result<(), String> {
+    Err("not yet implemented".into())
+}
+
 /// Stub: copy the given text to the system clipboard.
 /// Wired to actual OS calls in W4 T35.
 #[tauri::command]
@@ -463,6 +472,16 @@ mod tests {
     #[test]
     fn test_open_in_finder_stub_returns_error() {
         let result = open_in_finder("/some/path".into());
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), "not yet implemented");
+    }
+
+    #[test]
+    fn test_reveal_in_finder_stub_returns_not_yet_implemented() {
+        // T35 will wire this to `open -R <path>` on macOS.
+        // Until then the stub must return Err("not yet implemented") so the
+        // frontend call-site can be verified without OS integration.
+        let result = reveal_in_finder("/some/feature/02-design/mockup.html".into());
         assert!(result.is_err());
         assert_eq!(result.unwrap_err(), "not yet implemented");
     }

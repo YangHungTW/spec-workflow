@@ -569,7 +569,8 @@ W3 composes W2 primitives + W1 IPC into the user-facing routes. App.tsx routes b
   - reviewer-style: i18n via `t("btn.revealInFinder")`.
 - **Depends on**: T11, T18, T19
 - **Parallel-safe-with**: T17, T18, T19, T21, T22, T23, T24
-- [ ]
+- [x]
+- 2026-04-19 Developer — T20 DesignFolderIndex + reveal_in_finder stub complete (40 frontend + 13 Rust tests)
 
 ---
 

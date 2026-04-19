@@ -6,6 +6,7 @@ import { TabStrip } from "../components/TabStrip";
 import { NotesTimeline } from "../components/NotesTimeline";
 import type { NoteEntry } from "../components/NotesTimeline";
 import CardDetailMarkdownPane from "../components/CardDetailMarkdownPane";
+import { DesignFolderIndex } from "../components/DesignFolderIndex";
 import type { StageKey } from "../components/StagePill";
 import type { IdleState } from "../components/IdleBadge";
 
@@ -143,16 +144,41 @@ function CardDetail() {
           />
 
           {/*
-           * Tab content area — T22 wires MarkdownPane + read-only footer.
-           * Content is an empty string stub; T19/T20 supply real artefact content
-           * via IPC read_artefact once active-tab state is wired.
-           * AC9.e: no edit affordance inside CardDetailMarkdownPane by design.
+           * Tab content area — conditional render per active tab.
+           *
+           * 02-design: shows DesignFolderIndex with per-file "Reveal in Finder"
+           *   (AC9.h). Stub file list uses the synthesised featurePath; real
+           *   filesystem listing from IPC list_design_files lands later.
+           *
+           * All other tabs: CardDetailMarkdownPane with read-only footer (T22).
+           *   Content is an empty string stub; IPC read_artefact wiring later.
+           *
+           * AC9.e: no edit affordance anywhere in this pane by design (B2).
            */}
           <div
             className="card-detail__tab-content"
             data-testid="tab-content-placeholder"
           >
-            <CardDetailMarkdownPane content="" />
+            {activeTabId === "02-design" ? (
+              <DesignFolderIndex
+                files={[
+                  {
+                    name: "mockup.html",
+                    path: `${featurePath}/02-design/mockup.html`,
+                  },
+                  {
+                    name: "notes.md",
+                    path: `${featurePath}/02-design/notes.md`,
+                  },
+                  {
+                    name: "README.md",
+                    path: `${featurePath}/02-design/README.md`,
+                  },
+                ]}
+              />
+            ) : (
+              <CardDetailMarkdownPane content="" />
+            )}
           </div>
         </main>
       </div>
