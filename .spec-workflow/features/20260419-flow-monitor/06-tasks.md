@@ -83,7 +83,7 @@ Every W0 task touches the scaffold or pinned-deps blocks; they MUST run sequenti
   - reviewer-style: dep blocks alphabetised within their category; no commented-out dep lines.
 - **Depends on**: T1
 - **Parallel-safe-with**: — (sequential within W0)
-- [ ]
+- [x]
 
 ---
 
@@ -1012,6 +1012,8 @@ This sub-sequencing is captured in T19/T20/T21/T22's `Depends on:` field (each l
 <!-- Each task completion appends one line here at merge time. Format:
 - YYYY-MM-DD <Role> — T<n> done: <brief summary of what was committed>
 -->
+
+- 2026-04-19 Developer — T2 versions pinned (Tauri 2.2 / Rust 1.88.0 / React 19 / Vite 6 / TS 5.7); note: rust-toolchain.toml uses 1.88.0 instead of task-specified 1.83.0 because time-core 0.1.8 (transitive dep via tauri-utils → serde_with → time) requires Rust 1.88; 1.83 cannot satisfy the dep tree.
 
 ## Team memory
 
