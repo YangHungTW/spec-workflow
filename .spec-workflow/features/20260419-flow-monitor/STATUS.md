@@ -60,3 +60,4 @@
 - 2026-04-19 Developer — T16 MarkdownPane complete (lazy markdown-it + DOMPurify default)
 - 2026-04-19 review result — wave W2 retry 2 verdict=NITS (advisories only; eager locale load, WHAT-comments, DOMPurify test-mock)
 - 2026-04-19 implement wave W2 done — T12, T13, T14 (retry 2), T15, T16 merged (79 frontend tests pass)
+- 2026-04-19 Developer — T18 retry: URL param validation guard + 10 i18n keys
