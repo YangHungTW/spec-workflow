@@ -21,6 +21,7 @@ vi.mock("../../i18n", () => ({
       const map: Record<string, string> = {
         "btn.openInFinder": "Open in Finder",
         "btn.copyPath": "Copy path",
+        "btn.back": "Back",
         "stage.implement": "implement",
         "idle.stalled": "Stalled",
         "idle.stale": "Stale",
@@ -35,6 +36,15 @@ vi.mock("../../i18n", () => ({
         "stage.gap-check": "gap-check",
         "stage.verify": "verify",
         "stage.archive": "archive",
+        "tab.request": "00 request",
+        "tab.brainstorm": "01 brainstorm",
+        "tab.design": "02 design",
+        "tab.prd": "03 prd",
+        "tab.tech": "04 tech",
+        "tab.plan": "05 plan",
+        "tab.tasks": "06 tasks",
+        "tab.gaps": "07 gaps",
+        "tab.verify": "08 verify",
       };
       return map[key] ?? key;
     },
@@ -132,7 +142,7 @@ describe("CardDetail — master-detail skeleton", () => {
     expect(tabs?.length).toBe(9);
   });
 
-  it("tab labels match the 9 markdown docs", () => {
+  it("tab labels match the 9 markdown docs (via i18n keys)", () => {
     renderCardDetail();
     const expectedLabels = [
       "00 request",
@@ -148,6 +158,42 @@ describe("CardDetail — master-detail skeleton", () => {
     expectedLabels.forEach((label) => {
       expect(screen.getByRole("tab", { name: label })).toBeTruthy();
     });
+  });
+
+  it("invalid repoId (contains ..) redirects to / (security: URL param validation)", () => {
+    render(
+      <MemoryRouter initialEntries={["/feature/../my-feature"]}>
+        <Routes>
+          <Route path="/feature/:repoId/:slug" element={<CardDetail />} />
+          <Route path="/" element={<div data-testid="main-window-restored">MainWindow</div>} />
+        </Routes>
+      </MemoryRouter>,
+    );
+    // router normalises the path so repoId would be ".." — guard must redirect
+    // In MemoryRouter, navigating to /feature/../my-feature normalises to /feature,
+    // which matches no route — we verify this test for malformed repoId at the guard level
+    // by routing with an explicit repoId containing ".."
+    render(
+      <MemoryRouter initialEntries={["/feature/..bad/my-feature"]}>
+        <Routes>
+          <Route path="/feature/:repoId/:slug" element={<CardDetail />} />
+          <Route path="/" element={<div data-testid="main-window-restored2">MainWindow</div>} />
+        </Routes>
+      </MemoryRouter>,
+    );
+    expect(screen.getByTestId("main-window-restored2")).toBeTruthy();
+  });
+
+  it("invalid slug (contains /) redirects to / (security: URL param validation)", () => {
+    render(
+      <MemoryRouter initialEntries={["/feature/myrepo/bad%2Fslug"]}>
+        <Routes>
+          <Route path="/feature/:repoId/:slug" element={<CardDetail />} />
+          <Route path="/" element={<div data-testid="main-window-restored3">MainWindow</div>} />
+        </Routes>
+      </MemoryRouter>,
+    );
+    expect(screen.getByTestId("main-window-restored3")).toBeTruthy();
   });
 
   it("no textbox input present (AC9.e — no edit affordance)", () => {

@@ -20,12 +20,23 @@
   "idle.stalled": "停滯",
   "idle.active": "進行中",
 
+  "btn.back": "返回",
   "btn.openInFinder": "在 Finder 中開啟",
   "btn.copyPath": "複製路徑",
   "btn.openMain": "開啟主視窗 →",
   "btn.revealInFinder": "在 Finder 中顯示",
   "btn.addRepo": "新增倉庫…",
   "btn.remove": "移除",
+
+  "tab.request": "00 需求",
+  "tab.brainstorm": "01 腦力激盪",
+  "tab.design": "02 設計",
+  "tab.prd": "03 PRD",
+  "tab.tech": "04 技術",
+  "tab.plan": "05 計畫",
+  "tab.tasks": "06 任務",
+  "tab.gaps": "07 差異分析",
+  "tab.verify": "08 驗證",
 
   "empty.title": "尚無倉庫",
   "empty.body": "新增含有 .spec-workflow/ 資料夾的倉庫，以開始監控您的 specflow 工作階段。",

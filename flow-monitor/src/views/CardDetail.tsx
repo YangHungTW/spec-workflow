@@ -1,8 +1,15 @@
-import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams, Navigate } from "react-router-dom";
 import { CardDetailHeader } from "../components/CardDetailHeader";
 import { StageChecklist } from "../components/StageChecklist";
 import type { StageKey } from "../components/StagePill";
 import type { IdleState } from "../components/IdleBadge";
+import { useTranslation } from "../i18n";
+
+/** Validates URL path segment — allows only alphanumeric, hyphen, underscore. */
+const SAFE_ID = /^[A-Za-z0-9_-]+$/;
+function isSafeId(s: string | undefined): s is string {
+  return typeof s === "string" && SAFE_ID.test(s);
+}
 
 /**
  * The 9 markdown document tabs shown in CardDetail.
@@ -11,16 +18,16 @@ import type { IdleState } from "../components/IdleBadge";
  * T18 provides only the skeleton: container + 9 tab button stubs.
  */
 const TAB_DEFINITIONS = [
-  { id: "00-request", label: "00 request" },
-  { id: "01-brainstorm", label: "01 brainstorm" },
-  { id: "02-design", label: "02 design" },
-  { id: "03-prd", label: "03 prd" },
-  { id: "04-tech", label: "04 tech" },
-  { id: "05-plan", label: "05 plan" },
-  { id: "06-tasks", label: "06 tasks" },
-  { id: "07-gaps", label: "07 gaps" },
-  { id: "08-verify", label: "08 verify" },
-] as const;
+  { id: "00-request", labelKey: "tab.request" as const },
+  { id: "01-brainstorm", labelKey: "tab.brainstorm" as const },
+  { id: "02-design", labelKey: "tab.design" as const },
+  { id: "03-prd", labelKey: "tab.prd" as const },
+  { id: "04-tech", labelKey: "tab.tech" as const },
+  { id: "05-plan", labelKey: "tab.plan" as const },
+  { id: "06-tasks", labelKey: "tab.tasks" as const },
+  { id: "07-gaps", labelKey: "tab.gaps" as const },
+  { id: "08-verify", labelKey: "tab.verify" as const },
+];
 
 /**
  * CardDetail — master-detail view for a single specflow feature session.
@@ -39,12 +46,18 @@ const TAB_DEFINITIONS = [
  * B2 boundary: NO edit affordance, NO save button, NO command-trigger (AC9.e).
  */
 function CardDetail() {
-  const { repoId = "unknown", slug = "unknown" } = useParams<{
+  const { repoId, slug } = useParams<{
     repoId: string;
     slug: string;
   }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { t } = useTranslation();
+
+  /** Guard: reject invalid URL path segments before any path construction. */
+  if (!isSafeId(repoId) || !isSafeId(slug)) {
+    return <Navigate to="/" replace />;
+  }
 
   /**
    * Reconstruct the MainWindow URL with restored filter state from search params.
@@ -128,7 +141,7 @@ function CardDetail() {
                 className="card-detail__tab"
                 data-tab-id={tab.id}
               >
-                {tab.label}
+                {t(tab.labelKey)}
               </button>
             ))}
           </div>

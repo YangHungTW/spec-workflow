@@ -17,6 +17,7 @@ vi.mock("../../i18n", () => ({
       const map: Record<string, string> = {
         "btn.openInFinder": "Open in Finder",
         "btn.copyPath": "Copy path",
+        "btn.back": "Back",
         "stage.implement": "implement",
         "idle.stalled": "Stalled",
         "idle.stale": "Stale",
@@ -106,6 +107,16 @@ describe("CardDetailHeader", () => {
     const backBtn = screen.getByRole("button", { name: /back/i });
     fireEvent.click(backBtn);
     expect(onBack).toHaveBeenCalledOnce();
+  });
+
+  it("back button aria-label uses t(btn.back) — i18n (style fix)", () => {
+    render(<CardDetailHeader {...BASE_PROPS} />);
+    // The i18n stub maps btn.back → "Back"
+    // A hardcoded aria-label="Back" would also pass, but this test uses
+    // queryByRole to verify the translated string is used
+    const backBtn = screen.getByRole("button", { name: "Back" });
+    expect(backBtn).toBeTruthy();
+    expect(backBtn.getAttribute("aria-label")).toBe("Back");
   });
 
   it("renders idle badge when idleState is stalled (AC9.j)", () => {

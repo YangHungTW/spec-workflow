@@ -50,7 +50,7 @@ export function CardDetailHeader({
       <button
         type="button"
         className="card-detail-header__back"
-        aria-label="Back"
+        aria-label={t("btn.back")}
         onClick={onBack}
       >
         ←

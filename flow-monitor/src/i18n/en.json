@@ -20,12 +20,23 @@
   "idle.stalled": "Stalled",
   "idle.active": "Active",
 
+  "btn.back": "Back",
   "btn.openInFinder": "Open in Finder",
   "btn.copyPath": "Copy path",
   "btn.openMain": "Open main →",
   "btn.revealInFinder": "Reveal in Finder",
   "btn.addRepo": "Add repository…",
   "btn.remove": "Remove",
+
+  "tab.request": "00 request",
+  "tab.brainstorm": "01 brainstorm",
+  "tab.design": "02 design",
+  "tab.prd": "03 prd",
+  "tab.tech": "04 tech",
+  "tab.plan": "05 plan",
+  "tab.tasks": "06 tasks",
+  "tab.gaps": "07 gaps",
+  "tab.verify": "08 verify",
 
   "empty.title": "No repos yet",
   "empty.body": "Add a repository that contains a .spec-workflow/ folder to start monitoring your specflow sessions.",
