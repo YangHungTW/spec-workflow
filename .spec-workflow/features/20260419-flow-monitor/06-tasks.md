@@ -963,7 +963,8 @@ W5 implements the test seams the dogfood paradox forces (Architect's §8), instr
   - reviewer-style: cite the design `02-design/notes.md` "Theming" table as the authoritative token pairing source.
 - **Depends on**: T13, T15
 - **Parallel-safe-with**: T30, T31, T32, T33, T34, T35, T36, T37, T38, T40, T41, T42
-- [ ]
+- [x]
+- 2026-04-19 Developer — T39 WCAG contrast test complete
 
 ---
 
