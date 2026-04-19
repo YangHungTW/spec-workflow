@@ -1,0 +1,48 @@
+{
+  "sidebar.allProjects": "All Projects",
+  "sidebar.addRepo": "+ Add repo…",
+  "sidebar.settings": "Settings",
+  "sidebar.pollingFooter": "Polling · {interval}s",
+
+  "stage.request": "request",
+  "stage.brainstorm": "brainstorm",
+  "stage.design": "design",
+  "stage.prd": "PRD",
+  "stage.tech": "tech",
+  "stage.plan": "plan",
+  "stage.tasks": "tasks",
+  "stage.implement": "implement",
+  "stage.gap-check": "gap-check",
+  "stage.verify": "verify",
+  "stage.done": "done",
+
+  "idle.stale": "Stale",
+  "idle.stalled": "Stalled",
+  "idle.active": "Active",
+
+  "btn.openInFinder": "Open in Finder",
+  "btn.copyPath": "Copy path",
+  "btn.openMain": "Open main →",
+  "btn.revealInFinder": "Reveal in Finder",
+  "btn.addRepo": "Add repository…",
+  "btn.remove": "Remove",
+
+  "empty.title": "No repos yet",
+  "empty.body": "Add a repository that contains a .spec-workflow/ folder to start monitoring your specflow sessions.",
+  "empty.cta": "Add repository…",
+
+  "settings.general": "General",
+  "settings.notifications": "Notifications",
+  "settings.repositories": "Repositories",
+  "settings.polling": "Polling Interval",
+  "settings.thresholds": "Idle Thresholds",
+  "settings.theme.light": "Light",
+  "settings.theme.dark": "Dark",
+  "settings.language": "Language",
+  "settings.about": "About",
+
+  "notification.stalled.title": "Session stalled: {slug}",
+  "notification.stalled.body": "{stage} · idle for {duration} · {repo}",
+
+  "markdown.footer": "Read-only preview. Open in Finder to edit."
+}

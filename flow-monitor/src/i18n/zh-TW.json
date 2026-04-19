@@ -1,0 +1,48 @@
+{
+  "sidebar.allProjects": "全部專案",
+  "sidebar.addRepo": "+ 新增倉庫…",
+  "sidebar.settings": "設定",
+  "sidebar.pollingFooter": "輪詢中 · 每 {interval} 秒",
+
+  "stage.request": "需求",
+  "stage.brainstorm": "腦力激盪",
+  "stage.design": "設計",
+  "stage.prd": "PRD",
+  "stage.tech": "技術",
+  "stage.plan": "計畫",
+  "stage.tasks": "任務",
+  "stage.implement": "實作",
+  "stage.gap-check": "缺口確認",
+  "stage.verify": "驗證",
+  "stage.done": "完成",
+
+  "idle.stale": "過時",
+  "idle.stalled": "停滯",
+  "idle.active": "進行中",
+
+  "btn.openInFinder": "在 Finder 中開啟",
+  "btn.copyPath": "複製路徑",
+  "btn.openMain": "開啟主視窗 →",
+  "btn.revealInFinder": "在 Finder 中顯示",
+  "btn.addRepo": "新增倉庫…",
+  "btn.remove": "移除",
+
+  "empty.title": "尚無倉庫",
+  "empty.body": "新增含有 .spec-workflow/ 資料夾的倉庫，以開始監控您的 specflow 工作階段。",
+  "empty.cta": "新增倉庫…",
+
+  "settings.general": "一般",
+  "settings.notifications": "通知",
+  "settings.repositories": "倉庫",
+  "settings.polling": "輪詢間隔",
+  "settings.thresholds": "閒置門檻",
+  "settings.theme.light": "淺色",
+  "settings.theme.dark": "深色",
+  "settings.language": "語言",
+  "settings.about": "關於",
+
+  "notification.stalled.title": "工作階段停滯：{slug}",
+  "notification.stalled.body": "{stage} · 閒置 {duration} · {repo}",
+
+  "markdown.footer": "唯讀預覽。如需編輯，請在 Finder 中開啟。"
+}
