@@ -10,8 +10,8 @@ All paths below are absolute under `/Users/yanghungtw/Tools/spec-workflow/`. The
 
 ## 1. Summary
 
-- **Total tasks**: 43 [CHANGED 2026-04-19]
-- **Waves**: 7 (W0 → W1 → W1.5 → W2 → W3 → W4 → W5; W2 may run concurrently with W1 once W0 lands; W1.5 inserted post-W1 merge to absorb NITS cleanup per STATUS note) [CHANGED 2026-04-19]
+- **Total tasks**: 44 [CHANGED 2026-04-19]
+- **Waves**: 8 (W0 → W1 → W1.5 → W2 → W3 → W4 → W5 → W5.5; W2 may run concurrently with W1 once W0 lands; W1.5 inserted post-W1 merge to absorb NITS cleanup per STATUS note; W5.5 inserted post-verify-FAIL to close the component-CSS gap exposed on first .dmg launch) [CHANGED 2026-04-19]
 - **Critical path length**: W0 (sequential 5 tasks) → W1 ∥ W2 (max 6 ≈ 6 task-hours) → W3 (max 8 ≈ 8 task-hours) → W4 (max 5 ≈ 5 task-hours) → W5 (max 5 ≈ 5 task-hours). ≈ 30 task-hours linear, ≈ 12–14 task-hours with full parallelism.
 - **Dogfood paradox** (per `shared/dogfood-paradox-third-occurrence`): W5 is structural-only verification; runtime confirmation deferred to the next feature after archive + first app launch.
 
@@ -36,6 +36,9 @@ All paths below are absolute under `/Users/yanghungtw/Tools/spec-workflow/`. The
                        │
                        ▼
                  W5 (Polish + structural verify + .dmg, ∥ within wave)
+                       │
+                       ▼
+                 W5.5 (T44 solo — component CSS, post-verify-FAIL)   [CHANGED 2026-04-19]
 ```
 
 ## 3. Tasks
@@ -1036,6 +1039,81 @@ W5 implements the test seams the dogfood paradox forces (Architect's §8), instr
 
 ---
 
+## T44 — Component CSS: implement visual design per `02-design/mockup.html` (verify-FAIL recovery) [CHANGED 2026-04-19]
+- **Wave**: W5.5 (post-verify fix)
+- **Requirements**: R15 (two themes × all seven mockup screens — theming commitment), plus the overall visual design contract captured in `02-design/mockup.html` and `02-design/notes.md` (card shapes, layout, typography, stage-pill and idle-badge variants).
+- **Decisions**: D9 (CSS custom properties + `html.dark` root class — already implemented by T13 in `theme.css`; this task consumes those tokens).
+- **Context / why**: The running `.dmg` produced by T41 renders as **unstyled HTML** — default browser styles, no layout, no colors, plain bullet list for "All Projects / + Add repo…". Root cause: `flow-monitor/src/styles/theme.css` declares CSS custom-property tokens only (168 lines of `--variable: value`) but **no component styles consume them**. No `.session-card`, `.sidebar`, `.stage-pill`, `.card-detail`, `body`, `h1`, `.btn` rules exist anywhere. Tests pass because React Testing Library verifies DOM structure + behaviour only, not visual styling. Verify stage was reverted to unchecked and this task closes the gap.
+- **Scope**: Write the actual component CSS that consumes `theme.css` tokens, referencing `02-design/mockup.html` as the visual target. Coverage must span all 7 mockup screens + the compact panel + the empty state:
+
+  **1. Global (`globals.css`)**
+  - `body` — font stack (system-ui), bg from `var(--page-bg)`, text from `var(--text-primary)`, default line-height and margins reset.
+  - Box-sizing reset (`*, *::before, *::after { box-sizing: border-box }`).
+  - Default heading sizes (`h1`, `h2`, `h3`) matching mockup typographic scale.
+  - Link defaults (color token, hover state).
+
+  **2. Main Window (`components.css` — section 1)**
+  - `.repo-sidebar`, `.sidebar-item`, `.sidebar-item--active` — left-rail project switcher.
+  - `.sort-toolbar`, `.compact-toggle-btn` — top toolbar.
+  - `.session-card-grid` — 2-column responsive grid.
+  - `.session-card`, `.session-card--stalled`, `.session-card--stale` — card shell + idle-tier modifiers.
+  - `.polling-footer` — bottom status bar.
+
+  **3. Stage pills + idle badges (`components.css` — section 2)**
+  - `.stage-pill` base + 11 per-stage modifiers (`.stage-pill--brainstorm`, `--design`, `--prd`, `--tech`, `--plan`, `--tasks`, `--implement`, `--gap-check`, `--verify`, `--archive`, `--unknown`).
+  - `.idle-badge` base + 3 modifiers (`.idle-badge--stalled`, `.idle-badge--stale`, `.idle-badge--none`).
+  - **Per AC9.j** — no `transition` or `animation` property anywhere on `.idle-badge` or its modifiers (static only).
+
+  **4. Card Detail (`components.css` — section 3)**
+  - Breadcrumb (`.card-detail__breadcrumb`).
+  - Left rail + stage checklist (`.card-detail__rail`, `.stage-checklist`, `.stage-checklist__item`).
+  - Right pane (`.card-detail__pane`).
+  - Tab strip: `.tab-strip`, `.tab-strip__tab`, `.tab-strip__tab--active`, `.tab-strip__tab--missing`.
+  - Markdown pane + literal footer (`.markdown-pane`, `.markdown-pane__footer`).
+
+  **5. Settings (`components.css` — section 4)**
+  - 3-tab layout (General / Notifications / Repositories) — `.settings-tabs`, `.settings-tab`, `.settings-tab--active`.
+  - Form rows (`.form-row`, `.form-row__label`, `.form-row__control`).
+  - Input controls (`input[type="text"]`, `input[type="checkbox"]`, radio, select) styled against tokens.
+
+  **6. Compact Panel (`components.css` — section 5)**
+  - Floating glass surface — `.compact-panel`, `.compact-panel__row`.
+  - Per-session row with coloured dot — `.compact-panel__dot`, `.compact-panel__dot--stalled`, `.compact-panel__dot--stale`, `.compact-panel__dot--none`.
+  - The compact panel is a separate `WebviewWindow` (per T29); may need its own `body` overrides (transparent bg, drag region).
+
+  **7. Empty State (`components.css` — section 6)**
+  - Centered CTA layout (`.empty-state`, `.empty-state__cta`, `.empty-state__cta-btn`).
+
+  **Token discipline**:
+  - All rules MUST use `var(--token)` for colors and spacing; **no hardcoded hex literals** anywhere outside `theme.css`.
+  - `html.dark { ... }` override in `theme.css` already flips token values; component CSS is theme-agnostic by construction.
+  - No `!important` unless accompanied by an inline comment justifying the override.
+  - Class names follow the BEM-like pattern already used in JSX (e.g. `.session-card--stalled`, not `.sessionCardStalled`).
+
+- **Files**:
+  - `flow-monitor/src/styles/globals.css` (NEW — body, reset, typography).
+  - `flow-monitor/src/styles/components.css` (NEW — all component styles, organised by the 6 sections above).
+  - `flow-monitor/src/main.tsx` (EDIT — import the new stylesheets **after** `theme.css` so component rules can consume the tokens; import order: `theme.css` → `globals.css` → `components.css`).
+  - `flow-monitor/src/styles/README.md` (NEW — brief note on token usage discipline, BEM-like class-naming convention, and the "no hardcoded colors outside theme.css" rule; English-only per `.claude/rules/common/language-preferences.md` carve-out b).
+- **PRD ACs covered**: closes the R15 theming commitment across all 7 mockup screens (AC15.a–f) — runtime verify previously blocked at FAIL because no component styles existed to flip on `html.dark`.
+- **Acceptance/exit**:
+  - `cd flow-monitor && npm run build` exits 0.
+  - `cd flow-monitor && npm run tauri build -- --target universal-apple-darwin` produces a `.dmg` artefact under `src-tauri/target/universal-apple-darwin/release/bundle/dmg/` (command exits 0; at least one `.dmg` file present).
+  - **Visual acceptance (runtime)**: launch the `.dmg`, compare the Empty State and Main Window screens to `02-design/mockup.html` — should match the mockup's visual language (card shapes, colours, typography, 2-column grid layout). This check is runtime-only and must be confirmed by the user on first launch per `shared/dogfood-paradox-third-occurrence`.
+  - **Theme toggle (runtime)**: flipping the `html.dark` class (via Settings → General theme control from T23) switches all surfaces to dark — page bg reads `#0F1411`, primary accent reads `#1B4332` in computed styles.
+  - **No hardcoded colors** (structural): `grep -E '#[0-9a-fA-F]{3,8}' flow-monitor/src/styles/globals.css flow-monitor/src/styles/components.css` returns empty (all colours via `var(--*)`). The `theme.css` file remains the single source of hex literals.
+  - **Bundle size**: combined byte size of `globals.css` + `components.css` < 30 KB on disk (`wc -c` of the two files summed).
+  - **AC9.j structural**: `grep -E 'transition|animation' flow-monitor/src/styles/components.css | grep -iE 'idle-badge'` returns empty (no animation/transition on idle-badge selectors).
+- **Reviewer briefs**:
+  - reviewer-style: no hardcoded hex colours outside `theme.css` (grep acceptance above enforces this). Class names must match the BEM-like pattern already present in JSX (e.g. `.session-card--stalled`, not `.sessionCardStalled` or `.session_card_stalled`); cross-reference `.claude/rules/reviewer/style.md` check 1 (match existing naming conventions in the file). No `!important` unless an inline comment documents why. Cite `.claude/rules/reviewer/style.md`.
+  - reviewer-performance: no CSS animations/transitions on `.idle-badge` (AC9.j — static visual tier). Keep combined CSS bundle under 30 KB. Flag any selector with a descendant-chain depth > 4 or over-broad universal selectors in a hot path. Cite `.claude/rules/reviewer/performance.md`.
+  - reviewer-security: N/A — CSS has no injection surface; no `@import` of external URLs; no `url(javascript:...)` patterns. Reviewer may confirm these three absences with a grep and return PASS.
+- **Depends on**: T42 (all implement tasks complete; W5 rollup already merged). T44 runs after the verify-FAIL revert and before re-entering verify.
+- **Parallel-safe-with**: — (solo; W5.5 is a single-task wave by construction).
+- [ ]
+
+---
+
 ## 4. Parallel-safety analysis & wave schedule
 
 ### Wave schedule
@@ -1047,6 +1125,7 @@ W5 implements the test seams the dogfood paradox forces (Architect's §8), instr
 - **W3**: T17, T18, T19, T20, T21, T22, T23, T24 (all parallel — different primary view/component files). Shared dispatcher: `src/App.tsx` routes block — each task adds one `<Route>` element at a stable position; classified as **append-only collision** per `tpm/parallel-safe-append-sections`, resolves keep-both. T18, T19, T20, T21, T22 all extend `CardDetail.tsx` — but each adds a distinct child component; the per-task `CardDetail.tsx` edits live in different sections of the file (header strip vs. tab strip vs. design-folder-index vs. notes-timeline vs. markdown-pane wrapper) AND are in different file regions; classified as parallel-safe with a NOTE that any logic-conflicting edit must serialize.
 - **W4**: T25, T26, T27, T28, T29 (all parallel — different primary `.rs` files or distinct IPC handlers; append-only collisions on `src-tauri/Cargo.toml` plugin deps and `src-tauri/src/main.rs` plugin init resolve keep-both).
 - **W5**: T30, T31, T32, T33, T34, T35, T36, T37, T38, T39, T40, T41, T42 (all parallel — different test files; T42 depends on the others' results so runs last but is small audit-only).
+- **W5.5**: T44 (solo; component CSS post-verify-FAIL recovery; NEW files only plus one `main.tsx` import-line edit; NOT parallel-safe with anything because nothing else is outstanding at this stage). [CHANGED 2026-04-19]
 
 ### Append-only collisions expected (keep-both merges)
 
@@ -1118,6 +1197,7 @@ This sub-sequencing is captured in T19/T20/T21/T22's `Depends on:` field (each l
 | T40 | W5 | 5 | T11, T23, T24, T26, T32 |
 | T41 | W5 | 1 (extend) | T25, T26, T27, T28, T29 |
 | T42 | W5 | 1 (STATUS edit) | T30..T41 |
+| T44 | W5.5 | 3 (NEW: globals.css, components.css, styles/README.md) + 1 EDIT (main.tsx) | T42 |
 
 ## 6. STATUS Notes
 
