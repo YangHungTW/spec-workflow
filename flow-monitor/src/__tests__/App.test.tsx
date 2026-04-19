@@ -10,6 +10,13 @@ vi.mock("../i18n", () => ({
   I18nProvider: ({ children }: { children: ReactNode }) => children,
 }));
 
+// Stub Tauri event API — MainWindow and PollingFooter call listen() on mount;
+// without this mock the test environment throws because the Tauri IPC bridge
+// (window.__TAURI_INTERNALS__) is not present in jsdom.
+vi.mock("@tauri-apps/api/event", () => ({
+  listen: vi.fn(() => Promise.resolve(() => undefined)),
+}));
+
 // Stub Tauri IPC — route by command so MainWindow (list_sessions), Settings (get_settings), and CompactPanel (focus_main_window) all work
 vi.mock("@tauri-apps/api/core", () => ({
   invoke: vi.fn((cmd: string) => {

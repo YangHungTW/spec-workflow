@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import { useTranslation } from "../i18n";
 import { RepoSidebar, type RepoEntry } from "../components/RepoSidebar";
 import { SortToolbar } from "../components/SortToolbar";
@@ -66,6 +67,8 @@ function MainWindow() {
   const [repos, setRepos] = useState<RepoEntry[]>([]);
   const [pollingIntervalSecs, setPollingIntervalSecs] = useState<number>(3);
   const [loading, setLoading] = useState(true);
+  // Tracks whether the compact panel window is currently open (AC10.a).
+  const [compactPanelOpen, setCompactPanelOpen] = useState<boolean>(false);
 
   // Load sessions and settings on mount
   const loadData = useCallback(() => {
@@ -110,6 +113,34 @@ function MainWindow() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // Subscribe to sessions_changed events (AC10.c) — both MainWindow and the
+  // compact panel share the same poll cycle; when the backend emits a new
+  // session snapshot we reload data so cards stay in sync.
+  useEffect(() => {
+    let unlisten: (() => void) | null = null;
+
+    listen("sessions_changed", () => {
+      loadData();
+    }).then((fn) => {
+      unlisten = fn;
+    });
+
+    return () => {
+      if (unlisten) {
+        unlisten();
+      }
+    };
+  }, [loadData]);
+
+  // Toggle the compact panel window via IPC (AC10.a).
+  // set_compact_panel_open(true) creates the WebviewWindow; false closes it.
+  function handleCompactToggle() {
+    const next = !compactPanelOpen;
+    invoke("set_compact_panel_open", { open: next }).then(() => {
+      setCompactPanelOpen(next);
+    }).catch(() => undefined);
+  }
 
   // Filter sessions by selected repo
   const filteredSessions =
@@ -166,6 +197,16 @@ function MainWindow() {
           onSelect={setSelectedRepoId}
           onAddRepo={handleAddRepo}
         />
+        {/* Compact panel toggle button (AC10.a) */}
+        <button
+          type="button"
+          className="main-window__compact-toggle"
+          data-testid="compact-toggle"
+          aria-pressed={compactPanelOpen}
+          onClick={handleCompactToggle}
+        >
+          {t("btn.compactPanel")}
+        </button>
         {/* Polling footer at the bottom of the sidebar (AC4.c) */}
         <PollingFooter intervalSeconds={pollingIntervalSecs} />
       </aside>
