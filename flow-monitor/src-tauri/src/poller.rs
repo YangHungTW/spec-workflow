@@ -20,7 +20,7 @@ use tokio::sync::mpsc;
 use tracing::info;
 
 use crate::repo_discovery::discover_sessions;
-use crate::status_parse::parse;
+use crate::status_parse::{parse, Stage};
 use crate::store::{diff, DiffEvent, SessionKey, SessionMap};
 
 // ---------------------------------------------------------------------------
@@ -130,6 +130,13 @@ pub async fn run_polling_loop(
                 let mut state = parse(&content, mtime);
                 // Fill in the caller-owned path field (status_parse::parse leaves it empty).
                 state.raw_status_path = session_info.status_path.clone();
+
+                // AC1.a: sessions at stage:archive are excluded from the discovered set.
+                // The archive stage indicates the session is complete and moved to the
+                // archive directory; it must not surface in the active session list.
+                if state.stage == Stage::Archive {
+                    continue;
+                }
 
                 let key: SessionKey = (repo.clone(), session_info.slug.clone());
                 new_map.insert(key, state);
