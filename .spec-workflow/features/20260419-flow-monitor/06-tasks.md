@@ -213,7 +213,8 @@ Every W1 task owns a primary file under `src-tauri/src/`. Append-only collisions
   - reviewer-style: closed enum for `SortAxis`; one match arm per axis.
 - **Depends on**: T5
 - **Parallel-safe-with**: T6, T7, T9, T10
-- [ ]
+- [x]
+- STATUS: - 2026-04-19 Developer — T8 store::diff complete (pure fn, O(n))
 
 ---
 
