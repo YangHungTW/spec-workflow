@@ -446,7 +446,8 @@ W2 may run concurrently with W1 once W0 is merged. Append-only collisions on `sr
   - reviewer-style: i18n labels — no hardcoded English strings; cite gap-check predicted finding.
 - **Depends on**: T5
 - **Parallel-safe-with**: T12, T13, T14, T16
-- [ ]
+- [x]
+- 2026-04-19 Developer — T15 StagePill + IdleBadge complete (22 + 6 snapshot variants)
 
 ---
 
