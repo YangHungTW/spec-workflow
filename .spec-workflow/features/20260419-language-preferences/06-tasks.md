@@ -332,7 +332,7 @@ Wave schedule and R↔T trace at the bottom.
 - **Dependencies**: T3 (the shim content references `bin/specflow-lint` by path; at runtime-test time in W3, `bin/specflow-lint` must exist in the source tree being copied. At code-edit time the dependency is schema-only — the string `bin/specflow-lint scan-staged` is fixed.)
 - **Parallel-safe-with**: — (sole task in W2; all three edits touch `bin/specflow-seed` and serialize within this task per `tpm/parallel-safe-requires-different-files.md`)
 - **Notes**: **single-editor; all three intra-function edits on the same file serialize inside this task**. No parallelism possible within W2. No peer task this feature; cross-feature concurrency not currently a concern. Exit-code semantics: `MAX_CODE=1` on `foreign-pre-commit` matches existing `skipped:*` exit convention.
-- [ ]
+- [x] T4
 
 ---
 

@@ -36,3 +36,6 @@
 - 2026-04-19 implement — T3 retry 2 committed (17bd917, fix: `git cat-file --batch` → O(1) forks regardless of N; also consolidated dual `subprocess` import). Developer wall-clock: 70ms on 20-file scratch commit.
 - 2026-04-19 review result — T3 retry 2: security=PASS, performance=PASS (fork count O(1)), style=PASS. Wave 1 verdict=NITS (T2 style NITS; T1/T3 clean). Merge loop executed: T1 9149f2b, T2 c53ba02 (NITS embedded in commit body), T3 b2f470a. Worktrees + branches cleaned up.
 - 2026-04-19 implement wave 1 done — T1, T2, T3.
+- 2026-04-19 implement — wave 2 developer done (T4); review dispatched (1×3).
+- 2026-04-19 review result — wave 2 verdict=NITS (T4 security NITS: TOCTOU `should` on classify→write_atomic; perf+style PASS). Merged: T4 [merge-sha]. Worktree cleaned.
+- 2026-04-19 implement wave 2 done — T4.
