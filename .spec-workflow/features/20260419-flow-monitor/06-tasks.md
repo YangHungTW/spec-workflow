@@ -502,7 +502,8 @@ W3 composes W2 primitives + W1 IPC into the user-facing routes. App.tsx routes b
   - reviewer-style: i18n via `t(key)` for every visible string; gap-check predicted finding.
 - **Depends on**: T11 (IPC), T13 (theme), T14 (i18n), T15 (StagePill, IdleBadge)
 - **Parallel-safe-with**: T18, T19, T20, T21, T22, T23, T24 (different primary view file; App.tsx route addition is append-only)
-- [ ]
+- [x]
+- 2026-04-19 Developer — T17 MainWindow + 4 primitives complete (11 tests)
 
 ---
 

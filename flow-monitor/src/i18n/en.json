@@ -44,5 +44,15 @@
   "notification.stalled-title": "Session stalled: {slug}",
   "notification.stalled-body": "{stage} · idle for {duration} · {repo}",
 
-  "markdown.footer": "Read-only preview. Open in Finder to edit."
+  "markdown.footer": "Read-only preview. Open in Finder to edit.",
+
+  "sort.label": "Sort by",
+  "sort.lastUpdatedDesc": "Last Updated",
+  "sort.stage": "Stage",
+  "sort.slugAZ": "Name A–Z",
+  "sort.stalledFirst": "Stalled First",
+
+  "card.repoGroup": "{repo}",
+  "card.collapseRepo": "Collapse {repo}",
+  "card.expandRepo": "Expand {repo}"
 }
