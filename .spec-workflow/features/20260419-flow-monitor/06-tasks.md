@@ -630,7 +630,8 @@ W3 composes W2 primitives + W1 IPC into the user-facing routes. App.tsx routes b
   - reviewer-style: i18n via `t(key)`.
 - **Depends on**: T11, T13, T14
 - **Parallel-safe-with**: T17, T18, T19, T20, T21, T22, T24
-- [ ]
+- [x]
+- STATUS: - 2026-04-19 Developer — T23 Settings view complete (3 tabs, 31 tests)
 
 ---
 
