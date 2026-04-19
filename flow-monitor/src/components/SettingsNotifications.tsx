@@ -1,6 +1,9 @@
+import { useEffect, useState } from "react";
 import { useTranslation } from "../i18n";
 import { invoke } from "@tauri-apps/api/core";
 import type { AppSettings } from "../views/Settings";
+
+type PermissionStatus = "granted" | "denied" | "default";
 
 interface SettingsNotificationsProps {
   settings: AppSettings;
@@ -12,12 +15,34 @@ export function SettingsNotifications({
   onSettingsChange,
 }: SettingsNotificationsProps) {
   const { t } = useTranslation();
+  const [permissionStatus, setPermissionStatus] = useState<PermissionStatus | null>(null);
+
+  // Fetch macOS notification permission status on mount (AC6.e / R-5 mitigation).
+  // Falls back to browser Notification.permission when the Tauri IPC is unavailable.
+  useEffect(() => {
+    invoke<PermissionStatus>("get_notification_permission_status")
+      .then((status) => setPermissionStatus(status))
+      .catch(() => {
+        // Tauri IPC unavailable (e.g. running in browser dev-mode); fall back
+        // to the browser Notification API permission value.
+        if (typeof Notification !== "undefined") {
+          const p = Notification.permission as PermissionStatus;
+          setPermissionStatus(p);
+        }
+      });
+  }, []);
 
   function handleToggle(e: React.ChangeEvent<HTMLInputElement>) {
     const enabled = e.target.checked;
     const patch = { notifications_enabled: enabled };
     onSettingsChange(patch);
     invoke("update_settings", patch).catch(() => undefined);
+  }
+
+  function statusLabel(status: PermissionStatus): string {
+    if (status === "granted") return t("settings.notifications.statusGranted");
+    if (status === "denied") return t("settings.notifications.statusDenied");
+    return t("settings.notifications.statusDefault");
   }
 
   return (
@@ -34,6 +59,25 @@ export function SettingsNotifications({
           />
           {t("settings.enableNotifications")}
         </label>
+
+        {permissionStatus !== null && (
+          <p
+            className="settings-notifications__permission-status"
+            data-testid="notification-permission-status"
+          >
+            {t("settings.notifications.permissionStatus")}{" "}
+            {statusLabel(permissionStatus)}
+          </p>
+        )}
+
+        {permissionStatus === "denied" && (
+          <p
+            className="settings-notifications__denied-hint"
+            data-testid="notification-denied-hint"
+          >
+            {t("settings.notifications.deniedHint")}
+          </p>
+        )}
       </section>
     </div>
   );
