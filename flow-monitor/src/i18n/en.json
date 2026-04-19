@@ -36,8 +36,8 @@
   "settings.repositories": "Repositories",
   "settings.polling": "Polling Interval",
   "settings.thresholds": "Idle Thresholds",
-  "settings.theme.light": "Light",
-  "settings.theme.dark": "Dark",
+  "settings.theme-light": "Light",
+  "settings.theme-dark": "Dark",
   "settings.language": "Language",
   "settings.about": "About",
 

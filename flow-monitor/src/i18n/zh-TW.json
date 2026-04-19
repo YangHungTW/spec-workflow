@@ -36,8 +36,8 @@
   "settings.repositories": "倉庫",
   "settings.polling": "輪詢間隔",
   "settings.thresholds": "閒置門檻",
-  "settings.theme.light": "淺色",
-  "settings.theme.dark": "深色",
+  "settings.theme-light": "淺色",
+  "settings.theme-dark": "深色",
   "settings.language": "語言",
   "settings.about": "關於",
 
