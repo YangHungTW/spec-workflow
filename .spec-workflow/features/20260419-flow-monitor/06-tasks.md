@@ -427,7 +427,8 @@ W2 may run concurrently with W1 once W0 is merged. Append-only collisions on `sr
   - reviewer-style: i18n keys flat (no nested objects beyond two levels); kebab-cased segments.
 - **Depends on**: T5
 - **Parallel-safe-with**: T12, T13, T15, T16
-- [ ]
+- [x]
+- 2026-04-19 Developer — T14 i18n complete (en + zh-TW, 39 keys, parity check passes)
 
 ---
 
