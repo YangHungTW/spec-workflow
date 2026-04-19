@@ -379,7 +379,7 @@ Wave schedule and R↔T trace at the bottom.
 - **Dependencies**: T1 (rule file content), T3 (lint CLI for step 5's self-lint)
 - **Parallel-safe-with**: T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20 (all W3 test files), T21 (smoke register), T22 (README)
 - **Notes**: static test; no sandbox needed. Structural PASS only per R9 / `shared/dogfood-paradox-third-occurrence.md`.
-- [ ]
+- [x] T5
 
 ---
 
@@ -406,7 +406,7 @@ Wave schedule and R↔T trace at the bottom.
   - `bash /Users/yanghungtw/Tools/spec-workflow/test/t52_rule_index_row.sh` exits 0 after T1.
 - **Dependencies**: T1
 - **Parallel-safe-with**: T5, T7..T22 (all W3 peers)
-- [ ]
+- [x] T6
 
 ---
 
@@ -441,7 +441,7 @@ Wave schedule and R↔T trace at the bottom.
   - `bash test/t53_marker_rule_coupling.sh` exits 0 after T1 and T2.
 - **Dependencies**: T1, T2
 - **Parallel-safe-with**: T5, T6, T8..T22
-- [ ]
+- [x] T7
 
 ---
 
@@ -491,7 +491,7 @@ Wave schedule and R↔T trace at the bottom.
 - **Dependencies**: T2
 - **Parallel-safe-with**: T5..T7, T9..T22
 - **Notes**: Dogfood paradox — structural PASS in sandbox; runtime PASS deferred to next feature after session restart per R9.
-- [ ]
+- [x] T8
 
 ---
 
@@ -524,7 +524,7 @@ Wave schedule and R↔T trace at the bottom.
 - **Dependencies**: T2
 - **Parallel-safe-with**: T5..T8, T10..T22
 - **Notes**: Structural PASS only; runtime deferred per R9.
-- [ ]
+- [x] T9
 
 ---
 
@@ -555,7 +555,7 @@ Wave schedule and R↔T trace at the bottom.
 - **Dependencies**: T2
 - **Parallel-safe-with**: T5..T9, T11..T22
 - **Notes**: Structural PASS; runtime deferred per R9.
-- [ ]
+- [x] T10
 
 ---
 
@@ -591,7 +591,7 @@ Wave schedule and R↔T trace at the bottom.
 - **Dependencies**: T2
 - **Parallel-safe-with**: T5..T10, T12..T22
 - **Notes**: Structural PASS; runtime deferred per R9.
-- [ ]
+- [x] T11
 
 ---
 
@@ -619,7 +619,7 @@ Wave schedule and R↔T trace at the bottom.
 - **Dependencies**: T3
 - **Parallel-safe-with**: T5..T11, T13..T22
 - **Notes**: Structural PASS; runtime deferred per R9.
-- [ ]
+- [x] T12
 
 ---
 
@@ -649,7 +649,7 @@ Wave schedule and R↔T trace at the bottom.
 - **Dependencies**: T3
 - **Parallel-safe-with**: T5..T12, T14..T22
 - **Notes**: Structural PASS; runtime deferred per R9.
-- [ ]
+- [x] T13
 
 ---
 
@@ -693,7 +693,7 @@ Wave schedule and R↔T trace at the bottom.
 - **Dependencies**: T3
 - **Parallel-safe-with**: T5..T13, T15..T22
 - **Notes**: Structural PASS.
-- [ ]
+- [x] T14
 
 ---
 
@@ -730,7 +730,7 @@ Wave schedule and R↔T trace at the bottom.
   - `bash test/t61_lint_inline_marker_allowlist.sh` exits 0 after T3.
 - **Dependencies**: T3
 - **Parallel-safe-with**: T5..T14, T16..T22
-- [ ]
+- [x] T15
 
 ---
 
@@ -754,7 +754,7 @@ Wave schedule and R↔T trace at the bottom.
   - `bash test/t62_lint_archive_ignored.sh` exits 0 after T3.
 - **Dependencies**: T3
 - **Parallel-safe-with**: T5..T15, T17..T22
-- [ ]
+- [x] T16
 
 ---
 
@@ -793,7 +793,7 @@ Wave schedule and R↔T trace at the bottom.
 - **Dependencies**: T2, T3, T4
 - **Parallel-safe-with**: T5..T16, T18..T22
 - **Notes**: This test gates the portability invariant; static test, no sandbox.
-- [ ]
+- [x] T17
 
 ---
 
@@ -823,7 +823,7 @@ Wave schedule and R↔T trace at the bottom.
 - **Dependencies**: T3, T4
 - **Parallel-safe-with**: T5..T17, T19..T22
 - **Notes**: Structural PASS in sandbox; runtime rejection on the user's real commit deferred to next feature per R9.
-- [ ]
+- [x] T18
 
 ---
 
@@ -853,7 +853,7 @@ Wave schedule and R↔T trace at the bottom.
   - `bash test/t65_subagent_diff_empty.sh` exits 0 at feature verify (by which time zero agent diff has been maintained throughout the feature).
 - **Dependencies**: — (no implementation dep; test stands alone)
 - **Parallel-safe-with**: T5..T18, T20..T22
-- [ ]
+- [x] T19
 
 ---
 
@@ -881,7 +881,7 @@ Wave schedule and R↔T trace at the bottom.
   - `bash test/t66_readme_doc_section.sh` exits 0 after T1 + T22.
 - **Dependencies**: T1 (rule file), T22 (README edit)
 - **Parallel-safe-with**: T5..T19, T21, T22 (different files; T20 creates the test file, T22 edits README — no same-file collision)
-- [ ]
+- [x] T20
 
 ---
 
@@ -926,7 +926,7 @@ Wave schedule and R↔T trace at the bottom.
 - **Dependencies**: T5..T20 (every test file must exist before registration; otherwise `bash test/smoke.sh` exits non-zero on a missing file)
 - **Parallel-safe-with**: T5..T20, T22 (different files in the parallel set; this task edits `test/smoke.sh` alone — single-editor)
 - **Notes**: **single-editor; append-only**. Per `tpm/parallel-safe-append-sections.md`, `test/smoke.sh` is a shared file but this is the only editor this feature — zero append-collision by design. The 16 test files land in parallel alongside this task; this task waits on all of them at the dependency gate.
-- [ ]
+- [x] T21
 
 ---
 
@@ -969,7 +969,7 @@ Wave schedule and R↔T trace at the bottom.
 - **Dependencies**: — (independent of T1..T21 at the edit level; t66 in T20 greps both this file and the rule file together, so verification of the overall doc-section AC waits until T1 + T22 both land)
 - **Parallel-safe-with**: T5..T21 (different files)
 - **Notes**: **single-editor; append-only new section**. Per `tpm/parallel-safe-append-sections.md`, zero append-collision by design (this task is the sole README editor this feature).
-- [ ]
+- [x] T22
 
 ---
 

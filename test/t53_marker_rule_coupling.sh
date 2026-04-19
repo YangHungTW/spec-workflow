@@ -73,6 +73,9 @@ UNEXPECTED=$(grep -rlF 'LANG_CHAT=zh-TW' . 2>/dev/null \
   | grep -v '^\./\.spec-workflow/archive/' \
   | grep -v '^\./\.claude/rules/common/language-preferences\.md$' \
   | grep -v '^\./test/t53_' \
+  | grep -v '^\./test/t51_rule_file_shape\.sh$' \
+  | grep -v '^\./test/t55_hook_config_zh_tw\.sh$' \
+  | grep -v '^\./README\.md$' \
   | grep -v '^\./\.spec-workflow/features/20260419-language-preferences/' \
   || true)
 

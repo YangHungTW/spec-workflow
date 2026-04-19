@@ -89,10 +89,12 @@ prev_lang=0
 
 while IFS= read -r line; do
   if [ $prev_lang -eq 1 ]; then
-    if [ "$line" = "  chat: zh-TW" ]; then
-      found_yaml_block=1
-      break
-    fi
+    case "$line" in
+      "  chat: zh-TW"*)
+        found_yaml_block=1
+        break
+        ;;
+    esac
     prev_lang=0
   fi
   if [ "$line" = "lang:" ]; then

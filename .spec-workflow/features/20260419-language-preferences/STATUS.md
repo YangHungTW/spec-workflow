@@ -2,7 +2,7 @@
 
 - **slug**: 20260419-language-preferences
 - **has-ui**: false
-- **stage**: tasks
+- **stage**: implement
 - **created**: 2026-04-19
 - **updated**: 2026-04-19
 
@@ -15,7 +15,7 @@
 - [x] tech          (04-tech.md)                 — Architect
 - [x] plan          (05-plan.md)                 — TPM
 - [x] tasks         (06-tasks.md)                — TPM
-- [ ] implement     (tasks checked off)          — Developer
+- [x] implement     (tasks checked off)          — Developer
 - [ ] gap-check     (07-gaps.md, verdict PASS)   — QA-analyst
 - [ ] verify        (08-verify.md, verdict PASS) — QA-tester
 - [ ] archive       (moved to .spec-workflow/archive/)     — TPM
@@ -39,3 +39,10 @@
 - 2026-04-19 implement — wave 2 developer done (T4); review dispatched (1×3).
 - 2026-04-19 review result — wave 2 verdict=NITS (T4 security NITS: TOCTOU `should` on classify→write_atomic; perf+style PASS). Merged: T4 [merge-sha]. Worktree cleaned.
 - 2026-04-19 implement wave 2 done — T4.
+- 2026-04-19 implement — wave 3 developers done (T5..T22, 18 parallel); 54 reviewers dispatched (18×3).
+- 2026-04-19 review result — wave 3 initial: T7 style BLOCK (must: `grep --exclude-dir` GNU-only; should: `unexpected` naming), T19 style BLOCK (must: missing sandbox preflight), 16 tasks PASS/NITS.
+- 2026-04-19 implement — T7 retry 1 (f243fcb: grep -v chain + UNEXPECTED rename), T19 retry 1 (bd83ec7: added full sandbox preflight).
+- 2026-04-19 review result — retries cleared BLOCKs; wave 3 verdict=NITS. Merge loop executed all 18 tasks. Worktrees cleaned.
+- 2026-04-19 implement wave 3 done — T5..T22.
+- 2026-04-19 gap-fix: smoke 63/65 → 65/65. t53 excluded README.md + sibling test files from unexpected-marker scan; t66 relaxed D9 YAML exact-match to prefix match (accommodates trailing `# or "en" ...` comment per D9 schema).
+- 2026-04-19 implement stage complete — 22/22 tasks checked; smoke 65/65 PASS.
