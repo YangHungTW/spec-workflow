@@ -1003,7 +1003,8 @@ W5 implements the test seams the dogfood paradox forces (Architect's §8), instr
   - reviewer-security: `.dmg` is unsigned; document this in README (signing is a follow-up per Q-plan-3).
 - **Depends on**: T25, T26, T27, T28, T29 (all OS surfaces wired)
 - **Parallel-safe-with**: T30, T31, T32, T33, T34, T35, T36, T37, T38, T39, T40, T42
-- [ ]
+- [x]
+- 2026-04-19 Developer — T41 final .dmg + dogfood handoff README complete (src-tauri/target/universal-apple-darwin/release/bundle/dmg/flow-monitor_0.1.0_universal.dmg)
 
 ---
 
