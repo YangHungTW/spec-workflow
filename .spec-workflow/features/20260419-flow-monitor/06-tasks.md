@@ -1110,7 +1110,8 @@ W5 implements the test seams the dogfood paradox forces (Architect's §8), instr
   - reviewer-security: N/A — CSS has no injection surface; no `@import` of external URLs; no `url(javascript:...)` patterns. Reviewer may confirm these three absences with a grep and return PASS.
 - **Depends on**: T42 (all implement tasks complete; W5 rollup already merged). T44 runs after the verify-FAIL revert and before re-entering verify.
 - **Parallel-safe-with**: — (solo; W5.5 is a single-task wave by construction).
-- [ ]
+- [x]
+- 2026-04-19 Developer — T44 component CSS complete (2.5 KB globals + 23 KB components; theme tokens consumed via var() aliases; 283/283 tests pass)
 
 ---
 

@@ -3,6 +3,8 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import "./styles/theme.css";
+import "./styles/globals.css";
+import "./styles/components.css";
 import { applyThemeToDocument } from "./stores/themeStore";
 import type { Theme } from "./stores/themeStore";
 
