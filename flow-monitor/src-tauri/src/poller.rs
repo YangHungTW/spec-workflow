@@ -19,6 +19,9 @@ use std::{
 use tokio::sync::mpsc;
 use tracing::info;
 
+// Per-tick observer uses std::sync::mpsc (no tokio executor needed in tests).
+use std::sync::mpsc as std_mpsc;
+
 use crate::repo_discovery::discover_sessions;
 use crate::status_parse::{parse, Stage};
 use crate::store::{diff, DiffEvent, SessionKey, SessionMap};
@@ -164,6 +167,111 @@ pub async fn run_polling_loop(
         // Emit the diff event; if the receiver is gone the loop exits cleanly.
         if tx.send(event).await.is_err() {
             info!("DiffEvent receiver dropped — polling loop exiting");
+            break;
+        }
+    }
+
+    Ok(())
+}
+
+// ---------------------------------------------------------------------------
+// Test-only hook: per-tick wall-clock observer
+// ---------------------------------------------------------------------------
+
+/// Run the polling loop and emit each tick's elapsed milliseconds to
+/// `tick_observer_tx`.
+///
+/// Identical to `run_polling_loop` in every observable way except that after
+/// each tick completes it sends `elapsed.as_millis()` on `tick_observer_tx`.
+/// The send is non-blocking (`try_send`); a full observer channel is silently
+/// ignored so the hook cannot stall the production loop.
+///
+/// # Note
+/// This function exists to support integration tests in `tests/wall_clock_budget.rs`
+/// (AC13.c).  It is not intended for production use.  The `#[doc(hidden)]`
+/// attribute suppresses it from the public documentation.
+#[doc(hidden)]
+pub async fn run_polling_loop_with_observer(
+    repos: Vec<PathBuf>,
+    interval_secs: u64,
+    store: Arc<Mutex<SessionMap>>,
+    tx: mpsc::Sender<DiffEvent>,
+    tick_observer_tx: std_mpsc::SyncSender<u128>,
+) -> Result<(), PollingError> {
+    // Validate all repo paths before entering the loop (security rule check 3).
+    for repo in &repos {
+        if !repo.is_absolute() {
+            return Err(PollingError::RelativePath(repo.clone()));
+        }
+    }
+
+    let interval_secs = interval_secs.clamp(2, 300);
+    let stalled_threshold = Duration::from_secs(30 * 60);
+    let mut stalled_set: HashSet<SessionKey> = HashSet::new();
+    let mut interval = tokio::time::interval(Duration::from_secs(interval_secs));
+
+    loop {
+        interval.tick().await;
+
+        let start = Instant::now();
+
+        let mut new_map: SessionMap = std::collections::HashMap::new();
+        for repo in &repos {
+            let sessions = discover_sessions(repo);
+            for session_info in sessions {
+                let mut file = match std::fs::File::open(&session_info.status_path) {
+                    Ok(f) => f,
+                    Err(e) => {
+                        tracing::warn!(
+                            path = %session_info.status_path.display(),
+                            error = %e,
+                            "failed to open STATUS.md — skipping session this cycle"
+                        );
+                        continue;
+                    }
+                };
+                let mtime = file
+                    .metadata()
+                    .and_then(|m| m.modified())
+                    .unwrap_or_else(|_| SystemTime::now());
+                let mut content = String::new();
+                if let Err(e) = file.read_to_string(&mut content) {
+                    tracing::warn!(
+                        path = %session_info.status_path.display(),
+                        error = %e,
+                        "failed to read STATUS.md — skipping session this cycle"
+                    );
+                    continue;
+                }
+                let mut state = parse(&content, mtime);
+                state.raw_status_path = session_info.status_path.clone();
+                let key: SessionKey = (repo.clone(), session_info.slug.clone());
+                new_map.insert(key, state);
+            }
+        }
+
+        let event = {
+            let prev = store.lock().expect("store lock poisoned");
+            diff(&prev, &new_map, stalled_threshold, &stalled_set)
+        };
+
+        stalled_set = event.next_stalled_set.clone();
+
+        {
+            let mut guard = store.lock().expect("store lock poisoned");
+            *guard = new_map;
+        }
+
+        let elapsed = start.elapsed();
+        let elapsed_ms = elapsed.as_millis();
+        info!(elapsed_ms, "polling cycle complete (observer)");
+
+        // Emit elapsed to the observer; non-blocking so a slow consumer never
+        // stalls the production path.
+        let _ = tick_observer_tx.try_send(elapsed_ms);
+
+        if tx.send(event).await.is_err() {
+            info!("DiffEvent receiver dropped — polling loop (observer) exiting");
             break;
         }
     }
