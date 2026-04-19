@@ -11,6 +11,11 @@ vi.mock("../../i18n", () => ({
   I18nProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 
+// Stub Tauri event API — MainWindow and PollingFooter call listen() on mount.
+vi.mock("@tauri-apps/api/event", () => ({
+  listen: vi.fn(() => Promise.resolve(() => undefined)),
+}));
+
 // Stub Tauri IPC — route by command so MainWindow (list_sessions) and Settings (get_settings) both work
 vi.mock("@tauri-apps/api/core", () => ({
   invoke: vi.fn((cmd: string) => {
