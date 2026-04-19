@@ -37,6 +37,7 @@
   "tab.tasks": "06 tasks",
   "tab.gaps": "07 gaps",
   "tab.verify": "08 verify",
+  "tab.notYetGenerated": "Not yet generated",
 
   "empty.title": "No repos yet",
   "empty.body": "Add a repository that contains a .spec-workflow/ folder to start monitoring your specflow sessions.",
