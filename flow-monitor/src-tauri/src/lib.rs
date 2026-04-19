@@ -1,4 +1,5 @@
 pub mod ipc;
+pub mod notify;
 pub mod poller;
 pub mod repo_discovery;
 pub mod settings;
