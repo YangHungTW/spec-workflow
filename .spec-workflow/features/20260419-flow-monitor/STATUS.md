@@ -30,3 +30,4 @@
 - 2026-04-19 TPM — implementation plan written
 - 2026-04-19 TPM — tasks broken out (T42 total)
 - 2026-04-19 Developer — T1 scaffold complete (Tauri 2 + React + TS + Vite)
+- 2026-04-19 Developer — T2 retry: pins tightened (dompurify ~3.2, markdown-it ~14.1, tokio 1.44, serde 1.0, serde_json 1.0)

@@ -12,8 +12,8 @@
   "dependencies": {
     "@tauri-apps/api": "2.0",
     "@tauri-apps/plugin-opener": "2.0",
-    "dompurify": "3",
-    "markdown-it": "14",
+    "dompurify": "~3.2",
+    "markdown-it": "~14.1",
     "react": "19.0",
     "react-dom": "19.0"
   },
