@@ -895,7 +895,8 @@ W5 implements the test seams the dogfood paradox forces (Architect's §8), instr
   - reviewer-security: cite check 7 (atomic writes); confirm `.bak` discipline holds under crash.
 - **Depends on**: T10
 - **Parallel-safe-with**: T30, T31, T32, T33, T34, T36, T37, T38, T39, T40, T41, T42
-- [ ]
+- [x]
+- STATUS: - 2026-04-19 Developer — T35 Seam 5 deepen complete (byte-equality + atomic write crash)
 
 ---
 
