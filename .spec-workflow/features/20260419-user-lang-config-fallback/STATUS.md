@@ -2,7 +2,7 @@
 
 - **slug**: 20260419-user-lang-config-fallback
 - **has-ui**: false
-- **stage**: verify
+- **stage**: archive
 - **created**: 2026-04-19
 - **updated**: 2026-04-19
 
@@ -17,7 +17,7 @@
 - [x] implement     (tasks checked off)          — Developer
 - [x] gap-check     (07-gaps.md, verdict PASS)   — QA-analyst
 - [x] verify        (08-verify.md, verdict PASS) — QA-tester
-- [ ] archive       (moved to .spec-workflow/archive/)     — TPM
+- [x] archive       (moved to .spec-workflow/archive/)     — TPM
 
 ## Notes
 <!-- date + role + what changed -->
@@ -35,3 +35,5 @@
 - 2026-04-19 implement stage complete — 10/10 tasks checked; smoke 72/72 PASS.
 - 2026-04-19 qa-analyst — gap-check NITS; 0 must, 2 advisory (G1: AC6.c equivalent ordering, not exact string; G2: README §Precedence header added beyond tech D8 — both PRD-compliant); 18/18 ACs traced; advancing to verify.
 - 2026-04-19 QA-tester — verify PASS; 18/18 ACs: 12 runnable, 5 structural (runtime deferred per dogfood paradox), 1 N/A; smoke 72/72; 08-verify.md written.
+- 2026-04-19 TPM archive: retrospective produced 7 memory proposals (P1–P7), user approved all. Written: tpm/prd-clarification-via-update-req-when-architect-flags-blocker.md, qa-analyst/task-acceptance-stricter-than-prd-allowance.md, qa-analyst/tech-prescription-no-new-header-not-prd-requirement.md, developer/candidate-list-space-separated-for-loop-bash-32.md, pm/architect-recommends-accept-over-flip.md, tpm/prd-allowance-clause-must-reach-task-briefing.md; updated shared/dogfood-paradox-third-occurrence.md (bumped to 8th occurrence).
+- 2026-04-19 TPM archive: feature complete; artifacts moved to .spec-workflow/archive/20260419-user-lang-config-fallback/.
