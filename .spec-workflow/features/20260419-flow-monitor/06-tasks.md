@@ -1027,7 +1027,7 @@ W5 implements the test seams the dogfood paradox forces (Architect's §8), instr
   - reviewer-style: STATUS Notes are English (per `.claude/rules/common/language-preferences.md` carve-out f).
 - **Depends on**: T30, T31, T32, T33, T34, T35, T36, T37, T38, T39, T40, T41
 - **Parallel-safe-with**: — (last task in wave; small audit-only task)
-- [ ]
+- [x]
 
 ---
 

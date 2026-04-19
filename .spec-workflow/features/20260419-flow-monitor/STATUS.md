@@ -69,3 +69,7 @@
 - 2026-04-19 review result — wave W4 verdict=NITS (advisories + 3 should: line-length, btn.compactPanel missing i18n key, notify title/body validation)
 - 2026-04-19 implement wave W4 done — T25, T26, T27, T28, T29 merged (316 tests pass: 89 Rust + 227 frontend)
 - 2026-04-19 Developer — T34 retry: Option A revert html:true back to html:false; defence-in-depth two-barrier model restored; <details>/<summary> test (c) removed (not a B1 AC); JSDoc updated
+- 2026-04-19 Developer — T42 W5 rollup: Test Seam 1–7 coverage + structural-vs-runtime PASS matrix + R-1..R-5 disposition documented
+- 2026-04-19 Developer — W5 rollup — structural PASS: AC3.d, AC6.e, AC9.e, AC9.j, AC11.c, AC13.a, AC13.c, AC14.a, AC14.c, AC15.a, AC15.f. Runtime PASS deferred to first launch per shared/dogfood-paradox-third-occurrence: AC1.a–d, AC2.a–d, AC3.a–c, AC4.a–c, AC5.a–e, AC6.a–d, AC7.a–c, AC8.a, AC10.a–e, AC11.a–b, AC12.a–b, AC13.b.
+- 2026-04-19 Developer — W5 rollup — risk register: R-1 Tauri WKWebView quirks OPEN (runtime deferred); R-2 window-state plugin ACCEPTED; R-3 dogfood paradox EXPECTED; R-4 DOMPurify GFM MITIGATED (T34 positive fixture); R-5 notification permission MITIGATED (T40 indicator).
+- 2026-04-19 Developer — W5 rollup — accepted NITS: W0 T2 devDep wildcards; W1 retry WHAT/dead-code/syscall/dedup advisories; W2 eager locale load; W4 line-length + btn.compactPanel key (fixed post-merge) + notify validation. All should-severity; none block gap-check.
