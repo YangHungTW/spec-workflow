@@ -2,7 +2,7 @@
 
 - **slug**: 20260419-flow-monitor
 - **has-ui**: true
-- **stage**: prd
+- **stage**: verify
 - **created**: 2026-04-19
 - **updated**: 2026-04-19
 
@@ -77,3 +77,5 @@
 - 2026-04-19 implement wave W5 done — T30-T42 all merged (382 tests pass: 99 Rust + 283 frontend)
 - 2026-04-19 implement complete — 43/43 tasks (T1-T42 + T43 cleanup) all merged; feature branch ready for /specflow:gap-check
 - 2026-04-19 QA-analyst — gap-check PASS-WITH-NITS (0 must, 2 should advisories); 37 ACs queued for runtime verify per dogfood paradox
+- 2026-04-19 QA-tester — verify done: PASS-DEFERRED; 382/382 structural tests pass; 37 ACs runtime-deferred per dogfood-paradox; 0 regressions; DMG absent from build tree
+- 2026-04-19 verify runtime FAIL — user screenshot shows unstyled app (no component CSS; theme.css has tokens only, no selectors applied). R15 + all 7-screen visual design commitments not met. Reverting verify checkbox.
