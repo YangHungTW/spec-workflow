@@ -835,7 +835,8 @@ W5 implements the test seams the dogfood paradox forces (Architect's §8), instr
   - reviewer-style: cite `tpm/reviewer-blind-spot-semantic-drift` — this test catches the predicted gap-check finding.
 - **Depends on**: T14
 - **Parallel-safe-with**: T30, T31, T33, T34, T35, T36, T37, T38, T39, T40, T41, T42
-- [ ]
+- [x]
+- 2026-04-19 Developer — T32 Seam 6 i18n parity test complete
 
 ---
 
