@@ -2,7 +2,7 @@
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "flow-monitor",
   "version": "0.1.0",
-  "identifier": "com.specworkflow.flowmonitor",
+  "identifier": "com.flow-monitor.app",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -12,18 +12,29 @@
   "app": {
     "windows": [
       {
-        "title": "flow-monitor",
-        "width": 800,
-        "height": 600
+        "label": "main",
+        "title": "Flow Monitor",
+        "width": 1280,
+        "height": 800,
+        "minWidth": 480,
+        "minHeight": 600
+      },
+      {
+        "label": "compact",
+        "title": "Flow Monitor",
+        "width": 360,
+        "height": 400,
+        "alwaysOnTop": false,
+        "visible": false
       }
     ],
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'"
     }
   },
   "bundle": {
     "active": true,
-    "targets": "all",
+    "targets": ["dmg"],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

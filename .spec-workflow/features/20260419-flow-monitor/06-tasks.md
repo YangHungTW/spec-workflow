@@ -103,7 +103,8 @@ Every W0 task touches the scaffold or pinned-deps blocks; they MUST run sequenti
   - reviewer-style: watch for B2 leakage — no `controlPlane` / `instruction` namespace declared in config.
 - **Depends on**: T2
 - **Parallel-safe-with**: —
-- [ ]
+- [x]
+- STATUS: - 2026-04-19 Developer — T3 capability lockdown + CSP set (addresses T1 should-finding)
 
 ---
 
