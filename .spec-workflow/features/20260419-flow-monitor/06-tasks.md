@@ -607,7 +607,8 @@ W3 composes W2 primitives + W1 IPC into the user-facing routes. App.tsx routes b
   - reviewer-style: footer is a JSX literal, NOT `t("markdown.footer")` — explicit carve-out from i18n discipline; cite in verdict.
 - **Depends on**: T16, T18
 - **Parallel-safe-with**: T17, T18, T19, T20, T21, T23, T24
-- [ ]
+- [x]
+- STATUS: - 2026-04-19 Developer — T22 CardDetailMarkdownPane complete (literal footer per AC9.k)
 
 ---
 
