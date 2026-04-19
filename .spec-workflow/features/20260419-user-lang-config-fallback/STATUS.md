@@ -2,7 +2,7 @@
 
 - **slug**: 20260419-user-lang-config-fallback
 - **has-ui**: false
-- **stage**: implement
+- **stage**: verify
 - **created**: 2026-04-19
 - **updated**: 2026-04-19
 
@@ -15,8 +15,8 @@
 - [x] plan          (05-plan.md)                 — TPM
 - [x] tasks         (06-tasks.md)                — TPM
 - [x] implement     (tasks checked off)          — Developer
-- [ ] gap-check     (07-gaps.md, verdict PASS)   — QA-analyst
-- [ ] verify        (08-verify.md, verdict PASS) — QA-tester
+- [x] gap-check     (07-gaps.md, verdict PASS)   — QA-analyst
+- [x] verify        (08-verify.md, verdict PASS) — QA-tester
 - [ ] archive       (moved to .spec-workflow/archive/)     — TPM
 
 ## Notes
@@ -33,3 +33,5 @@
 - 2026-04-19 implement — wave 2 done (T2..T10, 9 parallel); 27 reviewers; 0 must, 3 NITS (T7 style, T8 perf+style). All merged.
 - 2026-04-19 gap-fix: t53 exclusion list extended for new feature's spec dir + test files + .worktrees; smoke 71/72 → 72/72 PASS.
 - 2026-04-19 implement stage complete — 10/10 tasks checked; smoke 72/72 PASS.
+- 2026-04-19 qa-analyst — gap-check NITS; 0 must, 2 advisory (G1: AC6.c equivalent ordering, not exact string; G2: README §Precedence header added beyond tech D8 — both PRD-compliant); 18/18 ACs traced; advancing to verify.
+- 2026-04-19 QA-tester — verify PASS; 18/18 ACs: 12 runnable, 5 structural (runtime deferred per dogfood paradox), 1 N/A; smoke 72/72; 08-verify.md written.
