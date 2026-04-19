@@ -7,7 +7,7 @@ _2026-04-19 · TPM_
 Greenfield Tauri 2.x desktop app with a Rust core (filesystem polling + state
 diff + macOS Notification Center bridge + tray) and a React 19 + TypeScript
 renderer (card grid, master-detail drill-in, compact panel, Settings, Empty
-state). Stack pins: **Tauri 2.2**, **Rust 1.83 (MSRV)**, **React 19.0**,
+state). Stack pins: **Tauri 2.2**, **Rust 1.88.0 (MSRV)** [CHANGED 2026-04-19], **React 19.0**,
 **Vite 6 + TypeScript 5.7**, **markdown-it 14 + DOMPurify 3**, plus the
 official Tauri plugins for tray, notification, and window-state. The work
 breaks into **6 sequential waves (W0–W5)** with internal parallelism in W1,
@@ -19,14 +19,14 @@ structural-only — runtime exercise lands on the next feature after archive.
 
 ### Q-plan-1 — Tauri version pin and Rust MSRV
 
-**Locked**: `tauri = "2.2"` (latest stable in the 2.x line as of 2026-04),
-`rustc 1.83.0` as MSRV (matches Tauri 2.2's published MSRV). Pinned in
+**Locked** [CHANGED 2026-04-19]: `tauri = "2.2"` (latest stable in the 2.x line as of 2026-04),
+`rustc 1.88.0` as MSRV. Pinned in
 `src-tauri/Cargo.toml` with caret-pinned minor (`tauri = "2.2"`,
 `tauri-build = "2.0"`) and exact `rust-toolchain.toml` (`channel =
-"1.83.0"`) so CI and dev machines use the same toolchain. Pinning matters
+"1.88.0"`) so CI and dev machines use the same toolchain. Pinning matters
 because the build matrix in W0 derives every cache key from these two
 values and a floating pin would silently re-compile the world on every
-upstream patch release.
+upstream patch release. [CHANGED 2026-04-19] MSRV bumped from 1.83.0 to 1.88.0 during T2 implementation: Tauri 2.10's transitive dependency `time-core 0.1.8` requires `edition = "2024"` (Rust 1.85+), so 1.83.0 cannot resolve the dep tree; 1.88.0 is the lowest version that builds end-to-end. CI workflow `.github/workflows/build.yml` (T4) already uses `dtolnay/rust-toolchain` with `toolchain: 1.88.0` to match.
 
 ### Q-plan-2 — Renderer UI framework
 
@@ -127,7 +127,7 @@ subdirectory under the repo root).
 
 **Tasks (high-level)**:
 - T0.1: `flow-monitor/` directory scaffold via `npm create tauri-app@latest`, prune the template down to the module layout from §2 of 04-tech.md.
-- T0.2: pin Tauri 2.2, Rust 1.83 (MSRV) via `rust-toolchain.toml`, React 19, TypeScript 5.7, Vite 6 in `Cargo.toml` and `package.json`.
+- T0.2: pin Tauri 2.2, Rust 1.88.0 (MSRV) via `rust-toolchain.toml`, React 19, TypeScript 5.7, Vite 6 in `Cargo.toml` and `package.json`. [CHANGED 2026-04-19]
 - T0.3: `.github/workflows/build.yml` with a single-job matrix `os: [macos-latest]`, runs `cargo check` + `npm run build` + `tauri build --target universal-apple-darwin`.
 - T0.4: `.gitignore` (`target/`, `node_modules/`, `dist/`), `README.md` stub for the app, `LICENSE` placeholder.
 - T0.5: smoke verify — `cargo build` green, `npm run build` green, `tauri build` produces an unsigned `.dmg` locally.
