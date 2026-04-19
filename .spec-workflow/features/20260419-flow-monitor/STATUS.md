@@ -38,3 +38,11 @@
 - 2026-04-19 implement wave W0 done — T1, T2 (retry), T3, T4, T5 merged
 - 2026-04-19 TPM — plan updated: Q-plan-1 Rust 1.83 → 1.88.0 (Tauri 2.10 transitive deps require edition 2024)
 - 2026-04-19 Developer — T6 status_parse complete (pure fn + fixtures)
+- 2026-04-19 Developer — T7 repo_discovery complete (closed-enum, single read_dir)
+- 2026-04-19 Developer — T8 store::diff complete (pure fn, O(n))
+- 2026-04-19 Developer — T9 polling engine complete (no subprocess, wall-clock instrumented)
+- 2026-04-19 Developer — T10 settings_io complete (atomic write, .bak, schema_version 1)
+- 2026-04-19 Developer — T11 ipc complete (read-only commands, path-traversal guard, no B2 leakage)
+- 2026-04-19 review result — wave W1 task T11 verdict=BLOCK blocking-tasks=T11(security)
+- 2026-04-19 Developer — T11 retry: canonicalise patch.repos in update_settings (security must)
+- 2026-04-19 review result — wave W1 retry verdict=NITS (advisories only: T6 WHAT-comment, T8 dead let now, T9 metadata+read 2-syscalls, T11 full-struct clobber + guard duplication)
