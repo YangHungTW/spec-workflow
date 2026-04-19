@@ -29,3 +29,4 @@
 - 2026-04-19 Architect — tech doc written
 - 2026-04-19 TPM — implementation plan written
 - 2026-04-19 TPM — tasks broken out (T42 total)
+- 2026-04-19 Developer — T1 scaffold complete (Tauri 2 + React + TS + Vite)

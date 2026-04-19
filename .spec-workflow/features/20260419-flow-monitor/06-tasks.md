@@ -61,7 +61,7 @@ Every W0 task touches the scaffold or pinned-deps blocks; they MUST run sequenti
   - reviewer-style: watch for B2 leakage — no demo "Send instruction" widget left over from the template (the default Tauri greet command IS removed, full stop).
 - **Depends on**: —
 - **Parallel-safe-with**: — (sole task in W0 sub-wave 0)
-- [ ]
+- [x]
 
 ---
 
