@@ -988,7 +988,8 @@ W5 implements the test seams the dogfood paradox forces (Architect's §8), instr
   - reviewer-style: i18n via `t(key)`; parity preserved.
 - **Depends on**: T11, T23, T24, T26, T32
 - **Parallel-safe-with**: T30, T31, T32, T33, T34, T35, T36, T37, T38, T39, T41, T42
-- [ ]
+- [x]
+- 2026-04-19 Developer — T40 notification permission UX complete
 
 ---
 
