@@ -4,6 +4,7 @@
 //! still stalled), AC6.c (re-cross fires again), AC7.c (each SortAxis),
 //! AC8.a (group_by_repo).
 
+use flow_monitor_lib::status_parse::Stage;
 use flow_monitor_lib::store::{
     diff, group_by_repo, sort_by, SessionMap, SessionKey, SortAxis,
 };
@@ -11,22 +12,25 @@ use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 use std::time::{Duration, SystemTime};
 
+// stale_threshold was a UI-only concern (renderer-side visual tier); removed
+// from store::diff() in T43 cleanup.
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-/// Minimal SessionState stub used in these tests.
-/// At T6 merge the real struct replaces this; the test API stays the same.
 use flow_monitor_lib::store::SessionState;
 
-fn make_state(slug: &str, stage: &str, ago_secs: u64) -> SessionState {
+fn make_state(slug: &str, stage: Stage, ago_secs: u64) -> SessionState {
     let last_activity = SystemTime::now()
         .checked_sub(Duration::from_secs(ago_secs))
         .expect("time subtraction should not underflow for test durations");
     SessionState {
         slug: slug.to_string(),
-        stage: stage.to_string(),
+        stage,
         last_activity,
+        stage_checklist: Vec::new(),
+        notes: Vec::new(),
         raw_status_path: PathBuf::from(format!("/fake/{}/STATUS.md", slug)),
     }
 }
@@ -39,7 +43,6 @@ fn key(repo_path: &str, slug: &str) -> SessionKey {
     (repo(repo_path), slug.to_string())
 }
 
-const STALE_THRESH: Duration = Duration::from_secs(5 * 60);
 const STALLED_THRESH: Duration = Duration::from_secs(30 * 60);
 
 fn empty_stalled() -> HashSet<SessionKey> {
@@ -54,8 +57,8 @@ fn empty_stalled() -> HashSet<SessionKey> {
 fn ac6a_stalled_transition_fires_on_first_crossing() {
     // Session that has been inactive for > stalled threshold.
     let k = key("/repo/a", "feature-x");
-    let old_state = make_state("feature-x", "Implement", 10); // 10 s ago — NOT stalled
-    let new_state = make_state("feature-x", "Implement", 31 * 60); // 31 min ago — stalled
+    let old_state = make_state("feature-x", Stage::Implement, 10); // 10 s ago — NOT stalled
+    let new_state = make_state("feature-x", Stage::Implement, 31 * 60); // 31 min ago — stalled
 
     let mut prev: SessionMap = HashMap::new();
     prev.insert(k.clone(), old_state);
@@ -63,7 +66,7 @@ fn ac6a_stalled_transition_fires_on_first_crossing() {
     let mut new: SessionMap = HashMap::new();
     new.insert(k.clone(), new_state);
 
-    let event = diff(&prev, &new, STALE_THRESH, STALLED_THRESH, &empty_stalled());
+    let event = diff(&prev, &new, STALLED_THRESH, &empty_stalled());
 
     assert!(
         event.stalled_transitions.contains(&k),
@@ -80,7 +83,7 @@ fn ac6a_stalled_transition_fires_on_first_crossing() {
 #[test]
 fn ac6b_no_recurrence_while_still_stalled() {
     let k = key("/repo/a", "feature-x");
-    let stalled_state = make_state("feature-x", "Implement", 31 * 60);
+    let stalled_state = make_state("feature-x", Stage::Implement, 31 * 60);
 
     // Session is stalled in both prev and new.
     let mut prev: SessionMap = HashMap::new();
@@ -93,7 +96,7 @@ fn ac6b_no_recurrence_while_still_stalled() {
     let mut prev_stalled = HashSet::new();
     prev_stalled.insert(k.clone());
 
-    let event = diff(&prev, &new, STALE_THRESH, STALLED_THRESH, &prev_stalled);
+    let event = diff(&prev, &new, STALLED_THRESH, &prev_stalled);
 
     assert!(
         event.stalled_transitions.is_empty(),
@@ -112,23 +115,23 @@ fn ac6c_recross_fires_again_after_recovery() {
     let k = key("/repo/a", "feature-x");
 
     // Tick 1: stalled.
-    let stalled_state = make_state("feature-x", "Implement", 31 * 60);
+    let stalled_state = make_state("feature-x", Stage::Implement, 31 * 60);
     let mut prev: SessionMap = HashMap::new();
     prev.insert(k.clone(), stalled_state.clone());
     let mut new: SessionMap = HashMap::new();
     new.insert(k.clone(), stalled_state.clone());
 
-    let event1 = diff(&prev, &new, STALE_THRESH, STALLED_THRESH, &empty_stalled());
+    let event1 = diff(&prev, &new, STALLED_THRESH, &empty_stalled());
     assert!(event1.stalled_transitions.contains(&k), "tick-1 must fire");
     let after_tick1 = event1.next_stalled_set.clone();
 
     // Tick 2: session recovers (recent activity — no longer stalled).
-    let active_state = make_state("feature-x", "Implement", 10); // 10 s ago
+    let active_state = make_state("feature-x", Stage::Implement, 10); // 10 s ago
     let prev2 = new.clone();
     let mut new2: SessionMap = HashMap::new();
     new2.insert(k.clone(), active_state);
 
-    let event2 = diff(&prev2, &new2, STALE_THRESH, STALLED_THRESH, &after_tick1);
+    let event2 = diff(&prev2, &new2, STALLED_THRESH, &after_tick1);
     assert!(
         event2.stalled_transitions.is_empty(),
         "tick-2: recovered session must not fire"
@@ -138,12 +141,12 @@ fn ac6c_recross_fires_again_after_recovery() {
     let after_tick2 = event2.next_stalled_set.clone();
 
     // Tick 3: session goes stalled again — must fire once more (AC6.c).
-    let stalled_again = make_state("feature-x", "Implement", 32 * 60);
+    let stalled_again = make_state("feature-x", Stage::Implement, 32 * 60);
     let prev3 = new2.clone();
     let mut new3: SessionMap = HashMap::new();
     new3.insert(k.clone(), stalled_again);
 
-    let event3 = diff(&prev3, &new3, STALE_THRESH, STALLED_THRESH, &after_tick2);
+    let event3 = diff(&prev3, &new3, STALLED_THRESH, &after_tick2);
     assert!(
         event3.stalled_transitions.contains(&k),
         "AC6.c: re-crossed threshold must fire stalled_transitions again"
@@ -159,9 +162,9 @@ fn added_session_appears_in_added() {
     let k = key("/repo/b", "new-feature");
     let prev: SessionMap = HashMap::new();
     let mut new: SessionMap = HashMap::new();
-    new.insert(k.clone(), make_state("new-feature", "Prd", 60));
+    new.insert(k.clone(), make_state("new-feature", Stage::Prd, 60));
 
-    let event = diff(&prev, &new, STALE_THRESH, STALLED_THRESH, &empty_stalled());
+    let event = diff(&prev, &new, STALLED_THRESH, &empty_stalled());
     assert!(event.added.contains(&k));
     assert!(event.removed.is_empty());
     assert!(event.changed.is_empty());
@@ -171,10 +174,10 @@ fn added_session_appears_in_added() {
 fn removed_session_appears_in_removed() {
     let k = key("/repo/b", "old-feature");
     let mut prev: SessionMap = HashMap::new();
-    prev.insert(k.clone(), make_state("old-feature", "Archive", 60));
+    prev.insert(k.clone(), make_state("old-feature", Stage::Archive, 60));
     let new: SessionMap = HashMap::new();
 
-    let event = diff(&prev, &new, STALE_THRESH, STALLED_THRESH, &empty_stalled());
+    let event = diff(&prev, &new, STALLED_THRESH, &empty_stalled());
     assert!(event.removed.contains(&k));
     assert!(event.added.is_empty());
     assert!(event.changed.is_empty());
@@ -184,11 +187,11 @@ fn removed_session_appears_in_removed() {
 fn changed_session_detected_when_stage_changes() {
     let k = key("/repo/c", "stage-change");
     let mut prev: SessionMap = HashMap::new();
-    prev.insert(k.clone(), make_state("stage-change", "Design", 120));
+    prev.insert(k.clone(), make_state("stage-change", Stage::Design, 120));
     let mut new: SessionMap = HashMap::new();
-    new.insert(k.clone(), make_state("stage-change", "Prd", 60));
+    new.insert(k.clone(), make_state("stage-change", Stage::Prd, 60));
 
-    let event = diff(&prev, &new, STALE_THRESH, STALLED_THRESH, &empty_stalled());
+    let event = diff(&prev, &new, STALLED_THRESH, &empty_stalled());
     assert!(event.changed.contains(&k));
 }
 
@@ -201,15 +204,15 @@ fn build_sort_map() -> SessionMap {
     // Three sessions: alpha (recent, Design), beta (old, Archive), gamma (mid, Prd)
     map.insert(
         key("/repo/x", "alpha"),
-        make_state("alpha", "Design", 60),
+        make_state("alpha", Stage::Design, 60),
     );
     map.insert(
         key("/repo/x", "beta"),
-        make_state("beta", "Archive", 2 * 60 * 60),
+        make_state("beta", Stage::Archive, 2 * 60 * 60),
     );
     map.insert(
         key("/repo/x", "gamma"),
-        make_state("gamma", "Prd", 30 * 60),
+        make_state("gamma", Stage::Prd, 30 * 60),
     );
     map
 }
@@ -228,10 +231,11 @@ fn ac7c_sort_last_updated_desc() {
 fn ac7c_sort_stage() {
     let map = build_sort_map();
     let sorted = sort_by(SortAxis::Stage, &map);
-    // Lexicographic: Archive < Design < Prd
-    assert_eq!(sorted[0].1, "beta");   // Archive
-    assert_eq!(sorted[1].1, "alpha");  // Design
-    assert_eq!(sorted[2].1, "gamma");  // Prd
+    // Stage enum Ord is workflow-order: Design(2) < Prd(3) < Archive(10).
+    // This reflects progression through the workflow, not alphabetical order.
+    assert_eq!(sorted[0].1, "alpha");  // Design (earlier in workflow)
+    assert_eq!(sorted[1].1, "gamma");  // Prd
+    assert_eq!(sorted[2].1, "beta");   // Archive (last in workflow)
 }
 
 #[test]
@@ -261,9 +265,9 @@ fn ac7c_sort_stalled_first() {
 #[test]
 fn ac8a_group_by_repo_groups_correctly() {
     let mut map: SessionMap = HashMap::new();
-    map.insert(key("/repo/a", "feat-1"), make_state("feat-1", "Design", 60));
-    map.insert(key("/repo/a", "feat-2"), make_state("feat-2", "Prd", 120));
-    map.insert(key("/repo/b", "feat-3"), make_state("feat-3", "Tasks", 30));
+    map.insert(key("/repo/a", "feat-1"), make_state("feat-1", Stage::Design, 60));
+    map.insert(key("/repo/a", "feat-2"), make_state("feat-2", Stage::Prd, 120));
+    map.insert(key("/repo/b", "feat-3"), make_state("feat-3", Stage::Tasks, 30));
 
     let groups = group_by_repo(&map);
 

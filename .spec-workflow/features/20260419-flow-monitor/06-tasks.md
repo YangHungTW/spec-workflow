@@ -355,7 +355,8 @@ W1 shipped with verdict NITS: several `should`-level findings and `advisory` ite
   - reviewer-style: verify via grep checks above that `mod status_parse;` moved from `main.rs` to `lib.rs`, stub structs are gone, dead `let now` is gone, and the WHAT-comment at `status_parse.rs:185` is reworked or removed (re-cite `.claude/rules/reviewer/style.md` check 3 + check 8).
 - **Depends on**: T11 (last W1 task merged — already done; all W1 tasks must be merged before T43 starts)
 - **Parallel-safe-with**: — (sole task in W1.5; touches 5+ files across W1 modules; MUST run solo)
-- [ ]
+- [x]
+- 2026-04-19 Developer — T43 W1 cleanup complete (10 items, 67 tests pass, 0 dead-code warnings)
 
 ---
 

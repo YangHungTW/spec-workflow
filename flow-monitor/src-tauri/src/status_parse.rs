@@ -11,7 +11,10 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 // ---------------------------------------------------------------------------
 
 /// The 11 workflow stages plus Unknown for malformed / unrecognised values.
-#[derive(Debug, Clone, PartialEq, Eq)]
+/// Variants are ordered to match workflow progression (Request → Archive)
+/// so that `Ord` / `PartialOrd` give a meaningful sort when SortAxis::Stage
+/// is used in the store's sort_by helper.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Stage {
     Request,
     Brainstorm,
@@ -182,8 +185,9 @@ fn try_parse(content: &str, mtime: SystemTime) -> Option<SessionState> {
 
 /// Parse a checklist line: `- [ ] label ...` or `- [x] label ...`.
 fn parse_checklist_line(trimmed: &str) -> Option<(StageItem, bool)> {
-    // Expected format: `- [ ] label` or `- [x] label`
     let rest = trimmed.strip_prefix("- ")?;
+    // Accept uppercase [X] because common editors auto-capitalise when
+    // the checkbox is toggled via keyboard shortcut.
     let (checked, label_rest) = if rest.starts_with("[x]") || rest.starts_with("[X]") {
         (true, &rest[3..])
     } else if rest.starts_with("[ ]") {
