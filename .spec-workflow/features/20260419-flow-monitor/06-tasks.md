@@ -6,12 +6,12 @@ Legend: `[ ]` todo · `[x]` done · `[~]` in progress
 
 Source of truth: `03-prd.md` (R1–R15, ACs incl. [CHANGED 2026-04-19] AC9.f–k, AC15.a–f), `04-tech.md` (D1–D12, §8 Test Seams 1–7), `05-plan.md` (W0–W5; locked Q-plan-1..5).
 
-All paths below are absolute under `/Users/yanghungtw/Tools/spec-workflow/`. The app lives under `/Users/yanghungtw/Tools/spec-workflow/flow-monitor/`. Wave headers group tasks for readability; numbering is **flat T1..T42** to match the orchestrator's `--task T<n>` flag.
+All paths below are absolute under `/Users/yanghungtw/Tools/spec-workflow/`. The app lives under `/Users/yanghungtw/Tools/spec-workflow/flow-monitor/`. Wave headers group tasks for readability; numbering is **flat T1..T43** to match the orchestrator's `--task T<n>` flag.
 
 ## 1. Summary
 
-- **Total tasks**: 42
-- **Waves**: 6 (W0 → W1 → W2 → W3 → W4 → W5; W2 may run concurrently with W1 once W0 lands)
+- **Total tasks**: 43 [CHANGED 2026-04-19]
+- **Waves**: 7 (W0 → W1 → W1.5 → W2 → W3 → W4 → W5; W2 may run concurrently with W1 once W0 lands; W1.5 inserted post-W1 merge to absorb NITS cleanup per STATUS note) [CHANGED 2026-04-19]
 - **Critical path length**: W0 (sequential 5 tasks) → W1 ∥ W2 (max 6 ≈ 6 task-hours) → W3 (max 8 ≈ 8 task-hours) → W4 (max 5 ≈ 5 task-hours) → W5 (max 5 ≈ 5 task-hours). ≈ 30 task-hours linear, ≈ 12–14 task-hours with full parallelism.
 - **Dogfood paradox** (per `shared/dogfood-paradox-third-occurrence`): W5 is structural-only verification; runtime confirmation deferred to the next feature after archive + first app launch.
 
@@ -23,6 +23,9 @@ All paths below are absolute under `/Users/yanghungtw/Tools/spec-workflow/`. The
         ┌──────────────┴──────────────┐
         ▼                             ▼
     W1 (Rust core, ∥ within wave)  W2 (Frontend foundations, ∥ within wave)
+        │                             │
+        ▼                             │
+    W1.5 (T43 solo cleanup)           │    [CHANGED 2026-04-19]
         │                             │
         └──────────────┬──────────────┘
                        ▼
@@ -283,6 +286,76 @@ Every W1 task owns a primary file under `src-tauri/src/`. Append-only collisions
 - **Parallel-safe-with**: T6, T7, T8, T9, T10 (different primary files)
 - [x]
 - STATUS: - 2026-04-19 Developer — T11 ipc complete (read-only commands, path-traversal guard, no B2 leakage)
+
+---
+
+### Wave W1.5 — W1 cleanup (1 task, solo; depends on all of W1)
+
+W1 shipped with verdict NITS: several `should`-level findings and `advisory` items landed unfixed, plus a `mod status_parse;` mis-placement was caught at merge time (in `main.rs` rather than `lib.rs`). W1.5 bundles all follow-up fixes into one atomic cleanup task so the developer lands them without bouncing between worktrees. This is the only task in its wave; it touches 5+ W1 modules and is NOT parallel-safe with anything.
+
+---
+
+## T43 — W1 cleanup: move `mod status_parse;` to `lib.rs`, replace stub types, absorb W1 NITS
+- **Wave**: W1.5
+- **Requirements**: none directly (pure cleanup; tightens existing AC6.*, AC7.*, AC8.*, AC13.a, AC14.a–c guarantees from W1)
+- **Decisions**: D11 (in-memory dedupe, preserved), D7 (tokio interval, preserved), D8 (atomic write + .bak, preserved), D12 (classify-before-mutate, preserved)
+- **Scope**: One consolidated cleanup pass covering 10 concrete changes. Each change lists the originating finding severity and the owning earlier task. All changes land atomically in one task to avoid cross-worktree churn.
+
+  **Structural fixes (modules + type wiring):**
+  1. Move `mod status_parse;` from `flow-monitor/src-tauri/src/main.rs` to `flow-monitor/src-tauri/src/lib.rs` as `pub mod status_parse;`. T7–T11 correctly placed their `mod` decls in `lib.rs`; T6 drifted. Consistency + integration-test visibility require `lib.rs`. Delete the line from `main.rs` after the move. Removes the dead-code warnings currently emitted from the bin-crate build.
+  2. Replace stub type aliases with real imports across three files:
+     - `flow-monitor/src-tauri/src/store.rs` — replace the stub `SessionState` struct with `use crate::status_parse::SessionState;` (T6's real type; field names already align).
+     - `flow-monitor/src-tauri/src/poller.rs` — replace stub `SessionInfo`, `SessionState`, `SessionMap`, `DiffEvent` with imports from `crate::status_parse`, `crate::repo_discovery`, and `crate::store` as appropriate.
+     - `flow-monitor/src-tauri/src/ipc.rs` — replace any remaining stub types from T8/T10 with `use crate::store::*;` and `use crate::settings::*;` as appropriate.
+     - After replacement, run `cargo test` to confirm the 66+ existing tests still pass (compile-time type alignment is the goal — no behaviour change).
+
+  **T8 `should`-level NITS (from 2026-04-19 W1 retry review):**
+  3. `store::diff` has an unused `stale_threshold: Duration` parameter. **Recommendation: REMOVE** the parameter from the `diff()` signature. Update all call-sites in `flow-monitor/src-tauri/src/poller.rs` and `flow-monitor/src-tauri/tests/store_diff_tests.rs`. Rationale: the stalled/stale tier logic already uses `stalled_threshold`; `stale_threshold` governs a UI-only visual tier that the store layer does not need. (If the developer determines at implementation time that threading `stale_threshold` into stalled-detection logic is simpler, that is an acceptable alternative — document the choice in the per-task STATUS line.)
+  4. Delete the dead `let now = SystemTime::now();` followed by `let _ = now;` in the `SortAxis::StalledFirst` arm of `store::sort_by` in `flow-monitor/src-tauri/src/store.rs`. Two-line deletion, no logic change.
+
+  **T9 `should`-level NITS:**
+  5. Collapse `metadata()` + `read_to_string` into a single `File::open` in the `poller.rs` polling loop. Pattern: open file once via `File::open`, call `.metadata()?.modified()?` on the handle, then read contents via `std::io::Read::read_to_string(&mut file, &mut buf)`. Two kernel round-trips → one. (Reviewer-performance rule 6: minimise fork/exec and extra syscalls in hot paths.)
+  6. Add `interval_secs` clamp at the top of `run_polling_loop`: `let interval_secs = interval_secs.clamp(2, 300);` or equivalent POSIX-safe clamp. This enforces the caller's documented contract of "2–5 s" (AC4.b) plus a generous upper bound so a caller-supplied overflow does not stall the loop.
+  7. Assert `repo.is_absolute()` for each entry in `repos` at the top of `run_polling_loop`. **Recommendation: typed error** over `assert!`: return `Err(PollingError::RelativePath(repo.clone()))` rather than panicking. Cleaner boundary validation per `.claude/rules/reviewer/security.md` check 3 (input validation at the first point of entry into the call tree).
+
+  **T11 `should`-level NITS:**
+  8. Fix `update_settings` full-struct clobber: instead of `*guard = patch;`, perform a field-level merge. **Recommendation: Option A (field-level merge)** — split `patch` into named fields; assign each over the stored settings individually; for `repos`, skip assignment if `patch.repos.is_empty()`. Preserves the canonicalisation flow already fixed in the T11 retry. (Option B — reject `patch.repos.is_empty()` with a typed `IpcError::EmptyRepos` — is acceptable if the developer prefers stricter-by-default semantics; document choice in STATUS line.)
+  9. Collapse inline `read_artefact` + `read_artefact_inner` duplication in `flow-monitor/src-tauri/src/ipc.rs`. Refactor the Tauri command wrapper `read_artefact` to delegate to `read_artefact_inner` by passing the locked `registered_roots` snapshot. Single source of truth for the path-traversal guard (per `.claude/rules/reviewer/security.md` check 2).
+
+  **T6 style NIT:**
+  10. Rework the WHAT-comment at `flow-monitor/src-tauri/src/status_parse.rs:185`. Original comment: `Expected format: - [ ] label or - [x] label`. Replace with a WHY-style note (e.g. "accept uppercase `[X]` per common editor auto-capitalise") or remove entirely since the two `starts_with` branches make the format self-evident. Per `.claude/rules/reviewer/style.md` check 3 (comments explain WHY, not WHAT).
+
+- **Files**:
+  - `flow-monitor/src-tauri/src/main.rs` (remove `mod status_parse;`)
+  - `flow-monitor/src-tauri/src/lib.rs` (add `pub mod status_parse;`)
+  - `flow-monitor/src-tauri/src/status_parse.rs` (rework/remove line 185 comment)
+  - `flow-monitor/src-tauri/src/store.rs` (drop stub `SessionState`, drop dead `let now`, drop `stale_threshold` param)
+  - `flow-monitor/src-tauri/src/poller.rs` (drop stub types, collapse `metadata()`+`read_to_string`, clamp `interval_secs`, validate `repo.is_absolute()`)
+  - `flow-monitor/src-tauri/src/ipc.rs` (drop stub types, field-level merge in `update_settings`, collapse `read_artefact`/`read_artefact_inner`)
+  - `flow-monitor/src-tauri/src/settings.rs` (may need minor adjustments if field-level merge pattern touches struct accessors)
+  - `flow-monitor/src-tauri/tests/store_diff_tests.rs` (update call-sites for changed `diff()` signature)
+  - `flow-monitor/src-tauri/tests/` additional tests only if existing tests no longer compile after signature changes
+- **PRD ACs covered**: none directly (pure cleanup); tightens existing AC guarantees from AC6.*, AC7.*, AC8.*, AC13.a, AC14.a–c.
+- **Acceptance/exit**:
+  - `cd flow-monitor && cargo test --manifest-path src-tauri/Cargo.toml` exits 0 with the 66+ W1 tests still passing (no new tests required; existing tests must continue to pass).
+  - `cd flow-monitor && cargo check --manifest-path src-tauri/Cargo.toml 2>&1 | grep -E 'never used|dead_code|unused_variables'` returns empty (the 13 post-W1 warnings drop to 0).
+  - `grep -E 'struct SessionState' flow-monitor/src-tauri/src/store.rs flow-monitor/src-tauri/src/poller.rs flow-monitor/src-tauri/src/ipc.rs` returns empty (stub structs gone).
+  - `grep 'mod status_parse' flow-monitor/src-tauri/src/main.rs` returns empty.
+  - `grep 'pub mod status_parse' flow-monitor/src-tauri/src/lib.rs` succeeds.
+  - `grep -E 'stale_threshold' flow-monitor/src-tauri/src/store.rs` returns empty (param removed; OR if developer chose to keep, grep returns a USE site inside stalled-detection logic, not just a param binding).
+  - `grep -E 'let now = SystemTime::now\(\);' flow-monitor/src-tauri/src/store.rs` returns empty.
+  - `grep -E 'metadata\(\)' flow-monitor/src-tauri/src/poller.rs` — each hit is on an already-opened `File` handle, not a standalone `fs::metadata()` call followed later by `fs::read_to_string()`.
+  - `grep -E 'interval_secs\.clamp|interval_secs = ' flow-monitor/src-tauri/src/poller.rs` shows the clamp at top of `run_polling_loop`.
+  - `grep -E 'is_absolute|PollingError::RelativePath' flow-monitor/src-tauri/src/poller.rs` shows the absolute-path validation at top of `run_polling_loop`.
+  - `grep -E '\*guard = patch' flow-monitor/src-tauri/src/ipc.rs` returns empty (full-struct clobber gone).
+  - `grep -cE 'fn read_artefact' flow-monitor/src-tauri/src/ipc.rs` returns `2` at most (wrapper + inner), and the wrapper body delegates to `_inner` (verified by reading the wrapper body — it should not re-implement the traversal guard).
+- **Reviewer briefs**:
+  - reviewer-security: re-verify the `update_settings` field-level merge did not regress the path-traversal canonicalisation established in the T11 retry; confirm the `read_artefact` wrapper delegates cleanly to `read_artefact_inner` with a single source of truth for the registered-roots boundary check (re-cite `.claude/rules/reviewer/security.md` check 2 + check 3).
+  - reviewer-performance: confirm the `File::open` path opens the file once per discovered STATUS.md per cycle; no new syscalls introduced; `interval_secs.clamp` is a single in-process arithmetic op (re-cite `.claude/rules/reviewer/performance.md` check 6).
+  - reviewer-style: verify via grep checks above that `mod status_parse;` moved from `main.rs` to `lib.rs`, stub structs are gone, dead `let now` is gone, and the WHAT-comment at `status_parse.rs:185` is reworked or removed (re-cite `.claude/rules/reviewer/style.md` check 3 + check 8).
+- **Depends on**: T11 (last W1 task merged — already done; all W1 tasks must be merged before T43 starts)
+- **Parallel-safe-with**: — (sole task in W1.5; touches 5+ files across W1 modules; MUST run solo)
+- [ ]
 
 ---
 
@@ -940,7 +1013,8 @@ W5 implements the test seams the dogfood paradox forces (Architect's §8), instr
 
 - **W0**: T1 → T2 → T3 → T4 → T5 (sequential — every task touches the scaffold/deps).
 - **W1**: T6, T7, T8, T9, T10, T11 (all parallel — different primary files; append-only collisions on `src-tauri/src/main.rs` mod-decls and `src-tauri/Cargo.toml` deps resolve keep-both).
-- **W2**: T12, T13, T14, T15, T16 (all parallel — different primary files; append-only collisions on `src/main.tsx` provider wiring and `package.json` deps resolve keep-both). W2 may run concurrently with W1 once W0 lands.
+- **W1.5**: T43 (solo; cleanup pass touching 5+ W1 modules to land W1 NITS + a `mod status_parse;` placement fix; depends on all of W1; NOT parallel-safe with anything). [CHANGED 2026-04-19]
+- **W2**: T12, T13, T14, T15, T16 (all parallel — different primary files; append-only collisions on `src/main.tsx` provider wiring and `package.json` deps resolve keep-both). W2 may run concurrently with W1 once W0 lands (W1.5 does NOT gate W2 — W2 touches only frontend files, none of the W1 Rust modules T43 edits).
 - **W3**: T17, T18, T19, T20, T21, T22, T23, T24 (all parallel — different primary view/component files). Shared dispatcher: `src/App.tsx` routes block — each task adds one `<Route>` element at a stable position; classified as **append-only collision** per `tpm/parallel-safe-append-sections`, resolves keep-both. T18, T19, T20, T21, T22 all extend `CardDetail.tsx` — but each adds a distinct child component; the per-task `CardDetail.tsx` edits live in different sections of the file (header strip vs. tab strip vs. design-folder-index vs. notes-timeline vs. markdown-pane wrapper) AND are in different file regions; classified as parallel-safe with a NOTE that any logic-conflicting edit must serialize.
 - **W4**: T25, T26, T27, T28, T29 (all parallel — different primary `.rs` files or distinct IPC handlers; append-only collisions on `src-tauri/Cargo.toml` plugin deps and `src-tauri/src/main.rs` plugin init resolve keep-both).
 - **W5**: T30, T31, T32, T33, T34, T35, T36, T37, T38, T39, T40, T41, T42 (all parallel — different test files; T42 depends on the others' results so runs last but is small audit-only).
@@ -983,6 +1057,7 @@ This sub-sequencing is captured in T19/T20/T21/T22's `Depends on:` field (each l
 | T9 | W1 | 2 | T5 (consumes T6/T7/T8 in same wave) |
 | T10 | W1 | 3 | T5 |
 | T11 | W1 | 2 | T5 |
+| T43 | W1.5 | 7–9 (edits across 5+ W1 modules) | T6, T7, T8, T9, T10, T11 (all of W1) |
 | T12 | W2 | 9 | T5 |
 | T13 | W2 | 3 | T5 |
 | T14 | W2 | 3 | T5 |
