@@ -46,3 +46,4 @@
 - 2026-04-19 review result — wave W1 task T11 verdict=BLOCK blocking-tasks=T11(security)
 - 2026-04-19 Developer — T11 retry: canonicalise patch.repos in update_settings (security must)
 - 2026-04-19 review result — wave W1 retry verdict=NITS (advisories only: T6 WHAT-comment, T8 dead let now, T9 metadata+read 2-syscalls, T11 full-struct clobber + guard duplication)
+- 2026-04-19 implement wave W1 done — T6, T7, T8, T9, T10, T11 merged (66 tests pass)
