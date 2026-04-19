@@ -1,5 +1,19 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+
+// Stub i18n for stub tests
+vi.mock("../../i18n", () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+    locale: "en",
+    setLocale: vi.fn(),
+  }),
+}));
+
+// Stub Tauri IPC for stub tests
+vi.mock("@tauri-apps/api/core", () => ({
+  invoke: vi.fn().mockResolvedValue({ sessions: [], repos: [], polling_interval_secs: 3 }),
+}));
 
 // These imports will fail (red) until the stub files exist.
 import MainWindow from "../MainWindow";
@@ -9,9 +23,11 @@ import EmptyState from "../EmptyState";
 import CompactPanel from "../CompactPanel";
 
 describe("Route stub placeholders", () => {
-  it("MainWindow renders placeholder text", () => {
+  it("MainWindow renders the main window layout (T17 replaced stub)", () => {
     render(<MainWindow />);
-    expect(screen.getByText("MainWindow")).toBeTruthy();
+    // T17 replaced the stub; verify the layout container renders without crashing
+    const main = document.querySelector("[data-testid='main-window']");
+    expect(main).toBeTruthy();
   });
 
   it("CardDetail renders placeholder text", () => {

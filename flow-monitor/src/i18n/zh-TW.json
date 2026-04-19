@@ -44,5 +44,15 @@
   "notification.stalled-title": "工作階段停滯：{slug}",
   "notification.stalled-body": "{stage} · 閒置 {duration} · {repo}",
 
-  "markdown.footer": "唯讀預覽。如需編輯，請在 Finder 中開啟。"
+  "markdown.footer": "唯讀預覽。如需編輯，請在 Finder 中開啟。",
+
+  "sort.label": "排序方式",
+  "sort.lastUpdatedDesc": "最後更新",
+  "sort.stage": "階段",
+  "sort.slugAZ": "名稱 A–Z",
+  "sort.stalledFirst": "停滯優先",
+
+  "card.repoGroup": "{repo}",
+  "card.collapseRepo": "收合 {repo}",
+  "card.expandRepo": "展開 {repo}"
 }

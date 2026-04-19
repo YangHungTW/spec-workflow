@@ -1,2 +1,259 @@
-function MainWindow() { return <div>MainWindow</div>; }
+import { useState, useEffect, useCallback } from "react";
+import { invoke } from "@tauri-apps/api/core";
+import { useTranslation } from "../i18n";
+import { RepoSidebar, type RepoEntry } from "../components/RepoSidebar";
+import { SortToolbar } from "../components/SortToolbar";
+import { PollingFooter } from "../components/PollingFooter";
+import { SessionCard } from "../components/SessionCard";
+import { useSessionStore, sortSessions, type SessionState } from "../stores/sessionStore";
+import type { SortAxis } from "../stores/sessionStore";
+
+/**
+ * Shape of the list_sessions IPC response.
+ * T11 defines the backend command; this is the front-end contract.
+ */
+interface ListSessionsResponse {
+  sessions: Array<{
+    slug: string;
+    stage: string;
+    idle_state: string;
+    last_updated_ms: number;
+    note_excerpt: string;
+    repo_path: string;
+    repo_id: string;
+    repo_name: string;
+  }>;
+  polling_interval_secs: number;
+}
+
+/**
+ * Shape of the get_settings IPC response (relevant fields only).
+ */
+interface SettingsResponse {
+  repos?: Array<{ id: string; name: string; path: string }>;
+  polling_interval_secs?: number;
+  collapsed_repo_ids?: string[];
+}
+
+/**
+ * MainWindow — main view: project-switcher sidebar + 2-column card grid +
+ * sort toolbar + polling footer.
+ *
+ * Layout:
+ *   - Left sidebar (RepoSidebar): repo list, "All Projects", "Add repo…" ghost
+ *   - Top toolbar (SortToolbar): 4-axis sort dropdown
+ *   - Main area: 2-column card grid (≥720px) or 1-column (< 720px)
+ *   - Sidebar footer (PollingFooter): "Polling · {interval}s" with green dot
+ *
+ * Group-by-repo (AC8.a): when "All Projects" is selected and ≥2 repos are
+ * registered, sessions are grouped under collapsible repo headers.
+ * Single-repo selection renders flat list with no headers (AC8.c).
+ *
+ * Collapse state is persisted via sessionStore (AC8.b).
+ */
+function MainWindow() {
+  const { t } = useTranslation();
+  const {
+    sortAxis,
+    setSortAxis,
+    selectedRepoId,
+    setSelectedRepoId,
+    collapsedRepoIds,
+    toggleRepoCollapse,
+  } = useSessionStore();
+
+  const [sessions, setSessions] = useState<SessionState[]>([]);
+  const [repos, setRepos] = useState<RepoEntry[]>([]);
+  const [pollingIntervalSecs, setPollingIntervalSecs] = useState<number>(3);
+  const [loading, setLoading] = useState(true);
+
+  // Load sessions and settings on mount
+  const loadData = useCallback(() => {
+    Promise.all([
+      invoke<ListSessionsResponse>("list_sessions"),
+      invoke<SettingsResponse>("get_settings"),
+    ])
+      .then(([sessionData, settingsData]) => {
+        const mapped: SessionState[] = sessionData.sessions.map((s) => ({
+          slug: s.slug,
+          // Cast stage — backend guarantees valid values; unknown falls back to "implement"
+          stage: (s.stage as SessionState["stage"]) ?? "implement",
+          idleState: (s.idle_state as SessionState["idleState"]) ?? "none",
+          lastUpdatedMs: s.last_updated_ms,
+          noteExcerpt: s.note_excerpt,
+          repoPath: s.repo_path,
+          repoId: s.repo_id,
+        }));
+        setSessions(mapped);
+        setPollingIntervalSecs(
+          settingsData.polling_interval_secs ??
+            sessionData.polling_interval_secs ??
+            3,
+        );
+        if (settingsData.repos) {
+          setRepos(
+            settingsData.repos.map((r) => ({
+              id: r.id,
+              name: r.name,
+              path: r.path,
+            })),
+          );
+        }
+        setLoading(false);
+      })
+      .catch(() => {
+        // IPC unavailable (test environment or Tauri not running) — show empty state
+        setLoading(false);
+      });
+  }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  // Filter sessions by selected repo
+  const filteredSessions =
+    selectedRepoId === "all"
+      ? sessions
+      : sessions.filter((s) => s.repoId === selectedRepoId);
+
+  // Sort sessions — pure in-process per AC7.c (no IPC round-trip)
+  const sortedSessions = sortSessions(filteredSessions, sortAxis);
+
+  // Determine if we should show group-by-repo headers (AC8.a, AC8.c)
+  const showGroupHeaders = selectedRepoId === "all" && repos.length >= 2;
+
+  function handleSortChange(axis: SortAxis) {
+    setSortAxis(axis);
+  }
+
+  function handleAddRepo() {
+    // T23 implements the folder picker; this handler is a no-op stub for T17
+    invoke("pick_repo_folder").catch(() => undefined);
+  }
+
+  // Group sessions by repo for the "All Projects" view
+  function groupSessionsByRepo(
+    items: SessionState[],
+  ): Array<{ repoId: string; repoName: string; sessions: SessionState[] }> {
+    const map = new Map<
+      string,
+      { repoId: string; repoName: string; sessions: SessionState[] }
+    >();
+    for (const session of items) {
+      if (!map.has(session.repoId)) {
+        const repo = repos.find((r) => r.id === session.repoId);
+        map.set(session.repoId, {
+          repoId: session.repoId,
+          repoName: repo?.name ?? session.repoId,
+          sessions: [],
+        });
+      }
+      map.get(session.repoId)!.sessions.push(session);
+    }
+    return Array.from(map.values());
+  }
+
+  return (
+    <div className="main-window" data-testid="main-window">
+      {/* Left sidebar */}
+      <aside className="main-window__sidebar">
+        <RepoSidebar
+          repos={repos}
+          selectedId={selectedRepoId}
+          onSelect={setSelectedRepoId}
+          onAddRepo={handleAddRepo}
+        />
+        {/* Polling footer at the bottom of the sidebar (AC4.c) */}
+        <PollingFooter intervalSeconds={pollingIntervalSecs} />
+      </aside>
+
+      {/* Main content area */}
+      <main className="main-window__content">
+        {/* Sort toolbar (AC7.b, AC7.c) */}
+        <SortToolbar sortAxis={sortAxis} onSortChange={handleSortChange} />
+
+        {/* Card grid */}
+        <div className="main-window__grid" data-testid="card-grid">
+          {loading && (
+            <div className="main-window__loading" data-testid="loading-indicator">
+              {t("sort.label")}
+            </div>
+          )}
+
+          {!loading && sortedSessions.length === 0 && (
+            <div className="main-window__empty" data-testid="empty-state">
+              {t("empty.title")}
+            </div>
+          )}
+
+          {!loading &&
+            (showGroupHeaders ? (
+              // Group-by-repo view with collapsible headers (AC8.a, AC8.b)
+              groupSessionsByRepo(sortedSessions).map(
+                ({ repoId, repoName, sessions: repoSessions }) => {
+                  const isCollapsed = collapsedRepoIds.has(repoId);
+                  return (
+                    <section
+                      key={repoId}
+                      className="main-window__repo-group"
+                      data-testid={`repo-group-${repoId}`}
+                    >
+                      <button
+                        type="button"
+                        className="main-window__repo-header"
+                        aria-expanded={!isCollapsed}
+                        onClick={() => toggleRepoCollapse(repoId)}
+                        data-testid={`repo-header-${repoId}`}
+                      >
+                        <span className="main-window__repo-chevron">
+                          {isCollapsed ? "▶" : "▼"}
+                        </span>
+                        <span className="main-window__repo-name">
+                          {repoName}
+                        </span>
+                        <span className="main-window__repo-count">
+                          ({repoSessions.length})
+                        </span>
+                      </button>
+
+                      {!isCollapsed && (
+                        <div className="main-window__repo-sessions">
+                          {repoSessions.map((session) => (
+                            <SessionCard
+                              key={`${session.repoId}/${session.slug}`}
+                              slug={session.slug}
+                              stage={session.stage}
+                              idleState={session.idleState}
+                              lastUpdatedMs={session.lastUpdatedMs}
+                              noteExcerpt={session.noteExcerpt}
+                              repoPath={session.repoPath}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </section>
+                  );
+                },
+              )
+            ) : (
+              // Flat list — single-repo selected or fewer than 2 repos (AC8.c)
+              sortedSessions.map((session) => (
+                <SessionCard
+                  key={`${session.repoId}/${session.slug}`}
+                  slug={session.slug}
+                  stage={session.stage}
+                  idleState={session.idleState}
+                  lastUpdatedMs={session.lastUpdatedMs}
+                  noteExcerpt={session.noteExcerpt}
+                  repoPath={session.repoPath}
+                />
+              ))
+            ))}
+        </div>
+      </main>
+    </div>
+  );
+}
+
 export default MainWindow;

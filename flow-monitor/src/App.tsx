@@ -3,12 +3,9 @@ import MainWindow from "./views/MainWindow";
 import CardDetail from "./views/CardDetail";
 import Settings from "./views/Settings";
 import CompactPanel from "./views/CompactPanel";
+import { I18nProvider } from "./i18n";
 
 function ThemeProvider({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
-}
-
-function I18nProvider({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
