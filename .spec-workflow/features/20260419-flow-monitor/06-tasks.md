@@ -525,7 +525,8 @@ W3 composes W2 primitives + W1 IPC into the user-facing routes. App.tsx routes b
   - reviewer-style: i18n via `t(key)`.
 - **Depends on**: T11 (IPC `read_artefact`), T13, T14, T15, T17 (sessionStore filter state)
 - **Parallel-safe-with**: T17, T19, T20, T21, T22, T23, T24
-- [ ]
+- [x]
+- 2026-04-19 Developer — T18 CardDetail skeleton complete (master-detail, breadcrumb-back, display-only checklist)
 
 ---
 

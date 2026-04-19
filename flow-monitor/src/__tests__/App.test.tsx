@@ -53,13 +53,14 @@ describe("App routing", () => {
     expect(document.querySelector("[data-testid='main-window']")).toBeTruthy();
   });
 
-  it("/feature/:repoId/:slug renders CardDetail placeholder", () => {
+  it("/feature/:repoId/:slug renders CardDetail master-detail skeleton (T18)", () => {
     render(
       <MemoryRouter initialEntries={["/feature/abc/my-slug"]}>
         <App />
       </MemoryRouter>,
     );
-    expect(screen.getByText("CardDetail")).toBeTruthy();
+    // T18 replaced the stub with the full master-detail skeleton
+    expect(document.querySelector("[data-testid='card-detail']")).toBeTruthy();
   });
 
   it("/settings renders Settings view with tablist", () => {
