@@ -29,3 +29,5 @@
 - 2026-04-19 Architect: tech doc complete; D1..D9 decisions (+D10..D17 deferred); no blocker questions. D1=.spec-workflow/config.yml, D2=git pre-commit hook via bin/specflow-lint, D9=one-level nested lang.chat (no artifacts key).
 - 2026-04-19 TPM: plan complete; B1..B5 blocks across W1..W3 waves; handoff to /specflow:tasks.
 - 2026-04-19 TPM: tasks complete; T1..T22 across W1..W3; handoff to /specflow:implement.
+- 2026-04-19 implement — wave 1 developers done (T1, T2, T3); review dispatched (3×3 reviewers).
+- 2026-04-19 review result — wave 1 verdict=BLOCK blocking-tasks=T3(security: path-traversal `must` on scan_one_path opening caller-supplied paths without boundary check). T2 NITS (style: WHAT-not-WHY comment, awk indent — would land in merge commit if wave had merged). T1 PASS. Worktrees + branches preserved for inspection. Recovery: `/specflow:implement 20260419-language-preferences --task T3` (max 2 retries before TPM escalation); or override via `--skip-inline-review` if the finding is disputed.
