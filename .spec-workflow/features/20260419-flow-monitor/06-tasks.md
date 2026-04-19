@@ -192,7 +192,8 @@ Every W1 task owns a primary file under `src-tauri/src/`. Append-only collisions
   - reviewer-style: closed-enum dispatch — `match SessionKind { ... }` arm-per-arm; no fall-through to `_ => panic!()`.
 - **Depends on**: T5
 - **Parallel-safe-with**: T6, T8, T9, T10
-- [ ]
+- [x]
+- STATUS: - 2026-04-19 Developer — T7 repo_discovery complete (closed-enum, single read_dir)
 
 ---
 
