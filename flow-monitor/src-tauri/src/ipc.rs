@@ -143,17 +143,21 @@ pub fn get_settings(
 /// Merge a partial settings patch and persist (delegates write to settings_io
 /// in T10; here we update in-memory state — persistence happens via the
 /// settings_io write path when T10 merges).
+///
+/// Security: `patch.repos` entries are canonicalised before the patch is
+/// applied — the renderer is untrusted and could supply `..` traversal
+/// sequences that would corrupt the registered-root set that
+/// `read_artefact`'s path-traversal guard depends on.  The update is
+/// atomic: if ANY entry fails to canonicalise the stored settings are left
+/// unchanged and an error is returned.
+///
+/// Delegates to `update_settings_inner` for unit testability.
 #[tauri::command]
 pub fn update_settings(
     patch: Settings,
     settings: tauri::State<'_, SettingsState>,
 ) -> Result<(), IpcError> {
-    let mut guard = settings.0.lock().map_err(|_| IpcError {
-        code: "LOCK_POISONED",
-        message: "settings lock is poisoned".into(),
-    })?;
-    *guard = patch;
-    Ok(())
+    update_settings_inner(patch, &settings.0)
 }
 
 /// Add a repository root to the watched set.
@@ -496,6 +500,61 @@ mod tests {
         assert!(result.is_err());
         assert_eq!(result.unwrap_err(), "not yet implemented");
     }
+
+    // ---------------------------------------------------------------------------
+    // update_settings — canonicalisation regression tests (security must finding)
+    // ---------------------------------------------------------------------------
+
+    /// update_settings must reject a patch whose repos list contains a path
+    /// that cannot be canonicalised (e.g. a non-existent directory with `..`
+    /// traversal), and must leave the stored settings unchanged (all-or-nothing).
+    #[test]
+    fn update_settings_rejects_non_canonical_repo_paths() {
+        let initial = Settings::default();
+        let stored = std::sync::Arc::new(Mutex::new(initial.clone()));
+
+        // Build a patch with a repo path that cannot be canonicalised.
+        let mut patch = Settings::default();
+        patch.repos = vec![PathBuf::from("/nonexistent/path/that/cannot/canonicalise")];
+
+        let result = update_settings_inner(patch, &stored);
+
+        // The call must fail.
+        assert!(result.is_err(), "expected error for non-canonicalisable path");
+        let err = result.unwrap_err();
+        assert_eq!(err.code, "INVALID_PATH",
+            "expected INVALID_PATH error code, got: {}", err.code);
+
+        // Stored settings must be unchanged (repos still empty).
+        let guard = stored.lock().unwrap();
+        assert_eq!(guard.repos, initial.repos,
+            "stored settings must not be mutated on canonicalise failure");
+    }
+
+    /// update_settings must canonicalise valid repo paths in the patch and store
+    /// the canonical form (not the raw input form).
+    #[test]
+    fn update_settings_canonicalises_valid_repos() {
+        let tmp = tempfile::tempdir().expect("tempdir");
+        let repo_path = tmp.path().to_path_buf();
+        let expected_canonical = repo_path.canonicalize().unwrap();
+
+        let stored = std::sync::Arc::new(Mutex::new(Settings::default()));
+
+        let mut patch = Settings::default();
+        patch.repos = vec![repo_path];
+
+        let result = update_settings_inner(patch, &stored);
+        assert!(result.is_ok(), "valid path must succeed: {:?}", result.err());
+
+        let guard = stored.lock().unwrap();
+        assert_eq!(guard.repos.len(), 1, "exactly one repo should be stored");
+        assert_eq!(guard.repos[0], expected_canonical,
+            "stored repo must be the canonicalised form");
+
+        drop(guard);
+        drop(tmp);
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -542,4 +601,40 @@ pub fn read_artefact_inner(
         code: "READ_ERROR",
         message: format!("cannot read artefact: {e}"),
     })
+}
+
+// ---------------------------------------------------------------------------
+// Testable inner function for update_settings (avoids Tauri State in unit
+// tests).  The `#[tauri::command]` wrapper delegates to this.
+// ---------------------------------------------------------------------------
+
+/// Inner implementation of `update_settings`, extracted for unit testability.
+/// Takes the shared `Mutex<Settings>` directly so tests can inspect state after
+/// the call without needing a live Tauri app instance.
+pub fn update_settings_inner(
+    mut patch: Settings,
+    store: &std::sync::Mutex<Settings>,
+) -> Result<(), IpcError> {
+    // Canonicalise every repo path before acquiring the write lock.
+    // Collect all results first — if any entry fails we return early without
+    // mutating the stored settings (all-or-nothing atomicity).
+    let mut canonical_repos: Vec<PathBuf> = Vec::with_capacity(patch.repos.len());
+    for raw in &patch.repos {
+        let canonical = raw.canonicalize().map_err(|e| IpcError {
+            code: "INVALID_PATH",
+            message: format!(
+                "cannot canonicalise repo path in settings patch {}: {e}",
+                raw.display()
+            ),
+        })?;
+        canonical_repos.push(canonical);
+    }
+    patch.repos = canonical_repos;
+
+    let mut guard = store.lock().map_err(|_| IpcError {
+        code: "LOCK_POISONED",
+        message: "settings lock is poisoned".into(),
+    })?;
+    *guard = patch;
+    Ok(())
 }
