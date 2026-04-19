@@ -37,7 +37,7 @@ export function SettingsRepositories({
     }
 
     if (!hasSpecWorkflow) {
-      setRepoError("Not a specflow repository: missing .spec-workflow/ folder.");
+      setRepoError(t("settings.repoNotSpecflow"));
       return;
     }
 
@@ -47,7 +47,7 @@ export function SettingsRepositories({
         repositories: [...settings.repositories, pickedPath],
       });
     } catch {
-      setRepoError("Failed to add repository.");
+      setRepoError(t("settings.repoAddFailed"));
     }
   }
 

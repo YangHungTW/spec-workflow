@@ -30,7 +30,7 @@ export function SettingsGeneral({
     const stale = Number(e.target.value);
     if (stale >= settings.stalled_threshold_mins) {
       onThresholdError(
-        `Stalled threshold must be greater than stale threshold (${stale} min).`,
+        t("settings.staleExceedsStalled").replace("{stale}", String(stale)),
       );
       return;
     }
@@ -44,7 +44,7 @@ export function SettingsGeneral({
     const stalled = Number(e.target.value);
     if (stalled < settings.stale_threshold_mins) {
       onThresholdError(
-        `Stalled threshold must be >= stale threshold (${settings.stale_threshold_mins} min).`,
+        t("settings.stalledBelowStale").replace("{stale}", String(settings.stale_threshold_mins)),
       );
       return;
     }
@@ -96,25 +96,25 @@ export function SettingsGeneral({
           </p>
         )}
         <label htmlFor="stale-input" className="settings-label">
-          Stale threshold (minutes)
+          {t("settings.staleLabel")}
         </label>
         <input
           id="stale-input"
           type="number"
           role="spinbutton"
-          aria-label="Stale threshold (minutes)"
+          aria-label={t("settings.staleLabel")}
           value={settings.stale_threshold_mins}
           min={1}
           onChange={handleStaleChange}
         />
         <label htmlFor="stalled-input" className="settings-label">
-          Stalled threshold (minutes)
+          {t("settings.stalledLabel")}
         </label>
         <input
           id="stalled-input"
           type="number"
           role="spinbutton"
-          aria-label="Stalled threshold (minutes)"
+          aria-label={t("settings.stalledLabel")}
           value={settings.stalled_threshold_mins}
           min={1}
           onChange={handleStalledChange}
@@ -130,9 +130,9 @@ export function SettingsGeneral({
             value="en"
             checked={settings.locale === "en"}
             onChange={() => handleLocaleChange("en")}
-            aria-label="English"
+            aria-label={t("settings.langEnglish")}
           />
-          English
+          {t("settings.langEnglish")}
         </label>
         <label className="settings-radio-label">
           <input
@@ -141,14 +141,14 @@ export function SettingsGeneral({
             value="zh-TW"
             checked={settings.locale === "zh-TW"}
             onChange={() => handleLocaleChange("zh-TW")}
-            aria-label="繁體中文"
+            aria-label={t("settings.langZhTw")}
           />
-          繁體中文
+          {t("settings.langZhTw")}
         </label>
       </section>
 
       <section className="settings-section">
-        <h3 className="settings-section-title">Theme</h3>
+        <h3 className="settings-section-title">{t("settings.themeSection")}</h3>
         <label className="settings-radio-label">
           <input
             type="radio"

@@ -32,7 +32,7 @@ export function SettingsNotifications({
             checked={settings.notifications_enabled}
             onChange={handleToggle}
           />
-          Enable stalled-session notifications (AC6.e)
+          {t("settings.enableNotifications")}
         </label>
       </section>
     </div>
