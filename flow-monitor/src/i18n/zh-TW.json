@@ -41,8 +41,8 @@
   "settings.language": "語言",
   "settings.about": "關於",
 
-  "notification.stalled.title": "工作階段停滯：{slug}",
-  "notification.stalled.body": "{stage} · 閒置 {duration} · {repo}",
+  "notification.stalled-title": "工作階段停滯：{slug}",
+  "notification.stalled-body": "{stage} · 閒置 {duration} · {repo}",
 
   "markdown.footer": "唯讀預覽。如需編輯，請在 Finder 中開啟。"
 }

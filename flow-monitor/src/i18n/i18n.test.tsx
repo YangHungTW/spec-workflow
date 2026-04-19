@@ -27,16 +27,16 @@ describe("useTranslation — English defaults", () => {
     expect(result.current.t("sidebar.allProjects")).toBe("All Projects");
   });
 
-  it("returns the English string for notification.stalled.title", () => {
+  it("returns the English string for notification.stalled-title", () => {
     const { result } = renderHook(() => useTranslation(), { wrapper });
-    expect(result.current.t("notification.stalled.title")).toBe(
+    expect(result.current.t("notification.stalled-title")).toBe(
       "Session stalled: {slug}",
     );
   });
 
-  it("returns the English string for notification.stalled.body", () => {
+  it("returns the English string for notification.stalled-body", () => {
     const { result } = renderHook(() => useTranslation(), { wrapper });
-    expect(result.current.t("notification.stalled.body")).toBe(
+    expect(result.current.t("notification.stalled-body")).toBe(
       "{stage} · idle for {duration} · {repo}",
     );
   });
