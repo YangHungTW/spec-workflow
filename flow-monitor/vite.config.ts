@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
@@ -28,5 +29,17 @@ export default defineConfig(async () => ({
       // 3. tell Vite to ignore watching `src-tauri`
       ignored: ["**/src-tauri/**"],
     },
+  },
+
+  build: {
+    // Use esbuild for minification (fast, no source maps in production)
+    minify: "esbuild",
+    sourcemap: false,
+  },
+
+  test: {
+    globals: false,
+    environment: "jsdom",
+    setupFiles: [],
   },
 }));
