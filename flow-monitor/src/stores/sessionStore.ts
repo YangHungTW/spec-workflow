@@ -17,6 +17,24 @@ import { useState, useCallback } from "react";
 import type { StageKey } from "../components/StagePill";
 import type { IdleState } from "../components/IdleBadge";
 
+/**
+ * Stage sort order — hoisted to module level so the Record is created once,
+ * not reconstructed on every sortSessions("Stage") call (perf: O(1) reuse).
+ */
+const STAGE_ORDER: Record<string, number> = {
+  request: 0,
+  brainstorm: 1,
+  design: 2,
+  prd: 3,
+  tech: 4,
+  plan: 5,
+  tasks: 6,
+  implement: 7,
+  "gap-check": 8,
+  verify: 9,
+  archive: 10,
+};
+
 /** Exactly 4 sort axes per AC7.c */
 export type SortAxis =
   | "LastUpdatedDesc"
@@ -59,26 +77,12 @@ export function sortSessions(
   switch (axis) {
     case "LastUpdatedDesc":
       return copy.sort((a, b) => b.lastUpdatedMs - a.lastUpdatedMs);
-    case "Stage": {
-      // Stage order matches STAGE_KEYS enum index
-      const STAGE_ORDER: Record<string, number> = {
-        request: 0,
-        brainstorm: 1,
-        design: 2,
-        prd: 3,
-        tech: 4,
-        plan: 5,
-        tasks: 6,
-        implement: 7,
-        "gap-check": 8,
-        verify: 9,
-        archive: 10,
-      };
+    case "Stage":
+      // Stage order matches STAGE_KEYS enum index; STAGE_ORDER is module-level const
       return copy.sort(
         (a, b) =>
           (STAGE_ORDER[a.stage] ?? 99) - (STAGE_ORDER[b.stage] ?? 99),
       );
-    }
     case "SlugAZ":
       return copy.sort((a, b) => a.slug.localeCompare(b.slug));
     case "StalledFirst":

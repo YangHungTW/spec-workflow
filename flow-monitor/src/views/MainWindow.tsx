@@ -132,20 +132,22 @@ function MainWindow() {
     invoke("pick_repo_folder").catch(() => undefined);
   }
 
-  // Group sessions by repo for the "All Projects" view
+  // Group sessions by repo for the "All Projects" view.
+  // repoById is built once before the loop — O(1) per lookup instead of O(n)
+  // repos.find() on every session iteration (perf: O(n+m) total, not O(n*m)).
   function groupSessionsByRepo(
     items: SessionState[],
   ): Array<{ repoId: string; repoName: string; sessions: SessionState[] }> {
+    const repoById = new Map(repos.map((r) => [r.id, r]));
     const map = new Map<
       string,
       { repoId: string; repoName: string; sessions: SessionState[] }
     >();
     for (const session of items) {
       if (!map.has(session.repoId)) {
-        const repo = repos.find((r) => r.id === session.repoId);
         map.set(session.repoId, {
           repoId: session.repoId,
-          repoName: repo?.name ?? session.repoId,
+          repoName: repoById.get(session.repoId)?.name ?? session.repoId,
           sessions: [],
         });
       }
