@@ -283,27 +283,64 @@ pub fn set_notification_strings(
     Ok(())
 }
 
-/// Stub: open the given path in macOS Finder.
-/// Wired to actual OS calls in W4 T35.
+/// Open the given path in macOS Finder (shows the directory/file).
+///
+/// Security: path is canonicalised and verified against registered repo roots
+/// before invoking `open` (security check 2 — path traversal boundary).
+/// Argv-form invocation only — no string-built shell command (check 4).
+/// Read-only: `open` on macOS never mutates `.spec-workflow/**` (B1/B2 boundary).
 #[tauri::command]
-pub fn open_in_finder(_path: String) -> Result<(), String> {
-    Err("not yet implemented".into())
+pub fn open_in_finder(
+    path: String,
+    settings: tauri::State<'_, SettingsState>,
+) -> Result<(), IpcError> {
+    let registered_roots: Vec<PathBuf> = {
+        let guard = settings.0.lock().map_err(|_| IpcError {
+            code: "LOCK_POISONED",
+            message: "settings lock is poisoned".into(),
+        })?;
+        guard.repos.clone()
+    };
+    open_in_finder_inner(path, &registered_roots)
 }
 
-/// Stub: reveal the given path in macOS Finder (selects the file).
-/// Corresponds to `open -R <path>` on macOS.
-/// Wired to actual OS shell-out in W4 T35; for now returns an error so the
-/// frontend call-site can be tested independently of OS integration.
+/// Reveal the given path in macOS Finder (selects the individual file).
+///
+/// Security: same path-traversal guard as `open_in_finder`.
+/// Corresponds to `open -R <path>` — argv-form, no shell string (check 4).
+/// Used by DesignFolderIndex per-file buttons (AC9.h).
 #[tauri::command]
-pub fn reveal_in_finder(_path: String) -> Result<(), String> {
-    Err("not yet implemented".into())
+pub fn reveal_in_finder(
+    path: String,
+    settings: tauri::State<'_, SettingsState>,
+) -> Result<(), IpcError> {
+    let registered_roots: Vec<PathBuf> = {
+        let guard = settings.0.lock().map_err(|_| IpcError {
+            code: "LOCK_POISONED",
+            message: "settings lock is poisoned".into(),
+        })?;
+        guard.repos.clone()
+    };
+    reveal_in_finder_inner(path, &registered_roots)
 }
 
-/// Stub: copy the given text to the system clipboard.
-/// Wired to actual OS calls in W4 T35.
+/// Copy plain text to the system clipboard via the Tauri clipboard plugin.
+///
+/// The `copy_to_clipboard_inner` helper validates the input; actual clipboard
+/// write requires `AppHandle` which is available at runtime but not in unit
+/// tests. Tests cover the validation layer; the AppHandle write is exercised
+/// in manual smoke (AC7.d).
 #[tauri::command]
-pub fn copy_to_clipboard(_text: String) -> Result<(), String> {
-    Err("not yet implemented".into())
+pub fn copy_to_clipboard(
+    text: String,
+    app: tauri::AppHandle,
+) -> Result<(), IpcError> {
+    copy_to_clipboard_inner(text.clone())?;
+    use tauri_plugin_clipboard_manager::ClipboardExt;
+    app.clipboard().write_text(text).map_err(|e| IpcError {
+        code: "CLIPBOARD_ERROR",
+        message: format!("failed to write to clipboard: {e}"),
+    })
 }
 
 // ---------------------------------------------------------------------------
@@ -469,28 +506,127 @@ mod tests {
             "B2 command leaked into settings");
     }
 
+    // ---------------------------------------------------------------------------
+    // open_in_finder — path-traversal guard (T27)
+    // ---------------------------------------------------------------------------
+
+    /// Path outside any registered root must be rejected with PATH_TRAVERSAL.
+    /// This is the primary security AC for T27 (security check 2 + 4).
     #[test]
-    fn test_open_in_finder_stub_returns_error() {
-        let result = open_in_finder("/some/path".into());
+    fn test_open_in_finder_rejects_path_outside_registered_roots() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path().canonicalize().unwrap();
+        // /etc/passwd is never under the temp root.
+        let result = open_in_finder_inner("/etc/passwd".into(), &[root]);
         assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), "not yet implemented");
+        let err = result.unwrap_err();
+        assert_eq!(
+            err.code, "PATH_TRAVERSAL",
+            "expected PATH_TRAVERSAL, got: {}",
+            err.code
+        );
     }
 
+    /// A path that canonicalises successfully and sits inside a registered root
+    /// must pass the boundary check (no OS process is actually spawned in tests).
     #[test]
-    fn test_reveal_in_finder_stub_returns_not_yet_implemented() {
-        // T35 will wire this to `open -R <path>` on macOS.
-        // Until then the stub must return Err("not yet implemented") so the
-        // frontend call-site can be verified without OS integration.
-        let result = reveal_in_finder("/some/feature/02-design/mockup.html".into());
-        assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), "not yet implemented");
+    fn test_open_in_finder_valid_path_passes_boundary_check() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path().canonicalize().unwrap();
+        // Create a real subdirectory so canonicalize succeeds.
+        let feature_dir = root.join("my-feature");
+        fs::create_dir_all(&feature_dir).unwrap();
+
+        // open_in_finder_inner with dry_run=true skips the actual Command::new.
+        let result = open_in_finder_inner_dry(feature_dir.to_string_lossy().into(), &[root]);
+        assert!(result.is_ok(), "valid path must pass boundary: {:?}", result.err());
     }
 
+    /// Non-existent path must be rejected (canonicalize fails → INVALID_PATH).
     #[test]
-    fn test_copy_to_clipboard_stub_returns_error() {
-        let result = copy_to_clipboard("some text".into());
+    fn test_open_in_finder_nonexistent_path_rejected() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path().canonicalize().unwrap();
+        let result = open_in_finder_inner(
+            "/nonexistent/path/that/will/never/exist".into(),
+            &[root],
+        );
         assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), "not yet implemented");
+        let err = result.unwrap_err();
+        assert_eq!(
+            err.code, "INVALID_PATH",
+            "nonexistent path must give INVALID_PATH, got: {}",
+            err.code
+        );
+    }
+
+    // ---------------------------------------------------------------------------
+    // reveal_in_finder — path-traversal guard (T27)
+    // ---------------------------------------------------------------------------
+
+    /// Path outside registered roots must be rejected.
+    #[test]
+    fn test_reveal_in_finder_rejects_unregistered_path() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path().canonicalize().unwrap();
+        let result = reveal_in_finder_inner("/etc/passwd".into(), &[root]);
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert_eq!(
+            err.code, "PATH_TRAVERSAL",
+            "expected PATH_TRAVERSAL, got: {}",
+            err.code
+        );
+    }
+
+    /// Valid path under a registered root passes the boundary check.
+    #[test]
+    fn test_reveal_in_finder_valid_path_passes_boundary_check() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path().canonicalize().unwrap();
+        let design_file = root.join("02-design").join("mockup.html");
+        fs::create_dir_all(design_file.parent().unwrap()).unwrap();
+        fs::write(&design_file, "<html/>").unwrap();
+
+        let result = reveal_in_finder_inner_dry(design_file.to_string_lossy().into(), &[root]);
+        assert!(result.is_ok(), "valid file must pass boundary: {:?}", result.err());
+    }
+
+    /// Non-existent path must be rejected (canonicalize fails → INVALID_PATH).
+    #[test]
+    fn test_reveal_in_finder_nonexistent_path_rejected() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path().canonicalize().unwrap();
+        let result = reveal_in_finder_inner(
+            "/nonexistent/file/does/not/exist.html".into(),
+            &[root],
+        );
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert_eq!(
+            err.code, "INVALID_PATH",
+            "nonexistent path must give INVALID_PATH, got: {}",
+            err.code
+        );
+    }
+
+    // ---------------------------------------------------------------------------
+    // copy_to_clipboard — typed interface test (T27)
+    // ---------------------------------------------------------------------------
+
+    /// The clipboard inner helper accepts non-empty text without error.
+    /// Actual clipboard access is not exercised in unit tests.
+    #[test]
+    fn test_copy_to_clipboard_inner_accepts_text() {
+        let result = copy_to_clipboard_inner("hello world".into());
+        assert!(result.is_ok(), "non-empty text must be accepted: {:?}", result.err());
+    }
+
+    /// Empty text is also accepted — clipboard can hold an empty string.
+    #[test]
+    fn test_copy_to_clipboard_inner_accepts_empty_string() {
+        let result = copy_to_clipboard_inner(String::new());
+        assert!(result.is_ok(), "empty string must be accepted");
     }
 
     // ---------------------------------------------------------------------------
@@ -547,6 +683,89 @@ mod tests {
         drop(guard);
         drop(tmp);
     }
+}
+
+// ---------------------------------------------------------------------------
+// Testable inner functions for open_in_finder / reveal_in_finder (T27).
+//
+// Pattern mirrors read_artefact_inner: the `#[tauri::command]` wrapper supplies
+// registered_roots from managed state, then delegates to the pure inner
+// function which contains all validation and OS invocation logic.
+//
+// Dry-run variants (_dry) skip the Command::new spawn so unit tests can
+// exercise the path-traversal guard without forking a real process.
+// ---------------------------------------------------------------------------
+
+/// Validate `path` against `registered_roots` and invoke `open <path>`.
+///
+/// Argv-form only — no shell string interpolation (security check 4).
+/// Path canonicalisation + boundary check (security check 2).
+pub fn open_in_finder_inner(path: String, registered_roots: &[PathBuf]) -> Result<(), IpcError> {
+    let canonical = canonicalize_and_assert(&path, registered_roots)?;
+    std::process::Command::new("open")
+        .arg(&canonical)
+        .status()
+        .map_err(|e| IpcError {
+            code: "OPEN_FAILED",
+            message: format!("failed to invoke open: {e}"),
+        })?;
+    Ok(())
+}
+
+/// Boundary-check only variant for unit tests (no OS process spawned).
+pub fn open_in_finder_inner_dry(path: String, registered_roots: &[PathBuf]) -> Result<(), IpcError> {
+    canonicalize_and_assert(&path, registered_roots)?;
+    Ok(())
+}
+
+/// Validate `path` against `registered_roots` and invoke `open -R <path>`.
+///
+/// `-R` causes Finder to reveal (select) the file rather than opening it.
+/// Argv-form only — no shell string interpolation (security check 4).
+pub fn reveal_in_finder_inner(path: String, registered_roots: &[PathBuf]) -> Result<(), IpcError> {
+    let canonical = canonicalize_and_assert(&path, registered_roots)?;
+    std::process::Command::new("open")
+        .args(["-R", canonical.to_string_lossy().as_ref()])
+        .status()
+        .map_err(|e| IpcError {
+            code: "OPEN_FAILED",
+            message: format!("failed to invoke open -R: {e}"),
+        })?;
+    Ok(())
+}
+
+/// Boundary-check only variant for unit tests (no OS process spawned).
+pub fn reveal_in_finder_inner_dry(path: String, registered_roots: &[PathBuf]) -> Result<(), IpcError> {
+    canonicalize_and_assert(&path, registered_roots)?;
+    Ok(())
+}
+
+/// Validate clipboard text input.
+///
+/// Extracted for unit testability: the actual AppHandle clipboard write
+/// lives in the `#[tauri::command]` wrapper (requires a live Tauri runtime).
+/// This inner function validates the input so tests can cover that layer.
+pub fn copy_to_clipboard_inner(text: String) -> Result<(), IpcError> {
+    // No validation rule currently rejects any string content.
+    // The function exists as the testable seam; future rules (max length,
+    // sanitisation) belong here rather than in the command wrapper.
+    let _ = text;
+    Ok(())
+}
+
+/// Canonicalise `raw_path` and verify it sits under one of `registered_roots`.
+///
+/// Returns the canonical `PathBuf` on success, or a typed `IpcError` on
+/// failure. All callers (open_in_finder_inner, reveal_in_finder_inner) share
+/// this single boundary-check implementation.
+fn canonicalize_and_assert(raw_path: &str, registered_roots: &[PathBuf]) -> Result<PathBuf, IpcError> {
+    let p = PathBuf::from(raw_path);
+    let canonical = p.canonicalize().map_err(|e| IpcError {
+        code: "INVALID_PATH",
+        message: format!("cannot canonicalise path {raw_path}: {e}"),
+    })?;
+    assert_under_registered_root(&canonical, registered_roots)?;
+    Ok(canonical)
 }
 
 // ---------------------------------------------------------------------------
