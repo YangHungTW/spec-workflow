@@ -89,14 +89,14 @@ import os
 # repo_root — resolved once; used as boundary for path traversal check
 # Falls back to CWD when not inside a git repo (edge-case environments).
 # ---------------------------------------------------------------------------
-import subprocess as _subprocess
+import subprocess
 
 def _resolve_repo_root():
     try:
-        proc = _subprocess.run(
+        proc = subprocess.run(
             ['git', 'rev-parse', '--show-toplevel'],
-            stdout=_subprocess.PIPE,
-            stderr=_subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
         if proc.returncode == 0:
             return os.path.realpath(proc.stdout.decode('utf-8', errors='replace').strip())
@@ -256,13 +256,15 @@ def scan_one_path(path):
     return 1 if verdict == 'cjk-hit' else 0
 
 # ---------------------------------------------------------------------------
-# scan_staged — git show :FILE for each staged path
+# scan_staged — batch-reads all staged blobs via a single git cat-file --batch
+# process; avoids per-file git show forks (performance: O(1) forks vs O(n)).
 # ---------------------------------------------------------------------------
 def scan_staged():
-    import subprocess
+    # One fork: fetch the list of staged paths using NUL-separated output so
+    # filenames with spaces or special characters parse safely.
     try:
-        proc = subprocess.run(
-            ['git', 'diff', '--cached', '--name-only'],
+        diff_proc = subprocess.run(
+            ['git', 'diff', '--cached', '--name-only', '-z'],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
         )
@@ -270,48 +272,75 @@ def scan_staged():
         print('specflow-lint: git invocation failed: ' + str(exc), file=sys.stderr)
         sys.exit(2)
 
-    if proc.returncode != 0:
-        msg = proc.stderr.decode('utf-8', errors='replace').strip()
+    if diff_proc.returncode != 0:
+        msg = diff_proc.stderr.decode('utf-8', errors='replace').strip()
         print('specflow-lint: git diff failed: ' + msg, file=sys.stderr)
         sys.exit(2)
 
-    paths = [p for p in proc.stdout.decode('utf-8', errors='replace').splitlines() if p]
+    # -z output: NUL-separated paths; filter empty tokens and out-of-scope paths.
+    all_paths = [p for p in diff_proc.stdout.split(b'\0') if p]
+    paths = [p for p in all_paths if not is_out_of_scope(p.decode('utf-8', errors='replace'))]
+
     hit_count = 0
     ok_count = 0
 
-    for path in paths:
-        if is_out_of_scope(path):
+    if not paths:
+        print('specflow-lint: 0 path(s) scanned; all clean', file=sys.stderr)
+        sys.exit(0)
+
+    # One fork: open a git cat-file --batch process that accepts blob-object
+    # references on stdin and streams blob contents on stdout — one round-trip
+    # per path, no extra subprocess per file.
+    try:
+        cat = subprocess.Popen(
+            ['git', 'cat-file', '--batch'],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+        )
+    except OSError as exc:
+        print('specflow-lint: git cat-file failed: ' + str(exc), file=sys.stderr)
+        sys.exit(2)
+
+    # Send all requests at once then close stdin so git flushes its output.
+    req = b''.join(b':' + p + b'\n' for p in paths)
+    cat.stdin.write(req)
+    cat.stdin.close()
+
+    # Read one response header per requested path, in order.
+    for path_bytes in paths:
+        path_str = path_bytes.decode('utf-8', errors='replace')
+        header = cat.stdout.readline()
+        if not header:
+            break
+        # Header form: "<sha> blob <size>\n"  or  "<ref> missing\n"
+        header_stripped = header.rstrip(b'\n')
+        if header_stripped.endswith(b'missing'):
+            # File deleted or not a blob in the index — skip silently.
             continue
-        # Fetch staged content via argv-form invocation (no shell concatenation)
         try:
-            show_proc = subprocess.run(
-                ['git', 'show', ':' + path],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-            )
-        except OSError as exc:
-            print('specflow-lint: git show failed for ' + path + ': ' + str(exc),
-                  file=sys.stderr)
-            hit_count += 1
+            _sha, _obj_type, size_str = header_stripped.split(b' ')
+            size = int(size_str)
+        except ValueError:
+            # Unexpected header shape — skip this blob.
             continue
 
-        if show_proc.returncode != 0:
-            # File may be deleted or unreadable in index; skip
-            continue
-
-        content_bytes = show_proc.stdout
+        content_bytes = cat.stdout.read(size)
+        cat.stdout.read(1)  # consume the trailing newline that follows each blob
 
         if is_binary(content_bytes):
-            emit_result(path, 'binary-skip', None, [])
+            emit_result(path_str, 'binary-skip', None, [])
             ok_count += 1
             continue
 
-        verdict, reason, findings = classify_content(path, content_bytes)
-        emit_result(path, verdict, reason, findings)
+        verdict, reason, findings = classify_content(path_str, content_bytes)
+        emit_result(path_str, verdict, reason, findings)
         if verdict == 'cjk-hit':
             hit_count += 1
         else:
             ok_count += 1
+
+    cat.stdout.close()
+    cat.wait()
 
     if hit_count > 0:
         print('specflow-lint: ' + str(hit_count) + ' cjk-hit finding(s); '
