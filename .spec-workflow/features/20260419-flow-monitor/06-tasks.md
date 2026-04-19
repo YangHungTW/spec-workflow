@@ -930,7 +930,8 @@ W5 implements the test seams the dogfood paradox forces (Architect's §8), instr
   - reviewer-style: document the JSDOM limitation inline.
 - **Depends on**: T15
 - **Parallel-safe-with**: T30, T31, T32, T33, T34, T35, T36, T38, T39, T40, T41, T42
-- [ ]
+- [x]
+- 2026-04-19 Developer — T37 AC9.j computed-style test complete
 
 ---
 
