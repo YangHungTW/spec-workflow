@@ -12,11 +12,3 @@
 | Alice | active |
 | Bob   | idle   |
 
-## Collapsible Details
-
-<details>
-<summary>Click to expand</summary>
-
-Hidden details body text.
-
-</details>

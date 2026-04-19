@@ -1,5 +1,5 @@
 /**
- * T34 — DOMPurify positive-fixture: GFM checkboxes, tables, and details preserved.
+ * T34 — DOMPurify positive-fixture: GFM checkboxes and tables preserved.
  *
  * Uses REAL markdown-it, REAL markdown-it-task-lists, and REAL DOMPurify (no mocks).
  * Verifies that the sanitiser's default profile (plus checkbox relaxation when
@@ -7,6 +7,10 @@
  *
  * R-4 mitigation: if DOMPurify strips <input> by default, the narrowest
  * relaxation is applied — ADD_TAGS: ["input"], ADD_ATTR: ["type","disabled","checked"].
+ *
+ * Note: <details>/<summary> raw HTML passthrough is NOT tested here because
+ * MarkdownPane uses `html: false` (defence-in-depth). Raw HTML blocks are
+ * escaped by markdown-it; this is intentional per T34 security review.
  */
 import { describe, it, expect } from "vitest";
 import { render, waitFor } from "@testing-library/react";
@@ -23,7 +27,7 @@ const FIXTURE_PATH = join(
 );
 const GFM_CONTENT = readFileSync(FIXTURE_PATH, "utf-8");
 
-describe("MarkdownPane GFM positive fixture (real DOMPurify)", () => {
+describe("MarkdownPane GFM positive fixture (real DOMPurify, html:false)", () => {
   it("(a) renders <input type='checkbox' disabled> for task-list items", async () => {
     render(<MarkdownPane content={GFM_CONTENT} />);
 
@@ -50,14 +54,4 @@ describe("MarkdownPane GFM positive fixture (real DOMPurify)", () => {
     });
   });
 
-  it("(c) renders <details> and <summary> for collapsible blocks", async () => {
-    render(<MarkdownPane content={GFM_CONTENT} />);
-
-    await waitFor(() => {
-      const pane = document.querySelector("[data-testid='markdown-pane']");
-      expect(pane).not.toBeNull();
-      expect(pane!.querySelector("details")).not.toBeNull();
-      expect(pane!.querySelector("summary")).not.toBeNull();
-    });
-  });
 });
