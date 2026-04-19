@@ -190,6 +190,23 @@ json_escape() {
   END { printf "" }'
 }
 
+# sniff_lang_chat <path>
+# Sniffs the lang.chat value from a YAML config file.
+# Echoes the token on stdout (empty string if key absent or file unreadable).
+# Awk body is byte-identical to the parent D7 block.
+sniff_lang_chat() {
+  local cfg_file="$1"
+  awk '/^lang:/        {in_lang=1; next}
+    in_lang && /^  chat:/ {
+      sub(/^  chat:[[:space:]]*/, "")
+      gsub(/"/, ""); gsub(/#.*$/, "")
+      gsub(/[[:space:]]+$/, "")
+      print; exit
+    }
+    /^[^ ]/         {in_lang=0}
+  ' "$cfg_file" 2>/dev/null
+}
+
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
@@ -255,35 +272,37 @@ if [ -z "$digest" ]; then
   log_info "no valid rules found in $RULES_DIR"
 fi
 
-# New: read lang.chat from config, append marker line if set
-cfg_file=".spec-workflow/config.yml"
-if [ -r "$cfg_file" ]; then
-  cfg_chat=$(awk '/^lang:/        {in_lang=1; next}
-    in_lang && /^  chat:/ {
-      sub(/^  chat:[[:space:]]*/, "")
-      gsub(/"/, ""); gsub(/#.*$/, "")
-      gsub(/[[:space:]]+$/, "")
-      print; exit
-    }
-    /^[^ ]/         {in_lang=0}
-  ' "$cfg_file" 2>/dev/null)
+# Read lang.chat from an ordered candidate list; first file with the key wins.
+# 1. .spec-workflow/config.yml  (project — wins when present)
+# 2. $XDG_CONFIG_HOME/specflow/config.yml  (only if env var set and non-empty)
+# 3. $HOME/.config/specflow/config.yml  (final tilde fallback)
+CANDIDATES=".spec-workflow/config.yml"
+if [ -n "${XDG_CONFIG_HOME:-}" ]; then
+  CANDIDATES="$CANDIDATES $XDG_CONFIG_HOME/specflow/config.yml"
+fi
+CANDIDATES="$CANDIDATES $HOME/.config/specflow/config.yml"
 
-  case "$cfg_chat" in
-    zh-TW|en)
-      if [ -n "$digest" ]; then
-        digest=$(printf '%s\nLANG_CHAT=%s' "$digest" "$cfg_chat")
-      else
-        digest="LANG_CHAT=$cfg_chat"
-      fi
-      ;;
-    "")
-      # Empty / absent key — default-off, no warning
-      :
-      ;;
-    *)
-      log_warn "config.yml: lang.chat has unknown value '$cfg_chat' — ignored"
-      ;;
-  esac
+cfg_chat=""
+cfg_source=""
+for cfg_file in $CANDIDATES; do
+  [ -r "$cfg_file" ] || continue
+  cfg_chat="$(sniff_lang_chat "$cfg_file")"
+  if [ -n "$cfg_chat" ]; then
+    cfg_source="$cfg_file"
+    break
+  fi
+done
+
+if [ -n "$cfg_chat" ]; then
+  if [ "$cfg_chat" = "zh-TW" ] || [ "$cfg_chat" = "en" ]; then
+    if [ -n "$digest" ]; then
+      digest=$(printf '%s\nLANG_CHAT=%s' "$digest" "$cfg_chat")
+    else
+      digest="LANG_CHAT=$cfg_chat"
+    fi
+  else
+    log_warn "$cfg_source: lang.chat has unknown value '$cfg_chat' — ignored"
+  fi
 fi
 
 # JSON-escape the digest
