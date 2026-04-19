@@ -3,7 +3,7 @@ name: Dogfood paradox — structural verify during bootstrap, runtime exercise n
 description: Features that deliver the tool they would themselves use need structural-only verification; live runtime exercise happens on the next feature.
 type: pattern
 created: 2026-04-18
-updated: 2026-04-18
+updated: 2026-04-19
 ---
 
 <!-- 2026-04-18 update: added fifth and sixth occurrences from
@@ -11,8 +11,25 @@ feature 20260418-per-project-install — the sixth reinforces that
 dogfood execution starts at whatever state the dev machine happens
 to hold, which synthetic sandboxes cannot model. -->
 
+<!-- 2026-04-19 update: 7th occurrence = 20260419-language-preferences
+(SessionStart hook reads lang.chat config, emits LANG_CHAT marker);
+8th occurrence = 20260419-user-lang-config-fallback (same hook
+extended to ordered candidate list: project → XDG → ~/.config). Both
+structurally verified only — runtime handoff from the 7th was
+carried by the 8th's own T1 hook edit; runtime handoff from the 8th
+falls to the NEXT feature archived. Neither surfaced a new dogfood-
+exposed bug, so no new pattern is added — the entries below (4th and
+6th occurrences) still cover the observed failure modes. -->
 
-<!-- NOTE: filename says "third-occurrence" but file now records 4+ occurrences (2026-04-18); kept filename stable to avoid breaking refs. -->
+<!-- Discipline at archive time: every feature that invokes the
+dogfood paradox in its PRD/tech/plan should bump the occurrence log
+above with one sentence each. Do NOT rewrite the body entries unless
+a new failure mode surfaces. -->
+
+<!-- NOTE: filename says "third-occurrence" but file now records 8
+occurrences (2026-04-19); kept filename stable to avoid breaking
+refs. -->
+
 
 ## Rule
 

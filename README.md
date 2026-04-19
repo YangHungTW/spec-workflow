@@ -82,6 +82,49 @@ If you need to roll back, restore from the `.bak` files the tool produced.
 
 ---
 
+## Language preferences
+
+specflow supports an opt-in language preference for chat replies. The setting lives in `.spec-workflow/config.yml` and is user-authored; the file is local-only by default (D1). Users who want the preference shared across contributors can deliberately commit it to the repo.
+
+Absence of the file — or of the `lang.chat` key — means default-off: today's English-only behaviour continues unchanged. The setting is strictly opt-in; no config file required.
+
+### Config key: `lang.chat`
+
+Set `lang.chat` to `zh-TW` (or any BCP-47 tag) to enable chat-reply localisation. Any unrecognised value produces a warning and falls back to the default-off behaviour.
+
+```yaml
+# .spec-workflow/config.yml
+lang:
+  chat: zh-TW    # or "en" (explicit default) — any other value → warning + default-off
+```
+
+The SessionStart hook reads this file and, when `lang.chat: zh-TW` is set, injects a `LANG_CHAT=zh-TW` marker into the session context so every specflow subagent role honours the preference without per-agent duplication. The full conditional and carve-out rules (file content, CLI stdout, commit messages, and team-memory files always stay English regardless of config value) are documented in `.claude/rules/common/language-preferences.md`.
+
+### Precedence
+
+The hook walks these candidates in order and stops at the first file whose `lang.chat` key is present (even if the value is invalid):
+
+1. `.spec-workflow/config.yml` — project-level (repo-local).
+2. `$XDG_CONFIG_HOME/specflow/config.yml` — only when `$XDG_CONFIG_HOME` is set and non-empty.
+3. `~/.config/specflow/config.yml` — user-home fallback.
+
+Invalid values (outside `{zh-TW, en}`) in an earlier candidate produce a single stderr warning naming the path, and the hook falls back to English default for the session. Iteration does **not** cascade past an invalid early candidate to a later one — the invalid file is treated as a deliberate "this is the setting, please fix the typo" signal, not an oversight to route around.
+
+For most users, `~/.config/specflow/config.yml` is the right file to set once and forget; project-level is for team-shared overrides.
+
+### Bypass discipline
+
+Two escape hatches are available when the language preference must be suppressed on a specific commit or file:
+
+- **Emergency (commit-level):** `git commit --no-verify` skips all pre-commit hooks, including the specflow linter that enforces the preference. Use sparingly; the bypass is not audited automatically.
+- **Surgical (per-file):** Add an HTML comment to the file before linting runs:
+  ```
+  <!-- specflow-lint: allow-cjk reason="..." -->
+  ```
+  The linter treats this marker as an exemption for that file only, leaving all other files under normal enforcement.
+
+---
+
 ## Flow
 
 ```
