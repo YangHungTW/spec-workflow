@@ -853,7 +853,8 @@ W5 implements the test seams the dogfood paradox forces (Architect's §8), instr
   - reviewer-security: critical — this is THE XSS test for B1; cite `.claude/rules/reviewer/security.md` check 5.
 - **Depends on**: T16, T22
 - **Parallel-safe-with**: T30, T31, T32, T34, T35, T36, T37, T38, T39, T40, T41, T42
-- [ ]
+- [x]
+- 2026-04-19 Developer — T33 Seam 7 XSS test complete (3 attack vectors stripped)
 
 ---
 
