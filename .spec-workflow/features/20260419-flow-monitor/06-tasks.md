@@ -172,7 +172,7 @@ Every W1 task owns a primary file under `src-tauri/src/`. Append-only collisions
   - reviewer-performance: avoid re-parsing the same content multiple times; one pass through the string.
 - **Depends on**: T5
 - **Parallel-safe-with**: T7, T8, T9, T10 (different primary files; mod-decl + Cargo.toml deps are append-only collisions, resolve keep-both)
-- [ ]
+- [x]
 
 ---
 
