@@ -37,3 +37,4 @@
 - 2026-04-19 review result — wave W0 task T2 retry verdict=NITS (5 should: devDep wildcards on testing-library/types/vitest)
 - 2026-04-19 implement wave W0 done — T1, T2 (retry), T3, T4, T5 merged
 - 2026-04-19 TPM — plan updated: Q-plan-1 Rust 1.83 → 1.88.0 (Tauri 2.10 transitive deps require edition 2024)
+- 2026-04-19 Developer — T6 status_parse complete (pure fn + fixtures)
