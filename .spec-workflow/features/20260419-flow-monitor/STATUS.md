@@ -49,3 +49,14 @@
 - 2026-04-19 implement wave W1 done — T6, T7, T8, T9, T10, T11 merged (66 tests pass)
 - 2026-04-19 TPM — added T43 W1 cleanup task (10 items bundled)
 - 2026-04-19 Developer — T14 retry: rename settings.theme.{light,dark} to 2-level keys (style must)
+- 2026-04-19 Developer — T12 React shell + router complete
+- 2026-04-19 Developer — T13 theme system complete (light/dark, ink-green primary, first-paint)
+- 2026-04-19 Developer — T14 i18n complete (en + zh-TW, 39 keys, parity)
+- 2026-04-19 review result — wave W2 task T14 verdict=BLOCK blocking-tasks=T14(style:3-level keys)
+- 2026-04-19 Developer — T14 retry: rename settings.theme.{light,dark} to 2-level keys
+- 2026-04-19 review result — wave W2 task T14 retry verdict=BLOCK (notification.stalled.title/body also 3-level)
+- 2026-04-19 Developer — T14 retry 2: rename notification.stalled.{title,body} to 2-level; consolidate react imports
+- 2026-04-19 Developer — T15 StagePill + IdleBadge complete (38 snapshot variants)
+- 2026-04-19 Developer — T16 MarkdownPane complete (lazy markdown-it + DOMPurify default)
+- 2026-04-19 review result — wave W2 retry 2 verdict=NITS (advisories only; eager locale load, WHAT-comments, DOMPurify test-mock)
+- 2026-04-19 implement wave W2 done — T12, T13, T14 (retry 2), T15, T16 merged (79 frontend tests pass)
