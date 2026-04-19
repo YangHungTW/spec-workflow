@@ -15,7 +15,7 @@
 - [x] plan          (05-plan.md)                 — TPM
 - [x] tasks         (06-tasks.md)                — TPM
 - [x] implement     (tasks checked off)          — Developer
-- [ ] gap-check     (07-gaps.md, verdict PASS)   — QA-analyst
+- [x] gap-check     (07-gaps.md, verdict PASS)   — QA-analyst
 - [ ] verify        (08-verify.md, verdict PASS) — QA-tester
 - [ ] archive       (moved to .spec-workflow/archive/)     — TPM
 
@@ -76,3 +76,4 @@
 - 2026-04-19 Developer — W5 re-merge: T30/T31/T35/T36/T41 lost commits rescued by direct-SHA merge (Cargo.lock blocking) — re-merged successfully
 - 2026-04-19 implement wave W5 done — T30-T42 all merged (382 tests pass: 99 Rust + 283 frontend)
 - 2026-04-19 implement complete — 43/43 tasks (T1-T42 + T43 cleanup) all merged; feature branch ready for /specflow:gap-check
+- 2026-04-19 QA-analyst — gap-check PASS-WITH-NITS (0 must, 2 should advisories); 37 ACs queued for runtime verify per dogfood paradox
