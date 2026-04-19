@@ -26,6 +26,7 @@
   "btn.openMain": "開啟主視窗 →",
   "btn.revealInFinder": "在 Finder 中顯示",
   "btn.addRepo": "新增倉庫…",
+  "btn.compactPanel": "精簡面板",
   "btn.remove": "移除",
 
   "tab.request": "00 需求",

@@ -26,6 +26,7 @@
   "btn.openMain": "Open main →",
   "btn.revealInFinder": "Reveal in Finder",
   "btn.addRepo": "Add repository…",
+  "btn.compactPanel": "Compact panel",
   "btn.remove": "Remove",
 
   "tab.request": "00 request",

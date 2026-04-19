@@ -61,3 +61,10 @@
 - 2026-04-19 review result — wave W2 retry 2 verdict=NITS (advisories only; eager locale load, WHAT-comments, DOMPurify test-mock)
 - 2026-04-19 implement wave W2 done — T12, T13, T14 (retry 2), T15, T16 merged (79 frontend tests pass)
 - 2026-04-19 Developer — T18 retry: URL param validation guard + 10 i18n keys
+- 2026-04-19 Developer — T25 tray icon complete (macOS-only, stalled-count badge)
+- 2026-04-19 Developer — T26 Notification Center complete (silent, dedupe from T8 store)
+- 2026-04-19 Developer — T27 Finder + clipboard complete (argv-form, path-traversal guard)
+- 2026-04-19 Developer — T28 window-state plugin + set_always_on_top complete
+- 2026-04-19 Developer — T29 compact panel window + polling footer event subscription complete
+- 2026-04-19 review result — wave W4 verdict=NITS (advisories + 3 should: line-length, btn.compactPanel missing i18n key, notify title/body validation)
+- 2026-04-19 implement wave W4 done — T25, T26, T27, T28, T29 merged (316 tests pass: 89 Rust + 227 frontend)
