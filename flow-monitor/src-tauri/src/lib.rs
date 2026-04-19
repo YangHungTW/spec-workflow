@@ -26,6 +26,7 @@ pub fn run() {
             ipc::set_always_on_top,
             ipc::set_notification_strings,
             ipc::open_in_finder,
+            ipc::reveal_in_finder,
             ipc::copy_to_clipboard,
         ])
         .run(tauri::generate_context!())

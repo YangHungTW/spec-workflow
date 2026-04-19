@@ -22,6 +22,7 @@ vi.mock("../../i18n", () => ({
         "btn.openInFinder": "Open in Finder",
         "btn.copyPath": "Copy path",
         "btn.back": "Back",
+        "btn.revealInFinder": "Reveal in Finder",
         "stage.implement": "implement",
         "idle.stalled": "Stalled",
         "idle.stale": "Stale",
@@ -231,5 +232,54 @@ describe("CardDetail — master-detail skeleton", () => {
     // After back, we should no longer be on the feature page
     // The route should navigate to MainWindow
     expect(screen.getByTestId("main-window-restored")).toBeTruthy();
+  });
+});
+
+describe("CardDetail — 02-design tab conditional render (T20)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    window.HTMLElement.prototype.scrollIntoView = vi.fn();
+  });
+
+  it("default tab (00-request) renders CardDetailMarkdownPane, not DesignFolderIndex", () => {
+    renderCardDetail();
+    // CardDetailMarkdownPane renders a footer with the literal string
+    expect(
+      screen.getByText("Read-only preview. Open in Finder to edit."),
+    ).toBeTruthy();
+    // DesignFolderIndex is NOT present
+    expect(
+      document.querySelector("[data-testid='design-folder-index']"),
+    ).toBeNull();
+  });
+
+  it("clicking the 02-design tab shows DesignFolderIndex, not the markdown footer", () => {
+    renderCardDetail();
+    const designTab = screen.getByRole("tab", { name: "02 design" });
+    fireEvent.click(designTab);
+    // DesignFolderIndex must be present
+    expect(
+      document.querySelector("[data-testid='design-folder-index']"),
+    ).toBeTruthy();
+    // The read-only markdown footer must NOT be present inside the tab content area
+    const tabContent = document.querySelector("[data-testid='tab-content-placeholder']");
+    expect(
+      tabContent?.querySelector(".card-detail__markdown-footer"),
+    ).toBeNull();
+  });
+
+  it("switching back to 00-request tab hides DesignFolderIndex and shows markdown pane", () => {
+    renderCardDetail();
+    const designTab = screen.getByRole("tab", { name: "02 design" });
+    fireEvent.click(designTab);
+    // Now switch back to 00-request
+    const requestTab = screen.getByRole("tab", { name: "00 request" });
+    fireEvent.click(requestTab);
+    expect(
+      document.querySelector("[data-testid='design-folder-index']"),
+    ).toBeNull();
+    expect(
+      screen.getByText("Read-only preview. Open in Finder to edit."),
+    ).toBeTruthy();
   });
 });
