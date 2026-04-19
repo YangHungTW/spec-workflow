@@ -11,6 +11,11 @@ pub mod tray;
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_clipboard_manager::init())
+        // Restores position + size for every named window (main, compact) before
+        // first paint. Applied unconditionally — the RISK GATE in 05-plan.md R-2
+        // requires dropping this plugin if it causes flash, drift, or focus
+        // issues; document the cut in STATUS Notes if that occurs.
+        .plugin(tauri_plugin_window_state::Builder::default().build())
         .plugin(tauri_plugin_opener::init())
         .manage(ipc::SettingsState(std::sync::Mutex::new(
             ipc::Settings::default(),

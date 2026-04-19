@@ -252,18 +252,78 @@ pub fn set_compact_panel_open(
     Ok(())
 }
 
-/// Toggle the always-on-top window hint in settings.
+/// Toggle the always-on-top window hint for the compact panel and persist in
+/// settings.
+///
+/// The command attempts to apply the hint to the live compact panel window
+/// (label = "compact") if it exists. If the compact window has not been
+/// created yet (T29 creates it on demand), `COMPACT_WINDOW_NOT_FOUND` is
+/// returned so the caller can surface a user-friendly message. The settings
+/// field is always updated regardless of whether the window was found, so
+/// the preference is honoured the next time the compact panel opens.
 #[tauri::command]
 pub fn set_always_on_top(
     always_on_top: bool,
+    app: tauri::AppHandle,
     settings: tauri::State<'_, SettingsState>,
 ) -> Result<(), IpcError> {
-    let mut guard = settings.0.lock().map_err(|_| IpcError {
-        code: "LOCK_POISONED",
-        message: "settings lock is poisoned".into(),
-    })?;
-    guard.always_on_top = always_on_top;
-    Ok(())
+    set_always_on_top_inner(
+        always_on_top,
+        &settings.0,
+        |label| {
+            use tauri::Manager;
+            app.get_webview_window(label)
+                .map(|w| Box::new(w) as Box<dyn WindowAlwaysOnTop>)
+        },
+    )
+}
+
+/// Trait abstraction over the always-on-top call so the inner function is
+/// unit-testable without a live Tauri runtime.
+pub trait WindowAlwaysOnTop {
+    fn set_always_on_top(&self, value: bool) -> Result<(), String>;
+}
+
+impl WindowAlwaysOnTop for tauri::WebviewWindow {
+    fn set_always_on_top(&self, value: bool) -> Result<(), String> {
+        tauri::WebviewWindow::set_always_on_top(self, value)
+            .map_err(|e| e.to_string())
+    }
+}
+
+/// Inner implementation of `set_always_on_top`, extracted for unit
+/// testability.
+///
+/// `window_lookup` is called with the label `"compact"` and should return
+/// `Some(Box<dyn WindowAlwaysOnTop>)` when the window exists, `None`
+/// otherwise.  The settings field is always written, even when the window is
+/// absent, so that the preference is applied when the compact panel opens.
+pub fn set_always_on_top_inner(
+    always_on_top: bool,
+    store: &std::sync::Mutex<Settings>,
+    window_lookup: impl FnOnce(&str) -> Option<Box<dyn WindowAlwaysOnTop>>,
+) -> Result<(), IpcError> {
+    // Persist the preference first — independent of whether the window exists.
+    {
+        let mut guard = store.lock().map_err(|_| IpcError {
+            code: "LOCK_POISONED",
+            message: "settings lock is poisoned".into(),
+        })?;
+        guard.always_on_top = always_on_top;
+    }
+
+    // Apply to the live compact panel window if it exists.
+    match window_lookup("compact") {
+        Some(win) => win.set_always_on_top(always_on_top).map_err(|e| IpcError {
+            code: "WINDOW_OP_FAILED",
+            message: format!("set_always_on_top failed on compact window: {e}"),
+        }),
+        None => Err(IpcError {
+            code: "COMPACT_WINDOW_NOT_FOUND",
+            message: "compact panel window does not exist yet; preference saved for next open"
+                .into(),
+        }),
+    }
 }
 
 /// Update localised notification strings supplied by the renderer (AC11.d).
@@ -657,6 +717,97 @@ mod tests {
         let guard = stored.lock().unwrap();
         assert_eq!(guard.repos, initial.repos,
             "stored settings must not be mutated on canonicalise failure");
+    }
+
+    // ---------------------------------------------------------------------------
+    // set_always_on_top_inner — window-state persistence + real window wiring
+    // ---------------------------------------------------------------------------
+
+    /// When the compact window does not exist, `set_always_on_top_inner` must
+    /// return `COMPACT_WINDOW_NOT_FOUND` AND still persist the preference.
+    #[test]
+    fn set_always_on_top_inner_no_window_persists_preference_and_errors() {
+        let stored = std::sync::Arc::new(Mutex::new(Settings::default()));
+        assert_eq!(stored.lock().unwrap().always_on_top, true); // default
+
+        let result = set_always_on_top_inner(
+            false,
+            &stored,
+            |_label| None, // compact window absent
+        );
+
+        assert!(result.is_err(), "expected error when compact window is absent");
+        let err = result.unwrap_err();
+        assert_eq!(err.code, "COMPACT_WINDOW_NOT_FOUND",
+            "error code must be COMPACT_WINDOW_NOT_FOUND, got: {}", err.code);
+
+        // Preference must be persisted even though the window was absent.
+        let guard = stored.lock().unwrap();
+        assert!(!guard.always_on_top, "always_on_top must be updated in settings");
+    }
+
+    /// When the compact window exists and the call succeeds, the function
+    /// returns `Ok(())` and the preference is persisted.
+    #[test]
+    fn set_always_on_top_inner_window_present_applies_and_persists() {
+        use std::cell::Cell;
+        use std::rc::Rc;
+
+        let stored = std::sync::Arc::new(Mutex::new(Settings::default()));
+        // Track that the window call was made.
+        let called_with: Rc<Cell<Option<bool>>> = Rc::new(Cell::new(None));
+        let called_with_clone = Rc::clone(&called_with);
+
+        struct MockWindow {
+            record: Rc<Cell<Option<bool>>>,
+        }
+        impl WindowAlwaysOnTop for MockWindow {
+            fn set_always_on_top(&self, value: bool) -> Result<(), String> {
+                self.record.set(Some(value));
+                Ok(())
+            }
+        }
+
+        let result = set_always_on_top_inner(
+            false,
+            &stored,
+            move |_label| {
+                Some(Box::new(MockWindow { record: called_with_clone }) as Box<dyn WindowAlwaysOnTop>)
+            },
+        );
+
+        assert!(result.is_ok(), "expected Ok when window is present: {:?}", result.err());
+        assert_eq!(called_with.get(), Some(false), "window set_always_on_top must be called with false");
+        let guard = stored.lock().unwrap();
+        assert!(!guard.always_on_top, "always_on_top must be persisted as false");
+    }
+
+    /// When the compact window exists but the OS call fails, the function
+    /// returns `WINDOW_OP_FAILED`.
+    #[test]
+    fn set_always_on_top_inner_window_op_failure_returns_error() {
+        let stored = std::sync::Arc::new(Mutex::new(Settings::default()));
+
+        struct FailWindow;
+        impl WindowAlwaysOnTop for FailWindow {
+            fn set_always_on_top(&self, _value: bool) -> Result<(), String> {
+                Err("OS denied the request".into())
+            }
+        }
+
+        let result = set_always_on_top_inner(
+            true,
+            &stored,
+            |_label| Some(Box::new(FailWindow) as Box<dyn WindowAlwaysOnTop>),
+        );
+
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert_eq!(err.code, "WINDOW_OP_FAILED",
+            "expected WINDOW_OP_FAILED, got: {}", err.code);
+        // Preference was still saved before the window call.
+        let guard = stored.lock().unwrap();
+        assert!(guard.always_on_top, "always_on_top was set to true before window op");
     }
 
     /// update_settings must canonicalise valid repo paths in the patch and store
