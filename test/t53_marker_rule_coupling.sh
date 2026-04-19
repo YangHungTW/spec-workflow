@@ -68,21 +68,20 @@ fi
 # emits it dynamically.
 # ---------------------------------------------------------------------------
 cd "$REPO_ROOT"
-unexpected=$(grep -rlF 'LANG_CHAT=zh-TW' . \
-  --exclude-dir=.git \
-  --exclude-dir=archive \
-  2>/dev/null \
+UNEXPECTED=$(grep -rlF 'LANG_CHAT=zh-TW' . 2>/dev/null \
+  | grep -v '^\./\.git/' \
+  | grep -v '^\./\.spec-workflow/archive/' \
   | grep -v '^\./\.claude/rules/common/language-preferences\.md$' \
   | grep -v '^\./test/t53_' \
   | grep -v '^\./\.spec-workflow/features/20260419-language-preferences/' \
   || true)
 
-if [ -z "$unexpected" ]; then
+if [ -z "$UNEXPECTED" ]; then
   echo "PASS: literal LANG_CHAT=zh-TW appears in no unexpected files"
   PASS=$((PASS + 1))
 else
   echo "FAIL: literal LANG_CHAT=zh-TW appears in unexpected files:" >&2
-  printf '%s\n' "$unexpected" >&2
+  printf '%s\n' "$UNEXPECTED" >&2
   FAIL=$((FAIL + 1))
 fi
 
