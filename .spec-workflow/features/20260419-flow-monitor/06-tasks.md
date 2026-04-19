@@ -547,7 +547,8 @@ W3 composes W2 primitives + W1 IPC into the user-facing routes. App.tsx routes b
   - reviewer-style: i18n; no hardcoded strings.
 - **Depends on**: T11, T18
 - **Parallel-safe-with**: T17, T18, T20, T21, T22, T23, T24
-- [ ]
+- [x]
+- 2026-04-19 Developer — T19 TabStrip complete (horizontal scroll, auto-scroll-into-view)
 
 ---
 

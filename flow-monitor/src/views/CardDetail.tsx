@@ -1,9 +1,10 @@
+import { useState } from "react";
 import { useParams, useNavigate, useSearchParams, Navigate } from "react-router-dom";
 import { CardDetailHeader } from "../components/CardDetailHeader";
 import { StageChecklist } from "../components/StageChecklist";
+import { TabStrip } from "../components/TabStrip";
 import type { StageKey } from "../components/StagePill";
 import type { IdleState } from "../components/IdleBadge";
-import { useTranslation } from "../i18n";
 
 /** Validates URL path segment — allows only alphanumeric, hyphen, underscore. */
 const SAFE_ID = /^[A-Za-z0-9_-]+$/;
@@ -13,20 +14,19 @@ function isSafeId(s: string | undefined): s is string {
 
 /**
  * The 9 markdown document tabs shown in CardDetail.
- * T19 will add horizontal scroll + active-tab auto-scroll-into-view.
  * T22 will wrap content with MarkdownPane + read-only footer.
- * T18 provides only the skeleton: container + 9 tab button stubs.
+ * exists: true for all tabs until IPC list_artefact_files wiring lands in T20.
  */
 const TAB_DEFINITIONS = [
-  { id: "00-request", labelKey: "tab.request" as const },
-  { id: "01-brainstorm", labelKey: "tab.brainstorm" as const },
-  { id: "02-design", labelKey: "tab.design" as const },
-  { id: "03-prd", labelKey: "tab.prd" as const },
-  { id: "04-tech", labelKey: "tab.tech" as const },
-  { id: "05-plan", labelKey: "tab.plan" as const },
-  { id: "06-tasks", labelKey: "tab.tasks" as const },
-  { id: "07-gaps", labelKey: "tab.gaps" as const },
-  { id: "08-verify", labelKey: "tab.verify" as const },
+  { id: "00-request", labelKey: "tab.request" as const, exists: true },
+  { id: "01-brainstorm", labelKey: "tab.brainstorm" as const, exists: true },
+  { id: "02-design", labelKey: "tab.design" as const, exists: true },
+  { id: "03-prd", labelKey: "tab.prd" as const, exists: true },
+  { id: "04-tech", labelKey: "tab.tech" as const, exists: true },
+  { id: "05-plan", labelKey: "tab.plan" as const, exists: true },
+  { id: "06-tasks", labelKey: "tab.tasks" as const, exists: true },
+  { id: "07-gaps", labelKey: "tab.gaps" as const, exists: true },
+  { id: "08-verify", labelKey: "tab.verify" as const, exists: true },
 ];
 
 /**
@@ -52,7 +52,8 @@ function CardDetail() {
   }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { t } = useTranslation();
+
+  const [activeTabId, setActiveTabId] = useState<string>(TAB_DEFINITIONS[0].id);
 
   /** Guard: reject invalid URL path segments before any path construction. */
   if (!isSafeId(repoId) || !isSafeId(slug)) {
@@ -124,27 +125,14 @@ function CardDetail() {
           data-testid="card-detail-right-pane"
         >
           {/*
-           * Tab strip — T18 provides 9 stub buttons only.
-           * T19 adds horizontal scroll + active-tab auto-scroll-into-view.
-           * NO overflow menu, NO wrap (T19 constraint).
+           * Tab strip — horizontal scroll, active-tab auto-scroll-into-view (AC9.g).
+           * NO overflow menu, NO wrap per AC9.g constraint.
            */}
-          <div
-            className="card-detail__tab-strip"
-            data-testid="tab-strip-placeholder"
-            role="tablist"
-          >
-            {TAB_DEFINITIONS.map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                role="tab"
-                className="card-detail__tab"
-                data-tab-id={tab.id}
-              >
-                {t(tab.labelKey)}
-              </button>
-            ))}
-          </div>
+          <TabStrip
+            tabs={TAB_DEFINITIONS}
+            activeId={activeTabId}
+            onSelect={setActiveTabId}
+          />
 
           {/* Tab content area — T19/T20/T22 wire real content */}
           <div
