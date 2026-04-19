@@ -256,7 +256,8 @@ Every W1 task owns a primary file under `src-tauri/src/`. Append-only collisions
   - reviewer-style: watch for B2 leakage — settings struct has NO `controlPlaneEnabled`, NO `instructionHistory` keys.
 - **Depends on**: T5
 - **Parallel-safe-with**: T6, T7, T8, T9
-- [ ]
+- [x]
+- STATUS: - 2026-04-19 Developer — T10 settings_io complete (atomic write, .bak, schema_version 1)
 
 ---
 
