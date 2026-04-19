@@ -589,7 +589,9 @@ W3 composes W2 primitives + W1 IPC into the user-facing routes. App.tsx routes b
   - reviewer-style: i18n N/A for verbatim Notes content.
 - **Depends on**: T6, T11, T18
 - **Parallel-safe-with**: T17, T18, T19, T20, T22, T23, T24
-- [ ]
+- [x]
+- STATUS Notes:
+  - 2026-04-19 Developer — T21 NotesTimeline complete (newest-first, untruncated)
 
 ---
 

@@ -3,6 +3,8 @@ import { useParams, useNavigate, useSearchParams, Navigate } from "react-router-
 import { CardDetailHeader } from "../components/CardDetailHeader";
 import { StageChecklist } from "../components/StageChecklist";
 import { TabStrip } from "../components/TabStrip";
+import { NotesTimeline } from "../components/NotesTimeline";
+import type { NoteEntry } from "../components/NotesTimeline";
 import type { StageKey } from "../components/StagePill";
 import type { IdleState } from "../components/IdleBadge";
 
@@ -93,6 +95,14 @@ function CardDetail() {
   const stage: StageKey = "implement";
   const idleState: IdleState = "none";
 
+  /**
+   * Notes — stub: empty array until IPC read_artefact → status_parse
+   * integration lands in a later task. NotesTimeline renders nothing for
+   * an empty array, which is the correct B1 behaviour before wiring.
+   * STUB (T21): replace with real data from IPC when integration task ships.
+   */
+  const notes: NoteEntry[] = [];
+
   return (
     <div className="card-detail" data-testid="card-detail">
       <CardDetailHeader
@@ -112,11 +122,8 @@ function CardDetail() {
         >
           <StageChecklist currentStage={stage} />
 
-          {/* Notes timeline — rendered by T21 (NotesTimeline component) */}
-          <div
-            className="card-detail__notes-placeholder"
-            data-testid="notes-timeline-placeholder"
-          />
+          {/* Notes timeline — T21: NotesTimeline wired with stub notes array. */}
+          <NotesTimeline notes={notes} />
         </aside>
 
         {/* Right pane: tab strip + content area */}
