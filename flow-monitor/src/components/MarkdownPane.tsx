@@ -14,8 +14,12 @@ interface MarkdownPaneProps {
  *    dangerouslySetInnerHTML — no HTML reaches the DOM without sanitisation.
  *  - DOMPurify DEFAULT profile is used; no tags/attrs are relaxed.
  *  - markdown-it-task-lists plugin is enabled for GFM checkbox support (R-4).
- *  - GFM tables are enabled via markdown-it's built-in `html: false` + `linkify`
- *    defaults; tables are always on in markdown-it 14.
+ *  - GFM tables are enabled via markdown-it's built-in table support; tables
+ *    are always on in markdown-it 14.
+ *  - `html: false` keeps the markdown-it escape layer intact so raw HTML blocks
+ *    (e.g. <details>/<summary>) are escaped rather than passed through. This is
+ *    intentional: defence-in-depth requires TWO barriers (markdown-it escaping +
+ *    DOMPurify sanitisation). Raw HTML passthrough is not a B1 requirement.
  */
 function MarkdownPane({ content }: MarkdownPaneProps) {
   const [safeHtml, setSafeHtml] = useState<string>("");
@@ -36,8 +40,11 @@ function MarkdownPane({ content }: MarkdownPaneProps) {
       if (cancelled) return;
 
       const md = new MarkdownIt({
-        // HTML passthrough is disabled — raw HTML tags in source are escaped,
-        // never inserted verbatim (XSS-safe default).
+        // html: false (default) — raw HTML blocks are escaped by markdown-it
+        // before DOMPurify sees them. Keeping this false preserves the
+        // defence-in-depth two-barrier model: markdown-it escapes first,
+        // DOMPurify sanitises second. Raw HTML passthrough (<details> etc.)
+        // is not required by any B1 acceptance criterion.
         html: false,
         // Linkify plain-text URLs so they become clickable anchors.
         linkify: true,

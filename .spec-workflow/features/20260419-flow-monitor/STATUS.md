@@ -68,3 +68,4 @@
 - 2026-04-19 Developer — T29 compact panel window + polling footer event subscription complete
 - 2026-04-19 review result — wave W4 verdict=NITS (advisories + 3 should: line-length, btn.compactPanel missing i18n key, notify title/body validation)
 - 2026-04-19 implement wave W4 done — T25, T26, T27, T28, T29 merged (316 tests pass: 89 Rust + 227 frontend)
+- 2026-04-19 Developer — T34 retry: Option A revert html:true back to html:false; defence-in-depth two-barrier model restored; <details>/<summary> test (c) removed (not a B1 AC); JSDoc updated
