@@ -1,0 +1,61 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`IdleBadge > theme: dark > renders idle state "none" in dark theme (snapshot) 1`] = `
+<span
+  class="idle-badge"
+  data-idle-state="none"
+  style="background-color: var(--idle-none-bg); color: var(--idle-none-fg);"
+>
+  idle.none
+</span>
+`;
+
+exports[`IdleBadge > theme: dark > renders idle state "stale" in dark theme (snapshot) 1`] = `
+<span
+  class="idle-badge"
+  data-idle-state="stale"
+  style="background-color: var(--idle-stale-bg); color: var(--idle-stale-fg);"
+>
+  idle.stale
+</span>
+`;
+
+exports[`IdleBadge > theme: dark > renders idle state "stalled" in dark theme (snapshot) 1`] = `
+<span
+  class="idle-badge"
+  data-idle-state="stalled"
+  style="background-color: var(--idle-stalled-bg); color: var(--idle-stalled-fg);"
+>
+  idle.stalled
+</span>
+`;
+
+exports[`IdleBadge > theme: light > renders idle state "none" in light theme (snapshot) 1`] = `
+<span
+  class="idle-badge"
+  data-idle-state="none"
+  style="background-color: var(--idle-none-bg); color: var(--idle-none-fg);"
+>
+  idle.none
+</span>
+`;
+
+exports[`IdleBadge > theme: light > renders idle state "stale" in light theme (snapshot) 1`] = `
+<span
+  class="idle-badge"
+  data-idle-state="stale"
+  style="background-color: var(--idle-stale-bg); color: var(--idle-stale-fg);"
+>
+  idle.stale
+</span>
+`;
+
+exports[`IdleBadge > theme: light > renders idle state "stalled" in light theme (snapshot) 1`] = `
+<span
+  class="idle-badge"
+  data-idle-state="stalled"
+  style="background-color: var(--idle-stalled-bg); color: var(--idle-stalled-fg);"
+>
+  idle.stalled
+</span>
+`;
