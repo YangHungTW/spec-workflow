@@ -845,7 +845,14 @@ for t in t13_settings_json t14_rules_dir_structure t15_rules_schema \
          t63_lint_no_jq_no_readlink_f \
          t64_precommit_shim_wiring \
          t65_subagent_diff_empty \
-         t66_readme_doc_section; do
+         t66_readme_doc_section \
+         t67_userlang_all_absent \
+         t68_userlang_user_home_only \
+         t69_userlang_project_over_user \
+         t70_userlang_xdg_over_tilde \
+         t71_userlang_stop_on_first_invalid \
+         t72_userlang_missing_doesnt_stop \
+         t73_userlang_structural_grep; do
   echo "--- $t ---"
   if bash "$REPO_ROOT/test/${t}.sh" >/dev/null 2>&1; then
     echo "  PASS"
