@@ -33,4 +33,5 @@ tracing-subscriber = "0.3"
 
 [dev-dependencies]
 tempfile = "3"
+walkdir = "2"
 
