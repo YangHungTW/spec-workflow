@@ -17,10 +17,20 @@
 # bounded by what git diff actually reports; the test will PASS vacuously if
 # no .claude/agents/specflow/ path exists in the diff at all.
 #
-# No sandbox: all operations are read-only (git diff, awk).
 # Bash 3.2 portable. No jq, no mapfile, no readlink -f, no [[ =~ ]].
 
 set -u -o pipefail
+
+# Sandbox discipline — template rule (sandbox-home-in-tests.md) applies uniformly,
+# even for read-only scripts, so audits are simple.
+SANDBOX="$(mktemp -d 2>/dev/null || mktemp -d -t t65)"
+trap 'rm -rf "$SANDBOX"' EXIT
+export HOME="$SANDBOX/home"
+mkdir -p "$HOME"
+case "$HOME" in
+  "$SANDBOX"*) ;;
+  *) echo "FAIL: HOME not isolated: $HOME" >&2; exit 2 ;;
+esac
 
 # Locate repo root relative to this script — never hardcode the worktree path
 # (test-script-path-convention memory).
