@@ -8,6 +8,7 @@ vi.mock("../../i18n", () => ({
     locale: "en",
     setLocale: vi.fn(),
   }),
+  I18nProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 // Stub Tauri IPC — route by command so MainWindow (list_sessions) and Settings (get_settings) both work

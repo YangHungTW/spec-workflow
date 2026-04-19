@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { afterEach, describe, it, expect, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
@@ -5,7 +6,8 @@ import App from "../App";
 
 // Mock i18n so components using useTranslation render without an I18nProvider in the tree
 vi.mock("../i18n", () => ({
-  useTranslation: () => ({ t: (key: string) => key }),
+  useTranslation: () => ({ t: (key: string) => key, locale: "en", setLocale: () => undefined }),
+  I18nProvider: ({ children }: { children: ReactNode }) => children,
 }));
 
 // Stub Tauri IPC — route by command so MainWindow (list_sessions), Settings (get_settings), and CompactPanel (focus_main_window) all work
