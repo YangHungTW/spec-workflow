@@ -5,6 +5,7 @@ import { StageChecklist } from "../components/StageChecklist";
 import { TabStrip } from "../components/TabStrip";
 import { NotesTimeline } from "../components/NotesTimeline";
 import type { NoteEntry } from "../components/NotesTimeline";
+import CardDetailMarkdownPane from "../components/CardDetailMarkdownPane";
 import type { StageKey } from "../components/StagePill";
 import type { IdleState } from "../components/IdleBadge";
 
@@ -141,11 +142,18 @@ function CardDetail() {
             onSelect={setActiveTabId}
           />
 
-          {/* Tab content area — T19/T20/T22 wire real content */}
+          {/*
+           * Tab content area — T22 wires MarkdownPane + read-only footer.
+           * Content is an empty string stub; T19/T20 supply real artefact content
+           * via IPC read_artefact once active-tab state is wired.
+           * AC9.e: no edit affordance inside CardDetailMarkdownPane by design.
+           */}
           <div
             className="card-detail__tab-content"
             data-testid="tab-content-placeholder"
-          />
+          >
+            <CardDetailMarkdownPane content="" />
+          </div>
         </main>
       </div>
     </div>
