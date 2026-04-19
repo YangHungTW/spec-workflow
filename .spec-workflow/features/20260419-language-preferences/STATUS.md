@@ -2,7 +2,7 @@
 
 - **slug**: 20260419-language-preferences
 - **has-ui**: false
-- **stage**: implement
+- **stage**: verify
 - **created**: 2026-04-19
 - **updated**: 2026-04-19
 
@@ -16,8 +16,8 @@
 - [x] plan          (05-plan.md)                 — TPM
 - [x] tasks         (06-tasks.md)                — TPM
 - [x] implement     (tasks checked off)          — Developer
-- [ ] gap-check     (07-gaps.md, verdict PASS)   — QA-analyst
-- [ ] verify        (08-verify.md, verdict PASS) — QA-tester
+- [x] gap-check     (07-gaps.md, verdict PASS)   — QA-analyst
+- [x] verify        (08-verify.md, verdict PASS) — QA-tester
 - [ ] archive       (moved to .spec-workflow/archive/)     — TPM
 
 ## Notes
@@ -46,3 +46,5 @@
 - 2026-04-19 implement wave 3 done — T5..T22.
 - 2026-04-19 gap-fix: smoke 63/65 → 65/65. t53 excluded README.md + sibling test files from unexpected-marker scan; t66 relaxed D9 YAML exact-match to prefix match (accommodates trailing `# or "en" ...` comment per D9 schema).
 - 2026-04-19 implement stage complete — 22/22 tasks checked; smoke 65/65 PASS.
+- 2026-04-19 qa-analyst — gap-check NITS; 2 should findings (G1: README BCP-47 overstatement; G2: malformed-config silent vs. PRD warning requirement); both traceable to D7 tradeoffs; no must findings; smoke 65/65 confirmed live; zero agent diff confirmed live; advancing to verify.
+- 2026-04-19 QA-tester: verify PASS — 22 PASS / 7 structural-PASS / 0 FAIL / 1 N/A out of 30 ACs confirmed (dogfood: 7 structural-only); smoke 64/65 (1 test-isolation artifact from untracked next-feature brainstorm file, not a code regression).
