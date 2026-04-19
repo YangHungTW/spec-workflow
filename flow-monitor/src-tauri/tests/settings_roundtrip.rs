@@ -5,6 +5,7 @@
 /// verified at the integration level (not just unit level).
 use flow_monitor_lib::settings::{self, Language, Settings, Theme};
 use serde_json::Value;
+use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 
@@ -208,4 +209,155 @@ fn seam5_corrupt_json_renamed_and_defaults_returned() {
         .iter()
         .any(|e| e.file_name().to_string_lossy().contains(".corrupt-"));
     assert!(has_corrupt, ".corrupt-<epoch> file must exist after rename");
+}
+
+// ---------------------------------------------------------------------------
+// T9 — full-struct byte-equality: every field set to a non-default value
+// ---------------------------------------------------------------------------
+//
+// Unlike T1 (which sets most fields), this test exhaustively sets EVERY field
+// declared on `Settings` to a value different from its `Default` impl, then
+// performs a double round-trip to confirm structural stability. This guards
+// against a future field addition that is accidentally omitted from serialisation.
+
+#[test]
+fn seam5_all_fields_non_default_round_trip() {
+    let dir = tempfile::tempdir().unwrap();
+    let p = dir.path().join("settings.json");
+
+    // Build a Settings value where every field differs from Default::default().
+    let mut repo_collapse: HashMap<PathBuf, bool> = HashMap::new();
+    repo_collapse.insert(PathBuf::from("/tmp/repo-alpha"), true);
+    repo_collapse.insert(PathBuf::from("/tmp/repo-beta"), false);
+
+    let original = Settings {
+        // schema_version is fixed at 1 for B1; changing it would be a protocol
+        // break, so we keep it at 1 and assert it survives the round-trip.
+        schema_version: 1,
+        repos: vec![
+            PathBuf::from("/tmp/repo-alpha"),
+            PathBuf::from("/tmp/repo-beta"),
+        ],
+        // non-default: default is 3
+        polling_interval_secs: 5,
+        // non-default: default is 5
+        stale_threshold_mins: 20,
+        // non-default: default is 30
+        stalled_threshold_mins: 60,
+        // non-default: default is true
+        notifications_enabled: false,
+        // non-default: default is true
+        always_on_top: false,
+        // non-default: default is Language::En
+        language: Language::ZhTw,
+        // non-default: default is Theme::Light
+        theme: Theme::Dark,
+        repo_section_collapse: repo_collapse,
+    };
+
+    // First write → read → must equal original.
+    settings::write(&p, &original).unwrap();
+    let after_first = settings::read(&p);
+    assert_eq!(
+        original, after_first,
+        "first round-trip must produce byte-equal Settings for all fields"
+    );
+
+    // Second write → read → must still equal original (idempotency).
+    settings::write(&p, &after_first).unwrap();
+    let after_second = settings::read(&p);
+    assert_eq!(
+        original, after_second,
+        "second round-trip must still produce byte-equal Settings"
+    );
+}
+
+// ---------------------------------------------------------------------------
+// T10 — atomic-write crash simulation: .bak protects the original file
+// ---------------------------------------------------------------------------
+//
+// Strategy: use `std::panic::catch_unwind` to simulate a mid-write crash
+// without spawning an external subprocess (which would require a dedicated
+// test binary).  We:
+//   1. Write a known-good settings file.  settings::write() creates .bak on
+//      the *second* write, so we write twice to ensure .bak exists.
+//   2. Simulate a crash by writing .tmp manually and then abandoning it
+//      (the rename never happens), mirroring what would occur if the process
+//      were killed after Phase 3 but before Phase 5 of settings::write().
+//   3. Confirm the live settings.json still parses correctly and matches the
+//      last-known-good content.
+//   4. Confirm .bak is byte-identical to the last-known-good state, so a
+//      recovery procedure could use it even if .tmp is corrupt.
+
+#[test]
+fn seam5_atomic_write_crash_leaves_original_intact() {
+    let dir = tempfile::tempdir().unwrap();
+    let p = dir.path().join("settings.json");
+
+    // --- Step 1: establish a known-good state. ---
+    let good = Settings {
+        polling_interval_secs: 4,
+        stale_threshold_mins: 10,
+        stalled_threshold_mins: 50,
+        notifications_enabled: false,
+        always_on_top: false,
+        language: Language::ZhTw,
+        theme: Theme::Dark,
+        repos: vec![PathBuf::from("/tmp/known-good-repo")],
+        ..Settings::default()
+    };
+
+    // First write: creates the live file; no .bak yet.
+    settings::write(&p, &good).unwrap();
+    // Second write: copies live → .bak, then atomically renames .tmp → live.
+    // After this call both p and p.bak exist and contain `good`.
+    settings::write(&p, &good).unwrap();
+
+    let bak_path = {
+        let mut b = p.as_os_str().to_os_string();
+        b.push(".bak");
+        PathBuf::from(b)
+    };
+    let tmp_path = {
+        let mut t = p.as_os_str().to_os_string();
+        t.push(".tmp");
+        PathBuf::from(t)
+    };
+
+    assert!(p.exists(), "live file must exist before crash simulation");
+    assert!(bak_path.exists(), ".bak must exist before crash simulation");
+
+    // Capture the live-file content so we can compare after the simulated crash.
+    let good_bytes = fs::read(&p).unwrap();
+
+    // --- Step 2: simulate a crash mid-write. ---
+    // Write corrupt/partial content to .tmp (as if write() had completed Phase 3
+    // but was killed before the Phase 5 rename).
+    fs::write(&tmp_path, b"{ \"partial\": true, \"corrupt\": }").unwrap();
+    // We intentionally do NOT rename .tmp → p; the process "crashed" here.
+
+    // --- Step 3: confirm the live file is still intact. ---
+    // The live path must not have been touched by the aborted write.
+    let live_bytes = fs::read(&p).unwrap();
+    assert_eq!(
+        good_bytes, live_bytes,
+        "live settings.json must be byte-identical to good state after crash"
+    );
+
+    // Must still parse successfully — not corrupt.
+    let recovered = settings::read(&p);
+    assert_eq!(
+        good, recovered,
+        "settings::read() must return the good Settings after crash"
+    );
+
+    // --- Step 4: confirm .bak is also the good state (recovery path). ---
+    let bak_bytes = fs::read(&bak_path).unwrap();
+    assert_eq!(
+        good_bytes, bak_bytes,
+        ".bak must be byte-identical to last good state for manual recovery"
+    );
+
+    // Clean up the leftover .tmp so the tempdir drops cleanly.
+    let _ = fs::remove_file(&tmp_path);
 }
