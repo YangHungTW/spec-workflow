@@ -4,6 +4,7 @@ pub mod repo_discovery;
 pub mod settings;
 pub mod status_parse;
 pub mod store;
+pub mod tray;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
