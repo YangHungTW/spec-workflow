@@ -383,7 +383,8 @@ W2 may run concurrently with W1 once W0 is merged. Append-only collisions on `sr
   - reviewer-style: watch for B2 leakage — no `/control-plane` or `/send-instruction` route declared.
 - **Depends on**: T5
 - **Parallel-safe-with**: T13, T14, T15, T16 (different primary files; package.json + main.tsx are append-only)
-- [ ]
+- [x]
+- STATUS: - 2026-04-19 Developer — T12 React shell + router complete
 
 ---
 
