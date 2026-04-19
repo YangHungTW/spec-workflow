@@ -29,12 +29,13 @@ vi.mock("@tauri-apps/api/core", () => ({
   }),
 }));
 
-// MainWindow, CardDetail, Settings still have stub/smoke tests here.
+// MainWindow, CardDetail (T18 master-detail), Settings still have stub/smoke tests here.
 // EmptyState and CompactPanel replaced by T24 — full tests in their own files.
 import MainWindow from "../MainWindow";
 import CardDetail from "../CardDetail";
 import Settings from "../Settings";
 import { I18nProvider } from "../../i18n";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 
 describe("Route stub placeholders", () => {
   it("MainWindow renders the main window layout (T17 replaced stub)", () => {
@@ -44,9 +45,18 @@ describe("Route stub placeholders", () => {
     expect(main).toBeTruthy();
   });
 
-  it("CardDetail renders placeholder text", () => {
-    render(<CardDetail />);
-    expect(screen.getByText("CardDetail")).toBeTruthy();
+  it("CardDetail renders master-detail skeleton (T18 replaced stub)", () => {
+    // CardDetail requires Router context (uses useNavigate/useParams)
+    render(
+      <MemoryRouter initialEntries={["/feature/my-repo/my-feature"]}>
+        <Routes>
+          <Route path="/feature/:repoId/:slug" element={<CardDetail />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+    // T18 replaced the stub; verify the detail container renders
+    const detail = document.querySelector("[data-testid='card-detail']");
+    expect(detail).toBeTruthy();
   });
 
   it("Settings renders without crashing (no longer a stub)", () => {
