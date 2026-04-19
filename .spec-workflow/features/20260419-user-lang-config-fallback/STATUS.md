@@ -2,7 +2,7 @@
 
 - **slug**: 20260419-user-lang-config-fallback
 - **has-ui**: false
-- **stage**: tasks
+- **stage**: implement
 - **created**: 2026-04-19
 - **updated**: 2026-04-19
 
@@ -14,7 +14,7 @@
 - [x] tech          (04-tech.md)                 — Architect
 - [x] plan          (05-plan.md)                 — TPM
 - [x] tasks         (06-tasks.md)                — TPM
-- [ ] implement     (tasks checked off)          — Developer
+- [x] implement     (tasks checked off)          — Developer
 - [ ] gap-check     (07-gaps.md, verdict PASS)   — QA-analyst
 - [ ] verify        (08-verify.md, verdict PASS) — QA-tester
 - [ ] archive       (moved to .spec-workflow/archive/)     — TPM
@@ -29,3 +29,7 @@
 - 2026-04-19 PM update-req: AC4.a reworded to stop-on-first-hit per architect D6; PRD R4 body clarified; PRD and tech now aligned.
 - 2026-04-19 TPM: plan complete; B1..B3 blocks across W1..W2 waves; handoff to /specflow:tasks.
 - 2026-04-19 TPM: tasks complete; T1..T10 across W1..W2; handoff to /specflow:implement.
+- 2026-04-19 implement — wave 1 done (T1); review NITS (security advisory on $XDG_CONFIG_HOME absolute-path check; style should on CANDIDATES naming). T1 merged 40a3342.
+- 2026-04-19 implement — wave 2 done (T2..T10, 9 parallel); 27 reviewers; 0 must, 3 NITS (T7 style, T8 perf+style). All merged.
+- 2026-04-19 gap-fix: t53 exclusion list extended for new feature's spec dir + test files + .worktrees; smoke 71/72 → 72/72 PASS.
+- 2026-04-19 implement stage complete — 10/10 tasks checked; smoke 72/72 PASS.

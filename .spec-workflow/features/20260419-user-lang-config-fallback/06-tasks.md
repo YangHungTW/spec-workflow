@@ -286,7 +286,7 @@ Dogfood paradox staging (8th occurrence) is captured at the very end.
     during the development session. All runtime behaviour is observed
     in structural tests (W2) only; live runtime on next feature after
     session restart per R7 AC7.b.
-- [ ]
+- [x] T1
 
 ---
 
@@ -361,7 +361,7 @@ Dogfood paradox staging (8th occurrence) is captured at the very end.
   - Sandbox-HOME preflight is NON-NEGOTIABLE per the rule file.
   - Structural PASS only during this feature's verify; runtime PASS
     deferred to next-feature handoff per R7.
-- [ ]
+- [x] T2
 
 ---
 
@@ -426,7 +426,7 @@ Dogfood paradox staging (8th occurrence) is captured at the very end.
 - **Dependencies**: T1.
 - **Parallel-safe-with**: T2, T4, T5, T6, T7, T8, T9, T10.
 - **Notes**: R7 structural PASS only; runtime deferred.
-- [ ]
+- [x] T3
 
 ---
 
@@ -487,7 +487,7 @@ Dogfood paradox staging (8th occurrence) is captured at the very end.
 - **Notes**: Re-exercises parent's project-over-user semantics across
   the new 3-path shape (cross-ref Plan §5 Risk R1 mitigation). R7
   structural PASS only.
-- [ ]
+- [x] T4
 
 ---
 
@@ -553,7 +553,7 @@ Dogfood paradox staging (8th occurrence) is captured at the very end.
 - **Parallel-safe-with**: T2, T3, T4, T6, T7, T8, T9, T10.
 - **Notes**: Only test that exercises the XDG branch. R7 structural
   PASS only.
-- [ ]
+- [x] T5
 
 ---
 
@@ -650,7 +650,7 @@ Dogfood paradox staging (8th occurrence) is captured at the very end.
     AC4.a quote above is the anchor. Do NOT rewrite the assertions
     in the developer's own words.
   - R7 structural PASS only; runtime deferred.
-- [ ]
+- [x] T6
 
 ---
 
@@ -715,7 +715,7 @@ Dogfood paradox staging (8th occurrence) is captured at the very end.
 - **Dependencies**: T1.
 - **Parallel-safe-with**: T2, T3, T4, T5, T6, T8, T9, T10.
 - **Notes**: R7 structural PASS only; runtime deferred.
-- [ ]
+- [x] T7
 
 ---
 
@@ -798,7 +798,7 @@ Dogfood paradox staging (8th occurrence) is captured at the very end.
   feature's verify stage (no dogfood paradox applies — it inspects
   source, not runtime behaviour). Cross-ref Plan §6 verification
   map.
-- [ ]
+- [x] T8
 
 ---
 
@@ -893,7 +893,7 @@ Dogfood paradox staging (8th occurrence) is captured at the very end.
 - **Notes**:
   - Single-editor on `README.md`; no peer collision inside W2.
   - No code; documentation-only. No test registration needed.
-- [ ]
+- [x] T9
 
 ---
 
@@ -979,7 +979,7 @@ Dogfood paradox staging (8th occurrence) is captured at the very end.
   - The per-test `exit 0` verify step may be RED until all of
     T2..T8's Acceptance pass; that is expected and matches parent
     T19's shape.
-- [ ]
+- [x] T10
 
 ---
 

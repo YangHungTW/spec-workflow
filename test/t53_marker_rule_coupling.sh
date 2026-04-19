@@ -70,13 +70,20 @@ fi
 cd "$REPO_ROOT"
 UNEXPECTED=$(grep -rlF 'LANG_CHAT=zh-TW' . 2>/dev/null \
   | grep -v '^\./\.git/' \
+  | grep -v '^\./\.worktrees/' \
   | grep -v '^\./\.spec-workflow/archive/' \
   | grep -v '^\./\.claude/rules/common/language-preferences\.md$' \
   | grep -v '^\./test/t53_' \
   | grep -v '^\./test/t51_rule_file_shape\.sh$' \
   | grep -v '^\./test/t55_hook_config_zh_tw\.sh$' \
+  | grep -v '^\./test/t68_userlang_user_home_only\.sh$' \
+  | grep -v '^\./test/t69_userlang_project_over_user\.sh$' \
+  | grep -v '^\./test/t70_userlang_xdg_over_tilde\.sh$' \
+  | grep -v '^\./test/t71_userlang_stop_on_first_invalid\.sh$' \
+  | grep -v '^\./test/t72_userlang_missing_doesnt_stop\.sh$' \
   | grep -v '^\./README\.md$' \
   | grep -v '^\./\.spec-workflow/features/20260419-language-preferences/' \
+  | grep -v '^\./\.spec-workflow/features/20260419-user-lang-config-fallback/' \
   || true)
 
 if [ -z "$UNEXPECTED" ]; then
