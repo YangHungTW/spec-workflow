@@ -86,6 +86,28 @@ import sys
 import os
 
 # ---------------------------------------------------------------------------
+# repo_root — resolved once; used as boundary for path traversal check
+# Falls back to CWD when not inside a git repo (edge-case environments).
+# ---------------------------------------------------------------------------
+import subprocess as _subprocess
+
+def _resolve_repo_root():
+    try:
+        proc = _subprocess.run(
+            ['git', 'rev-parse', '--show-toplevel'],
+            stdout=_subprocess.PIPE,
+            stderr=_subprocess.PIPE,
+        )
+        if proc.returncode == 0:
+            return os.path.realpath(proc.stdout.decode('utf-8', errors='replace').strip())
+    except OSError:
+        pass
+    return os.path.realpath(os.getcwd())
+
+_REPO_ROOT = _resolve_repo_root()
+_REPO_ROOT_PREFIX = _REPO_ROOT + os.sep   # e.g. /path/to/repo/ — avoids /foo matching /foobar
+
+# ---------------------------------------------------------------------------
 # D6 Unicode ranges (verbatim from 04-tech.md §3 D6)
 # ---------------------------------------------------------------------------
 CJK_RANGES = (
@@ -203,13 +225,23 @@ def is_out_of_scope(path):
     return False
 
 # ---------------------------------------------------------------------------
-# scan_one_path — read from disk; return exit-contribution (0 or 1)
+# scan_one_path — read from disk; return exit-contribution (0, 1, or 2)
+#   0 = clean / out-of-scope / binary-skip
+#   1 = cjk-hit
+#   2 = boundary rejection (caller must propagate exit 2)
 # ---------------------------------------------------------------------------
 def scan_one_path(path):
     if is_out_of_scope(path):
         return 0
+    # Boundary check: resolve symlinks and assert the path sits under repo root.
+    # os.path.realpath resolves symlink chains, so a symlink pointing outside
+    # the repo is caught here even when the link itself lives inside the repo.
+    resolved = os.path.realpath(os.path.abspath(path))
+    if resolved != _REPO_ROOT and not resolved.startswith(_REPO_ROOT_PREFIX):
+        print('error: path outside repo root: ' + path, file=sys.stderr)
+        return 2
     try:
-        with open(path, 'rb') as fh:
+        with open(resolved, 'rb') as fh:
             content_bytes = fh.read()
     except OSError as exc:
         print('specflow-lint: cannot read ' + path + ': ' + str(exc), file=sys.stderr)
@@ -296,13 +328,19 @@ def scan_staged():
 def scan_paths(paths):
     hit_count = 0
     ok_count = 0
+    boundary_rejected = 0
     for path in paths:
         contrib = scan_one_path(path)
-        if contrib:
+        if contrib == 2:
+            boundary_rejected += 1
+        elif contrib == 1:
             hit_count += 1
         else:
             ok_count += 1
 
+    if boundary_rejected > 0:
+        # Boundary rejection is an internal/usage error — exit 2 regardless of cjk findings.
+        sys.exit(2)
     if hit_count > 0:
         print('specflow-lint: ' + str(hit_count) + ' cjk-hit finding(s); '
               + str(ok_count) + ' path(s) clean', file=sys.stderr)
