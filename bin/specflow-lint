@@ -1,0 +1,368 @@
+#!/usr/bin/env bash
+# =============================================================================
+# specflow-lint — CJK guardrail scanner
+# =============================================================================
+#
+# USAGE
+#   bin/specflow-lint <subcommand> [paths...]
+#   bin/specflow-lint --help
+#
+# SUBCOMMANDS
+#   scan-staged         Scan files staged for commit (reads git diff --cached).
+#                       Default subcommand invoked by the pre-commit hook.
+#
+#   scan-paths <path>   Scan one or more on-disk paths directly.
+#               ...
+#
+# OPTIONS
+#   --help, -h          Print this message and exit 0.
+#
+# OUTPUT CONTRACT
+#   stdout (one line per path, parseable by CI/audit scripts):
+#     ok:<path>
+#     cjk-hit:<path>:<line>:<col>:U+<hex>
+#     allowlisted:<path>:<reason>
+#     binary-skip:<path>
+#
+#   stderr: summary and error messages only.
+#
+# EXIT CODES
+#   0   Every scanned path classified ok, allowlisted, or binary-skip.
+#   1   One or more cjk-hit findings.
+#   2   Usage error, python3 missing, or internal error.
+#
+# ALLOWLIST SURFACES
+#   1. Path-based: .spec-workflow/features/**/00-request.md — only the block
+#      bounded by a "**Raw ask**:" prefix line and the following blank line
+#      is permitted to contain CJK. Every other line in that file is scanned.
+#
+#   2. Inline marker: any file containing a line:
+#        <!-- specflow-lint: allow-cjk reason="..." -->
+#      suppresses CJK scanning for that entire file. The reason is mandatory.
+#
+# =============================================================================
+set -u -o pipefail
+# NOTE: -e is intentionally omitted; we accumulate findings across files
+# rather than aborting on the first hit.
+
+# ---------------------------------------------------------------------------
+# Python 3 preflight — exit 2 if unavailable
+# ---------------------------------------------------------------------------
+command -v python3 >/dev/null 2>&1 || {
+  echo "specflow-lint: python3 required but not found" >&2
+  exit 2
+}
+
+# ---------------------------------------------------------------------------
+# usage
+# ---------------------------------------------------------------------------
+usage() {
+  sed -n '/^# USAGE/,/^# ===*/p' "$0" | sed 's/^# \{0,1\}//'
+  exit 0
+}
+
+# ---------------------------------------------------------------------------
+# run_scanner MODE [args...]
+#   MODE = staged  → reads staged content via git show :FILE
+#   MODE = paths   → reads on-disk files directly
+#   args for staged: none (reads git diff output internally)
+#   args for paths: one or more file paths
+#
+# Invokes the embedded Python 3 scanner via argv-form (no shell concatenation
+# of untrusted input). The scanner emits classifier lines to stdout and a
+# summary to stderr; exits 0 (clean) or 1 (cjk-hit).
+# ---------------------------------------------------------------------------
+run_scanner() {
+  local mode="$1"
+  shift
+  # All remaining args are passed as argv to python3; no shell word-splitting
+  # of untrusted path data occurs here — each path is its own argv element.
+  python3 - "$mode" "$@" <<'PYEOF'
+# =============================================================================
+# specflow-lint — Python 3 scanner (embedded heredoc)
+# Pure classifier: no mutation, no filesystem writes.
+# =============================================================================
+import sys
+import os
+
+# ---------------------------------------------------------------------------
+# D6 Unicode ranges (verbatim from 04-tech.md §3 D6)
+# ---------------------------------------------------------------------------
+CJK_RANGES = (
+    (0x3400, 0x4DBF), (0x4E00, 0x9FFF), (0x3000, 0x303F),
+    (0x3040, 0x309F), (0x30A0, 0x30FF), (0xAC00, 0xD7AF),
+    (0xF900, 0xFAFF), (0xFF00, 0xFFEF),
+)
+
+def is_cjk(cp):
+    return any(lo <= cp <= hi for (lo, hi) in CJK_RANGES)
+
+# ---------------------------------------------------------------------------
+# Inline marker allowlist — suppress CJK scanning for the whole file
+# Marker literal: <!-- specflow-lint: allow-cjk reason="..." -->
+# ---------------------------------------------------------------------------
+INLINE_MARKER = '<!-- specflow-lint: allow-cjk reason='
+
+def has_inline_allowlist(lines):
+    for line in lines:
+        if INLINE_MARKER in line:
+            return True
+    return False
+
+# ---------------------------------------------------------------------------
+# Path-based allowlist for 00-request.md files
+# The block starting with a "**Raw ask**:" prefix line, up to (but not
+# including) the following blank line, is permitted to contain CJK.
+# ---------------------------------------------------------------------------
+def build_allowed_line_set(path, lines):
+    """Return a set of 1-based line numbers that are allowlisted by the
+    path-based rule. Only applies to paths matching */00-request.md."""
+    basename = os.path.basename(path)
+    if basename != '00-request.md':
+        return set()
+    allowed = set()
+    in_block = False
+    for i, line in enumerate(lines, 1):
+        stripped = line.rstrip('\n')
+        if stripped.startswith('**Raw ask**:'):
+            in_block = True
+            allowed.add(i)
+            continue
+        if in_block:
+            if stripped == '':
+                in_block = False
+            else:
+                allowed.add(i)
+    return allowed
+
+# ---------------------------------------------------------------------------
+# Binary detection — probe the first 8 KB for a NUL byte
+# ---------------------------------------------------------------------------
+def is_binary(content_bytes):
+    return b'\x00' in content_bytes[:8192]
+
+# ---------------------------------------------------------------------------
+# classify_content — core scanner
+# Returns (verdict, findings)
+#   verdict: 'ok' | 'cjk-hit' | 'allowlisted'
+#   findings: list of (line_no, col_no, codepoint_hex) tuples for cjk-hit
+# ---------------------------------------------------------------------------
+def classify_content(path, content_bytes):
+    # Inline marker check — file gets allowlisted before decoding line-by-line
+    try:
+        raw_text = content_bytes.decode('utf-8', errors='replace')
+    except Exception:
+        raw_text = content_bytes.decode('latin-1', errors='replace')
+
+    lines = raw_text.splitlines(keepends=True)
+
+    if has_inline_allowlist(lines):
+        return ('allowlisted', 'inline-marker', [])
+
+    allowed_lines = build_allowed_line_set(path, lines)
+    findings = []
+
+    for line_no, line in enumerate(lines, 1):
+        if line_no in allowed_lines:
+            continue
+        for col_no, ch in enumerate(line, 1):
+            cp = ord(ch)
+            if is_cjk(cp):
+                findings.append((line_no, col_no, cp))
+
+    if findings:
+        return ('cjk-hit', None, findings)
+    return ('ok', None, [])
+
+# ---------------------------------------------------------------------------
+# emit_result — write classifier line to stdout
+# ---------------------------------------------------------------------------
+def emit_result(path, verdict, reason, findings):
+    if verdict == 'ok':
+        print('ok:' + path, flush=True)
+    elif verdict == 'allowlisted':
+        print('allowlisted:' + path + ':' + reason, flush=True)
+    elif verdict == 'binary-skip':
+        print('binary-skip:' + path, flush=True)
+    elif verdict == 'cjk-hit':
+        for (line_no, col_no, cp) in findings:
+            print(
+                'cjk-hit:' + path + ':' + str(line_no) + ':' +
+                str(col_no) + ':U+' + format(cp, '04X'),
+                flush=True,
+            )
+
+# ---------------------------------------------------------------------------
+# is_out_of_scope — paths we never scan
+# ---------------------------------------------------------------------------
+def is_out_of_scope(path):
+    norm = path.replace('\\', '/')
+    for prefix in ('.spec-workflow/archive/', '.git/', 'node_modules/'):
+        if norm.startswith(prefix) or ('/' + prefix) in ('/' + norm):
+            return True
+    return False
+
+# ---------------------------------------------------------------------------
+# scan_one_path — read from disk; return exit-contribution (0 or 1)
+# ---------------------------------------------------------------------------
+def scan_one_path(path):
+    if is_out_of_scope(path):
+        return 0
+    try:
+        with open(path, 'rb') as fh:
+            content_bytes = fh.read()
+    except OSError as exc:
+        print('specflow-lint: cannot read ' + path + ': ' + str(exc), file=sys.stderr)
+        return 1
+
+    if is_binary(content_bytes):
+        emit_result(path, 'binary-skip', None, [])
+        return 0
+
+    verdict, reason, findings = classify_content(path, content_bytes)
+    emit_result(path, verdict, reason, findings)
+    return 1 if verdict == 'cjk-hit' else 0
+
+# ---------------------------------------------------------------------------
+# scan_staged — git show :FILE for each staged path
+# ---------------------------------------------------------------------------
+def scan_staged():
+    import subprocess
+    try:
+        proc = subprocess.run(
+            ['git', 'diff', '--cached', '--name-only'],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+    except OSError as exc:
+        print('specflow-lint: git invocation failed: ' + str(exc), file=sys.stderr)
+        sys.exit(2)
+
+    if proc.returncode != 0:
+        msg = proc.stderr.decode('utf-8', errors='replace').strip()
+        print('specflow-lint: git diff failed: ' + msg, file=sys.stderr)
+        sys.exit(2)
+
+    paths = [p for p in proc.stdout.decode('utf-8', errors='replace').splitlines() if p]
+    hit_count = 0
+    ok_count = 0
+
+    for path in paths:
+        if is_out_of_scope(path):
+            continue
+        # Fetch staged content via argv-form invocation (no shell concatenation)
+        try:
+            show_proc = subprocess.run(
+                ['git', 'show', ':' + path],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+        except OSError as exc:
+            print('specflow-lint: git show failed for ' + path + ': ' + str(exc),
+                  file=sys.stderr)
+            hit_count += 1
+            continue
+
+        if show_proc.returncode != 0:
+            # File may be deleted or unreadable in index; skip
+            continue
+
+        content_bytes = show_proc.stdout
+
+        if is_binary(content_bytes):
+            emit_result(path, 'binary-skip', None, [])
+            ok_count += 1
+            continue
+
+        verdict, reason, findings = classify_content(path, content_bytes)
+        emit_result(path, verdict, reason, findings)
+        if verdict == 'cjk-hit':
+            hit_count += 1
+        else:
+            ok_count += 1
+
+    if hit_count > 0:
+        print('specflow-lint: ' + str(hit_count) + ' cjk-hit finding(s); '
+              + str(ok_count) + ' path(s) clean', file=sys.stderr)
+        sys.exit(1)
+    else:
+        print('specflow-lint: ' + str(ok_count) + ' path(s) scanned; all clean',
+              file=sys.stderr)
+        sys.exit(0)
+
+# ---------------------------------------------------------------------------
+# scan_paths — on-disk paths supplied as argv
+# ---------------------------------------------------------------------------
+def scan_paths(paths):
+    hit_count = 0
+    ok_count = 0
+    for path in paths:
+        contrib = scan_one_path(path)
+        if contrib:
+            hit_count += 1
+        else:
+            ok_count += 1
+
+    if hit_count > 0:
+        print('specflow-lint: ' + str(hit_count) + ' cjk-hit finding(s); '
+              + str(ok_count) + ' path(s) clean', file=sys.stderr)
+        sys.exit(1)
+    else:
+        print('specflow-lint: ' + str(ok_count) + ' path(s) scanned; all clean',
+              file=sys.stderr)
+        sys.exit(0)
+
+# ---------------------------------------------------------------------------
+# main
+# ---------------------------------------------------------------------------
+def main():
+    args = sys.argv[1:]  # argv[0] is the mode injected by the bash shim
+
+    if not args:
+        print('specflow-lint: missing subcommand', file=sys.stderr)
+        sys.exit(2)
+
+    mode = args[0]
+
+    if mode == 'staged':
+        scan_staged()
+    elif mode == 'paths':
+        paths = args[1:]
+        if not paths:
+            print('specflow-lint: scan-paths requires at least one path', file=sys.stderr)
+            sys.exit(2)
+        scan_paths(paths)
+    else:
+        print('specflow-lint: unknown mode: ' + mode, file=sys.stderr)
+        sys.exit(2)
+
+main()
+PYEOF
+}
+
+# ---------------------------------------------------------------------------
+# Argument dispatch
+# ---------------------------------------------------------------------------
+case "${1:-}" in
+  --help|-h|"")
+    usage
+    ;;
+  scan-staged)
+    run_scanner "staged"
+    exit $?
+    ;;
+  scan-paths)
+    shift
+    if [ $# -eq 0 ]; then
+      echo "specflow-lint: scan-paths requires at least one path" >&2
+      exit 2
+    fi
+    run_scanner "paths" "$@"
+    exit $?
+    ;;
+  *)
+    echo "specflow-lint: unknown subcommand: ${1}" >&2
+    echo "Run 'bin/specflow-lint --help' for usage." >&2
+    exit 2
+    ;;
+esac
