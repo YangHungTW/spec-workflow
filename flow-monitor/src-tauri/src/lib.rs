@@ -1,3 +1,4 @@
+pub mod poller;
 pub mod repo_discovery;
 pub mod store;
 
