@@ -818,7 +818,8 @@ W5 implements the test seams the dogfood paradox forces (Architect's §8), instr
   - reviewer-style: test logic uses `walkdir` (test-time only); not bash-portability constrained.
 - **Depends on**: T10 (settings.rs write site is the legitimate exception)
 - **Parallel-safe-with**: T30, T32, T33, T34, T35, T36, T37, T38, T39, T40, T41, T42
-- [ ]
+- [x]
+- STATUS: 2026-04-19 Developer — T31 Seam 4 no-writes test complete
 
 ---
 
