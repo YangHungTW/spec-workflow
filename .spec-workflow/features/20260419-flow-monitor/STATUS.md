@@ -30,3 +30,6 @@
 - 2026-04-19 TPM — implementation plan written
 - 2026-04-19 TPM — tasks broken out (T42 total)
 - 2026-04-19 Developer — T1 scaffold complete (Tauri 2 + React + TS + Vite)
+- 2026-04-19 review result — wave W0 task T2 verdict=BLOCK blocking-tasks=T2(security)
+- 2026-04-19 implement halted — T2 blocked on dompurify/markdown-it/tokio major-only floats. Recovery: retry T2 with tighter pins.
+- 2026-04-19 deviation — Rust pin bumped 1.83→1.88 (Tauri 2.10 transitive time-core requires edition 2024); plan Q-plan-1 needs /specflow:update-plan.
