@@ -106,18 +106,18 @@ esac
 # ---------------------------------------------------------------------------
 classify_status_file() {
   local f="$1"
-  # Read once to avoid two separate forks opening the same file — one grep per
-  # check would fork twice per call site, doubling I/O on every loop iteration.
+  # Read once with a builtin redirect (no cat fork) then use pure-bash case
+  # pattern matching — no printf|grep pipeline per check, so zero extra forks
+  # inside the main while-read loop (no-shell-out-in-tight-loops rule).
   local content
-  content="$(cat "$f")"
-  if printf '%s\n' "$content" | grep -q '^- \*\*tier\*\*:'; then
-    echo "already-migrated"
-    return
-  fi
-  if printf '%s\n' "$content" | grep -q '^- \*\*has-ui\*\*:'; then
-    echo "needs-migration"
-    return
-  fi
+  content=$(< "$f") || return 1
+  # Wrap content with leading/trailing newlines so patterns anchor to full lines.
+  case $'\n'"$content"$'\n' in
+    *$'\n'"- **tier**: "*) echo "already-migrated"; return ;;
+  esac
+  case $'\n'"$content"$'\n' in
+    *$'\n'"- **has-ui**: "*) echo "needs-migration"; return ;;
+  esac
   echo "missing-has-ui"
 }
 
@@ -160,13 +160,21 @@ verify_diff() {
   local diff_output
   diff_output="$(diff "$original" "$migrated" || true)"
 
-  # Count insertions (lines starting with ">") and deletions (lines starting
-  # with "<") in a single awk pass — avoids two printf|grep-c forks per call.
-  local counts
-  counts="$(printf '%s\n' "$diff_output" | awk 'BEGIN{a=0;d=0} /^>/{a++} /^</{d++} END{print a" "d}')"
-  local added_count deleted_count
-  added_count="${counts%% *}"
-  deleted_count="${counts##* }"
+  # Single awk pass: count insertions/deletions AND capture the added line text
+  # (stripping the "> " diff prefix).  This eliminates a second printf|grep|sed
+  # pipeline that would otherwise run for every migrated file.
+  local awk_out
+  awk_out="$(printf '%s\n' "$diff_output" | awk '
+    BEGIN { a=0; d=0; added_line="" }
+    /^>/ { a++; added_line=substr($0, 3) }
+    /^</ { d++ }
+    END  { printf "%d %d %s\n", a, d, added_line }
+  ')"
+  local added_count deleted_count added_line rest
+  added_count="${awk_out%% *}"
+  rest="${awk_out#* }"
+  deleted_count="${rest%% *}"
+  added_line="${rest#* }"
 
   if [ "$added_count" -ne 1 ] || [ "$deleted_count" -ne 0 ]; then
     echo "ERROR: unexpected diff for $status_path" >&2
@@ -176,9 +184,7 @@ verify_diff() {
     exit 2
   fi
 
-  # Assert the single added line is the tier: line
-  local added_line
-  added_line="$(printf '%s\n' "$diff_output" | grep '^>' | sed 's/^> //')"
+  # Assert the single added line is the tier: line (captured from awk pass above)
   if [ "$added_line" != "- **tier**: standard" ]; then
     echo "ERROR: unexpected inserted line for $status_path" >&2
     echo "  expected: '- **tier**: standard'" >&2
@@ -207,8 +213,9 @@ find "$FEATURES_DIR" \
   | sort > "$CANDIDATES"
 
 while IFS= read -r status_file; do
-  feature_dir="$(dirname "$status_file")"
-  slug="$(basename "$feature_dir")"
+  # Pure-bash parameter expansion — no dirname/basename fork per iteration.
+  feature_dir="${status_file%/*}"
+  slug="${feature_dir##*/}"
 
   state="$(classify_status_file "$status_file")"
 
