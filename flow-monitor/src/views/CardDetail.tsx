@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, useSearchParams, Navigate } from "react-router-dom";
 import { invoke } from "@tauri-apps/api/core";
 import { CardDetailHeader } from "../components/CardDetailHeader";
@@ -41,6 +41,14 @@ function CardDetail() {
   const [repoFullPath, setRepoFullPath] = useState<string | null>(null);
   const [tabContent, setTabContent] = useState<string>("");
   const [contentError, setContentError] = useState<string | null>(null);
+  const tabContentRef = useRef<HTMLDivElement>(null);
+
+  // Scroll to top when active tab or content changes
+  useEffect(() => {
+    if (tabContentRef.current) {
+      tabContentRef.current.scrollTop = 0;
+    }
+  }, [activeTabId, tabContent]);
 
   const validRepoId = isSafeId(repoId) ? repoId : null;
   const validSlug = isSafeId(slug) ? slug : null;
@@ -131,7 +139,7 @@ function CardDetail() {
             onSelect={setActiveTabId}
           />
 
-          <div className="card-detail__tab-content" data-testid="tab-content-placeholder">
+          <div ref={tabContentRef} className="card-detail__tab-content" data-testid="tab-content-placeholder">
             {activeTabId === "02-design" ? (
               <DesignFolderIndex
                 files={[
@@ -139,6 +147,8 @@ function CardDetail() {
                   { name: "notes.md", path: `${featurePath}/02-design/notes.md` },
                   { name: "README.md", path: `${featurePath}/02-design/README.md` },
                 ]}
+                repoPath={repoFullPath ?? undefined}
+                slug={validSlug}
               />
             ) : contentError ? (
               <p style={{ padding: 24, color: "var(--stalled-red)", fontSize: 12 }}>
