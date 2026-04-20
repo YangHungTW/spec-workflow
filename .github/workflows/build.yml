@@ -1,0 +1,45 @@
+name: flow-monitor build
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+
+      - name: Setup Node 20
+        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af  # v4.1.0
+        with:
+          node-version: 20
+
+      # rust-toolchain.toml in flow-monitor/ pins channel to 1.88.0;
+      # cargo honours the file automatically when invoked from that directory.
+      # dtolnay/rust-toolchain reads the same file so both tools stay in sync.
+      - name: Setup Rust toolchain (from rust-toolchain.toml)
+        uses: dtolnay/rust-toolchain@4305c38b25d97ef35a8ad1f985d029b4fc997e21  # stable tag as of 2026-04-19
+        with:
+          toolchain: 1.88.0
+
+      - name: npm install (flow-monitor)
+        run: npm --prefix flow-monitor install
+
+      - name: cargo check
+        run: cargo check --manifest-path flow-monitor/src-tauri/Cargo.toml
+
+      - name: npm run build (flow-monitor)
+        run: npm --prefix flow-monitor run build
+
+      - name: cargo test
+        run: cargo test --manifest-path flow-monitor/src-tauri/Cargo.toml

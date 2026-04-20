@@ -1,0 +1,204 @@
+/*
+ * Theme tokens — CSS custom properties for light (default) and dark themes.
+ *
+ * Light tokens live on the html element (default); dark tokens override via
+ * html.dark. The dark class is applied synchronously before React renders
+ * (first-paint, no FOUC) in main.tsx, and toggled by useTheme() in one frame.
+ *
+ * Token names match the 02-design/notes.md "Theming" table 1:1.
+ * No OS appearance auto-follow — user-only toggle per B1 carve-out (B2 will add OS follow).
+ */
+
+/* ── Light theme (default) ── */
+html {
+  /* Primary brand */
+  --primary: #4F46E5;
+
+  /* Page & surfaces */
+  --page-bg: #F1F5F9;
+  --card-bg: #FFFFFF;
+  --surface-secondary: #F8FAFC;
+
+  /* Sidebar */
+  --sidebar-bg: #1E293B;
+  --sidebar-active: #4F46E5;
+  --sidebar-border: #334155;
+  --sidebar-text-muted: #94A3B8;
+
+  /* Nav / window chrome */
+  --nav-bg: #FFFFFF;
+  --window-chrome-bg: #F8FAFC;
+
+  /* Text */
+  --text-primary: #1E293B;
+  --text-muted: #94A3B8;
+
+  /* Card border */
+  --card-border: #E2E8F0;
+
+  /* Stage-specific card backgrounds */
+  --stalled-card-bg: #FEF2F2;
+  --stale-card-bg: #FFFBEB;
+
+  /* Compact panel */
+  --compact-panel-bg: rgba(15, 23, 42, 0.92);
+  --compact-panel-accent: #4F46E5;
+
+  /* Severity colours */
+  --stalled-red: #EF4444;
+  --stale-amber: #F59E0B;
+
+  /* Stage pill — bg / text pairs (light) */
+  --pill-brainstorm-bg: #EFF6FF;
+  --pill-brainstorm-text: #1D4ED8;
+
+  --pill-design-bg: #F5F3FF;
+  --pill-design-text: #7C3AED;
+
+  --pill-prd-bg: #FFFBEB;
+  --pill-prd-text: #B45309;
+
+  --pill-tech-bg: #F0FDF4;
+  --pill-tech-text: #15803D;
+
+  --pill-plan-bg: #FFF0F6;
+  --pill-plan-text: #BE185D;
+
+  --pill-implement-bg: #F0FDF4;
+  --pill-implement-text: #166534;
+
+  --pill-gap-check-bg: #FEF2F2;
+  --pill-gap-check-text: #B91C1C;
+
+  --pill-verify-bg: #EFF6FF;
+  --pill-verify-text: #1E40AF;
+
+  /* Idle badge — bg / text pairs (light) */
+  --badge-active-bg: #DCFCE7;
+  --badge-active-text: #166534;
+
+  --badge-stale-bg: #FEF9C3;
+  --badge-stale-text: #854D0E;
+
+  --badge-stalled-bg: #FEE2E2;
+  --badge-stalled-text: #991B1B;
+
+  /* Sidebar section label + count badge */
+  --sidebar-section-label: #64748B;
+  --sidebar-count-bg: #475569;
+  --sidebar-count-text: #FFFFFF;
+  --sidebar-badge-stalled-text: #FFFFFF;
+  --sidebar-logo-text: #FFFFFF;
+
+  /* UI badge (purple) */
+  --ui-badge: #8B5CF6;
+  --ui-badge-light: #F5F3FF;
+
+  /* Active badge (green) */
+  --ok: #10B981;
+  --ok-light: #ECFDF5;
+
+  /* Brand color for logo */
+  --brand: #4F46E5;
+
+  /* Markdown preview */
+  --markdown-bg: #FFFFFF;
+  --markdown-text: #1E293B;
+}
+
+/* ── Dark theme ── */
+html.dark {
+  /* Primary brand — ink green for dark mode */
+  --primary: #1B4332;
+
+  /* Page & surfaces */
+  --page-bg: #0F1411;
+  --card-bg: #1A211D;
+  --surface-secondary: #141C18;
+
+  /* Sidebar */
+  --sidebar-bg: #111A15;
+  --sidebar-active: #1B4332;
+  --sidebar-border: #1F2E24;
+  --sidebar-text-muted: #6B9176;
+
+  /* Nav / window chrome */
+  --nav-bg: #111A15;
+  --window-chrome-bg: #141C18;
+
+  /* Text */
+  --text-primary: #E8F0EB;
+  --text-muted: #5C7A68;
+
+  /* Card border */
+  --card-border: #1F2E24;
+
+  /* Stage-specific card backgrounds */
+  --stalled-card-bg: #1F1212;
+  --stale-card-bg: #1F1A0E;
+
+  /* Compact panel */
+  --compact-panel-bg: rgba(10, 18, 13, 0.94);
+  --compact-panel-accent: #1B4332;
+
+  /* Severity colours — slightly desaturated for dark */
+  --stalled-red: #C53030;
+  --stale-amber: #D97706;
+
+  /* Stage pill — bg / text pairs (dark) */
+  --pill-brainstorm-bg: #1E2A3D;
+  --pill-brainstorm-text: #93C5FD;
+
+  --pill-design-bg: #261D3A;
+  --pill-design-text: #C4B5FD;
+
+  --pill-prd-bg: #2A230D;
+  --pill-prd-text: #FCD34D;
+
+  --pill-tech-bg: #122A1A;
+  --pill-tech-text: #6EE7B7;
+
+  --pill-plan-bg: #2A1220;
+  --pill-plan-text: #F9A8D4;
+
+  --pill-implement-bg: #0D2114;
+  --pill-implement-text: #86EFAC;
+
+  --pill-gap-check-bg: #2A1212;
+  --pill-gap-check-text: #FCA5A5;
+
+  --pill-verify-bg: #1A2540;
+  --pill-verify-text: #BAE6FD;
+
+  /* Idle badge — bg / text pairs (dark) */
+  --badge-active-bg: #0F2C1A;
+  --badge-active-text: #6EE7B7;
+
+  --badge-stale-bg: #2C220A;
+  --badge-stale-text: #FCD34D;
+
+  --badge-stalled-bg: #2A1010;
+  --badge-stalled-text: #FCA5A5;
+
+  /* Sidebar section label + count badge */
+  --sidebar-section-label: #4D7360;
+  --sidebar-count-bg: #1F2E24;
+  --sidebar-count-text: #9ECFB4;
+  --sidebar-badge-stalled-text: #FFFFFF;
+  --sidebar-logo-text: #FFFFFF;
+
+  /* UI badge (purple) */
+  --ui-badge: #7C3AED;
+  --ui-badge-light: #1A1529;
+
+  /* Active badge (green) */
+  --ok: #059669;
+  --ok-light: #0D1F18;
+
+  /* Brand color for logo */
+  --brand: #1B4332;
+
+  /* Markdown preview */
+  --markdown-bg: #1A211D;
+  --markdown-text: #E8F0EB;
+}
