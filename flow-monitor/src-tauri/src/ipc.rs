@@ -42,6 +42,7 @@ pub struct Settings {
     pub compact_panel_open: bool,
     pub notification_title: String,
     pub notification_body: String,
+    pub locale: String,
 }
 
 impl Default for Settings {
@@ -57,6 +58,7 @@ impl Default for Settings {
             compact_panel_open: false,
             notification_title: String::from("flow-monitor"),
             notification_body: String::from("A session has stalled."),
+            locale: String::from("en"),
         }
     }
 }

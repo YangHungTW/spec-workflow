@@ -38,8 +38,8 @@ function Settings() {
   const [thresholdError, setThresholdError] = useState<string | null>(null);
 
   useEffect(() => {
-    invoke<AppSettings>("get_settings")
-      .then((loaded) => setSettings(loaded))
+    invoke<Partial<AppSettings>>("get_settings")
+      .then((loaded) => setSettings({ ...DEFAULT_SETTINGS, ...loaded }))
       .catch(() => undefined);
   }, []);
 
