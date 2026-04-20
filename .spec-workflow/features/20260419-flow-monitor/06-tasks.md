@@ -10,7 +10,7 @@ All paths below are absolute under `/Users/yanghungtw/Tools/spec-workflow/`. The
 
 ## 1. Summary
 
-- **Total tasks**: 46 [CHANGED 2026-04-20]
+- **Total tasks**: 47 [CHANGED 2026-04-20]
 - **Waves**: 8 (W0 → W1 → W1.5 → W2 → W3 → W4 → W5 → W5.5; W2 may run concurrently with W1 once W0 lands; W1.5 inserted post-W1 merge to absorb NITS cleanup per STATUS note; W5.5 inserted post-verify-FAIL to close the component-CSS gap exposed on first .dmg launch) [CHANGED 2026-04-19]
 - **Critical path length**: W0 (sequential 5 tasks) → W1 ∥ W2 (max 6 ≈ 6 task-hours) → W3 (max 8 ≈ 8 task-hours) → W4 (max 5 ≈ 5 task-hours) → W5 (max 5 ≈ 5 task-hours). ≈ 30 task-hours linear, ≈ 12–14 task-hours with full parallelism.
 - **Dogfood paradox** (per `shared/dogfood-paradox-third-occurrence`): W5 is structural-only verification; runtime confirmation deferred to the next feature after archive + first app launch.
@@ -1148,6 +1148,22 @@ W5 implements the test seams the dogfood paradox forces (Architect's §8), instr
 
 ---
 
+## T47 — Wire EmptyState into MainWindow + mockup polish [CHANGED 2026-04-20]
+
+- **Goal**: Fix bug where `repos.length === 0` shows plain text instead of the fully-built `<EmptyState />`. Polish SessionCard (mono slug font, idle-state border classes), StageChecklist (BEM state classes + CSS), TabStrip (cursor:not-allowed on missing tabs), CompactPanel (unchanged — CSS already correct). Remove 3 hardcoded hex fallbacks from components.css.
+- **Files**:
+  - `flow-monitor/src/views/MainWindow.tsx` (EDIT — import EmptyState; render `<EmptyState />` when `repos.length === 0`, keep "no sessions" text when repos exist but sessions empty)
+  - `flow-monitor/src/components/SessionCard.tsx` (EDIT — add `session-card--stalled`/`session-card--stale` class based on `idleState`)
+  - `flow-monitor/src/components/StageChecklist.tsx` (EDIT — add BEM state classes `--complete`/`--current`/`--future`; remove inline style)
+  - `flow-monitor/src/styles/components.css` (EDIT — slug mono font; BEM StageChecklist classes; TabStrip missing cursor; remove hardcoded hex fallbacks)
+  - `flow-monitor/src/views/__tests__/MainWindow.emptyState.test.tsx` (NEW — 5 tests for EmptyState wiring)
+- **Depends on**: T46
+- **Parallel-safe-with**: — (solo; W5.8)
+- [x]
+- 2026-04-20 Developer — T47 EmptyState wired in MainWindow + 4 components polished to mockup
+
+---
+
 ## 4. Parallel-safety analysis & wave schedule
 
 ### Wave schedule
@@ -1244,6 +1260,7 @@ This sub-sequencing is captured in T19/T20/T21/T22's `Depends on:` field (each l
 - 2026-04-19 Developer — T2 versions pinned (Tauri 2.2 / Rust 1.88.0 / React 19 / Vite 6 / TS 5.7); note: rust-toolchain.toml uses 1.88.0 instead of task-specified 1.83.0 because time-core 0.1.8 (transitive dep via tauri-utils → serde_with → time) requires Rust 1.88; 1.83 cannot satisfy the dep tree.
 - 2026-04-20 Developer — T45 chrome navigation + 3 IPC stubs complete (Settings/theme toggle visible in toolbar; folder picker wired via tauri-plugin-dialog)
 - 2026-04-20 Developer — T46 theme toggle deduplicated; toolbar is single source of truth; state desync resolved
+- 2026-04-20 Developer — T47 EmptyState wired in MainWindow + 4 components polished to mockup
 
 ## Team memory
 

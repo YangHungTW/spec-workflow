@@ -65,8 +65,16 @@ export function SessionCard({
     navigator.clipboard.writeText(repoPath).catch(() => undefined);
   }
 
+  const cardClass = [
+    "session-card",
+    idleState === "stalled" ? "session-card--stalled" : "",
+    idleState === "stale" ? "session-card--stale" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    <article className="session-card" data-slug={slug}>
+    <article className={cardClass} data-slug={slug}>
       <header className="session-card__header">
         <span className="session-card__slug">{slug}</span>
         <StagePill stage={stage} />
