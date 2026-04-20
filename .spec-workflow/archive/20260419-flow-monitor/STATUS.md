@@ -2,9 +2,9 @@
 
 - **slug**: 20260419-flow-monitor
 - **has-ui**: true
-- **stage**: verify
+- **stage**: archive
 - **created**: 2026-04-19
-- **updated**: 2026-04-19
+- **updated**: 2026-04-20
 
 ## Stage checklist
 - [x] request       (00-request.md)              — PM
@@ -17,7 +17,7 @@
 - [x] implement     (tasks checked off)          — Developer
 - [x] gap-check     (07-gaps.md, verdict PASS)   — QA-analyst
 - [x] verify        (08-verify.md, verdict PASS) — QA-tester
-- [ ] archive       (moved to .spec-workflow/archive/)     — TPM
+- [x] archive       (moved to .spec-workflow/archive/)     — TPM
 
 ## Notes
 <!-- date + role + what changed -->
@@ -85,3 +85,4 @@
 - 2026-04-20 Developer — all T44-T48 + inline runtime fixes merged; runtime verify PASS on dogfood launch (flow-monitor observed its own development session).
 - 2026-04-20 TPM — flipped [x] verify; feature ready for /specflow:archive.
 - 2026-04-20 PM — intaken B2 follow-up (20260420-flow-monitor-control-plane) on this branch for continuity.
+- 2026-04-20 TPM — archived to .spec-workflow/archive/20260419-flow-monitor/; retrospective written; 6 memory proposals awaiting user approval.
