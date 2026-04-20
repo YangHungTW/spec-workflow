@@ -42,23 +42,30 @@ Run a one-shot parallel review of a feature branch. Spawns security, performance
    - The feature's `03-prd.md` (full).
    - Its role team-memory invocation block.
 
-5. **Aggregate verdicts (D3)** — collect all reviewer replies. Parse each reply for its D1 verdict footer. The aggregation classifier is a pure function that emits one of `review:BLOCK`, `review:NITS`, or `review:PASS` — no mutation inside the classifier:
+5. **Aggregate verdicts (D3)** — collect all reviewer replies. Write each reply to a per-axis verdict file in a temp dir, then invoke the extracted aggregator CLI. The aggregator is the pure classifier; no mutation here:
 
    ```bash
-   # Pure aggregator — stdout only, no side effects
-   # INPUT: reviewer replies piped in, one "verdict: <VAL>" line per reviewer
-   WAVE_STATE="review:PASS"
-   while IFS= read -r line; do
-     case "$line" in
-       "verdict: BLOCK") WAVE_STATE="review:BLOCK" ;;
-       "verdict: NITS")
-         if [ "$WAVE_STATE" != "review:BLOCK" ]; then
-           WAVE_STATE="review:NITS"
-         fi
-         ;;
-     esac
-   done
-   printf '%s\n' "$WAVE_STATE"
+   # Write each reviewer's raw output to its verdict file.
+   # For single-axis runs, only the relevant file is written.
+   VERDICT_DIR="$(mktemp -d)"
+   # (orchestrator writes each reviewer reply to $VERDICT_DIR/<axis>.txt
+   #  before the next line runs; one file per axis dispatched in step 4)
+
+   # Invoke extracted aggregator — bash 3.2 portable argv-form invocation.
+   AGG_OUTPUT="$(bin/specflow-aggregate-verdicts security performance style \
+     --dir "$VERDICT_DIR")"
+   AGG_VERDICT="$(printf '%s\n' "$AGG_OUTPUT" | head -1)"
+   WAVE_STATE="review:${AGG_VERDICT}"
+   rm -rf "$VERDICT_DIR"
+   ```
+
+   For single-axis runs (`--axis <axis>`), pass only the relevant axis name:
+
+   ```bash
+   AGG_OUTPUT="$(bin/specflow-aggregate-verdicts "$AXIS" --dir "$VERDICT_DIR")"
+   AGG_VERDICT="$(printf '%s\n' "$AGG_OUTPUT" | head -1)"
+   WAVE_STATE="review:${AGG_VERDICT}"
+   rm -rf "$VERDICT_DIR"
    ```
 
    Dispatch:
@@ -66,7 +73,7 @@ Run a one-shot parallel review of a feature branch. Spawns security, performance
    - `review:NITS`  → write report (step 6), append STATUS Notes (step 9), exit 0.
    - `review:PASS`  → write report (step 6), append STATUS Notes (step 9), exit 0.
 
-   Error posture: a missing or malformed verdict footer (no `## Reviewer verdict` heading, no `verdict:` line, or value outside `{PASS, NITS, BLOCK}`) is treated as BLOCK. Emit a diagnostic to stderr naming the reviewer and the malformed output.
+   Error posture: the aggregator treats a missing or malformed verdict footer (no `## Reviewer verdict` heading, no `verdict:` line, or value outside `{PASS, NITS, BLOCK}`) as BLOCK and emits a diagnostic to stderr naming the offending file.
 
 6. **Determine report filename (D10)** — never clobber a prior report:
 
