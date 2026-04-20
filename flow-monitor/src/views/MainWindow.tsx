@@ -7,6 +7,7 @@ import { RepoSidebar, type RepoEntry } from "../components/RepoSidebar";
 import { SortToolbar } from "../components/SortToolbar";
 import { PollingFooter } from "../components/PollingFooter";
 import { SessionCard } from "../components/SessionCard";
+import EmptyState from "./EmptyState";
 import { useSessionStore, sortSessions, type SessionState } from "../stores/sessionStore";
 import type { SortAxis } from "../stores/sessionStore";
 import { useTheme } from "../stores/themeStore";
@@ -237,22 +238,28 @@ function MainWindow() {
 
       {/* Main content area */}
       <main className="main-window__content">
-        {/* Sort toolbar (AC7.b, AC7.c) */}
-        <SortToolbar sortAxis={sortAxis} onSortChange={handleSortChange} />
+        {/* When no repos are registered, show the full EmptyState (AC12.a).
+            The sort toolbar is hidden — there's nothing to sort. */}
+        {!loading && repos.length === 0 ? (
+          <EmptyState />
+        ) : (
+          <>
+            {/* Sort toolbar (AC7.b, AC7.c) */}
+            <SortToolbar sortAxis={sortAxis} onSortChange={handleSortChange} />
 
-        {/* Card grid */}
-        <div className="main-window__grid" data-testid="card-grid">
-          {loading && (
-            <div className="main-window__loading" data-testid="loading-indicator">
-              {t("sort.label")}
-            </div>
-          )}
+            {/* Card grid */}
+            <div className="main-window__grid" data-testid="card-grid">
+              {loading && (
+                <div className="main-window__loading" data-testid="loading-indicator">
+                  {t("sort.label")}
+                </div>
+              )}
 
-          {!loading && sortedSessions.length === 0 && (
-            <div className="main-window__empty" data-testid="empty-state">
-              {t("empty.title")}
-            </div>
-          )}
+              {!loading && sortedSessions.length === 0 && (
+                <div className="main-window__empty" data-testid="empty-state">
+                  {t("empty.title")}
+                </div>
+              )}
 
           {!loading &&
             (showGroupHeaders ? (
@@ -317,7 +324,9 @@ function MainWindow() {
                 />
               ))
             ))}
-        </div>
+            </div>
+          </>
+        )}
       </main>
     </div>
   );

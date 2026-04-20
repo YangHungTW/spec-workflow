@@ -30,18 +30,19 @@ export function StageChecklist({ currentStage }: StageChecklistProps) {
         const isCompleted = index < currentIndex;
         const isCurrent = index === currentIndex;
 
+        const stateClass = isCompleted
+          ? "stage-checklist__item--complete"
+          : isCurrent
+            ? "stage-checklist__item--current"
+            : "stage-checklist__item--future";
+
         return (
           <li
             key={stage}
-            className="stage-checklist__item"
+            className={`stage-checklist__item ${stateClass}`}
             data-stage-item={stage}
             data-completed={isCompleted ? "true" : undefined}
             data-current={isCurrent ? "true" : undefined}
-            style={
-              isCurrent
-                ? { color: "var(--primary)", fontWeight: "bold" }
-                : undefined
-            }
           >
             <span className="stage-checklist__marker" aria-hidden="true">
               {isCompleted ? "✓" : isCurrent ? "▶" : "○"}
