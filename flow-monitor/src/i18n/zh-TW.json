@@ -58,7 +58,6 @@
   "settings.stalledLabel": "停滯門檻（分鐘）",
   "settings.staleExceedsStalled": "停滯門檻必須大於過時門檻（{stale} 分鐘）。",
   "settings.stalledBelowStale": "停滯門檻必須 >= 過時門檻（{stale} 分鐘）。",
-  "settings.themeSection": "主題",
   "settings.langEnglish": "English",
   "settings.langZhTw": "繁體中文",
   "settings.enableNotifications": "啟用停滯工作階段通知",
@@ -69,8 +68,6 @@
   "settings.notifications.deniedHint": "通知已被拒絕 — 請開啟「系統設定」→「通知」→「Flow Monitor」以啟用。",
   "settings.repoNotSpecflow": "不是 specflow 倉庫：缺少 .spec-workflow/ 資料夾。",
   "settings.repoAddFailed": "新增倉庫失敗。",
-  "settings.theme-light": "淺色",
-  "settings.theme-dark": "深色",
   "settings.language": "語言",
   "settings.about": "關於",
 

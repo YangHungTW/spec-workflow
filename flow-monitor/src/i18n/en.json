@@ -58,7 +58,6 @@
   "settings.stalledLabel": "Stalled threshold (minutes)",
   "settings.staleExceedsStalled": "Stalled threshold must be greater than stale threshold ({stale} min).",
   "settings.stalledBelowStale": "Stalled threshold must be >= stale threshold ({stale} min).",
-  "settings.themeSection": "Theme",
   "settings.langEnglish": "English",
   "settings.langZhTw": "繁體中文",
   "settings.enableNotifications": "Enable stalled-session notifications",
@@ -69,8 +68,6 @@
   "settings.notifications.deniedHint": "Notifications denied — open System Settings → Notifications → Flow Monitor to enable.",
   "settings.repoNotSpecflow": "Not a specflow repository: missing .spec-workflow/ folder.",
   "settings.repoAddFailed": "Failed to add repository.",
-  "settings.theme-light": "Light",
-  "settings.theme-dark": "Dark",
   "settings.language": "Language",
   "settings.about": "About",
 

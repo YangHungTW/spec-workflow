@@ -10,7 +10,7 @@ All paths below are absolute under `/Users/yanghungtw/Tools/spec-workflow/`. The
 
 ## 1. Summary
 
-- **Total tasks**: 44 [CHANGED 2026-04-19]
+- **Total tasks**: 46 [CHANGED 2026-04-20]
 - **Waves**: 8 (W0 → W1 → W1.5 → W2 → W3 → W4 → W5 → W5.5; W2 may run concurrently with W1 once W0 lands; W1.5 inserted post-W1 merge to absorb NITS cleanup per STATUS note; W5.5 inserted post-verify-FAIL to close the component-CSS gap exposed on first .dmg launch) [CHANGED 2026-04-19]
 - **Critical path length**: W0 (sequential 5 tasks) → W1 ∥ W2 (max 6 ≈ 6 task-hours) → W3 (max 8 ≈ 8 task-hours) → W4 (max 5 ≈ 5 task-hours) → W5 (max 5 ≈ 5 task-hours). ≈ 30 task-hours linear, ≈ 12–14 task-hours with full parallelism.
 - **Dogfood paradox** (per `shared/dogfood-paradox-third-occurrence`): W5 is structural-only verification; runtime confirmation deferred to the next feature after archive + first app launch.
@@ -1133,6 +1133,21 @@ W5 implements the test seams the dogfood paradox forces (Architect's §8), instr
 
 ---
 
+## T46 — Theme toggle deduplication + state sync fix [CHANGED 2026-04-20]
+
+- **Goal**: Remove the duplicate theme radio section from Settings General tab; the toolbar `useTheme()` toggle is the single source of truth. Fixes state desync where Settings radios read stale IPC state while the toolbar held the live state.
+- **Files**:
+  - `flow-monitor/src/components/SettingsGeneral.tsx` (EDIT — remove Theme section + unused imports)
+  - `flow-monitor/src/views/__tests__/Settings.test.tsx` (EDIT — replace theme-radio describe block with absence assertion)
+  - `flow-monitor/src/i18n/en.json` (EDIT — remove settings.themeSection, settings.theme-light, settings.theme-dark)
+  - `flow-monitor/src/i18n/zh-TW.json` (EDIT — remove same 3 keys)
+- **Depends on**: T45
+- **Parallel-safe-with**: — (solo; W5.7)
+- [x]
+- 2026-04-20 Developer — T46 theme toggle deduplicated; toolbar is single source of truth; state desync resolved
+
+---
+
 ## 4. Parallel-safety analysis & wave schedule
 
 ### Wave schedule
@@ -1228,6 +1243,7 @@ This sub-sequencing is captured in T19/T20/T21/T22's `Depends on:` field (each l
 
 - 2026-04-19 Developer — T2 versions pinned (Tauri 2.2 / Rust 1.88.0 / React 19 / Vite 6 / TS 5.7); note: rust-toolchain.toml uses 1.88.0 instead of task-specified 1.83.0 because time-core 0.1.8 (transitive dep via tauri-utils → serde_with → time) requires Rust 1.88; 1.83 cannot satisfy the dep tree.
 - 2026-04-20 Developer — T45 chrome navigation + 3 IPC stubs complete (Settings/theme toggle visible in toolbar; folder picker wired via tauri-plugin-dialog)
+- 2026-04-20 Developer — T46 theme toggle deduplicated; toolbar is single source of truth; state desync resolved
 
 ## Team memory
 

@@ -233,7 +233,7 @@ describe("Settings — General tab: idle thresholds (AC5.d)", () => {
   });
 });
 
-describe("Settings — General tab: theme toggle (AC15.a)", () => {
+describe("Settings — General tab: theme section removed (T46 dedup)", () => {
   beforeEach(() => {
     document.documentElement.className = "";
     mockInvoke.mockReset();
@@ -243,66 +243,13 @@ describe("Settings — General tab: theme toggle (AC15.a)", () => {
     document.documentElement.className = "";
   });
 
-  it("renders Light and Dark theme radio buttons", async () => {
+  it("does NOT render Light/Dark theme radio buttons in Settings General tab (toolbar is single source of truth)", async () => {
     renderSettings({ theme: "light" });
     await act(async () => { await Promise.resolve(); });
 
-    expect(screen.getByRole("radio", { name: /light/i })).toBeTruthy();
-    expect(screen.getByRole("radio", { name: /dark/i })).toBeTruthy();
-  });
-
-  it("Light radio is selected by default when theme = light", async () => {
-    renderSettings({ theme: "light" });
-    await act(async () => { await Promise.resolve(); });
-
-    const lightRadio = screen.getByRole("radio", { name: /light/i });
-    expect((lightRadio as HTMLInputElement).checked).toBe(true);
-  });
-
-  it("clicking Dark radio adds html.dark class within one frame (AC15.a)", async () => {
-    renderSettings({ theme: "light" });
-    await act(async () => { await Promise.resolve(); });
-
-    mockInvoke.mockResolvedValue({});
-
-    act(() => {
-      fireEvent.click(screen.getByRole("radio", { name: /dark/i }));
-    });
-
-    expect(document.documentElement.classList.contains("dark")).toBe(true);
-  });
-
-  it("clicking Light radio removes html.dark class within one frame (AC15.a)", async () => {
-    document.documentElement.classList.add("dark");
-    renderSettings({ theme: "dark" });
-    await act(async () => { await Promise.resolve(); });
-
-    mockInvoke.mockResolvedValue({});
-
-    act(() => {
-      fireEvent.click(screen.getByRole("radio", { name: /light/i }));
-    });
-
-    expect(document.documentElement.classList.contains("dark")).toBe(false);
-  });
-
-  it("switching theme calls update_settings IPC (AC14.a)", async () => {
-    renderSettings({ theme: "light" });
-    await act(async () => { await Promise.resolve(); });
-
-    mockInvoke.mockReset();
-    mockInvoke.mockResolvedValue({});
-
-    act(() => {
-      fireEvent.click(screen.getByRole("radio", { name: /dark/i }));
-    });
-
-    await waitFor(() => {
-      const updateCalls = mockInvoke.mock.calls.filter(
-        (c) => c[0] === "update_settings" || c[0] === "save_settings",
-      );
-      expect(updateCalls.length).toBeGreaterThan(0);
-    });
+    // Theme radios must be absent — toolbar is the only theme toggle
+    expect(screen.queryByRole("radio", { name: /^light$/i })).toBeNull();
+    expect(screen.queryByRole("radio", { name: /^dark$/i })).toBeNull();
   });
 });
 
