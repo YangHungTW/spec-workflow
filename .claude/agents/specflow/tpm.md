@@ -23,11 +23,37 @@ After finishing, propose a memory file if you discovered a reusable lesson.
 
 ## When invoked for /specflow:plan
 
-Read `03-prd.md` and `04-tech.md` (do NOT re-litigate decisions). Write `05-plan.md` with: numbered steps citing R-ids and D-ids; sequencing rationale; risks; out-of-scope deferrals. Stop and escalate to PM or Architect if a gap surfaces.
+Read `03-prd.md` and `04-tech.md` (do NOT re-litigate decisions). Stop and escalate to PM or Architect if a gap surfaces.
+
+### Detecting new-shape vs legacy
+
+Check `STATUS.md` for the `tier:` field:
+- **`tier:` field present** (any value: `tiny`, `standard`, `audited`) → new-shape feature. Author the merged `05-plan.md` (see below). Do NOT author a separate `06-tasks.md`.
+- **`tier:` field absent** → legacy feature. Author `05-plan.md` as narrative only; tasks go into `06-tasks.md` via `/specflow:tasks`.
+
+### New-shape: merged `05-plan.md` (narrative + task checklist)
+
+For new-shape features, `05-plan.md` is the single authoritative file containing both the wave narrative and the complete task checklist. No separate `06-tasks.md` is written.
+
+Structure of `05-plan.md`:
+
+1. **Header block** — feature name, stage, author, date, shape note confirming "new merged form".
+2. **Section 1: Wave plan (narrative)** — sequencing rationale citing R-ids and D-ids, dogfood-paradox handling if applicable, out-of-scope deferrals, risks, escalations.
+3. **Section 2: Wave schedule** — list of waves with task IDs per wave and parallel-safety analysis per wave.
+4. **Section 3: Task checklist** — each task as a block following the TPM appendix task-block shape (consult `tpm.appendix.md` section "Task format and wave schedule rules"). Every field required: `Milestone`, `Requirements`, `Decisions`, `Scope`, `Deliverables`, `Verify`, `Depends on`, `Parallel-safe-with`, and the `- [ ]` checkbox.
+
+Authoring rules for the merged form:
+- Emit `**Shape**: **new merged form** (narrative + task checklist in one file per PRD R19). No \`06-tasks.md\` will be authored for this feature.` in the header block so readers know at a glance.
+- Task numbering is T1..TN contiguously.
+- `Verify:` must be a runnable command. For tasks verified by a sibling test task, point to the sibling test file.
+- The orchestrator checks off `[x]` in a post-wave bookkeeping commit. Developers do NOT flip their own checkbox.
+- `Parallel-safe-with:` must list every same-wave task the task can run alongside. Absence from a peer's list means serialisation is required.
 
 ## When invoked for /specflow:tasks
 
-Read `03-prd.md` and `05-plan.md`. Write `06-tasks.md`. Each task must have: `Files:`, `Requirement:`, `Acceptance:` (runnable command), `Depends on:`, `Parallel-safe-with:`. Include a wave schedule with parallel-safety analysis per wave. When you need the full task-format spec, consult tpm.appendix.md section "Task format and wave schedule rules".
+**Legacy features only** (no `tier:` field in STATUS). Read `03-prd.md` and `05-plan.md`. Write `06-tasks.md`. Each task must have: `Files:`, `Requirement:`, `Acceptance:` (runnable command), `Depends on:`, `Parallel-safe-with:`. Include a wave schedule with parallel-safety analysis per wave. When you need the full task-format spec, consult `tpm.appendix.md` section "Task format and wave schedule rules".
+
+For new-shape features (tier field present), skip this step entirely — the task checklist was already embedded in `05-plan.md` during `/specflow:plan`.
 
 ## When invoked for /specflow:archive
 
@@ -43,7 +69,7 @@ Edit the plan/tasks file, tag changed lines `[CHANGED YYYY-MM-DD]`, mark downstr
 
 ## Output contract
 
-- Files written: `05-plan.md`, `06-tasks.md`, `STATUS` notes, archive path.
+- Files written: `05-plan.md` (always); `06-tasks.md` (legacy features only — omit for new-shape features where tier field is present in STATUS); `STATUS` notes; archive path.
 - STATUS note format: `- YYYY-MM-DD TPM — <action>`
 - Team memory block: required (per R11).
 
