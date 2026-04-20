@@ -51,70 +51,32 @@ Wave-based parallel execution. Default behaviour: run **every remaining wave** e
 
    **7b. Aggregate verdicts** (pure classifier — no mutation here; apply classify-before-mutate rule):
 
-   After all `3 × N_tasks` reviewers return, run the following aggregator. The classifier emits exactly one of `wave:BLOCK`, `wave:NITS`, or `wave:PASS` on stdout. All mutation (merge or halt) lives in step 7c, not here.
+   After all `3 × N_tasks` reviewers return, invoke `bin/specflow-aggregate-verdicts` with the
+   `security performance style` axis-set and the scratch dir holding the reviewer output files.
+   The CLI emits the aggregated verdict (`PASS`, `NITS`, or `BLOCK`) on stdout line 1, and
+   optionally `suggest-audited-upgrade: security` on line 2 when a security-axis `must`-severity
+   finding is present (tech §4.3). All mutation (merge or halt) lives in step 7c, not here.
 
    ```bash
-   # Aggregator: parse all reviewer verdict footers and emit wave state.
-   # Input: $VERDICT_DIR — a scratch dir where each reviewer's raw output
-   #        was written as <task>-<axis>.txt before this block runs.
-   # Output (stdout): wave:BLOCK | wave:NITS | wave:PASS
-   # Error posture: missing or malformed verdict footer → treat as BLOCK (fail-loud).
+   # Invoke the extracted aggregator CLI (bin/specflow-aggregate-verdicts).
+   # Input:  $VERDICT_DIR — scratch dir where each reviewer's raw output was written
+   #         as <task>-<axis>.txt before this block runs.
+   # Output: $WAVE_STATE        — wave:PASS | wave:NITS | wave:BLOCK (consumed by step 7c)
+   #         $SUGGEST_AUDITED_UPGRADE — non-empty when aggregator emits suggest-audited-upgrade
+   #         (tech §4.3: step 7c invokes set_tier on this signal; see dispatch block below)
 
-   WAVE_STATE="wave:PASS"
-   BLOCK_TASKS=""
-   NITS_LINES=""
+   AGG_OUTPUT="$(bin/specflow-aggregate-verdicts security performance style \
+     --dir "$VERDICT_DIR")"
+   AGG_VERDICT="$(printf '%s\n' "$AGG_OUTPUT" | head -1)"
+   WAVE_STATE="wave:$AGG_VERDICT"
 
-   for verdict_file in "$VERDICT_DIR"/*.txt; do
-     # Extract the ## Reviewer verdict section
-     IN_VERDICT=0
-     VERDICT_VALUE=""
-     TASK_LABEL=""
-     AXIS_VALUE=""
-     FOUND_HEADER=0
-
-     TASK_LABEL="$(basename "$verdict_file" .txt)"
-
-     while IFS= read -r line; do
-       case "$line" in
-         "## Reviewer verdict")
-           IN_VERDICT=1
-           FOUND_HEADER=1
-           ;;
-       esac
-       if [ "$IN_VERDICT" = "1" ]; then
-         case "$line" in
-           "axis: "*)   AXIS_VALUE="${line#axis: }" ;;
-           "verdict: "*) VERDICT_VALUE="${line#verdict: }" ;;
-           "  - severity: must"*)
-             WAVE_STATE="wave:BLOCK"
-             BLOCK_TASKS="$BLOCK_TASKS $TASK_LABEL"
-             ;;
-           "  - severity: should"*|"  - severity: advisory"*)
-             if [ "$WAVE_STATE" = "wave:PASS" ]; then
-               WAVE_STATE="wave:NITS"
-             fi
-             NITS_LINES="$NITS_LINES
-  $TASK_LABEL($AXIS_VALUE): $line"
-             ;;
-         esac
-       fi
-     done < "$verdict_file"
-
-     # Malformed footer (no ## Reviewer verdict header or no verdict: line) → BLOCK
-     if [ "$FOUND_HEADER" = "0" ] || [ -z "$VERDICT_VALUE" ]; then
-       echo "WARN: malformed or missing verdict footer in $verdict_file — treating as BLOCK" >&2
-       WAVE_STATE="wave:BLOCK"
-       BLOCK_TASKS="$BLOCK_TASKS $TASK_LABEL(malformed)"
-     fi
-
-     # verdict: BLOCK at the task level also forces wave:BLOCK
-     if [ "$VERDICT_VALUE" = "BLOCK" ]; then
-       WAVE_STATE="wave:BLOCK"
-       BLOCK_TASKS="$BLOCK_TASKS $TASK_LABEL($AXIS_VALUE)"
-     fi
-   done
-
-   echo "$WAVE_STATE"
+   SUGGEST_AUDITED_UPGRADE=""
+   case "$AGG_OUTPUT" in
+     *suggest-audited-upgrade:*)
+       SUGGEST_AUDITED_UPGRADE="$(printf '%s\n' "$AGG_OUTPUT" \
+         | grep '^suggest-audited-upgrade:' | head -1)"
+       ;;
+   esac
    ```
 
    **7c. Dispatch on wave state** (mutation lives here, not in the classifier above):
