@@ -50,6 +50,8 @@ export interface SessionState {
   noteExcerpt: string;
   repoPath: string;
   repoId: string;
+  /** Whether the session has a UI (02-design folder present) */
+  hasUi?: boolean;
 }
 
 export interface MainWindowFilterState {

@@ -174,26 +174,74 @@
 
 .repo-sidebar {
   flex: 1;
+  display: flex;
+  flex-direction: column;
   overflow-y: auto;
-  padding: 12px 0;
+  padding: 0;
+}
+
+/* Logo block — T48.1 */
+.repo-sidebar__logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 12px 10px;
+}
+
+.repo-sidebar__logo-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--brand);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.repo-sidebar__logo-text {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--sidebar-logo-text);
+  letter-spacing: 0.01em;
+}
+
+/* Section label headers — T48.2 */
+.repo-sidebar__section-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--sidebar-section-label);
+  padding: 8px 14px 4px;
+}
+
+.repo-sidebar__section-label--spaced {
+  margin-top: 6px;
 }
 
 .repo-sidebar__list {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  padding: 0 0 4px;
 }
 
 .repo-sidebar__item {
   display: flex;
   align-items: center;
-  padding: 8px 12px;
+  gap: 6px;
+  padding: 7px 12px;
   margin: 0 6px;
   border-radius: 8px;
   font-size: 13px;
   color: var(--sidebar-text-muted);
   cursor: pointer;
   user-select: none;
+  border: none;
+  background: transparent;
+  text-align: left;
+  width: calc(100% - 12px);
 }
 
 .repo-sidebar__item:hover {
@@ -217,7 +265,7 @@
   border: 1px dashed var(--sidebar-border);
   font-style: italic;
   opacity: 0.7;
-  margin-top: 6px;
+  margin-top: 4px;
 }
 
 .repo-sidebar__item--ghost:hover {
@@ -226,18 +274,128 @@
   color: var(--card-bg);
 }
 
-/* ── SORT TOOLBAR ── */
+/* Item label — flex-1 to push badge to the right */
+.repo-sidebar__item-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
-.sort-toolbar {
+/* Count badges — T48.3 */
+.repo-sidebar__badge {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  background: var(--sidebar-count-bg);
+  color: var(--sidebar-count-text);
+  min-width: 18px;
+  text-align: center;
+}
+
+/* Stalled badge on "All Projects" — red */
+.repo-sidebar__badge--stalled {
+  background: var(--stalled-red);
+  color: var(--sidebar-badge-stalled-text);
+}
+
+/* Filter items — T48.4 */
+.repo-sidebar__filter-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.repo-sidebar__filter-dot--stalled {
+  background: var(--stalled-red);
+}
+
+.repo-sidebar__filter-dot--ui {
+  background: var(--ui-badge);
+}
+
+.repo-sidebar__filter--active {
+  background: var(--sidebar-border);
+  color: var(--card-bg);
+}
+
+/* Bottom block — Settings + theme toggle — T48.5 */
+.repo-sidebar__bottom {
+  margin-top: auto;
+  border-top: 1px solid var(--sidebar-border);
+  padding: 6px 0 4px;
+}
+
+.repo-sidebar__bottom-item {
+  font-size: 12px;
+}
+
+.repo-sidebar__bottom-item--muted {
+  opacity: 0.75;
+}
+
+.repo-sidebar__bottom-item--muted:hover {
+  opacity: 1;
+}
+
+.repo-sidebar__theme-icon {
+  font-size: 12px;
+  width: 14px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.repo-sidebar__theme-label {
+  font-size: 11px;
+}
+
+/* ── MAIN WINDOW TOOLBAR — T48.6 ── */
+
+.main-window__toolbar {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   padding: 10px 16px;
   background: var(--card-bg);
   border-bottom: 1px solid var(--card-border);
   position: sticky;
   top: 0;
   z-index: 10;
+}
+
+.main-window__toolbar-title-block {
+  flex: 1;
+  min-width: 0;
+}
+
+.main-window__page-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.main-window__page-subtitle {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* ── SORT TOOLBAR ── */
+
+.sort-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+  background: transparent;
+  border-bottom: none;
+  position: static;
+  z-index: auto;
 }
 
 .sort-toolbar__label {
@@ -305,9 +463,39 @@
 
 .session-card__header {
   display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Repo name row — above slug, with optional UI badge (T48.7) */
+.session-card__repo-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.session-card__repo-name {
+  font-size: 11px;
+  font-family: "SF Mono", "Fira Code", "Cascadia Code", monospace;
+  color: var(--text-muted);
+}
+
+/* UI badge — purple pill (T48.8) */
+.session-card__ui-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 9999px;
+  background: var(--ui-badge-light);
+  color: var(--ui-badge);
+  letter-spacing: 0.04em;
+}
+
+/* Slug + stage pill row */
+.session-card__slug-row {
+  display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
 }
 
 .session-card__slug {
@@ -322,15 +510,67 @@
   white-space: nowrap;
 }
 
+/* Stalled card — all text recolored (T48.7) */
+.session-card--stalled .session-card__repo-name {
+  color: var(--stalled-red);
+}
+
+.session-card--stalled .session-card__slug {
+  color: var(--stalled-red);
+}
+
+.session-card--stalled .session-card__note {
+  color: var(--stalled-red);
+}
+
+.session-card--stalled .session-card__time {
+  color: var(--stalled-red);
+}
+
+/* Stale card — all text recolored (T48.7) */
+.session-card--stale .session-card__repo-name {
+  color: var(--stale-amber);
+}
+
+.session-card--stale .session-card__slug {
+  color: var(--stale-amber);
+}
+
+.session-card--stale .session-card__note {
+  color: var(--stale-amber);
+}
+
+.session-card--stale .session-card__time {
+  color: var(--stale-amber);
+}
+
 .session-card__meta {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 6px;
 }
 
 .session-card__time {
   font-size: 11px;
   color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+/* Active badge — green pill shown when session is healthy (T48.8) */
+.session-card__active-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  background: var(--ok-light);
+  color: var(--ok);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+  /* NO animation, NO transition per AC9.j */
 }
 
 .session-card__note {

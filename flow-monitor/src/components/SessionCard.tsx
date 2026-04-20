@@ -13,6 +13,10 @@ export interface SessionCardProps {
   noteExcerpt: string;
   /** Absolute path to the feature directory (used by hover actions) */
   repoPath: string;
+  /** Repository name shown above the slug (T48.7) */
+  repoName?: string;
+  /** Whether the session has a UI (02-design folder present); shows purple "UI" badge (T48.8) */
+  hasUi?: boolean;
 }
 
 /**
@@ -37,9 +41,16 @@ function formatRelativeTime(ms: number): string {
  *   1. slug
  *   2. StagePill
  *   3. relative time
- *   4. IdleBadge
+ *   4. IdleBadge (or "Active" badge when healthy)
  *   5. note excerpt (truncated to ≤80 chars)
  *   6. hover actions — EXACTLY "Open in Finder" + "Copy path" (AC7.d)
+ *
+ * T48 additions:
+ *   - Repo name row above slug (T48.7)
+ *   - "UI" badge (purple pill) when hasUi === true (T48.8)
+ *   - "Active" badge (green pill) when idleState === "none" (T48.8)
+ *   - Stalled: all text recolored to var(--stalled-red) (T48.7)
+ *   - Stale: all text recolored to var(--stale-amber) (T48.7)
  *
  * B2 boundary enforced: no "Send instruction", "Advance stage", or "Edit" action.
  */
@@ -50,6 +61,8 @@ export function SessionCard({
   lastUpdatedMs,
   noteExcerpt,
   repoPath,
+  repoName,
+  hasUi = false,
 }: SessionCardProps) {
   const { t } = useTranslation();
 
@@ -73,23 +86,30 @@ export function SessionCard({
     .filter(Boolean)
     .join(" ");
 
+  // "Active" badge shown when session is healthy (no idle state)
+  const showActiveBadge = idleState === "none";
+
   return (
     <article className={cardClass} data-slug={slug}>
       <header className="session-card__header">
-        <span className="session-card__slug">{slug}</span>
-        <StagePill stage={stage} />
-        <IdleBadge state={idleState} />
-      </header>
+        {/* Repo name row + UI badge — T48.7 */}
+        <div className="session-card__repo-row">
+          {repoName && (
+            <span className="session-card__repo-name">{repoName}</span>
+          )}
+          {hasUi && (
+            <span className="session-card__ui-badge" data-testid="ui-badge">
+              UI
+            </span>
+          )}
+        </div>
 
-      <div className="session-card__meta">
-        <span
-          className="session-card__time"
-          data-testid="relative-time"
-          title={new Date(lastUpdatedMs).toISOString()}
-        >
-          {formatRelativeTime(lastUpdatedMs)}
-        </span>
-      </div>
+        {/* Slug + Stage pill row */}
+        <div className="session-card__slug-row">
+          <span className="session-card__slug">{slug}</span>
+          <StagePill stage={stage} />
+        </div>
+      </header>
 
       {displayExcerpt && (
         <p
@@ -99,6 +119,29 @@ export function SessionCard({
           {displayExcerpt}
         </p>
       )}
+
+      <div className="session-card__meta">
+        <span
+          className="session-card__time"
+          data-testid="relative-time"
+          title={new Date(lastUpdatedMs).toISOString()}
+        >
+          <svg width="10" height="10" fill="none" viewBox="0 0 10 10" aria-hidden="true">
+            <circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.2" />
+            <path d="M5 3v2l1.5 1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+          </svg>
+          {formatRelativeTime(lastUpdatedMs)}
+        </span>
+
+        {/* Right side: Active badge (green) OR IdleBadge (stale/stalled) */}
+        {showActiveBadge ? (
+          <span className="session-card__active-badge" data-testid="active-badge">
+            {t("card.active")}
+          </span>
+        ) : (
+          <IdleBadge state={idleState} />
+        )}
+      </div>
 
       {/* Hover actions — EXACTLY 2 per AC7.d; B2 boundary: no edit/advance/send */}
       <div className="session-card__actions">
