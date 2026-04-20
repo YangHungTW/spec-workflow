@@ -4,6 +4,11 @@ description: Advance a feature to its next stage automatically. Usage: /specflow
 
 Orchestrator. Reads STATUS and advances one stage. Stops at any point that needs your input (blocker questions, design approval, one task at a time during implement).
 
+```bash
+# Source tier helper — double-source safe; REPO_ROOT must be set by caller.
+source "$REPO_ROOT/bin/specflow-tier"
+```
+
 ## Steps
 
 1. **Resolve slug**:
@@ -22,6 +27,21 @@ Orchestrator. Reads STATUS and advances one stage. Stops at any point that needs
 2. Read `.spec-workflow/features/<slug>/STATUS.md`.
 3. Determine the **next unchecked stage** in the Stage checklist.
 4. Apply these rules:
+   - **Read tier** (before every stage dispatch):
+     ```bash
+     tier=$(get_tier "$feature_dir")
+     ```
+     - If `tier = missing`: treat as `standard` for skip decisions (legacy feature, no `tier:` field yet).
+     - If `tier = malformed`: stop immediately — print error to user, exit 2. Do not advance.
+   - **Tier-aware skip check** — before dispatching to any stage, test whether the tier mandates skipping it:
+     ```bash
+     if tier_skips_stage "$tier" "$next_stage"; then
+       # check the box inline: append `[x]` to that stage line with note `skipped (tier: <t>)`
+       # append STATUS Notes line: `<date> next — tier <t> skips <stage>`
+       # re-read STATUS and advance again (loop — same as has-ui skip below)
+     fi
+     ```
+     STATUS Notes line format: `YYYY-MM-DD next — tier <t> skips <stage>`
    - If `has-ui: false` and next stage is `design` → auto-check the `design` box with note `skipped (has-ui: false)` in STATUS Notes, then re-read and advance again.
    - Otherwise, follow the matching command file's instructions:
 
