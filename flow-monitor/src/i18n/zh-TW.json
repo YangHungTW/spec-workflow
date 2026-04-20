@@ -1,6 +1,10 @@
 {
   "sidebar.allProjects": "全部專案",
   "sidebar.addRepo": "+ 新增倉庫…",
+  "sidebar.projects": "專案",
+  "sidebar.filter": "篩選",
+  "sidebar.stalledOnly": "僅顯示停滯",
+  "sidebar.hasUi": "有 UI",
   "sidebar.settings": "設定",
   "sidebar.pollingFooter": "輪詢中 · 每 {interval} 秒",
 
@@ -84,5 +88,6 @@
 
   "card.repoGroup": "{repo}",
   "card.collapseRepo": "收合 {repo}",
-  "card.expandRepo": "展開 {repo}"
+  "card.expandRepo": "展開 {repo}",
+  "card.active": "進行中"
 }

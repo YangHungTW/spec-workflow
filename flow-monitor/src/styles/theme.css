@@ -83,6 +83,24 @@ html {
   --badge-stalled-bg: #FEE2E2;
   --badge-stalled-text: #991B1B;
 
+  /* Sidebar section label + count badge */
+  --sidebar-section-label: #64748B;
+  --sidebar-count-bg: #475569;
+  --sidebar-count-text: #FFFFFF;
+  --sidebar-badge-stalled-text: #FFFFFF;
+  --sidebar-logo-text: #FFFFFF;
+
+  /* UI badge (purple) */
+  --ui-badge: #8B5CF6;
+  --ui-badge-light: #F5F3FF;
+
+  /* Active badge (green) */
+  --ok: #10B981;
+  --ok-light: #ECFDF5;
+
+  /* Brand color for logo */
+  --brand: #4F46E5;
+
   /* Markdown preview */
   --markdown-bg: #FFFFFF;
   --markdown-text: #1E293B;
@@ -161,6 +179,24 @@ html.dark {
 
   --badge-stalled-bg: #2A1010;
   --badge-stalled-text: #FCA5A5;
+
+  /* Sidebar section label + count badge */
+  --sidebar-section-label: #4D7360;
+  --sidebar-count-bg: #1F2E24;
+  --sidebar-count-text: #9ECFB4;
+  --sidebar-badge-stalled-text: #FFFFFF;
+  --sidebar-logo-text: #FFFFFF;
+
+  /* UI badge (purple) */
+  --ui-badge: #7C3AED;
+  --ui-badge-light: #1A1529;
+
+  /* Active badge (green) */
+  --ok: #059669;
+  --ok-light: #0D1F18;
+
+  /* Brand color for logo */
+  --brand: #1B4332;
 
   /* Markdown preview */
   --markdown-bg: #1A211D;

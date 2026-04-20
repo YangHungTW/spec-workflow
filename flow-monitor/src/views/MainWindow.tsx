@@ -26,6 +26,7 @@ interface ListSessionsResponse {
     repo_path: string;
     repo_id: string;
     repo_name: string;
+    has_ui?: boolean;
   }>;
   polling_interval_secs: number;
 }
@@ -44,8 +45,9 @@ interface SettingsResponse {
  * sort toolbar + polling footer.
  *
  * Layout:
- *   - Left sidebar (RepoSidebar): repo list, "All Projects", "Add repo…" ghost
- *   - Top toolbar (SortToolbar): 4-axis sort dropdown
+ *   - Left sidebar (RepoSidebar): logo, repo list, "All Projects", filter section,
+ *     Settings + theme toggle at bottom (T48)
+ *   - Top toolbar: page title + subtitle (T48.6), sort dropdown
  *   - Main area: 2-column card grid (≥720px) or 1-column (< 720px)
  *   - Sidebar footer (PollingFooter): "Polling · {interval}s" with green dot
  *
@@ -91,6 +93,7 @@ function MainWindow() {
           noteExcerpt: s.note_excerpt,
           repoPath: s.repo_path,
           repoId: s.repo_id,
+          hasUi: s.has_ui ?? false,
         }));
         setSessions(mapped);
         setPollingIntervalSecs(
@@ -159,6 +162,21 @@ function MainWindow() {
   // Determine if we should show group-by-repo headers (AC8.a, AC8.c)
   const showGroupHeaders = selectedRepoId === "all" && repos.length >= 2;
 
+  // Compute per-repo session counts for sidebar badges (T48.3)
+  const repoSessionCounts: Record<string, number> = {};
+  for (const session of sessions) {
+    repoSessionCounts[session.repoId] = (repoSessionCounts[session.repoId] ?? 0) + 1;
+  }
+
+  // Compute total stalled count for sidebar badge (T48.3)
+  const stalledCount = sessions.filter((s) => s.idleState === "stalled").length;
+
+  // Page title — selected repo name or "All Projects"
+  const pageTitle =
+    selectedRepoId === "all"
+      ? t("sidebar.allProjects")
+      : (repos.find((r) => r.id === selectedRepoId)?.name ?? t("sidebar.allProjects"));
+
   function handleSortChange(axis: SortAxis) {
     setSortAxis(axis);
   }
@@ -194,13 +212,19 @@ function MainWindow() {
 
   return (
     <div className="main-window" data-testid="main-window">
-      {/* Left sidebar */}
+      {/* Left sidebar — RepoSidebar now owns logo, section headers, filters,
+          Settings + theme toggle at bottom (T48) */}
       <aside className="main-window__sidebar">
         <RepoSidebar
           repos={repos}
           selectedId={selectedRepoId}
           onSelect={setSelectedRepoId}
           onAddRepo={handleAddRepo}
+          onSettings={() => navigate("/settings")}
+          onThemeToggle={toggleTheme}
+          theme={theme}
+          stalledCount={stalledCount}
+          repoSessionCounts={repoSessionCounts}
         />
         {/* Compact panel toggle button (AC10.a) */}
         <button
@@ -211,26 +235,6 @@ function MainWindow() {
           onClick={handleCompactToggle}
         >
           {t("btn.compactPanel")}
-        </button>
-        {/* Theme toggle — shows ☀ in dark mode (switch to light), ☾ in light mode (switch to dark) */}
-        <button
-          type="button"
-          className="main-window__theme-toggle"
-          data-testid="theme-toggle-btn"
-          aria-label={theme === "dark" ? t("btn.themeToLight") : t("btn.themeToDark")}
-          onClick={toggleTheme}
-        >
-          {theme === "dark" ? "☀" : "☾"}
-        </button>
-        {/* Settings navigation button — navigates to /settings */}
-        <button
-          type="button"
-          className="main-window__settings-btn"
-          data-testid="settings-btn"
-          aria-label={t("btn.settings")}
-          onClick={() => navigate("/settings")}
-        >
-          ⚙
         </button>
         {/* Polling footer at the bottom of the sidebar (AC4.c) */}
         <PollingFooter intervalSeconds={pollingIntervalSecs} />
@@ -244,8 +248,17 @@ function MainWindow() {
           <EmptyState />
         ) : (
           <>
-            {/* Sort toolbar (AC7.b, AC7.c) */}
-            <SortToolbar sortAxis={sortAxis} onSortChange={handleSortChange} />
+            {/* Toolbar — page title + subtitle on left, sort controls on right (T48.6) */}
+            <div className="main-window__toolbar">
+              <div className="main-window__toolbar-title-block">
+                <h1 className="main-window__page-title">{pageTitle}</h1>
+                <p className="main-window__page-subtitle">
+                  {sortedSessions.length} sessions &middot;{" "}
+                  {stalledCount} stalled &middot; last refreshed just now
+                </p>
+              </div>
+              <SortToolbar sortAxis={sortAxis} onSortChange={handleSortChange} />
+            </div>
 
             {/* Card grid */}
             <div className="main-window__grid" data-testid="card-grid">
@@ -302,6 +315,8 @@ function MainWindow() {
                               lastUpdatedMs={session.lastUpdatedMs}
                               noteExcerpt={session.noteExcerpt}
                               repoPath={session.repoPath}
+                              repoName={repoName}
+                              hasUi={session.hasUi ?? false}
                             />
                           ))}
                         </div>
@@ -321,6 +336,8 @@ function MainWindow() {
                   lastUpdatedMs={session.lastUpdatedMs}
                   noteExcerpt={session.noteExcerpt}
                   repoPath={session.repoPath}
+                  repoName={repos.find((r) => r.id === session.repoId)?.name}
+                  hasUi={session.hasUi ?? false}
                 />
               ))
             ))}

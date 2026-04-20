@@ -10,7 +10,7 @@ All paths below are absolute under `/Users/yanghungtw/Tools/spec-workflow/`. The
 
 ## 1. Summary
 
-- **Total tasks**: 47 [CHANGED 2026-04-20]
+- **Total tasks**: 48 [CHANGED 2026-04-20]
 - **Waves**: 8 (W0 → W1 → W1.5 → W2 → W3 → W4 → W5 → W5.5; W2 may run concurrently with W1 once W0 lands; W1.5 inserted post-W1 merge to absorb NITS cleanup per STATUS note; W5.5 inserted post-verify-FAIL to close the component-CSS gap exposed on first .dmg launch) [CHANGED 2026-04-19]
 - **Critical path length**: W0 (sequential 5 tasks) → W1 ∥ W2 (max 6 ≈ 6 task-hours) → W3 (max 8 ≈ 8 task-hours) → W4 (max 5 ≈ 5 task-hours) → W5 (max 5 ≈ 5 task-hours). ≈ 30 task-hours linear, ≈ 12–14 task-hours with full parallelism.
 - **Dogfood paradox** (per `shared/dogfood-paradox-third-occurrence`): W5 is structural-only verification; runtime confirmation deferred to the next feature after archive + first app launch.
@@ -1161,6 +1161,27 @@ W5 implements the test seams the dogfood paradox forces (Architect's §8), instr
 - **Parallel-safe-with**: — (solo; W5.8)
 - [x]
 - 2026-04-20 Developer — T47 EmptyState wired in MainWindow + 4 components polished to mockup
+
+---
+
+## T48 — Comprehensive mockup alignment: sidebar logo/sections/counts/filters, Settings to sidebar, toolbar title+subtitle, card repo+UI badge+text recolor+Active badge [CHANGED 2026-04-20]
+
+- **Goal**: Final polish pass closing 8 structural gaps between the running app and `02-design/mockup.html` lines 783–1037. All 8 items implemented and verified.
+- **Files**:
+  - `flow-monitor/src/components/RepoSidebar.tsx` (EDIT — logo, section headers, count badges, filter section, Settings + theme toggle at bottom)
+  - `flow-monitor/src/components/__tests__/RepoSidebar.test.tsx` (NEW — 13 tests)
+  - `flow-monitor/src/views/MainWindow.tsx` (EDIT — remove Settings/theme from aside; add page title + subtitle row; pass new props to RepoSidebar; compute stalledCount + repoSessionCounts)
+  - `flow-monitor/src/views/__tests__/MainWindow.chrome.test.tsx` (EDIT — update theme-toggle testid from toolbar to sidebar)
+  - `flow-monitor/src/components/SessionCard.tsx` (EDIT — repo name row, UI badge, Active badge, stalled/stale text recolor)
+  - `flow-monitor/src/stores/sessionStore.ts` (EDIT — add hasUi? to SessionState)
+  - `flow-monitor/src/styles/components.css` (EDIT — sidebar logo/section/badge/filter/bottom CSS; card repo-row/ui-badge/active-badge/stalled+stale text recolor; toolbar title block)
+  - `flow-monitor/src/styles/theme.css` (EDIT — 8 new tokens: --sidebar-section-label, --sidebar-count-bg, --sidebar-count-text, --sidebar-badge-stalled-text, --sidebar-logo-text, --ui-badge, --ui-badge-light, --ok, --ok-light, --brand)
+  - `flow-monitor/src/i18n/en.json` (EDIT — sidebar.projects, sidebar.filter, sidebar.stalledOnly, sidebar.hasUi, card.active)
+  - `flow-monitor/src/i18n/zh-TW.json` (EDIT — same keys, zh-TW values)
+- **Depends on**: T47
+- **Parallel-safe-with**: — (solo; W5.9)
+- [x]
+- 2026-04-20 Developer — T48 mockup alignment complete (sidebar/toolbar/card all closed gap with 02-design/mockup.html)
 
 ---
 

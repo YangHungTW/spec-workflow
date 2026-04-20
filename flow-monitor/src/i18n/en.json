@@ -1,6 +1,10 @@
 {
   "sidebar.allProjects": "All Projects",
   "sidebar.addRepo": "+ Add repo…",
+  "sidebar.projects": "Projects",
+  "sidebar.filter": "Filter",
+  "sidebar.stalledOnly": "Stalled only",
+  "sidebar.hasUi": "Has UI",
   "sidebar.settings": "Settings",
   "sidebar.pollingFooter": "Polling · {interval}s",
 
@@ -84,5 +88,6 @@
 
   "card.repoGroup": "{repo}",
   "card.collapseRepo": "Collapse {repo}",
-  "card.expandRepo": "Expand {repo}"
+  "card.expandRepo": "Expand {repo}",
+  "card.active": "Active"
 }

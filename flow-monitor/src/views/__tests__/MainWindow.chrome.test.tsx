@@ -125,7 +125,7 @@ describe("MainWindow chrome — Settings button (T45.1)", () => {
   });
 });
 
-describe("MainWindow chrome — Theme toggle button (T45.2)", () => {
+describe("MainWindow chrome — Theme toggle button (T45.2 / T48.5)", () => {
   beforeEach(() => {
     mockInvoke.mockReset();
     mockToggleTheme.mockReset();
@@ -135,7 +135,7 @@ describe("MainWindow chrome — Theme toggle button (T45.2)", () => {
     document.documentElement.className = "";
   });
 
-  it("renders a theme toggle button in the toolbar", async () => {
+  it("renders a theme toggle button in the sidebar (moved from toolbar in T48)", async () => {
     setupInvokeMock();
     await act(async () => {
       render(
@@ -147,7 +147,8 @@ describe("MainWindow chrome — Theme toggle button (T45.2)", () => {
       );
     });
 
-    const themeBtn = screen.queryByTestId("theme-toggle-btn");
+    // T48 moved theme toggle into RepoSidebar; testid is now sidebar-theme-toggle
+    const themeBtn = screen.queryByTestId("sidebar-theme-toggle");
     expect(themeBtn).toBeTruthy();
   });
 
@@ -163,7 +164,8 @@ describe("MainWindow chrome — Theme toggle button (T45.2)", () => {
       );
     });
 
-    const themeBtn = screen.getByTestId("theme-toggle-btn");
+    // T48 moved theme toggle into RepoSidebar; testid is now sidebar-theme-toggle
+    const themeBtn = screen.getByTestId("sidebar-theme-toggle");
     await act(async () => {
       fireEvent.click(themeBtn);
     });
