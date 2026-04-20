@@ -16,7 +16,7 @@
 - [x] tasks         (06-tasks.md)                — TPM
 - [x] implement     (tasks checked off)          — Developer
 - [x] gap-check     (07-gaps.md, verdict PASS)   — QA-analyst
-- [ ] verify        (08-verify.md, verdict PASS) — QA-tester
+- [x] verify        (08-verify.md, verdict PASS) — QA-tester
 - [ ] archive       (moved to .spec-workflow/archive/)     — TPM
 
 ## Notes
@@ -80,3 +80,8 @@
 - 2026-04-19 QA-tester — verify done: PASS-DEFERRED; 382/382 structural tests pass; 37 ACs runtime-deferred per dogfood-paradox; 0 regressions; DMG absent from build tree
 - 2026-04-19 verify runtime FAIL — user screenshot shows unstyled app (no component CSS; theme.css has tokens only, no selectors applied). R15 + all 7-screen visual design commitments not met. Reverting verify checkbox.
 - 2026-04-19 TPM — added T44 component CSS task (verify FAIL recovery)
+- 2026-04-19 Developer — T44 component CSS merged; unstyled-app regression resolved via theme-token-driven selectors.
+- 2026-04-20 TPM — added T45-T48 post-verify polish (chrome, theme dedup, EmptyState wiring, mockup alignment) + inline runtime fixes (IPC shape alignment, dialog capability grant, dialog deadlock fix, tab content wiring, card navigation, design preview, theme desync).
+- 2026-04-20 Developer — all T44-T48 + inline runtime fixes merged; runtime verify PASS on dogfood launch (flow-monitor observed its own development session).
+- 2026-04-20 TPM — flipped [x] verify; feature ready for /specflow:archive.
+- 2026-04-20 PM — intaken B2 follow-up (20260420-flow-monitor-control-plane) on this branch for continuity.
