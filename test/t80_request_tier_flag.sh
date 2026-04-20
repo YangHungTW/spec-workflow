@@ -75,10 +75,14 @@ if [ ! -f "$REQUEST_MD" ]; then
   exit 2
 fi
 
+# Cache file content once; boolean greps pipe from this variable to avoid
+# re-reading the file on each assertion (perf: no-re-reading-same-file).
+REQUEST_CONTENT="$(cat "$REQUEST_MD")"
+
 # ---------------------------------------------------------------------------
 # A. '--tier' flag token present (verify check from T18 task spec)
 # ---------------------------------------------------------------------------
-if grep -q -- '--tier' "$REQUEST_MD" 2>/dev/null; then
+if printf '%s\n' "$REQUEST_CONTENT" | grep -q -- '--tier' 2>/dev/null; then
   pass "A: '--tier' flag present in request.md"
 else
   skip "A: '--tier' not yet present in request.md — T18 not merged; skipping B–F"
@@ -91,7 +95,7 @@ fi
 # B. Enum values tiny|standard|audited documented near --tier
 # ---------------------------------------------------------------------------
 for tier_val in tiny standard audited; do
-  if grep -q "$tier_val" "$REQUEST_MD" 2>/dev/null; then
+  if printf '%s\n' "$REQUEST_CONTENT" | grep -q "$tier_val" 2>/dev/null; then
     pass "B: tier enum value '$tier_val' present in request.md"
   else
     fail "B: tier enum value '$tier_val' missing from request.md"
@@ -103,35 +107,35 @@ done
 # ---------------------------------------------------------------------------
 
 # C1: "I propose tier:" sentinel
-if grep -q 'I propose tier:' "$REQUEST_MD" 2>/dev/null; then
+if printf '%s\n' "$REQUEST_CONTENT" | grep -q 'I propose tier:' 2>/dev/null; then
   pass "C1: 'I propose tier:' sentinel present"
 else
   fail "C1: 'I propose tier:' sentinel missing (tech §D6 prompt shape)"
 fi
 
 # C2: tiny definition line (shape: "tiny     —" with optional surrounding text)
-if grep -q 'tiny.*—' "$REQUEST_MD" 2>/dev/null; then
+if printf '%s\n' "$REQUEST_CONTENT" | grep -q 'tiny.*—' 2>/dev/null; then
   pass "C2: tiny definition line (tiny ... —) present"
 else
   fail "C2: tiny definition line missing (tech §D6 prompt shape requires tiny — <one-line definition>)"
 fi
 
 # C3: standard definition line
-if grep -q 'standard.*—' "$REQUEST_MD" 2>/dev/null; then
+if printf '%s\n' "$REQUEST_CONTENT" | grep -q 'standard.*—' 2>/dev/null; then
   pass "C3: standard definition line (standard ... —) present"
 else
   fail "C3: standard definition line missing (tech §D6 prompt shape)"
 fi
 
 # C4: audited definition line
-if grep -q 'audited.*—' "$REQUEST_MD" 2>/dev/null; then
+if printf '%s\n' "$REQUEST_CONTENT" | grep -q 'audited.*—' 2>/dev/null; then
   pass "C4: audited definition line (audited ... —) present"
 else
   fail "C4: audited definition line missing (tech §D6 prompt shape)"
 fi
 
 # C5: "Press Enter to accept" sentinel
-if grep -q 'Press Enter to accept' "$REQUEST_MD" 2>/dev/null; then
+if printf '%s\n' "$REQUEST_CONTENT" | grep -q 'Press Enter to accept' 2>/dev/null; then
   pass "C5: 'Press Enter to accept' sentinel present"
 else
   fail "C5: 'Press Enter to accept' sentinel missing (tech §D6 prompt shape)"
@@ -144,16 +148,17 @@ fi
 # Strategy: find the line numbers for three sentinels and assert order.
 #   has_ui_line  < propose_line < slug_line
 #
-# We use grep -n and awk to extract line numbers; bash 3.2 portable.
+# We use grep -En (ERE, BSD-portable — no BRE \| needed) and awk to extract
+# line numbers; bash 3.2 portable.
 # ---------------------------------------------------------------------------
 
-has_ui_line="$(grep -n 'has.ui\|has-ui' "$REQUEST_MD" 2>/dev/null | awk -F: '{print $1; exit}')"
+has_ui_line="$(grep -En 'has.ui|has-ui' "$REQUEST_MD" 2>/dev/null | awk -F: '{print $1; exit}')"
 propose_line="$(grep -n 'I propose tier:' "$REQUEST_MD" 2>/dev/null | awk -F: '{print $1; exit}')"
 # "slug" finalisation: look for the step that writes stage=request to STATUS.
 # This is step 5 ("Update STATUS: stage=request ..."), which comes after the
 # propose-and-confirm block in step 4a. Using "stage=request" as the sentinel
 # avoids false matches on the frontmatter description: line.
-slug_line="$(grep -n 'stage=request\|Update STATUS' "$REQUEST_MD" 2>/dev/null | awk -F: '{print $1; exit}')"
+slug_line="$(grep -En 'stage=request|Update STATUS' "$REQUEST_MD" 2>/dev/null | awk -F: '{print $1; exit}')"
 
 if [ -n "$has_ui_line" ] && [ -n "$propose_line" ]; then
   if [ "$has_ui_line" -lt "$propose_line" ]; then
@@ -186,7 +191,7 @@ fi
 # E. Re-prompt-once discipline: prose must mention re-prompt behavior
 #    (PM MUST NOT block indefinitely; re-prompt once then default per T18 spec)
 # ---------------------------------------------------------------------------
-if grep -qi 're-prompt\|reprompt\|re.prompt\|once.*default\|default.*proposed\|unrecogni' "$REQUEST_MD" 2>/dev/null; then
+if printf '%s\n' "$REQUEST_CONTENT" | grep -Eqi 're-prompt|reprompt|re.prompt|once.*default|default.*proposed|unrecogni' 2>/dev/null; then
   pass "E: re-prompt-once discipline documented in request.md"
 else
   fail "E: re-prompt-once discipline not found — T18 spec: 're-prompt once on unrecognised input, then default to proposed'"
@@ -196,7 +201,7 @@ fi
 # F. No-silent-default: "propose" or "proposal" language present
 #    (PM MUST NOT silently default; MUST propose)
 # ---------------------------------------------------------------------------
-if grep -qi 'propos' "$REQUEST_MD" 2>/dev/null; then
+if printf '%s\n' "$REQUEST_CONTENT" | grep -qi 'propos' 2>/dev/null; then
   pass "F: 'propos' (propose/proposal) language present — no silent default"
 else
   fail "F: 'propos' language missing — T18 spec: 'PM MUST NOT silently default; MUST propose'"
