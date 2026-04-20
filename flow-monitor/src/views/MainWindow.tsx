@@ -86,18 +86,17 @@ function MainWindow() {
           lastUpdatedMs: (s.last_activity_secs ?? 0) * 1000,
           noteExcerpt: "",
           repoPath: s.repo,
-          repoId: s.repo,
+          repoId: s.repo.split("/").pop() ?? s.repo,
           hasUi: false,
         }));
         setSessions(mapped);
         setPollingIntervalSecs(settingsData.polling_interval_secs ?? 3);
         if (settingsData.repos) {
           setRepos(
-            settingsData.repos.map((p) => ({
-              id: p,
-              name: p.split("/").pop() ?? p,
-              path: p,
-            })),
+            settingsData.repos.map((p) => {
+              const name = p.split("/").pop() ?? p;
+              return { id: name, name, path: p };
+            }),
           );
         }
         setLoading(false);
@@ -306,6 +305,7 @@ function MainWindow() {
                               repoPath={session.repoPath}
                               repoName={repoName}
                               hasUi={session.hasUi ?? false}
+                              onClick={() => navigate(`/feature/${encodeURIComponent(session.repoId)}/${encodeURIComponent(session.slug)}`)}
                             />
                           ))}
                         </div>
@@ -327,6 +327,7 @@ function MainWindow() {
                   repoPath={session.repoPath}
                   repoName={repos.find((r) => r.id === session.repoId)?.name}
                   hasUi={session.hasUi ?? false}
+                  onClick={() => navigate(`/feature/${encodeURIComponent(session.repoId)}/${encodeURIComponent(session.slug)}`)}
                 />
               ))
             ))}

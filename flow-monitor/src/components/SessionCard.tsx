@@ -17,6 +17,8 @@ export interface SessionCardProps {
   repoName?: string;
   /** Whether the session has a UI (02-design folder present); shows purple "UI" badge (T48.8) */
   hasUi?: boolean;
+  /** Called when card body is clicked — opens CardDetail view */
+  onClick?: () => void;
 }
 
 /**
@@ -63,6 +65,7 @@ export function SessionCard({
   repoPath,
   repoName,
   hasUi = false,
+  onClick,
 }: SessionCardProps) {
   const { t } = useTranslation();
 
@@ -70,11 +73,13 @@ export function SessionCard({
   const displayExcerpt =
     noteExcerpt.length > 80 ? noteExcerpt.slice(0, 80) : noteExcerpt;
 
-  function handleOpenInFinder() {
+  function handleOpenInFinder(e: React.MouseEvent) {
+    e.stopPropagation();
     invoke("open_in_finder", { path: repoPath }).catch(() => undefined);
   }
 
-  function handleCopyPath() {
+  function handleCopyPath(e: React.MouseEvent) {
+    e.stopPropagation();
     navigator.clipboard.writeText(repoPath).catch(() => undefined);
   }
 
@@ -90,7 +95,14 @@ export function SessionCard({
   const showActiveBadge = idleState === "none";
 
   return (
-    <article className={cardClass} data-slug={slug}>
+    <article
+      className={cardClass}
+      data-slug={slug}
+      onClick={onClick}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (e) => { if (e.key === "Enter") onClick(); } : undefined}
+    >
       <header className="session-card__header">
         {/* Repo name row + UI badge — T48.7 */}
         <div className="session-card__repo-row">
