@@ -127,11 +127,12 @@ cat > "$ARCHIVE/old-feature/STATUS.md" <<'STATUS_ARCH'
 ## Notes
 STATUS_ARCH
 
-# Capture byte fingerprint of archived STATUS before any migration run.
+# Capture byte fingerprints before any migration run.
 ARCH_BEFORE="$(shasum "$ARCHIVE/old-feature/STATUS.md" | awk '{print $1}')"
-
-# Capture byte fingerprint of fixture A before dry-run.
 FIXTURE_A_BEFORE="$(shasum "$FEATURES/test-feature-A/STATUS.md" | awk '{print $1}')"
+# Fixture B must survive the migration untouched; snapshot it now so the
+# post-real-run assertion has a meaningful baseline to compare against.
+FIXTURE_B_BEFORE="$(shasum "$FEATURES/test-feature-B/STATUS.md" | awk '{print $1}')"
 
 # ---------------------------------------------------------------------------
 # Test 1: Dry-run — no mutation, expected diff on stdout.
@@ -168,11 +169,7 @@ if [ -f "$FEATURES/test-feature-A/STATUS.md.bak" ]; then
   fail "dry-run-no-backup" "STATUS.md.bak was created during --dry-run (must not create backup on dry-run)"
 fi
 
-# Archived STATUS must not have been touched.
-ARCH_AFTER_DRY="$(shasum "$ARCHIVE/old-feature/STATUS.md" | awk '{print $1}')"
-if [ "$ARCH_BEFORE" != "$ARCH_AFTER_DRY" ]; then
-  fail "dry-run-archive-untouched" "archived STATUS was modified during --dry-run"
-fi
+# Archived STATUS is verified once after all runs (see end of Test 2 block).
 
 # ---------------------------------------------------------------------------
 # Test 2: Real run — backup created, tier: standard inserted at correct position.
@@ -210,9 +207,16 @@ if ! grep -q '^\- \*\*tier\*\*: standard$' "$FEATURES/test-feature-A/STATUS.md";
 fi
 
 # The tier: line must appear AFTER has-ui: and BEFORE stage:.
-HAS_UI_LINE="$(grep -n '^\- \*\*has-ui\*\*:' "$FEATURES/test-feature-A/STATUS.md" | awk -F: '{print $1}')"
-TIER_LINE="$(grep -n '^\- \*\*tier\*\*:' "$FEATURES/test-feature-A/STATUS.md" | awk -F: '{print $1}')"
-STAGE_LINE="$(grep -n '^\- \*\*stage\*\*:' "$FEATURES/test-feature-A/STATUS.md" | awk -F: '{print $1}')"
+# Single awk pass — emits "has-ui=N tier=N stage=N" in one fork instead of three.
+_line_positions="$(awk '
+  /^\- \*\*has-ui\*\*:/  { hu = NR }
+  /^\- \*\*tier\*\*:/    { ti = NR }
+  /^\- \*\*stage\*\*:/   { st = NR }
+  END { print "has-ui=" hu " tier=" ti " stage=" st }
+' "$FEATURES/test-feature-A/STATUS.md")"
+HAS_UI_LINE="${_line_positions#*has-ui=}"; HAS_UI_LINE="${HAS_UI_LINE%% *}"
+TIER_LINE="${_line_positions#*tier=}";   TIER_LINE="${TIER_LINE%% *}"
+STAGE_LINE="${_line_positions#*stage=}"; STAGE_LINE="${STAGE_LINE%% *}"
 
 if [ -z "$HAS_UI_LINE" ] || [ -z "$TIER_LINE" ] || [ -z "$STAGE_LINE" ]; then
   fail "real-run-line-position" "could not locate has-ui/tier/stage lines (has-ui=$HAS_UI_LINE tier=$TIER_LINE stage=$STAGE_LINE)"
@@ -236,16 +240,17 @@ if [ "$NEW_LINE_COUNT" -ne "$EXPECTED_NEW_COUNT" ]; then
   fail "real-run-line-count" "migrated STATUS.md has $NEW_LINE_COUNT lines; expected $EXPECTED_NEW_COUNT (original $ORIG_LINE_COUNT + 1 new tier line)"
 fi
 
-# Fixture B (already migrated) must not have been mutated.
-FIXTURE_B_ORIGINAL="$(shasum "$FEATURES/test-feature-B/STATUS.md" | awk '{print $1}')"
-if ! grep -q '^\- \*\*tier\*\*: standard$' "$FEATURES/test-feature-B/STATUS.md"; then
-  fail "real-run-fixture-b" "fixture B lost its tier: line during migration"
+# Fixture B (already migrated) must not have been mutated — hash must equal pre-run baseline.
+FIXTURE_B_AFTER_REAL="$(shasum "$FEATURES/test-feature-B/STATUS.md" | awk '{print $1}')"
+if [ "$FIXTURE_B_BEFORE" != "$FIXTURE_B_AFTER_REAL" ]; then
+  fail "real-run-fixture-b" "fixture B was mutated during migration (before=$FIXTURE_B_BEFORE after=$FIXTURE_B_AFTER_REAL)"
 fi
 
-# Archived STATUS must still not have been touched.
-ARCH_AFTER_REAL="$(shasum "$ARCHIVE/old-feature/STATUS.md" | awk '{print $1}')"
-if [ "$ARCH_BEFORE" != "$ARCH_AFTER_REAL" ]; then
-  fail "real-run-archive-untouched" "archived STATUS was modified during real run"
+# Archived STATUS must still not have been touched — single final hash check
+# covers both dry-run and real-run; $ARCH_BEFORE is the only authoritative fingerprint.
+ARCH_AFTER_ALL="$(shasum "$ARCHIVE/old-feature/STATUS.md" | awk '{print $1}')"
+if [ "$ARCH_BEFORE" != "$ARCH_AFTER_ALL" ]; then
+  fail "archive-untouched" "archived STATUS was modified during migration runs"
 fi
 
 # ---------------------------------------------------------------------------
