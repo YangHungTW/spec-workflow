@@ -242,7 +242,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T1, T2, T3, T4
 - [ ]
 
-## T6 — Apply migration to B2's STATUS
+## T6 — [x] Apply migration to B2's STATUS
 - **Milestone**: M0
 - **Requirements**: R2, AC5
 - **Decisions**: D3
