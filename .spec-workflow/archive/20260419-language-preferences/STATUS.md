@@ -18,7 +18,7 @@
 - [x] implement     (tasks checked off)          — Developer
 - [x] gap-check     (07-gaps.md, verdict PASS)   — QA-analyst
 - [x] verify        (08-verify.md, verdict PASS) — QA-tester
-- [ ] archive       (moved to .spec-workflow/archive/)     — TPM
+- [x] archive       (moved to .spec-workflow/archive/)     — TPM
 
 ## Notes
 <!-- date + role + what changed -->
@@ -48,3 +48,4 @@
 - 2026-04-19 implement stage complete — 22/22 tasks checked; smoke 65/65 PASS.
 - 2026-04-19 qa-analyst — gap-check NITS; 2 should findings (G1: README BCP-47 overstatement; G2: malformed-config silent vs. PRD warning requirement); both traceable to D7 tradeoffs; no must findings; smoke 65/65 confirmed live; zero agent diff confirmed live; advancing to verify.
 - 2026-04-19 QA-tester: verify PASS — 22 PASS / 7 structural-PASS / 0 FAIL / 1 N/A out of 30 ACs confirmed (dogfood: 7 structural-only); smoke 64/65 (1 test-isolation artifact from untracked next-feature brainstorm file, not a code regression).
+- 2026-04-19 TPM — archive: parent feature housekeeping; code live on main for days, child 20260419-user-lang-config-fallback already archived; moved to .spec-workflow/archive/; RETROSPECTIVE.md authored.
