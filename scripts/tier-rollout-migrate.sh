@@ -14,7 +14,8 @@
 #
 # Exit codes:
 #   0  All done (all skipped or all migrated, or dry-run completed).
-#   2  Unexpected diff after a write — migration halted to avoid compounding.
+#   2  Unexpected diff after a write, OR one or more features failed to build
+#      migrated content (full pass completes before exiting).
 #
 # Idempotent: STATUS files that already contain a `tier:` field are skipped.
 # Archive directory (.spec-workflow/archive/) is never walked.
@@ -79,6 +80,20 @@ if [ ! -d "$FEATURES_DIR" ]; then
   exit 2
 fi
 
+# Resolve to a canonical absolute path (BSD-safe: cd + pwd -P, no readlink -f).
+# Then enforce that the resolved path sits inside REPO_ROOT — this prevents a
+# caller from passing ../../ or an unrelated absolute path to escape the repo
+# boundary (security: path-traversal on user-supplied --features-dir).
+FEATURES_DIR="$(cd "$FEATURES_DIR" && pwd -P)"
+case "$FEATURES_DIR" in
+  "$REPO_ROOT"/*)
+    ;;
+  *)
+    echo "ERROR: --features-dir must be inside $REPO_ROOT (got: $FEATURES_DIR)" >&2
+    exit 2
+    ;;
+esac
+
 # ---------------------------------------------------------------------------
 # classify_status_file: pure classifier — no side effects.
 # Outputs one of: missing-has-ui | needs-migration | already-migrated
@@ -91,11 +106,15 @@ fi
 # ---------------------------------------------------------------------------
 classify_status_file() {
   local f="$1"
-  if grep -q '^- \*\*tier\*\*:' "$f"; then
+  # Read once to avoid two separate forks opening the same file — one grep per
+  # check would fork twice per call site, doubling I/O on every loop iteration.
+  local content
+  content="$(cat "$f")"
+  if printf '%s\n' "$content" | grep -q '^- \*\*tier\*\*:'; then
     echo "already-migrated"
     return
   fi
-  if grep -q '^- \*\*has-ui\*\*:' "$f"; then
+  if printf '%s\n' "$content" | grep -q '^- \*\*has-ui\*\*:'; then
     echo "needs-migration"
     return
   fi
@@ -141,13 +160,13 @@ verify_diff() {
   local diff_output
   diff_output="$(diff "$original" "$migrated" || true)"
 
-  # Count only insertion lines (lines starting with ">")
-  local added_count
-  added_count="$(printf '%s\n' "$diff_output" | grep -c '^>' || true)"
-
-  # Count only deletion lines (lines starting with "<")
-  local deleted_count
-  deleted_count="$(printf '%s\n' "$diff_output" | grep -c '^<' || true)"
+  # Count insertions (lines starting with ">") and deletions (lines starting
+  # with "<") in a single awk pass — avoids two printf|grep-c forks per call.
+  local counts
+  counts="$(printf '%s\n' "$diff_output" | awk 'BEGIN{a=0;d=0} /^>/{a++} /^</{d++} END{print a" "d}')"
+  local added_count deleted_count
+  added_count="${counts%% *}"
+  deleted_count="${counts##* }"
 
   if [ "$added_count" -ne 1 ] || [ "$deleted_count" -ne 0 ]; then
     echo "ERROR: unexpected diff for $status_path" >&2
@@ -207,7 +226,8 @@ while IFS= read -r status_file; do
 
   # state = needs-migration
   if [ "$DRY_RUN" -eq 1 ]; then
-    # Build migrated content in memory and emit the diff (no file writes).
+    # --dry-run must never write to the features tree so users can safely preview
+    # changes on a live repo without risk of a half-migrated state on interrupt.
     TMP_MIGRATED="$(mktemp)"
     # Subshell trap to clean temp file even on error
     (
@@ -223,15 +243,24 @@ while IFS= read -r status_file; do
   bak_file="${status_file}.bak"
   tmp_file="${status_file}.tmp"
 
-  # Step 1: backup (no-force-on-user-paths.md)
+  # Step 1: backup (no-force-on-user-paths.md).
+  # Warn if a previous .bak exists so the caller knows it is being overwritten;
+  # the policy is: the .bak always reflects the state just before THIS run —
+  # we do not silently discard the warning because losing data silently violates
+  # no-force-on-user-paths.md §4.
+  if [ -f "$bak_file" ]; then
+    echo "WARNING: overwriting existing backup $bak_file (previous run's copy superseded)" >&2
+  fi
   cp "$status_file" "$bak_file"
 
-  # Step 2: build migrated content into tmp file
+  # Step 2: build migrated content into tmp file.
+  # On failure: record the error, clean up, and continue the loop so the full
+  # pass completes before we exit; the ERRORS counter drives the final exit 2.
   if ! build_migrated_content < "$status_file" > "$tmp_file"; then
-    echo "ERROR: failed to build migrated content for $slug — aborting" >&2
+    echo "ERROR: failed to build migrated content for $slug — skipping" >&2
     rm -f "$tmp_file"
     ERRORS=$((ERRORS + 1))
-    exit 2
+    continue
   fi
 
   # Step 3: verify the diff is exactly what we expect (tech §4.1 fail-loud)
