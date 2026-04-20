@@ -5,13 +5,46 @@ description: TPM archives a completed feature. Usage: /specflow:archive <slug> [
 1. Require `08-verify.md` verdict = PASS.
 2. **Resolve tier and run merge-check** (skip to step 3 if `--allow-unmerged REASON` was supplied and REASON is non-empty):
 
+   **Validate the slug and resolve `feature_dir`** (security: path traversal prevention):
+   - Extract `<slug>` from `$ARGUMENTS` (the first non-flag word).
+   - Reject invalid slugs immediately — print usage error to stderr and exit non-zero if the slug:
+     - contains `..` (directory traversal),
+     - contains `/` (path separator),
+     - starts with `-` (leading dash, misinterpreted as flag).
+   - Resolve `feature_dir` via `cd ... && pwd -P` and assert the resolved path begins with `$REPO_ROOT/.spec-workflow/features/`. If the boundary check fails, print an error and exit non-zero. Never pass an unvalidated slug to filesystem operations.
+   ```bash
+   REPO_ROOT="$(git rev-parse --show-toplevel)"
+   slug="$1"
+   case "$slug" in
+     *..* | */* ) printf 'ERROR: invalid slug — contains .. or /\n' >&2; exit 2 ;;
+     -*)          printf 'ERROR: invalid slug — starts with -\n' >&2; exit 2 ;;
+   esac
+   feature_dir="$REPO_ROOT/.spec-workflow/features/$slug"
+   canonical_dir="$(cd "$feature_dir" 2>/dev/null && pwd -P)" || {
+     printf 'ERROR: feature dir not found: %s\n' "$feature_dir" >&2; exit 2
+   }
+   features_root="$REPO_ROOT/.spec-workflow/features"
+   case "$canonical_dir" in
+     "$features_root"/*) ;;
+     *) printf 'ERROR: feature_dir escapes features root (boundary check failed)\n' >&2; exit 2 ;;
+   esac
+   ```
+
    Parse `$ARGUMENTS` for `--allow-unmerged`:
    - `--allow-unmerged` present but REASON (the word immediately after the flag) is absent or empty → print usage error to stderr and exit non-zero. Do NOT proceed.
-   - `--allow-unmerged REASON` present with a non-empty REASON → record the reason; skip the merge-check gate below; append STATUS Notes line at end of step 2 and continue.
+   - `--allow-unmerged REASON` present with a non-empty REASON → validate REASON; record it; skip the merge-check gate below; append STATUS Notes line at end of step 2 and continue.
+
+   **Validate REASON before appending** (security: single-line printable-ASCII only):
+   - REASON must be a single line (no embedded newlines). Reject with a usage error if it contains `\n` or `\r`.
+   - Pattern (bash):
+     ```bash
+     case "$reason" in
+       *$'\n'* | *$'\r'*) printf 'ERROR: REASON must be single line\n' >&2; exit 2 ;;
+     esac
+     ```
 
    Resolve the feature's tier by sourcing `bin/specflow-tier` and calling `get_tier`:
    ```bash
-   REPO_ROOT="$(git rev-parse --show-toplevel)"
    . "$REPO_ROOT/bin/specflow-tier"
    tier=$(get_tier "$feature_dir")
    ```
@@ -31,7 +64,17 @@ description: TPM archives a completed feature. Usage: /specflow:archive <slug> [
      ```
      If `git merge-base --is-ancestor` returns non-zero → print the branch name, the `main` ref, and the diagnostic above; exit non-zero; leave feature unmodified.
 
-   On `--allow-unmerged REASON` use: append the following STATUS Notes line (after the existing notes):
+   On `--allow-unmerged REASON` use: append the following STATUS Notes line using a **backup-then-temp-then-mv** atomic write pattern (security: no partial-write window, no data loss on interruption):
+   ```bash
+   status_md="$feature_dir/STATUS.md"
+   status_bak="$feature_dir/STATUS.md.bak"
+   status_tmp="$feature_dir/STATUS.md.tmp"
+   cp "$status_md" "$status_bak"
+   cp "$status_md" "$status_tmp"
+   printf '%s archive — --allow-unmerged USED: %s\n' "$(date +%Y-%m-%d)" "$reason" >> "$status_tmp"
+   mv "$status_tmp" "$status_md"
+   ```
+   The appended line format is:
    ```
    <date> archive — --allow-unmerged USED: <REASON>
    ```
