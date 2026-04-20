@@ -455,7 +455,16 @@ pub fn focus_main_window(app: tauri::AppHandle) -> Result<(), IpcError> {
 #[tauri::command]
 pub async fn dialog_open_directory(app: tauri::AppHandle) -> Result<Option<String>, IpcError> {
     use tauri_plugin_dialog::DialogExt;
-    let result = app.dialog().file().blocking_pick_folder();
+    // blocking_pick_folder must run off the tokio runtime to avoid deadlocking
+    // the async command thread. Use the callback variant via a oneshot channel.
+    let (tx, rx) = tokio::sync::oneshot::channel();
+    app.dialog().file().pick_folder(move |path| {
+        let _ = tx.send(path);
+    });
+    let result = rx.await.map_err(|e| IpcError {
+        code: "DIALOG_FAILED",
+        message: format!("dialog channel closed: {e}"),
+    })?;
     Ok(result.map(|p| p.to_string()))
 }
 
