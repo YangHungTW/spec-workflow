@@ -2,6 +2,7 @@
 
 - **slug**: 20260420-tier-model
 - **has-ui**: false
+- **tier**: standard
 - **stage**: plan
 - **created**: 2026-04-20
 - **updated**: 2026-04-20
