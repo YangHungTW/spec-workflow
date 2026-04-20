@@ -17,7 +17,7 @@
 # Bash 3.2 / BSD portable: no readlink -f, realpath, jq, mapfile, [[ =~ ]].
 # No HOME mutation in this script — purely reads/greps the command file.
 
-set -u -o pipefail
+set -euo pipefail
 
 # ---------------------------------------------------------------------------
 # Locate repo root relative to this script
@@ -31,7 +31,7 @@ TARGET="$REPO_ROOT/.claude/commands/specflow/validate.md"
 # Sandbox — HOME isolation (sandbox-home-in-tests.md)
 # This test does not mutate HOME but we carry the discipline uniformly.
 # ---------------------------------------------------------------------------
-SANDBOX="$(mktemp -d "$REPO_ROOT/.test-tN-validate.XXXXXX")"
+SANDBOX="$(mktemp -d "$REPO_ROOT/.test-t78-validate.XXXXXX")"
 trap 'rm -rf "$SANDBOX"' EXIT
 
 export HOME="$SANDBOX/home"

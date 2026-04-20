@@ -307,7 +307,7 @@ Conventions in this section (new merged shape):
 
 ### Wave 2 — New command + retired stubs + agent footer rename (7 tasks)
 
-## T11 — `.claude/commands/specflow/validate.md` new command
+## T11 — [x] `.claude/commands/specflow/validate.md` new command
 - **Milestone**: M2
 - **Requirements**: R3, R17, R18
 - **Decisions**: D4 (parallel axes), D5 (uses extracted aggregator)
@@ -324,7 +324,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T12, T13, T14, T15, T16, T17
 - [ ]
 
-## T12 — `brainstorm.md` deprecation stub
+## T12 — [x] `brainstorm.md` deprecation stub
 - **Milestone**: M2
 - **Requirements**: R4
 - **Decisions**: D8
@@ -338,7 +338,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T11, T13, T14, T15, T16, T17
 - [ ]
 
-## T13 — `tasks.md` deprecation stub
+## T13 — [x] `tasks.md` deprecation stub
 - **Milestone**: M2
 - **Requirements**: R4
 - **Decisions**: D8
@@ -349,7 +349,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T11, T12, T14, T15, T16, T17
 - [ ]
 
-## T14 — `verify.md` deprecation stub
+## T14 — [x] `verify.md` deprecation stub
 - **Milestone**: M2
 - **Requirements**: R4
 - **Decisions**: D8
@@ -360,7 +360,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T11, T12, T13, T15, T16, T17
 - [ ]
 
-## T15 — `gap-check.md` deprecation stub
+## T15 — [x] `gap-check.md` deprecation stub
 - **Milestone**: M2
 - **Requirements**: R4
 - **Decisions**: D8
@@ -371,7 +371,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T11, T12, T13, T14, T16, T17
 - [ ]
 
-## T16 — qa-tester + qa-analyst verdict footer header rename
+## T16 — [x] qa-tester + qa-analyst verdict footer header rename
 - **Milestone**: M2
 - **Requirements**: R18
 - **Decisions**: —
@@ -384,7 +384,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T11, T12, T13, T14, T15, T17
 - [ ]
 
-## T17 — Deprecation-stub invocation tests
+## T17 — [x] Deprecation-stub invocation tests
 - **Milestone**: M2
 - **Requirements**: R4, AC6
 - **Decisions**: D8

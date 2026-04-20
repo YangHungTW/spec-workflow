@@ -9,7 +9,7 @@ set -u -o pipefail
 # ---------------------------------------------------------------------------
 # Sandbox — HOME isolation (sandbox-home-in-tests rule, NON-NEGOTIABLE)
 # ---------------------------------------------------------------------------
-SANDBOX="$(mktemp -d 2>/dev/null || mktemp -d -t tN-validate-verdict)"
+SANDBOX="$(mktemp -d 2>/dev/null || mktemp -d -t t79-validate-verdict)"
 trap 'rm -rf "$SANDBOX"' EXIT
 
 export HOME="$SANDBOX/home"
