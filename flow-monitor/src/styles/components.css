@@ -80,6 +80,43 @@
   border-color: var(--sidebar-active);
 }
 
+/* Theme toggle and Settings icon buttons in the sidebar toolbar */
+.main-window__theme-toggle,
+.main-window__settings-btn {
+  margin: 4px 10px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--sidebar-text-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.main-window__theme-toggle:hover,
+.main-window__settings-btn:hover {
+  background: var(--sidebar-border);
+  border-color: var(--sidebar-border);
+}
+
+/* Back button at top of Settings page */
+.settings-view__back-btn {
+  margin: 0 0 12px 0;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--text-muted, #666);
+  background: transparent;
+  border: 1px solid var(--border, #ddd);
+  cursor: pointer;
+  display: block;
+}
+
+.settings-view__back-btn:hover {
+  background: var(--border, #eee);
+}
+
 /* Repo group headers (group-by-repo view) */
 .main-window__repo-group {
   grid-column: 1 / -1;

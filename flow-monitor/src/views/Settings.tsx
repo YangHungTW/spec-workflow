@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { invoke } from "@tauri-apps/api/core";
 import { useTranslation } from "../i18n";
 import { SettingsGeneral } from "../components/SettingsGeneral";
@@ -31,6 +32,7 @@ type TabKey = "general" | "notifications" | "repositories";
 
 function Settings() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabKey>("general");
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [thresholdError, setThresholdError] = useState<string | null>(null);
@@ -53,6 +55,15 @@ function Settings() {
 
   return (
     <div className="settings-view">
+      {/* Back button — navigates to the main window */}
+      <button
+        type="button"
+        className="settings-view__back-btn"
+        data-testid="back-btn"
+        onClick={() => navigate("/")}
+      >
+        ← {t("btn.back")}
+      </button>
       <div role="tablist" className="settings-tablist" aria-label="Settings">
         {TABS.map(({ key, label }) => (
           <button

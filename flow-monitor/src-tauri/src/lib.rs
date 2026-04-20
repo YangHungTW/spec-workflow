@@ -11,6 +11,7 @@ pub mod tray;
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_clipboard_manager::init())
+        .plugin(tauri_plugin_dialog::init())
         // Restores position + size for every named window (main, compact) before
         // first paint. Applied unconditionally — the RISK GATE in 05-plan.md R-2
         // requires dropping this plugin if it causes flash, drift, or focus
@@ -36,6 +37,9 @@ pub fn run() {
             ipc::open_in_finder,
             ipc::reveal_in_finder,
             ipc::copy_to_clipboard,
+            ipc::get_notification_permission_status,
+            ipc::focus_main_window,
+            ipc::dialog_open_directory,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

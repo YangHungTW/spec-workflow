@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { useTranslation } from "../i18n";
@@ -8,6 +9,7 @@ import { PollingFooter } from "../components/PollingFooter";
 import { SessionCard } from "../components/SessionCard";
 import { useSessionStore, sortSessions, type SessionState } from "../stores/sessionStore";
 import type { SortAxis } from "../stores/sessionStore";
+import { useTheme } from "../stores/themeStore";
 
 /**
  * Shape of the list_sessions IPC response.
@@ -54,6 +56,8 @@ interface SettingsResponse {
  */
 function MainWindow() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
   const {
     sortAxis,
     setSortAxis,
@@ -206,6 +210,26 @@ function MainWindow() {
           onClick={handleCompactToggle}
         >
           {t("btn.compactPanel")}
+        </button>
+        {/* Theme toggle — shows ☀ in dark mode (switch to light), ☾ in light mode (switch to dark) */}
+        <button
+          type="button"
+          className="main-window__theme-toggle"
+          data-testid="theme-toggle-btn"
+          aria-label={theme === "dark" ? t("btn.themeToLight") : t("btn.themeToDark")}
+          onClick={toggleTheme}
+        >
+          {theme === "dark" ? "☀" : "☾"}
+        </button>
+        {/* Settings navigation button — navigates to /settings */}
+        <button
+          type="button"
+          className="main-window__settings-btn"
+          data-testid="settings-btn"
+          aria-label={t("btn.settings")}
+          onClick={() => navigate("/settings")}
+        >
+          ⚙
         </button>
         {/* Polling footer at the bottom of the sidebar (AC4.c) */}
         <PollingFooter intervalSeconds={pollingIntervalSecs} />

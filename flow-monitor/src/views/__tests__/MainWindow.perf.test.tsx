@@ -11,6 +11,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, act, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 
 // Stub i18n
 vi.mock("../../i18n", () => ({
@@ -29,6 +30,12 @@ vi.mock("@tauri-apps/api/event", () => ({
 // Stub Tauri IPC — returns 3 repos, each with multiple sessions
 vi.mock("@tauri-apps/api/core", () => ({
   invoke: vi.fn(),
+}));
+
+// Stub themeStore — MainWindow now uses useTheme
+vi.mock("../../stores/themeStore", () => ({
+  useTheme: () => ({ theme: "light", setTheme: vi.fn(), toggleTheme: vi.fn() }),
+  applyThemeToDocument: vi.fn(),
 }));
 
 import { invoke } from "@tauri-apps/api/core";
@@ -85,7 +92,7 @@ describe("MainWindow — groupSessionsByRepo uses pre-built Map (O(n) lookup)", 
 
   it("renders all 3 repo group headers with correct names from repos list", async () => {
     await act(async () => {
-      render(<MainWindow />);
+      render(<MemoryRouter><MainWindow /></MemoryRouter>);
     });
 
     // All 3 repos should appear as group headers
@@ -96,7 +103,7 @@ describe("MainWindow — groupSessionsByRepo uses pre-built Map (O(n) lookup)", 
 
   it("repo header shows name from repos list (not raw repoId fallback)", async () => {
     await act(async () => {
-      render(<MainWindow />);
+      render(<MemoryRouter><MainWindow /></MemoryRouter>);
     });
 
     // The header for repo-alpha should display "Alpha Repo" (from repos list),
@@ -108,7 +115,7 @@ describe("MainWindow — groupSessionsByRepo uses pre-built Map (O(n) lookup)", 
 
   it("group count reflects correct session count per repo (10 each)", async () => {
     await act(async () => {
-      render(<MainWindow />);
+      render(<MemoryRouter><MainWindow /></MemoryRouter>);
     });
 
     // Each group header should show "(10)" — verifying all sessions are grouped

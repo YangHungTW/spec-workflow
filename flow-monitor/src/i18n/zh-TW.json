@@ -21,6 +21,9 @@
   "idle.active": "進行中",
 
   "btn.back": "返回",
+  "btn.settings": "設定",
+  "btn.themeToLight": "切換至淺色模式",
+  "btn.themeToDark": "切換至深色模式",
   "btn.openInFinder": "在 Finder 中開啟",
   "btn.copyPath": "複製路徑",
   "btn.openMain": "開啟主視窗 →",
