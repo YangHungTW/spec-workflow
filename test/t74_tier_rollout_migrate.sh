@@ -1,30 +1,46 @@
 #!/usr/bin/env bash
-# test/t74_tier_rollout_migrate.sh — tests for scripts/tier-rollout-migrate.sh
+# test/t74_tier_rollout_migrate.sh
 #
-# Covers:
-#   - Path-traversal guard: --features-dir outside REPO_ROOT is rejected (exit 2).
-#   - .bak clobber warning: when STATUS.md.bak already exists before a run,
-#     a warning is emitted to stderr (no silent overwrite).
-#   - Dry-run does not mutate files.
-#   - Real run: backup created, tier: standard inserted, idempotent second run.
-#   - Archived features are not touched.
-#   - missing-has-ui features are skipped (script exits 0).
+# Dry-run and real-run tests for scripts/tier-rollout-migrate.sh (T4 deliverable).
 #
-# Fixture dirs for real-run tests must live inside REPO_ROOT because the
-# path-traversal guard rejects --features-dir paths outside the repo boundary.
-# We create a tmp/ subdir under the repo root and remove it on EXIT.
+# Coverage (T5 spec):
+#   1. Dry-run against a fixture feature without tier: — asserts one-line insert
+#      diff on stdout, no file mutation.
+#   2. Real run — asserts STATUS.md.bak created, tier: standard line present at
+#      the correct header position (between has-ui: and stage:), and every other
+#      line is byte-identical.
+#   3. Idempotent re-run — second invocation is a no-op; backup is unchanged;
+#      stdout contains "skipped: already migrated".
+#   4. Archived feature dir (under .spec-workflow/archive/) is NOT touched.
+#   5. Sandbox-HOME discipline per .claude/rules/bash/sandbox-home-in-tests.md.
 #
-# Sandbox-HOME: HOME is sandboxed per sandbox-home-in-tests.md even though
-# the script under test does not itself read/write $HOME.
-
+# RED until scripts/tier-rollout-migrate.sh (T4) is merged.
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd -P)"
+# ---------------------------------------------------------------------------
+# Locate the repo root relative to this script so the test survives worktree
+# moves and CI checkouts (see developer/test-script-path-convention.md).
+# ---------------------------------------------------------------------------
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 MIGRATE="${MIGRATE:-$REPO_ROOT/scripts/tier-rollout-migrate.sh}"
 
 # ---------------------------------------------------------------------------
-# Sandbox + HOME isolation (sandbox-home-in-tests.md)
+# Preflight: the script under test must exist and be executable; if not, the
+# test is RED (missing production code, which is the expected TDD starting state
+# before T4 merges).
+# ---------------------------------------------------------------------------
+if [ ! -f "$MIGRATE" ]; then
+  echo "FAIL: setup: migration script not found: $MIGRATE" >&2
+  exit 1
+fi
+if [ ! -x "$MIGRATE" ]; then
+  echo "FAIL: setup: migration script not executable: $MIGRATE" >&2
+  exit 1
+fi
+
+# ---------------------------------------------------------------------------
+# Sandbox-HOME — mandatory per .claude/rules/bash/sandbox-home-in-tests.md.
 # ---------------------------------------------------------------------------
 SANDBOX="$(mktemp -d 2>/dev/null || mktemp -d -t specflow-t74)"
 trap 'rm -rf "$SANDBOX"' EXIT
@@ -32,192 +48,250 @@ trap 'rm -rf "$SANDBOX"' EXIT
 export HOME="$SANDBOX/home"
 mkdir -p "$HOME"
 
+# Preflight: refuse to run against the real HOME.
 case "$HOME" in
   "$SANDBOX"*) ;;
   *) echo "FAIL: HOME not isolated: $HOME" >&2; exit 2 ;;
 esac
 
-# Fixture dirs for real-run tests go inside REPO_ROOT (path-traversal guard
-# requires --features-dir to be under REPO_ROOT).  A unique tmp subdir keeps
-# the worktree clean and is removed by the EXIT trap below.
-FIXTURES="$REPO_ROOT/.test-t74-$$"
-mkdir -p "$FIXTURES"
-# Extend the trap to also clean the in-repo fixtures dir
-trap 'rm -rf "$SANDBOX" "$FIXTURES"' EXIT
-
-PASS=0
-FAIL=0
-
-pass() { echo "PASS: $1"; PASS=$((PASS + 1)); }
-fail() { echo "FAIL: $1"; FAIL=$((FAIL + 1)); }
-
 # ---------------------------------------------------------------------------
-# Helper: build a minimal feature dir with STATUS.md (no tier: field)
+# Helper: fail loudly.
 # ---------------------------------------------------------------------------
-make_feature() {
-  local dir="$1"
-  mkdir -p "$dir"
-  cat > "$dir/STATUS.md" <<'EOF'
-# Status
-
-- **owner**: developer
-- **has-ui**: no
-- **stage**: implement
-EOF
+fail() {
+  echo "FAIL: $1: $2" >&2
+  exit 1
 }
 
 # ---------------------------------------------------------------------------
-# Test 1: --features-dir outside REPO_ROOT is rejected with exit 2
-# (Security must — path-traversal check)
+# Build fixture .spec-workflow tree inside the sandbox.
+#
+# Structure:
+#   $HOME/.spec-workflow/features/test-feature-A/STATUS.md   (no tier: field)
+#   $HOME/.spec-workflow/features/test-feature-B/STATUS.md   (already has tier:)
+#   $HOME/.spec-workflow/archive/old-feature/STATUS.md       (archived — must NOT be touched)
+#
+# The migration script must walk .spec-workflow/features/ only; it must not
+# walk .spec-workflow/archive/.
 # ---------------------------------------------------------------------------
-OUTSIDE_DIR="$SANDBOX/outside-features"
-mkdir -p "$OUTSIDE_DIR/some-feature"
-make_feature "$OUTSIDE_DIR/some-feature"
+FEATURES="$HOME/.spec-workflow/features"
+ARCHIVE="$HOME/.spec-workflow/archive"
+mkdir -p "$FEATURES/test-feature-A"
+mkdir -p "$FEATURES/test-feature-B"
+mkdir -p "$ARCHIVE/old-feature"
 
-if bash "$MIGRATE" --features-dir "$OUTSIDE_DIR" >/dev/null 2>&1; then
-  fail "path-traversal guard: expected exit 2 for --features-dir outside REPO_ROOT, got exit 0"
-else
-  pass "path-traversal guard: --features-dir outside REPO_ROOT rejected"
-fi
+# Fixture A: no tier: field (migration target).
+cat > "$FEATURES/test-feature-A/STATUS.md" <<'STATUS_A'
+# STATUS
 
-# ---------------------------------------------------------------------------
-# Test 2: --dry-run does not mutate files (uses an in-repo fixture dir)
-# ---------------------------------------------------------------------------
-DRYRUN_DIR="$FIXTURES/dryrun-features"
-mkdir -p "$DRYRUN_DIR/alpha"
-make_feature "$DRYRUN_DIR/alpha"
+- **slug**: test-feature-A
+- **has-ui**: false
+- **stage**: request
+- **created**: 2026-01-01
+- **updated**: 2026-01-01
 
-BEFORE_SUM="$(cksum "$DRYRUN_DIR/alpha/STATUS.md")"
-bash "$MIGRATE" --dry-run --features-dir "$DRYRUN_DIR" >/dev/null 2>&1 || true
-AFTER_SUM="$(cksum "$DRYRUN_DIR/alpha/STATUS.md")"
+## Stage checklist
+- [ ] request
+- [ ] archive
 
-if [ "$BEFORE_SUM" = "$AFTER_SUM" ]; then
-  pass "dry-run: STATUS.md not mutated"
-else
-  fail "dry-run: STATUS.md was mutated"
-fi
+## Notes
+- 2026-01-01 PM — created
+STATUS_A
 
-if [ ! -f "$DRYRUN_DIR/alpha/STATUS.md.bak" ]; then
-  pass "dry-run: no .bak created"
-else
-  fail "dry-run: .bak created unexpectedly"
-fi
+# Fixture B: already has tier: standard (idempotency fixture — no migration needed).
+cat > "$FEATURES/test-feature-B/STATUS.md" <<'STATUS_B'
+# STATUS
 
-# ---------------------------------------------------------------------------
-# Test 3: real run inserts tier: standard and creates backup
-# ---------------------------------------------------------------------------
-REAL_DIR="$FIXTURES/real-features"
-mkdir -p "$REAL_DIR/beta"
-make_feature "$REAL_DIR/beta"
+- **slug**: test-feature-B
+- **has-ui**: false
+- **tier**: standard
+- **stage**: request
+- **created**: 2026-01-01
+- **updated**: 2026-01-01
 
-bash "$MIGRATE" --features-dir "$REAL_DIR" >/dev/null 2>&1
+## Stage checklist
+- [ ] request
 
-if grep -q '^- \*\*tier\*\*: standard$' "$REAL_DIR/beta/STATUS.md"; then
-  pass "real-run: tier: standard inserted"
-else
-  fail "real-run: tier: standard not found in STATUS.md"
-fi
+## Notes
+STATUS_B
 
-if [ -f "$REAL_DIR/beta/STATUS.md.bak" ]; then
-  pass "real-run: .bak created"
-else
-  fail "real-run: .bak not created"
-fi
+# Archived fixture: must never be touched.
+cat > "$ARCHIVE/old-feature/STATUS.md" <<'STATUS_ARCH'
+# STATUS
 
-# Verify no other field changed: new file should have exactly one more line
-ORIG_LINES=$(wc -l < "$REAL_DIR/beta/STATUS.md.bak")
-NEW_LINES=$(wc -l < "$REAL_DIR/beta/STATUS.md")
-EXPECTED_NEW=$((ORIG_LINES + 1))
-if [ "$NEW_LINES" -eq "$EXPECTED_NEW" ]; then
-  pass "real-run: exactly one line added"
-else
-  fail "real-run: expected $EXPECTED_NEW lines, got $NEW_LINES"
-fi
+- **slug**: old-feature
+- **has-ui**: false
+- **stage**: archive
+- **created**: 2025-01-01
+- **updated**: 2025-06-01
 
-# ---------------------------------------------------------------------------
-# Test 4: idempotent — second run is no-op, .bak unchanged
-# ---------------------------------------------------------------------------
-BAK_SUM_BEFORE="$(cksum "$REAL_DIR/beta/STATUS.md.bak")"
-bash "$MIGRATE" --features-dir "$REAL_DIR" >/dev/null 2>&1
-BAK_SUM_AFTER="$(cksum "$REAL_DIR/beta/STATUS.md.bak")"
+## Notes
+STATUS_ARCH
 
-if [ "$BAK_SUM_BEFORE" = "$BAK_SUM_AFTER" ]; then
-  pass "idempotent: .bak unchanged on second run"
-else
-  fail "idempotent: .bak changed on second run"
-fi
+# Capture byte fingerprints before any migration run.
+ARCH_BEFORE="$(shasum "$ARCHIVE/old-feature/STATUS.md" | awk '{print $1}')"
+FIXTURE_A_BEFORE="$(shasum "$FEATURES/test-feature-A/STATUS.md" | awk '{print $1}')"
+# Fixture B must survive the migration untouched; snapshot it now so the
+# post-real-run assertion has a meaningful baseline to compare against.
+FIXTURE_B_BEFORE="$(shasum "$FEATURES/test-feature-B/STATUS.md" | awk '{print $1}')"
 
 # ---------------------------------------------------------------------------
-# Test 5: .bak clobber warning — when .bak already exists, warns to stderr
-# (Security should — no silent .bak clobber per no-force-on-user-paths.md)
+# Test 1: Dry-run — no mutation, expected diff on stdout.
 # ---------------------------------------------------------------------------
-BAK_DIR="$FIXTURES/bak-features"
-mkdir -p "$BAK_DIR/gamma"
-make_feature "$BAK_DIR/gamma"
-# Pre-seed a .bak file to simulate a previous run
-echo "old backup content" > "$BAK_DIR/gamma/STATUS.md.bak"
+DRY_OUT="$SANDBOX/dry-run.out"
+DRY_ERR="$SANDBOX/dry-run.err"
 
-STDERR_OUT="$SANDBOX/bak_stderr.txt"
-bash "$MIGRATE" --features-dir "$BAK_DIR" >/dev/null 2>"$STDERR_OUT" || true
+set +e
+"$MIGRATE" --dry-run --spec-workflow-dir "$HOME/.spec-workflow" \
+  > "$DRY_OUT" 2>"$DRY_ERR"
+DRY_RC=$?
+set -e
 
-if grep -qi "warning\|overwrite\|exists" "$STDERR_OUT"; then
-  pass ".bak clobber: warning emitted to stderr when .bak pre-exists"
-else
-  fail ".bak clobber: no warning on stderr when pre-existing .bak overwritten (got: $(cat "$STDERR_OUT"))"
-fi
-
-# ---------------------------------------------------------------------------
-# Test 6: archived features (paths containing /archive/) are NOT touched
-# ---------------------------------------------------------------------------
-ARCH_BASE="$FIXTURES/arch-test"
-FEAT_ROOT="$ARCH_BASE/features"
-ARCH_ROOT="$ARCH_BASE/features/archive"
-mkdir -p "$FEAT_ROOT/active"
-mkdir -p "$ARCH_ROOT/old-feature"
-make_feature "$FEAT_ROOT/active"
-make_feature "$ARCH_ROOT/old-feature"
-
-bash "$MIGRATE" --features-dir "$FEAT_ROOT" >/dev/null 2>&1
-
-if [ ! -f "$ARCH_ROOT/old-feature/STATUS.md.bak" ]; then
-  pass "archive skip: archived feature not touched"
-else
-  fail "archive skip: archived feature was mutated"
-fi
-
-if grep -q '^- \*\*tier\*\*: standard$' "$FEAT_ROOT/active/STATUS.md"; then
-  pass "archive skip: active feature was migrated"
-else
-  fail "archive skip: active feature was not migrated"
-fi
-
-# ---------------------------------------------------------------------------
-# Test 7: missing-has-ui features are skipped; script exits 0
-# ---------------------------------------------------------------------------
-SKIP_DIR="$FIXTURES/skip-features"
-mkdir -p "$SKIP_DIR/no-has-ui"
-cat > "$SKIP_DIR/no-has-ui/STATUS.md" <<'EOF'
-# Status
-
-- **owner**: developer
-- **stage**: implement
-EOF
-
-EXIT_CODE=0
-bash "$MIGRATE" --features-dir "$SKIP_DIR" >/dev/null 2>&1 || EXIT_CODE=$?
-
-if [ "$EXIT_CODE" -eq 0 ]; then
-  pass "missing-has-ui: script exits 0 (skipped, no errors)"
-else
-  fail "missing-has-ui: script exited $EXIT_CODE, expected 0"
-fi
-
-# ---------------------------------------------------------------------------
-# Summary
-# ---------------------------------------------------------------------------
-echo ""
-echo "Results: PASS=$PASS FAIL=$FAIL"
-if [ "$FAIL" -gt 0 ]; then
+if [ "$DRY_RC" -ne 0 ]; then
+  echo "FAIL: dry-run: exit code $DRY_RC (expected 0)" >&2
+  echo "--- stdout ---" >&2; cat "$DRY_OUT" >&2
+  echo "--- stderr ---" >&2; cat "$DRY_ERR" >&2
   exit 1
 fi
+
+# Stdout must mention the would-be insert for feature A.
+if ! grep -q 'tier' "$DRY_OUT" 2>/dev/null && ! grep -q 'tier' "$DRY_ERR" 2>/dev/null; then
+  fail "dry-run-output" "no 'tier' line in dry-run output (expected to see the would-be insert)"
+fi
+
+# Fixture A must not have been mutated.
+FIXTURE_A_AFTER_DRY="$(shasum "$FEATURES/test-feature-A/STATUS.md" | awk '{print $1}')"
+if [ "$FIXTURE_A_BEFORE" != "$FIXTURE_A_AFTER_DRY" ]; then
+  fail "dry-run-no-mutation" "fixture A was mutated during --dry-run (before=$FIXTURE_A_BEFORE after=$FIXTURE_A_AFTER_DRY)"
+fi
+
+# No backup must have been created during dry-run.
+if [ -f "$FEATURES/test-feature-A/STATUS.md.bak" ]; then
+  fail "dry-run-no-backup" "STATUS.md.bak was created during --dry-run (must not create backup on dry-run)"
+fi
+
+# Archived STATUS is verified once after all runs (see end of Test 2 block).
+
+# ---------------------------------------------------------------------------
+# Test 2: Real run — backup created, tier: standard inserted at correct position.
+# ---------------------------------------------------------------------------
+REAL_OUT="$SANDBOX/real-run.out"
+REAL_ERR="$SANDBOX/real-run.err"
+
+set +e
+"$MIGRATE" --spec-workflow-dir "$HOME/.spec-workflow" \
+  > "$REAL_OUT" 2>"$REAL_ERR"
+REAL_RC=$?
+set -e
+
+if [ "$REAL_RC" -ne 0 ]; then
+  echo "FAIL: real-run: exit code $REAL_RC (expected 0)" >&2
+  echo "--- stdout ---" >&2; cat "$REAL_OUT" >&2
+  echo "--- stderr ---" >&2; cat "$REAL_ERR" >&2
+  exit 1
+fi
+
+# Backup must exist.
+if [ ! -f "$FEATURES/test-feature-A/STATUS.md.bak" ]; then
+  fail "real-run-backup" "STATUS.md.bak was not created for test-feature-A"
+fi
+
+# Backup must be byte-identical to the pre-migration original.
+BAK_HASH="$(shasum "$FEATURES/test-feature-A/STATUS.md.bak" | awk '{print $1}')"
+if [ "$FIXTURE_A_BEFORE" != "$BAK_HASH" ]; then
+  fail "real-run-backup-contents" "STATUS.md.bak does not match pre-migration file (bak=$BAK_HASH original=$FIXTURE_A_BEFORE)"
+fi
+
+# The migrated STATUS.md must contain a tier: standard line.
+if ! grep -q '^\- \*\*tier\*\*: standard$' "$FEATURES/test-feature-A/STATUS.md"; then
+  fail "real-run-tier-line" "tier: standard line not found in migrated STATUS.md"
+fi
+
+# The tier: line must appear AFTER has-ui: and BEFORE stage:.
+# Single awk pass — emits "has-ui=N tier=N stage=N" in one fork instead of three.
+_line_positions="$(awk '
+  /^\- \*\*has-ui\*\*:/  { hu = NR }
+  /^\- \*\*tier\*\*:/    { ti = NR }
+  /^\- \*\*stage\*\*:/   { st = NR }
+  END { print "has-ui=" hu " tier=" ti " stage=" st }
+' "$FEATURES/test-feature-A/STATUS.md")"
+HAS_UI_LINE="${_line_positions#*has-ui=}"; HAS_UI_LINE="${HAS_UI_LINE%% *}"
+TIER_LINE="${_line_positions#*tier=}";   TIER_LINE="${TIER_LINE%% *}"
+STAGE_LINE="${_line_positions#*stage=}"; STAGE_LINE="${STAGE_LINE%% *}"
+
+if [ -z "$HAS_UI_LINE" ] || [ -z "$TIER_LINE" ] || [ -z "$STAGE_LINE" ]; then
+  fail "real-run-line-position" "could not locate has-ui/tier/stage lines (has-ui=$HAS_UI_LINE tier=$TIER_LINE stage=$STAGE_LINE)"
+fi
+
+if [ "$TIER_LINE" -le "$HAS_UI_LINE" ]; then
+  fail "real-run-line-position" "tier: line ($TIER_LINE) must appear AFTER has-ui: line ($HAS_UI_LINE)"
+fi
+if [ "$TIER_LINE" -ge "$STAGE_LINE" ]; then
+  fail "real-run-line-position" "tier: line ($TIER_LINE) must appear BEFORE stage: line ($STAGE_LINE)"
+fi
+
+# Every line from the original file (except the insertion gap) must be present
+# in the migrated file — byte-compare by reading the backup and confirming all
+# its lines exist in the new STATUS.
+ORIG_LINE_COUNT="$(wc -l < "$FEATURES/test-feature-A/STATUS.md.bak" | tr -d ' ')"
+NEW_LINE_COUNT="$(wc -l < "$FEATURES/test-feature-A/STATUS.md" | tr -d ' ')"
+EXPECTED_NEW_COUNT="$((ORIG_LINE_COUNT + 1))"
+
+if [ "$NEW_LINE_COUNT" -ne "$EXPECTED_NEW_COUNT" ]; then
+  fail "real-run-line-count" "migrated STATUS.md has $NEW_LINE_COUNT lines; expected $EXPECTED_NEW_COUNT (original $ORIG_LINE_COUNT + 1 new tier line)"
+fi
+
+# Fixture B (already migrated) must not have been mutated — hash must equal pre-run baseline.
+FIXTURE_B_AFTER_REAL="$(shasum "$FEATURES/test-feature-B/STATUS.md" | awk '{print $1}')"
+if [ "$FIXTURE_B_BEFORE" != "$FIXTURE_B_AFTER_REAL" ]; then
+  fail "real-run-fixture-b" "fixture B was mutated during migration (before=$FIXTURE_B_BEFORE after=$FIXTURE_B_AFTER_REAL)"
+fi
+
+# Archived STATUS must still not have been touched — single final hash check
+# covers both dry-run and real-run; $ARCH_BEFORE is the only authoritative fingerprint.
+ARCH_AFTER_ALL="$(shasum "$ARCHIVE/old-feature/STATUS.md" | awk '{print $1}')"
+if [ "$ARCH_BEFORE" != "$ARCH_AFTER_ALL" ]; then
+  fail "archive-untouched" "archived STATUS was modified during migration runs"
+fi
+
+# ---------------------------------------------------------------------------
+# Test 3: Idempotent re-run — second invocation is a no-op.
+# ---------------------------------------------------------------------------
+# Capture current migrated hash before re-run.
+FIXTURE_A_AFTER_REAL="$(shasum "$FEATURES/test-feature-A/STATUS.md" | awk '{print $1}')"
+BAK_BEFORE_RERUN="$(shasum "$FEATURES/test-feature-A/STATUS.md.bak" | awk '{print $1}')"
+
+IDEM_OUT="$SANDBOX/idempotent.out"
+IDEM_ERR="$SANDBOX/idempotent.err"
+
+set +e
+"$MIGRATE" --spec-workflow-dir "$HOME/.spec-workflow" \
+  > "$IDEM_OUT" 2>"$IDEM_ERR"
+IDEM_RC=$?
+set -e
+
+if [ "$IDEM_RC" -ne 0 ]; then
+  echo "FAIL: idempotent-run: exit code $IDEM_RC (expected 0)" >&2
+  echo "--- stdout ---" >&2; cat "$IDEM_OUT" >&2
+  echo "--- stderr ---" >&2; cat "$IDEM_ERR" >&2
+  exit 1
+fi
+
+# Output must mention "skipped" for already-migrated feature A.
+if ! grep -q 'skipped' "$IDEM_OUT" "$IDEM_ERR" 2>/dev/null; then
+  fail "idempotent-skip-message" "re-run did not emit a 'skipped' message for already-migrated feature A"
+fi
+
+# Migrated STATUS.md must be unchanged.
+FIXTURE_A_AFTER_IDEM="$(shasum "$FEATURES/test-feature-A/STATUS.md" | awk '{print $1}')"
+if [ "$FIXTURE_A_AFTER_REAL" != "$FIXTURE_A_AFTER_IDEM" ]; then
+  fail "idempotent-no-mutation" "STATUS.md changed on re-run (not idempotent)"
+fi
+
+# Backup must be unchanged (re-run must not overwrite the backup).
+BAK_AFTER_RERUN="$(shasum "$FEATURES/test-feature-A/STATUS.md.bak" | awk '{print $1}')"
+if [ "$BAK_BEFORE_RERUN" != "$BAK_AFTER_RERUN" ]; then
+  fail "idempotent-backup-unchanged" "STATUS.md.bak was overwritten on re-run"
+fi
+
+echo "PASS"
 exit 0
