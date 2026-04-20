@@ -1,5 +1,6 @@
 .DS_Store
 *.log
 .worktrees/
+.test-t74*/
 settings.json.bak
 .spec-workflow/features/*/.stop-hook-last-epoch

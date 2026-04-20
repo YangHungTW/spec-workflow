@@ -170,21 +170,27 @@ validate_tier_transition() {
   local old_tier="$1"
   local new_tier="$2"
 
-  # Assign ordinal values: tiny=1, standard=2, audited=3.
-  # Anything else (missing, malformed, unknown) = 0.
+  # Self-transition is a valid no-op (idempotence for /specflow:update-* callers).
+  if [ "$old_tier" = "$new_tier" ] && [ "$old_tier" != "malformed" ] && [ "$old_tier" != "missing" ]; then
+    return 0
+  fi
+
+  # Migration bootstrap: missing → standard is the rollout path (W0 migration).
+  # Any other missing→X or any malformed→X is invalid.
+  if [ "$old_tier" = "missing" ] && [ "$new_tier" = "standard" ]; then
+    return 0
+  fi
+
+  # Ordinal upgrade: tiny=1, standard=2, audited=3. Missing/malformed = 0.
   local old_ord new_ord
   old_ord=0
   new_ord=0
-
   if [ "$old_tier" = "tiny" ];     then old_ord=1; fi
   if [ "$old_tier" = "standard" ]; then old_ord=2; fi
   if [ "$old_tier" = "audited" ];  then old_ord=3; fi
-
   if [ "$new_tier" = "tiny" ];     then new_ord=1; fi
   if [ "$new_tier" = "standard" ]; then new_ord=2; fi
   if [ "$new_tier" = "audited" ];  then new_ord=3; fi
-
-  # Both must be valid known tiers; new must be strictly greater than old.
   if [ "$old_ord" -gt 0 ] && [ "$new_ord" -gt "$old_ord" ]; then
     return 0
   fi
@@ -207,7 +213,7 @@ validate_tier_transition() {
 set_tier() {
   if [ "$#" -lt 4 ]; then
     printf 'set_tier: usage: set_tier <feature_dir> <new_tier> <role> <reason>\n' >&2
-    exit 2
+    return 2
   fi
 
   local feature_dir="$1"
@@ -218,20 +224,20 @@ set_tier() {
   # Boundary check: resolve path and assert it is inside REPO_ROOT before any
   # I/O, so path-traversal via caller-supplied feature_dir is rejected early.
   local resolved_dir
-  resolved_dir="$(_tier_resolve_and_check "$feature_dir")" || exit 2
+  resolved_dir="$(_tier_resolve_and_check "$feature_dir")" || return 2
 
   local status_file="$resolved_dir/STATUS.md"
 
   # Validate new_tier argument is a known tier.
   if [ "$new_tier" != "tiny" ] && [ "$new_tier" != "standard" ] && [ "$new_tier" != "audited" ]; then
     printf 'set_tier: new_tier must be tiny|standard|audited; got: %s\n' "$new_tier" >&2
-    exit 2
+    return 2
   fi
 
   # STATUS.md must exist to perform a mutation.
   if [ ! -f "$status_file" ]; then
     printf 'set_tier: STATUS.md not found: %s\n' "$status_file" >&2
-    exit 2
+    return 2
   fi
 
   # Classify current tier (read once; reuse).
@@ -242,7 +248,13 @@ set_tier() {
   if ! validate_tier_transition "$old_tier" "$new_tier"; then
     printf 'set_tier: disallowed transition %s→%s (old tier: %s)\n' \
       "$old_tier" "$new_tier" "$old_tier" >&2
-    exit 2
+    return 2
+  fi
+
+  # Self-transition short-circuit: valid per validate_tier_transition but a no-op;
+  # skip backup + mutation + audit-append so idempotent callers don't churn STATUS.
+  if [ "$old_tier" = "$new_tier" ]; then
+    return 0
   fi
 
   # Back up STATUS.md before mutation (no-force-on-user-paths rule).

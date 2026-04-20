@@ -42,7 +42,7 @@ fi
 # ---------------------------------------------------------------------------
 # Sandbox-HOME — mandatory per .claude/rules/bash/sandbox-home-in-tests.md.
 # ---------------------------------------------------------------------------
-SANDBOX="$(mktemp -d 2>/dev/null || mktemp -d -t specflow-t74)"
+SANDBOX="$(mktemp -d "$REPO_ROOT/.test-t74-migrate.XXXXXX")"
 trap 'rm -rf "$SANDBOX"' EXIT
 
 export HOME="$SANDBOX/home"
@@ -141,7 +141,7 @@ DRY_OUT="$SANDBOX/dry-run.out"
 DRY_ERR="$SANDBOX/dry-run.err"
 
 set +e
-"$MIGRATE" --dry-run --spec-workflow-dir "$HOME/.spec-workflow" \
+"$MIGRATE" --dry-run --features-dir "$FEATURES" \
   > "$DRY_OUT" 2>"$DRY_ERR"
 DRY_RC=$?
 set -e
@@ -178,7 +178,7 @@ REAL_OUT="$SANDBOX/real-run.out"
 REAL_ERR="$SANDBOX/real-run.err"
 
 set +e
-"$MIGRATE" --spec-workflow-dir "$HOME/.spec-workflow" \
+"$MIGRATE" --features-dir "$FEATURES" \
   > "$REAL_OUT" 2>"$REAL_ERR"
 REAL_RC=$?
 set -e
@@ -264,7 +264,7 @@ IDEM_OUT="$SANDBOX/idempotent.out"
 IDEM_ERR="$SANDBOX/idempotent.err"
 
 set +e
-"$MIGRATE" --spec-workflow-dir "$HOME/.spec-workflow" \
+"$MIGRATE" --features-dir "$FEATURES" \
   > "$IDEM_OUT" 2>"$IDEM_ERR"
 IDEM_RC=$?
 set -e

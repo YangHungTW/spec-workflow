@@ -30,7 +30,7 @@ TIER_LIB="${TIER_LIB:-$REPO_ROOT/bin/specflow-tier}"
 # ---------------------------------------------------------------------------
 # Sandbox — HOME isolation (sandbox-home-in-tests.md)
 # ---------------------------------------------------------------------------
-SANDBOX="$(mktemp -d 2>/dev/null || mktemp -d -t t74-test)"
+SANDBOX="$(mktemp -d "$REPO_ROOT/.test-t74.XXXXXX")"
 trap 'rm -rf "$SANDBOX"' EXIT
 
 export HOME="$SANDBOX/home"
