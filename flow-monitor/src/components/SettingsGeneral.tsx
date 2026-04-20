@@ -1,5 +1,4 @@
 import { useTranslation } from "../i18n";
-import { applyThemeToDocument, type Theme } from "../stores/themeStore";
 import { invoke } from "@tauri-apps/api/core";
 import type { AppSettings } from "../views/Settings";
 
@@ -50,13 +49,6 @@ export function SettingsGeneral({
     }
     onThresholdError(null);
     const patch = { stalled_threshold_mins: stalled };
-    onSettingsChange(patch);
-    invoke("update_settings", patch).catch(() => undefined);
-  }
-
-  function handleThemeChange(theme: Theme) {
-    applyThemeToDocument(theme);
-    const patch = { theme };
     onSettingsChange(patch);
     invoke("update_settings", patch).catch(() => undefined);
   }
@@ -147,31 +139,6 @@ export function SettingsGeneral({
         </label>
       </section>
 
-      <section className="settings-section">
-        <h3 className="settings-section-title">{t("settings.themeSection")}</h3>
-        <label className="settings-radio-label">
-          <input
-            type="radio"
-            name="theme"
-            value="light"
-            checked={settings.theme === "light"}
-            onChange={() => handleThemeChange("light")}
-            aria-label={t("settings.theme-light")}
-          />
-          {t("settings.theme-light")}
-        </label>
-        <label className="settings-radio-label">
-          <input
-            type="radio"
-            name="theme"
-            value="dark"
-            checked={settings.theme === "dark"}
-            onChange={() => handleThemeChange("dark")}
-            aria-label={t("settings.theme-dark")}
-          />
-          {t("settings.theme-dark")}
-        </label>
-      </section>
     </div>
   );
 }
