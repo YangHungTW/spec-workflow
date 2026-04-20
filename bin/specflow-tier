@@ -293,6 +293,102 @@ set_tier() {
 }
 
 # ---------------------------------------------------------------------------
+# _ask_contains <haystack> <needle>
+#
+# Returns 0 if needle is a substring of haystack (case-sensitive — caller
+# must lowercase both sides for case-insensitive matching).
+# Uses printf+grep -F so special characters in the needle (e.g. the dot in
+# "settings.json") are treated as literals, not regex metacharacters.
+# ---------------------------------------------------------------------------
+_ask_contains() {
+  printf '%s' "$1" | grep -qF "$2" 2>/dev/null
+}
+
+# ---------------------------------------------------------------------------
+# propose_tier <raw_ask>
+#
+# Keyword-scan heuristic that maps a raw user ask string to a proposed tier.
+# Outputs exactly one of: tiny | standard | audited
+# Never exits non-zero — safe in $() contexts.
+#
+# Algorithm (tech §D6):
+#   1. Lower-case the ask for case-insensitive substring matching.
+#   2. Scan audited keywords first (any match → audited; higher tier wins).
+#   3. Scan tiny keywords (any match → tiny).
+#   4. Default → standard.
+#
+# Keyword sets are embedded verbatim from tech §D6 so that the function is
+# self-contained and testable without invoking the pm agent.
+#
+# Tiny keywords (case-insensitive substring):
+#   typo, fix typo, rename, copy change, wording, comment, docstring,
+#   one-line, one line, single line, readme
+#
+# Audited keywords (any one match → audited):
+#   auth, oauth, secret, secrets, token, bearer, password, credential,
+#   payment, billing, migration, migrate db, breaking change, breaking api,
+#   settings.json
+# ---------------------------------------------------------------------------
+propose_tier() {
+  local raw_ask="$1"
+
+  # Lower-case via tr — POSIX; no bash 4+ ${var,,} expansion needed.
+  local ask_lc
+  ask_lc="$(printf '%s' "$raw_ask" | tr 'A-Z' 'a-z')"
+
+  # Strip leading/trailing spaces to detect empty/whitespace-only asks.
+  # Pure shell parameter expansion — no subprocess fork.
+  local stripped
+  stripped="${ask_lc#"${ask_lc%%[! ]*}"}"
+  stripped="${stripped%"${stripped##*[! ]}"}"
+
+  # Empty or whitespace-only ask → default tier.
+  if [ -z "$stripped" ]; then
+    printf 'standard\n'
+    return 0
+  fi
+
+  # ---- Audited keywords (checked before tiny; higher tier wins) ------------
+  if _ask_contains "$ask_lc" "auth"            || \
+     _ask_contains "$ask_lc" "oauth"           || \
+     _ask_contains "$ask_lc" "secret"          || \
+     _ask_contains "$ask_lc" "token"           || \
+     _ask_contains "$ask_lc" "bearer"          || \
+     _ask_contains "$ask_lc" "password"        || \
+     _ask_contains "$ask_lc" "credential"      || \
+     _ask_contains "$ask_lc" "payment"         || \
+     _ask_contains "$ask_lc" "billing"         || \
+     _ask_contains "$ask_lc" "migration"       || \
+     _ask_contains "$ask_lc" "migrate db"      || \
+     _ask_contains "$ask_lc" "breaking change" || \
+     _ask_contains "$ask_lc" "breaking api"    || \
+     _ask_contains "$ask_lc" "settings.json"; then
+    printf 'audited\n'
+    return 0
+  fi
+
+  # ---- Tiny keywords --------------------------------------------------------
+  if _ask_contains "$ask_lc" "typo"        || \
+     _ask_contains "$ask_lc" "fix typo"    || \
+     _ask_contains "$ask_lc" "rename"      || \
+     _ask_contains "$ask_lc" "copy change" || \
+     _ask_contains "$ask_lc" "wording"     || \
+     _ask_contains "$ask_lc" "comment"     || \
+     _ask_contains "$ask_lc" "docstring"   || \
+     _ask_contains "$ask_lc" "one-line"    || \
+     _ask_contains "$ask_lc" "one line"    || \
+     _ask_contains "$ask_lc" "single line" || \
+     _ask_contains "$ask_lc" "readme"; then
+    printf 'tiny\n'
+    return 0
+  fi
+
+  # ---- Default --------------------------------------------------------------
+  printf 'standard\n'
+  return 0
+}
+
+# ---------------------------------------------------------------------------
 # tier_skips_stage <tier> <stage>
 #
 # Returns 0 if the given tier mandates skipping this stage (PRD R10 "—" cells).
