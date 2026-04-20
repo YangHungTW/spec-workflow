@@ -34,6 +34,12 @@ export function DesignFolderIndex({ files, repoPath, slug }: DesignFolderIndexPr
     void invoke("reveal_in_finder", { path });
   }
 
+  function handleOpen(path: string) {
+    // open_in_finder uses macOS `open <path>` which routes by file type:
+    // .html → default browser, folder → Finder, etc.
+    void invoke("open_in_finder", { path });
+  }
+
   function handlePreview(file: DesignFile) {
     if (!repoPath || !slug) {
       setError("Cannot preview: missing repo context");
@@ -86,6 +92,7 @@ export function DesignFolderIndex({ files, repoPath, slug }: DesignFolderIndexPr
     <ul className="design-folder-index" data-testid="design-folder-index">
       {files.map((file) => {
         const isMarkdown = file.name.endsWith(".md");
+        const isHtml = file.name.endsWith(".html");
         return (
           <li key={file.path} className="design-folder-index__row">
             <span className="design-folder-index__name">{file.name}</span>
@@ -96,6 +103,15 @@ export function DesignFolderIndex({ files, repoPath, slug }: DesignFolderIndexPr
                 onClick={() => handlePreview(file)}
               >
                 Preview
+              </button>
+            )}
+            {isHtml && (
+              <button
+                type="button"
+                className="design-folder-index__reveal-btn"
+                onClick={() => handleOpen(file.path)}
+              >
+                Open in browser
               </button>
             )}
             <button

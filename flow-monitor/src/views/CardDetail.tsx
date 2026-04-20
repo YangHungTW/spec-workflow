@@ -43,10 +43,16 @@ function CardDetail() {
   const [contentError, setContentError] = useState<string | null>(null);
   const tabContentRef = useRef<HTMLDivElement>(null);
 
-  // Scroll to top when active tab or content changes
+  // Scroll to top when active tab or content changes.
+  // The actual scroll container is the inner [data-testid="markdown-pane"]
+  // (it has its own overflow-y:auto), not the parent tab-content div.
   useEffect(() => {
     if (tabContentRef.current) {
       tabContentRef.current.scrollTop = 0;
+      const inner = tabContentRef.current.querySelector<HTMLElement>(
+        '[data-testid="markdown-pane"]',
+      );
+      if (inner) inner.scrollTop = 0;
     }
   }, [activeTabId, tabContent]);
 
