@@ -16,28 +16,23 @@ import { useTheme } from "../stores/themeStore";
  * Shape of the list_sessions IPC response.
  * T11 defines the backend command; this is the front-end contract.
  */
-interface ListSessionsResponse {
-  sessions: Array<{
-    slug: string;
-    stage: string;
-    idle_state: string;
-    last_updated_ms: number;
-    note_excerpt: string;
-    repo_path: string;
-    repo_id: string;
-    repo_name: string;
-    has_ui?: boolean;
-  }>;
-  polling_interval_secs: number;
+/**
+ * Actual backend shape from list_sessions IPC (Rust ipc::SessionRecord).
+ */
+interface BackendSessionRecord {
+  repo: string;
+  slug: string;
+  stage: string;
+  last_activity_secs: number;
 }
 
 /**
- * Shape of the get_settings IPC response (relevant fields only).
+ * Actual backend shape from get_settings IPC (Rust ipc::Settings).
  */
 interface SettingsResponse {
-  repos?: Array<{ id: string; name: string; path: string }>;
+  repos?: string[];
   polling_interval_secs?: number;
-  collapsed_repo_ids?: string[];
+  locale?: string;
 }
 
 /**
@@ -77,43 +72,37 @@ function MainWindow() {
   // Tracks whether the compact panel window is currently open (AC10.a).
   const [compactPanelOpen, setCompactPanelOpen] = useState<boolean>(false);
 
-  // Load sessions and settings on mount
+  // Load sessions and settings on mount — map from actual Rust IPC shapes.
   const loadData = useCallback(() => {
     Promise.all([
-      invoke<ListSessionsResponse>("list_sessions"),
+      invoke<BackendSessionRecord[]>("list_sessions"),
       invoke<SettingsResponse>("get_settings"),
     ])
-      .then(([sessionData, settingsData]) => {
-        const mapped: SessionState[] = sessionData.sessions.map((s) => ({
+      .then(([sessionArray, settingsData]) => {
+        const mapped: SessionState[] = (sessionArray ?? []).map((s) => ({
           slug: s.slug,
-          // Cast stage — backend guarantees valid values; unknown falls back to "implement"
           stage: (s.stage as SessionState["stage"]) ?? "implement",
-          idleState: (s.idle_state as SessionState["idleState"]) ?? "none",
-          lastUpdatedMs: s.last_updated_ms,
-          noteExcerpt: s.note_excerpt,
-          repoPath: s.repo_path,
-          repoId: s.repo_id,
-          hasUi: s.has_ui ?? false,
+          idleState: "none" as SessionState["idleState"],
+          lastUpdatedMs: (s.last_activity_secs ?? 0) * 1000,
+          noteExcerpt: "",
+          repoPath: s.repo,
+          repoId: s.repo,
+          hasUi: false,
         }));
         setSessions(mapped);
-        setPollingIntervalSecs(
-          settingsData.polling_interval_secs ??
-            sessionData.polling_interval_secs ??
-            3,
-        );
+        setPollingIntervalSecs(settingsData.polling_interval_secs ?? 3);
         if (settingsData.repos) {
           setRepos(
-            settingsData.repos.map((r) => ({
-              id: r.id,
-              name: r.name,
-              path: r.path,
+            settingsData.repos.map((p) => ({
+              id: p,
+              name: p.split("/").pop() ?? p,
+              path: p,
             })),
           );
         }
         setLoading(false);
       })
       .catch(() => {
-        // IPC unavailable (test environment or Tauri not running) — show empty state
         setLoading(false);
       });
   }, []);
