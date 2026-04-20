@@ -11,14 +11,8 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { invoke } from "@tauri-apps/api/core";
 
 export type Theme = "light" | "dark";
-
-/** Settings shape returned by the get_settings IPC command. */
-interface SettingsPayload {
-  theme?: Theme;
-}
 
 /**
  * Apply a theme to the document root synchronously.
@@ -52,36 +46,38 @@ export function applyThemeToDocument(theme: Theme): void {
  * React hook — exposes current theme, setTheme, and toggleTheme.
  * Loads the persisted theme from IPC on mount; falls back to "light".
  */
+/** Read theme from localStorage (same cache main.tsx uses for first-paint). */
+function readPersistedTheme(): Theme {
+  try {
+    if (typeof globalThis.localStorage !== "undefined") {
+      const v = globalThis.localStorage.getItem("theme");
+      if (v === "dark" || v === "light") return v;
+    }
+  } catch {
+    // Storage unavailable — silently default
+  }
+  return "light";
+}
+
 export function useTheme(): {
   theme: Theme;
   setTheme: (t: Theme) => void;
   toggleTheme: () => void;
 } {
-  const [theme, setThemeState] = useState<Theme>("light");
+  // Initial state reads from localStorage so remounts (e.g. CardDetail navigation)
+  // preserve the theme user selected. main.tsx already applied the class before
+  // first paint, so no flash even if applyThemeToDocument below is a no-op.
+  const [theme, setThemeState] = useState<Theme>(() => readPersistedTheme());
 
-  // Load persisted theme from Tauri settings on mount
+  // Re-apply class on mount defensively — cheap no-op if class already matches.
   useEffect(() => {
-    invoke<SettingsPayload>("get_settings")
-      .then((settings) => {
-        const persisted: Theme = settings.theme === "dark" ? "dark" : "light";
-        applyThemeToDocument(persisted);
-        setThemeState(persisted);
-      })
-      .catch(() => {
-        // IPC unavailable (e.g. test environment stub returns rejection) —
-        // fall back to light and leave the class unchanged.
-        applyThemeToDocument("light");
-        setThemeState("light");
-      });
-  }, []);
+    applyThemeToDocument(theme);
+  }, [theme]);
 
   const setTheme = useCallback((t: Theme) => {
     applyThemeToDocument(t);
     setThemeState(t);
-    // Cache in localStorage for the synchronous first-paint path in main.tsx
     persistTheme(t);
-    // Persist to Tauri settings asynchronously; ignore errors (best-effort)
-    invoke("save_settings", { theme: t }).catch(() => undefined);
   }, []);
 
   const toggleTheme = useCallback(() => {
@@ -89,7 +85,6 @@ export function useTheme(): {
       const next: Theme = prev === "light" ? "dark" : "light";
       applyThemeToDocument(next);
       persistTheme(next);
-      invoke("save_settings", { theme: next }).catch(() => undefined);
       return next;
     });
   }, []);
