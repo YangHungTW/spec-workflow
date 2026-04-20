@@ -88,20 +88,16 @@ if [ -z "$pm_has_tiny" ] || [ -z "$pm_has_audited" ]; then
 fi
 
 # ---------------------------------------------------------------------------
-# Guard: propose_tier() must exist in specflow-tier (T25 adds it)
+# Guard: propose_tier() must exist in specflow-tier (future task adds it)
 # ---------------------------------------------------------------------------
-SPECFLOW_TIER_LOADED=0
 # shellcheck source=/dev/null
 . "$TIER_LIB"
 
-if ! command -v propose_tier > /dev/null 2>&1; then
-  # propose_tier is a shell function, not a command — use type instead.
-  # 'type propose_tier' exits non-zero if the function isn't defined.
-  if ! type propose_tier > /dev/null 2>&1; then
-    printf 'SKIP: propose_tier() not found in %s — T25 production code not yet added; re-run after this commit.\n' \
-      "$TIER_LIB" >&2
-    exit 0
-  fi
+# propose_tier is a shell function, not a PATH command; use type.
+if ! type propose_tier > /dev/null 2>&1; then
+  printf 'SKIP: propose_tier() not found in %s — production code not yet authored; re-run post-wave.\n' \
+    "$TIER_LIB" >&2
+  exit 0
 fi
 
 # ---------------------------------------------------------------------------
