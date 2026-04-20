@@ -21,6 +21,9 @@
   "idle.active": "Active",
 
   "btn.back": "Back",
+  "btn.settings": "Settings",
+  "btn.themeToLight": "Switch to light mode",
+  "btn.themeToDark": "Switch to dark mode",
   "btn.openInFinder": "Open in Finder",
   "btn.copyPath": "Copy path",
   "btn.openMain": "Open main →",

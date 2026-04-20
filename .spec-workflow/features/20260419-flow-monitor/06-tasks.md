@@ -1113,6 +1113,24 @@ W5 implements the test seams the dogfood paradox forces (Architect's §8), instr
 - [x]
 - 2026-04-19 Developer — T44 component CSS complete (2.5 KB globals + 23 KB components; theme tokens consumed via var() aliases; 283/283 tests pass)
 
+## T45 — Navigation chrome + missing IPC stubs [CHANGED 2026-04-20]
+
+- **Goal**: Close the chrome gap so the user can reach Settings and toggle theme from MainWindow; add back navigation to Settings; register 3 IPC stubs needed by the frontend but missing from the backend.
+- **Files**:
+  - `flow-monitor/src/views/MainWindow.tsx` (EDIT — Settings + theme-toggle buttons)
+  - `flow-monitor/src/views/Settings.tsx` (EDIT — back button)
+  - `flow-monitor/src/i18n/en.json` (EDIT — btn.settings, btn.themeToLight, btn.themeToDark)
+  - `flow-monitor/src/i18n/zh-TW.json` (EDIT — same keys, zh-TW values)
+  - `flow-monitor/src-tauri/src/ipc.rs` (EDIT — 3 new commands)
+  - `flow-monitor/src-tauri/src/lib.rs` (EDIT — register 3 commands + dialog plugin init)
+  - `flow-monitor/src-tauri/Cargo.toml` (EDIT — tauri-plugin-dialog = "2")
+  - `flow-monitor/package.json` (EDIT — @tauri-apps/plugin-dialog)
+  - `flow-monitor/src/views/__tests__/MainWindow.chrome.test.tsx` (NEW — TDD tests)
+- **Depends on**: T44
+- **Parallel-safe-with**: — (solo; W5.6)
+- [x]
+- 2026-04-20 Developer — T45 chrome navigation + 3 IPC stubs complete (Settings/theme toggle visible in toolbar; folder picker wired via tauri-plugin-dialog)
+
 ---
 
 ## 4. Parallel-safety analysis & wave schedule
@@ -1127,6 +1145,7 @@ W5 implements the test seams the dogfood paradox forces (Architect's §8), instr
 - **W4**: T25, T26, T27, T28, T29 (all parallel — different primary `.rs` files or distinct IPC handlers; append-only collisions on `src-tauri/Cargo.toml` plugin deps and `src-tauri/src/main.rs` plugin init resolve keep-both).
 - **W5**: T30, T31, T32, T33, T34, T35, T36, T37, T38, T39, T40, T41, T42 (all parallel — different test files; T42 depends on the others' results so runs last but is small audit-only).
 - **W5.5**: T44 (solo; component CSS post-verify-FAIL recovery; NEW files only plus one `main.tsx` import-line edit; NOT parallel-safe with anything because nothing else is outstanding at this stage). [CHANGED 2026-04-19]
+- **W5.6**: T45 (solo; chrome navigation + IPC stubs; depends on T44; NOT parallel-safe with anything). [CHANGED 2026-04-20]
 
 ### Append-only collisions expected (keep-both merges)
 
@@ -1199,6 +1218,7 @@ This sub-sequencing is captured in T19/T20/T21/T22's `Depends on:` field (each l
 | T41 | W5 | 1 (extend) | T25, T26, T27, T28, T29 |
 | T42 | W5 | 1 (STATUS edit) | T30..T41 |
 | T44 | W5.5 | 3 (NEW: globals.css, components.css, styles/README.md) + 1 EDIT (main.tsx) | T42 |
+| T45 | W5.6 | 9 EDIT (MainWindow.tsx, Settings.tsx, en.json, zh-TW.json, ipc.rs, lib.rs, Cargo.toml, package.json, components.css) + 1 NEW (MainWindow.chrome.test.tsx) | T44 |
 
 ## 6. STATUS Notes
 
@@ -1207,6 +1227,7 @@ This sub-sequencing is captured in T19/T20/T21/T22's `Depends on:` field (each l
 -->
 
 - 2026-04-19 Developer — T2 versions pinned (Tauri 2.2 / Rust 1.88.0 / React 19 / Vite 6 / TS 5.7); note: rust-toolchain.toml uses 1.88.0 instead of task-specified 1.83.0 because time-core 0.1.8 (transitive dep via tauri-utils → serde_with → time) requires Rust 1.88; 1.83 cannot satisfy the dep tree.
+- 2026-04-20 Developer — T45 chrome navigation + 3 IPC stubs complete (Settings/theme toggle visible in toolbar; folder picker wired via tauri-plugin-dialog)
 
 ## Team memory
 

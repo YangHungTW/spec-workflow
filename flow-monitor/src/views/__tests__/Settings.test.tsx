@@ -11,6 +11,7 @@
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, act, waitFor } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import Settings from "../Settings";
 import { I18nProvider } from "../../i18n";
 
@@ -40,9 +41,11 @@ function renderSettings(overrides: Partial<typeof DEFAULT_SETTINGS> = {}) {
     return Promise.resolve({});
   });
   return render(
-    <I18nProvider>
-      <Settings />
-    </I18nProvider>,
+    <MemoryRouter>
+      <I18nProvider>
+        <Settings />
+      </I18nProvider>
+    </MemoryRouter>,
   );
 }
 
@@ -508,9 +511,11 @@ describe("Settings — round-trip IPC (AC14.a–c)", () => {
     });
 
     render(
-      <I18nProvider>
-        <Settings />
-      </I18nProvider>,
+      <MemoryRouter>
+        <I18nProvider>
+          <Settings />
+        </I18nProvider>
+      </MemoryRouter>,
     );
 
     await act(async () => { await Promise.resolve(); });

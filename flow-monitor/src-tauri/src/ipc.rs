@@ -423,6 +423,40 @@ pub fn reveal_in_finder(
     reveal_in_finder_inner(path, &registered_roots)
 }
 
+/// Return the macOS notification permission status as a string.
+///
+/// Stub for B2: actual NSUserNotificationCenter authorization check is deferred.
+/// Returns `"default"` so the frontend renders the "Not yet requested" state.
+#[tauri::command]
+pub async fn get_notification_permission_status() -> Result<String, IpcError> {
+    Ok("default".to_string())
+}
+
+/// Focus the main window.
+///
+/// Stub for the compact panel's "Open main →" button (AC10.b).
+/// Uses `AppHandle::get_webview_window` to locate the main window and calls
+/// `set_focus()` — argv-style, no shell string (security check 4).
+#[tauri::command]
+pub fn focus_main_window(app: tauri::AppHandle) -> Result<(), IpcError> {
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.set_focus();
+    }
+    Ok(())
+}
+
+/// Open a folder picker dialog and return the selected path (or None).
+///
+/// Stub for B2 repo-add flow (T23). Uses tauri-plugin-dialog's blocking
+/// folder picker so the result is directly usable without async ceremony.
+/// Returns `None` when the user cancels without selecting a folder.
+#[tauri::command]
+pub async fn dialog_open_directory(app: tauri::AppHandle) -> Result<Option<String>, IpcError> {
+    use tauri_plugin_dialog::DialogExt;
+    let result = app.dialog().file().blocking_pick_folder();
+    Ok(result.map(|p| p.to_string()))
+}
+
 /// Copy plain text to the system clipboard via the Tauri clipboard plugin.
 ///
 /// The `copy_to_clipboard_inner` helper validates the input; actual clipboard

@@ -16,6 +16,12 @@ vi.mock("@tauri-apps/api/event", () => ({
   listen: vi.fn(() => Promise.resolve(() => undefined)),
 }));
 
+// Stub themeStore — MainWindow now uses useTheme
+vi.mock("../../stores/themeStore", () => ({
+  useTheme: () => ({ theme: "light", setTheme: vi.fn(), toggleTheme: vi.fn() }),
+  applyThemeToDocument: vi.fn(),
+}));
+
 // Stub Tauri IPC — route by command so MainWindow (list_sessions) and Settings (get_settings) both work
 vi.mock("@tauri-apps/api/core", () => ({
   invoke: vi.fn((cmd: string) => {
@@ -44,7 +50,7 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 
 describe("Route stub placeholders", () => {
   it("MainWindow renders the main window layout (T17 replaced stub)", () => {
-    render(<MainWindow />);
+    render(<MemoryRouter><MainWindow /></MemoryRouter>);
     // T17 replaced the stub; verify the layout container renders without crashing
     const main = document.querySelector("[data-testid='main-window']");
     expect(main).toBeTruthy();
@@ -66,9 +72,11 @@ describe("Route stub placeholders", () => {
 
   it("Settings renders without crashing (no longer a stub)", () => {
     render(
-      <I18nProvider>
-        <Settings />
-      </I18nProvider>,
+      <MemoryRouter>
+        <I18nProvider>
+          <Settings />
+        </I18nProvider>
+      </MemoryRouter>,
     );
     // Settings renders a tablist — verify it mounts without throwing
     expect(document.body).toBeTruthy();

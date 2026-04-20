@@ -10,6 +10,7 @@
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, act, fireEvent } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 
 // Mock i18n
 vi.mock("../../i18n", () => ({
@@ -23,6 +24,12 @@ vi.mock("../../i18n", () => ({
 // Mock Tauri IPC
 vi.mock("@tauri-apps/api/core", () => ({
   invoke: vi.fn(),
+}));
+
+// Mock themeStore — MainWindow now uses useTheme
+vi.mock("../../stores/themeStore", () => ({
+  useTheme: () => ({ theme: "light", setTheme: vi.fn(), toggleTheme: vi.fn() }),
+  applyThemeToDocument: vi.fn(),
 }));
 
 // Mock @tauri-apps/api/event
@@ -83,7 +90,7 @@ describe("MainWindow — polling_cycle_complete subscription (AC4.c)", () => {
   it("renders the polling footer (PollingFooter is present in MainWindow)", async () => {
     setupInvokeMock(3);
     await act(async () => {
-      render(<MainWindow />);
+      render(<MemoryRouter><MainWindow /></MemoryRouter>);
     });
     expect(screen.getByTestId("polling-footer")).toBeTruthy();
   });
@@ -91,7 +98,7 @@ describe("MainWindow — polling_cycle_complete subscription (AC4.c)", () => {
   it("polling_cycle_complete listener is registered on mount", async () => {
     setupInvokeMock(3);
     await act(async () => {
-      render(<MainWindow />);
+      render(<MemoryRouter><MainWindow /></MemoryRouter>);
     });
     // Either MainWindow or PollingFooter registers the listener — either is valid
     expect(vi.mocked(listen)).toHaveBeenCalledWith(
@@ -103,7 +110,7 @@ describe("MainWindow — polling_cycle_complete subscription (AC4.c)", () => {
   it("sessions_changed listener is registered on mount (AC10.c)", async () => {
     setupInvokeMock(3);
     await act(async () => {
-      render(<MainWindow />);
+      render(<MemoryRouter><MainWindow /></MemoryRouter>);
     });
     expect(vi.mocked(listen)).toHaveBeenCalledWith(
       "sessions_changed",
@@ -132,7 +139,7 @@ describe("MainWindow — compact panel toggle (AC10.a)", () => {
     });
 
     await act(async () => {
-      render(<MainWindow />);
+      render(<MemoryRouter><MainWindow /></MemoryRouter>);
     });
 
     // MainWindow must have a compact-panel toggle button (data-testid="compact-toggle")
@@ -154,7 +161,7 @@ describe("MainWindow — compact panel toggle (AC10.a)", () => {
   it("MainWindow stays functional (main-window testid visible) after render", async () => {
     setupInvokeMock(3);
     await act(async () => {
-      render(<MainWindow />);
+      render(<MemoryRouter><MainWindow /></MemoryRouter>);
     });
     expect(screen.getByTestId("main-window")).toBeTruthy();
   });
