@@ -163,7 +163,7 @@ Conventions in this section (new merged shape):
 
 ### Wave 0 — Schema & helpers (6 tasks)
 
-## T1 — Extend `_template/STATUS.md` with `tier:` field
+## T1 — [x] Extend `_template/STATUS.md` with `tier:` field
 - **Milestone**: M0
 - **Requirements**: R1
 - **Decisions**: —
@@ -174,7 +174,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T2, T3, T4, T5
 - [ ]
 
-## T2 — `bin/specflow-tier` sourceable library
+## T2 — [x] `bin/specflow-tier` sourceable library
 - **Milestone**: M0
 - **Requirements**: R1, R2, R11, R12, R13
 - **Decisions**: D1, D2
@@ -192,7 +192,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T1, T3, T4, T5
 - [ ]
 
-## T3 — Unit tests for `bin/specflow-tier`
+## T3 — [x] Unit tests for `bin/specflow-tier`
 - **Milestone**: M0
 - **Requirements**: R1, R2, R11, R12, R13
 - **Decisions**: D1, D2
@@ -208,7 +208,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T1, T2, T4, T5
 - [ ]
 
-## T4 — `scripts/tier-rollout-migrate.sh` one-shot migration
+## T4 — [x] `scripts/tier-rollout-migrate.sh` one-shot migration
 - **Milestone**: M0
 - **Requirements**: R2
 - **Decisions**: D3
@@ -226,7 +226,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T1, T2, T3, T5
 - [ ]
 
-## T5 — Dry-run test for migration script
+## T5 — [x] Dry-run test for migration script
 - **Milestone**: M0
 - **Requirements**: R2, AC5
 - **Decisions**: D3
