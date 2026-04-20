@@ -24,6 +24,7 @@ interface BackendSessionRecord {
   slug: string;
   stage: string;
   last_activity_secs: number;
+  has_ui: boolean;
 }
 
 /**
@@ -87,7 +88,7 @@ function MainWindow() {
           noteExcerpt: "",
           repoPath: s.repo,
           repoId: s.repo.split("/").pop() ?? s.repo,
-          hasUi: false,
+          hasUi: s.has_ui ?? false,
         }));
         setSessions(mapped);
         setPollingIntervalSecs(settingsData.polling_interval_secs ?? 3);

@@ -24,6 +24,7 @@ pub struct SessionRecord {
     pub slug: String,
     pub stage: String,
     pub last_activity_secs: u64,
+    pub has_ui: bool,
 }
 
 /// Flat list of sessions across all registered repos.

@@ -93,6 +93,7 @@ async fn run_session_polling(app: tauri::AppHandle) {
                     slug: session_info.slug,
                     stage: format!("{:?}", state.stage).to_lowercase(),
                     last_activity_secs,
+                    has_ui: state.has_ui,
                 });
             }
         }

@@ -58,6 +58,8 @@ pub struct SessionState {
     pub stage_checklist: Vec<(StageItem, bool)>,
     /// Notes in source (chronological-insertion) order.
     pub notes: Vec<NotesEntry>,
+    /// Parsed from `- **has-ui**: true|false` front-matter line.
+    pub has_ui: bool,
     /// Filled in by the caller after `parse()` returns.
     pub raw_status_path: PathBuf,
 }
@@ -89,6 +91,7 @@ pub fn parse(content: &str, mtime: SystemTime) -> SessionState {
             last_activity: mtime,
             stage_checklist: Vec::new(),
             notes: Vec::new(),
+            has_ui: false,
             raw_status_path: PathBuf::new(),
         },
     }
@@ -102,6 +105,7 @@ fn try_parse(content: &str, mtime: SystemTime) -> Option<SessionState> {
     let mut slug: Option<String> = None;
     let mut stage: Option<Stage> = None;
     let mut updated_epoch: Option<u64> = None;
+    let mut has_ui = false;
     let mut checklist: Vec<(StageItem, bool)> = Vec::new();
     let mut notes: Vec<NotesEntry> = Vec::new();
 
@@ -151,6 +155,8 @@ fn try_parse(content: &str, mtime: SystemTime) -> Option<SessionState> {
             stage = Some(parse_stage(rest.trim()));
         } else if let Some(rest) = trimmed.strip_prefix("- **updated**:") {
             updated_epoch = parse_date_to_epoch(rest.trim());
+        } else if let Some(rest) = trimmed.strip_prefix("- **has-ui**:") {
+            has_ui = rest.trim().eq_ignore_ascii_case("true");
         }
     }
 
@@ -175,6 +181,7 @@ fn try_parse(content: &str, mtime: SystemTime) -> Option<SessionState> {
         last_activity,
         stage_checklist: checklist,
         notes,
+        has_ui,
         raw_status_path: PathBuf::new(),
     })
 }
