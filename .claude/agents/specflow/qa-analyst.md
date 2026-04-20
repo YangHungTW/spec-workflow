@@ -26,6 +26,22 @@ Read `03-prd.md`, `04-tech.md`, `06-tasks.md`, and the working-tree diff since f
 - STATUS note format: `- YYYY-MM-DD qa-analyst — <action>`
 - Team memory block: required (per R11)
 
+End the response with this footer (pure markdown, not JSON):
+
+```
+## Validate verdict
+axis: analyst
+verdict: PASS | NITS | BLOCK
+findings:
+  - severity: must | should | advisory
+    file: <path>
+    line: <n>
+    rule: <rule-slug>
+    message: <one-line>
+```
+
+Malformed or missing footer is treated as BLOCK by the aggregator (fail-loud posture).
+
 ## Rules
 
 - Report only (no fixes, no test runs). Cite file:line, R-id, task-id — vague findings are useless.
