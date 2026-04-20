@@ -61,7 +61,7 @@ pass() { printf 'PASS: %s\n' "$1"; PASS=$((PASS + 1)); }
 fail() { printf 'FAIL: %s\n' "$1" >&2; FAIL=$((FAIL + 1)); }
 
 # Source the library — reset the loaded-guard to allow re-source within this
-# test process when needed; initial source suffices for all tests.
+# test process when needed.
 SPECFLOW_TIER_LOADED=0
 # shellcheck source=/dev/null
 . "$TIER_LIB"
