@@ -2,6 +2,7 @@
 
 - **slug**: 20260420-flow-monitor-control-plane
 - **has-ui**: true
+- **tier**: standard
 - **stage**: request
 - **created**: 2026-04-20
 - **updated**: 2026-04-20
