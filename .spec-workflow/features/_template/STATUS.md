@@ -2,6 +2,7 @@
 
 - **slug**: <slug>
 - **has-ui**: false
+- **tier**: standard
 - **stage**: request
 - **created**: <YYYY-MM-DD>
 - **updated**: <YYYY-MM-DD>
