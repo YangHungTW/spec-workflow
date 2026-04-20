@@ -255,7 +255,7 @@ Conventions in this section (new merged shape):
 
 ### Wave 1 — Aggregator extraction (4 tasks)
 
-## T7 — `bin/specflow-aggregate-verdicts` extracted aggregator CLI
+## T7 — [x] `bin/specflow-aggregate-verdicts` extracted aggregator CLI
 - **Milestone**: M1
 - **Requirements**: R17, R18
 - **Decisions**: D5
@@ -266,7 +266,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T8
 - [ ]
 
-## T8 — Unit tests for aggregator
+## T8 — [x] Unit tests for aggregator
 - **Milestone**: M1
 - **Requirements**: R17, R18
 - **Decisions**: D5
@@ -283,7 +283,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T7
 - [ ]
 
-## T9 — Refactor `implement.md` step 7b to call extracted aggregator
+## T9 — [x] Refactor `implement.md` step 7b to call extracted aggregator
 - **Milestone**: M1
 - **Requirements**: R17
 - **Decisions**: D5
@@ -294,7 +294,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T10
 - [ ]
 
-## T10 — Refactor `review.md` step 5 to call extracted aggregator
+## T10 — [x] Refactor `review.md` step 5 to call extracted aggregator
 - **Milestone**: M1
 - **Requirements**: R17
 - **Decisions**: D5
