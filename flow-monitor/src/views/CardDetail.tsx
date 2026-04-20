@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams, Navigate } from "react-router-dom";
+import { invoke } from "@tauri-apps/api/core";
 import { CardDetailHeader } from "../components/CardDetailHeader";
 import { StageChecklist } from "../components/StageChecklist";
 import { TabStrip } from "../components/TabStrip";
@@ -10,64 +11,79 @@ import { DesignFolderIndex } from "../components/DesignFolderIndex";
 import type { StageKey } from "../components/StagePill";
 import type { IdleState } from "../components/IdleBadge";
 
-/** Validates URL path segment — allows only alphanumeric, hyphen, underscore. */
 const SAFE_ID = /^[A-Za-z0-9_-]+$/;
 function isSafeId(s: string | undefined): s is string {
   return typeof s === "string" && SAFE_ID.test(s);
 }
 
-/**
- * The 9 markdown document tabs shown in CardDetail.
- * T22 will wrap content with MarkdownPane + read-only footer.
- * exists: true for all tabs until IPC list_artefact_files wiring lands in T20.
- */
 const TAB_DEFINITIONS = [
-  { id: "00-request", labelKey: "tab.request" as const, exists: true },
-  { id: "01-brainstorm", labelKey: "tab.brainstorm" as const, exists: true },
-  { id: "02-design", labelKey: "tab.design" as const, exists: true },
-  { id: "03-prd", labelKey: "tab.prd" as const, exists: true },
-  { id: "04-tech", labelKey: "tab.tech" as const, exists: true },
-  { id: "05-plan", labelKey: "tab.plan" as const, exists: true },
-  { id: "06-tasks", labelKey: "tab.tasks" as const, exists: true },
-  { id: "07-gaps", labelKey: "tab.gaps" as const, exists: true },
-  { id: "08-verify", labelKey: "tab.verify" as const, exists: true },
+  { id: "00-request", labelKey: "tab.request" as const, exists: true, file: "00-request.md" },
+  { id: "01-brainstorm", labelKey: "tab.brainstorm" as const, exists: true, file: "01-brainstorm.md" },
+  { id: "02-design", labelKey: "tab.design" as const, exists: true, file: "02-design" },
+  { id: "03-prd", labelKey: "tab.prd" as const, exists: true, file: "03-prd.md" },
+  { id: "04-tech", labelKey: "tab.tech" as const, exists: true, file: "04-tech.md" },
+  { id: "05-plan", labelKey: "tab.plan" as const, exists: true, file: "05-plan.md" },
+  { id: "06-tasks", labelKey: "tab.tasks" as const, exists: true, file: "06-tasks.md" },
+  { id: "07-gaps", labelKey: "tab.gaps" as const, exists: true, file: "07-gaps.md" },
+  { id: "08-verify", labelKey: "tab.verify" as const, exists: true, file: "08-verify.md" },
 ];
 
-/**
- * CardDetail — master-detail view for a single specflow feature session.
- *
- * Layout (AC9.a — master-detail, same-window nav, not a modal or drawer):
- *   - CardDetailHeader: breadcrumb back + repo/slug title + stage pill +
- *     idle badge + 2 action buttons
- *   - Left rail: StageChecklist (display-only) + Notes placeholder (T21)
- *   - Right pane: tab-strip placeholder (9 stubs, T19 adds scroll) +
- *     content area (T19/T22 wire content)
- *
- * Breadcrumb back (AC9.f): restores MainWindow filter/sort/repo by reading
- * the ?sort=<axis>&repo=<id> search params stored in the URL before navigation.
- * The MainWindow stores these in the URL so they survive a full React remount.
- *
- * B2 boundary: NO edit affordance, NO save button, NO command-trigger (AC9.e).
- */
+interface SettingsResponse {
+  repos?: string[];
+}
+
 function CardDetail() {
-  const { repoId, slug } = useParams<{
-    repoId: string;
-    slug: string;
-  }>();
+  const { repoId, slug } = useParams<{ repoId: string; slug: string }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
   const [activeTabId, setActiveTabId] = useState<string>(TAB_DEFINITIONS[0].id);
+  const [repoFullPath, setRepoFullPath] = useState<string | null>(null);
+  const [tabContent, setTabContent] = useState<string>("");
+  const [contentError, setContentError] = useState<string | null>(null);
 
-  /** Guard: reject invalid URL path segments before any path construction. */
-  if (!isSafeId(repoId) || !isSafeId(slug)) {
+  const validRepoId = isSafeId(repoId) ? repoId : null;
+  const validSlug = isSafeId(slug) ? slug : null;
+
+  // Resolve full repo path from settings using the basename URL param
+  useEffect(() => {
+    if (!validRepoId) return;
+    invoke<SettingsResponse>("get_settings")
+      .then((s) => {
+        const match = (s.repos ?? []).find(
+          (p) => (p.split("/").pop() ?? p) === validRepoId,
+        );
+        setRepoFullPath(match ?? null);
+      })
+      .catch(() => setRepoFullPath(null));
+  }, [validRepoId]);
+
+  // Load active-tab markdown content via read_artefact IPC
+  useEffect(() => {
+    if (!repoFullPath || !validSlug) return;
+    if (activeTabId === "02-design") {
+      setTabContent("");
+      return;
+    }
+    const tab = TAB_DEFINITIONS.find((t) => t.id === activeTabId);
+    if (!tab) return;
+    setContentError(null);
+    invoke<string>("read_artefact", {
+      repo: repoFullPath,
+      slug: validSlug,
+      file: tab.file,
+    })
+      .then((content) => setTabContent(content))
+      .catch((e) => {
+        setTabContent("");
+        setContentError(e instanceof Error ? e.message : String(e));
+      });
+  }, [activeTabId, repoFullPath, validSlug]);
+
+  if (!validRepoId || !validSlug) {
     return <Navigate to="/" replace />;
   }
 
-  /**
-   * Reconstruct the MainWindow URL with restored filter state from search params.
-   * MainWindow saves sort= and repo= before navigating into detail (AC9.f).
-   */
   function buildBackUrl(): string {
     const sort = searchParams.get("sort");
     const repo = searchParams.get("repo");
@@ -82,34 +98,20 @@ function CardDetail() {
     navigate(buildBackUrl());
   }
 
-  /**
-   * Feature directory path — derived from repoId and slug.
-   * In production this would come from IPC list_sessions or read_artefact.
-   * T18 skeleton uses a synthesised path; real path wiring lands in T19/T20.
-   */
-  const featurePath = `/${repoId}/.spec-workflow/features/${slug}`;
+  // Real absolute feature path from resolved repo (was hardcoded `/${repoId}/...`)
+  const featurePath = repoFullPath
+    ? `${repoFullPath}/.spec-workflow/features/${validSlug}`
+    : `/${validRepoId}/.spec-workflow/features/${validSlug}`;
 
-  /**
-   * Stage and idleState — in production loaded via IPC get_session or
-   * derived from the sessions list in sessionStore. T18 skeleton defaults
-   * so the header and checklist render; T17/T19 wire real data.
-   */
   const stage: StageKey = "implement";
   const idleState: IdleState = "none";
-
-  /**
-   * Notes — stub: empty array until IPC read_artefact → status_parse
-   * integration lands in a later task. NotesTimeline renders nothing for
-   * an empty array, which is the correct B1 behaviour before wiring.
-   * STUB (T21): replace with real data from IPC when integration task ships.
-   */
   const notes: NoteEntry[] = [];
 
   return (
     <div className="card-detail" data-testid="card-detail">
       <CardDetailHeader
-        repoId={repoId}
-        slug={slug}
+        repoId={validRepoId}
+        slug={validSlug}
         stage={stage}
         idleState={idleState}
         featurePath={featurePath}
@@ -117,67 +119,33 @@ function CardDetail() {
       />
 
       <div className="card-detail__body">
-        {/* Left rail: stage checklist + notes timeline placeholder (T21) */}
-        <aside
-          className="card-detail__left-rail"
-          data-testid="card-detail-left-rail"
-        >
+        <aside className="card-detail__left-rail" data-testid="card-detail-left-rail">
           <StageChecklist currentStage={stage} />
-
-          {/* Notes timeline — T21: NotesTimeline wired with stub notes array. */}
           <NotesTimeline notes={notes} />
         </aside>
 
-        {/* Right pane: tab strip + content area */}
-        <main
-          className="card-detail__right-pane"
-          data-testid="card-detail-right-pane"
-        >
-          {/*
-           * Tab strip — horizontal scroll, active-tab auto-scroll-into-view (AC9.g).
-           * NO overflow menu, NO wrap per AC9.g constraint.
-           */}
+        <main className="card-detail__right-pane" data-testid="card-detail-right-pane">
           <TabStrip
             tabs={TAB_DEFINITIONS}
             activeId={activeTabId}
             onSelect={setActiveTabId}
           />
 
-          {/*
-           * Tab content area — conditional render per active tab.
-           *
-           * 02-design: shows DesignFolderIndex with per-file "Reveal in Finder"
-           *   (AC9.h). Stub file list uses the synthesised featurePath; real
-           *   filesystem listing from IPC list_design_files lands later.
-           *
-           * All other tabs: CardDetailMarkdownPane with read-only footer (T22).
-           *   Content is an empty string stub; IPC read_artefact wiring later.
-           *
-           * AC9.e: no edit affordance anywhere in this pane by design (B2).
-           */}
-          <div
-            className="card-detail__tab-content"
-            data-testid="tab-content-placeholder"
-          >
+          <div className="card-detail__tab-content" data-testid="tab-content-placeholder">
             {activeTabId === "02-design" ? (
               <DesignFolderIndex
                 files={[
-                  {
-                    name: "mockup.html",
-                    path: `${featurePath}/02-design/mockup.html`,
-                  },
-                  {
-                    name: "notes.md",
-                    path: `${featurePath}/02-design/notes.md`,
-                  },
-                  {
-                    name: "README.md",
-                    path: `${featurePath}/02-design/README.md`,
-                  },
+                  { name: "mockup.html", path: `${featurePath}/02-design/mockup.html` },
+                  { name: "notes.md", path: `${featurePath}/02-design/notes.md` },
+                  { name: "README.md", path: `${featurePath}/02-design/README.md` },
                 ]}
               />
+            ) : contentError ? (
+              <p style={{ padding: 24, color: "var(--stalled-red)", fontSize: 12 }}>
+                Failed to load: {contentError}
+              </p>
             ) : (
-              <CardDetailMarkdownPane content="" />
+              <CardDetailMarkdownPane content={tabContent} />
             )}
           </div>
         </main>
