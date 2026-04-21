@@ -852,7 +852,24 @@ for t in t13_settings_json t14_rules_dir_structure t15_rules_schema \
          t70_userlang_xdg_over_tilde \
          t71_userlang_stop_on_first_invalid \
          t72_userlang_missing_doesnt_stop \
-         t73_userlang_structural_grep; do
+         t73_userlang_structural_grep \
+         t74_specflow_tier t74_tier_path_boundary t74_tier_rollout_migrate \
+         t75_tier_no_sed_forks \
+         t76_aggregate_verdicts \
+         t77_deprecation_stubs \
+         t78_validate_command \
+         t79_validate_verdict_header \
+         t80_request_tier_flag t80_tier_proposal_heuristic \
+         t81_next_tier_dispatch \
+         t82_archive_merge_check \
+         t83_implement_tier_dispatch \
+         t84_tier_dispatch_matrix \
+         t85_archive_merge_check \
+         t86_upgrade_audit \
+         t87_auto_upgrade_triggers \
+         t88_mid_flight_upgrade_nondestructive \
+         t89_inline_review_default \
+         t90_tier_proposal_prompt; do
   echo "--- $t ---"
   if bash "$REPO_ROOT/test/${t}.sh" >/dev/null 2>&1; then
     echo "  PASS"
