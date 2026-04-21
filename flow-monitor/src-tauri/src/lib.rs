@@ -15,6 +15,10 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_dialog::init())
+        // See D1 / T93 — fs plugin needed for audit-log appends + temp invoke-*.command writes
+        .plugin(tauri_plugin_fs::init())
+        // See D1 / T93 — shell plugin needed for argv-form /usr/bin/open Terminal.app spawn
+        .plugin(tauri_plugin_shell::init())
         // Restores position + size for every named window (main, compact) before
         // first paint. Applied unconditionally — the RISK GATE in 05-plan.md R-2
         // requires dropping this plugin if it causes flash, drift, or focus

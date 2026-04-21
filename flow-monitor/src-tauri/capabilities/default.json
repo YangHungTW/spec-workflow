@@ -7,6 +7,33 @@
     "core:default",
     "dialog:default",
     "clipboard-manager:default",
-    "notification:default"
+    "notification:default",
+    {
+      "identifier": "shell:allow-execute",
+      "allow": [
+        {
+          "name": "open-terminal",
+          "cmd": "/usr/bin/open",
+          "args": [
+            "-a",
+            "Terminal.app",
+            { "validator": "^/(private/)?(var|tmp)/flow-monitor-[a-z0-9-]+/invoke-[a-f0-9]{16}\\.command$" }
+          ]
+        }
+      ]
+    },
+    {
+      "identifier": "fs:allow-write-text-file",
+      "allow": [
+        { "path": "$APPLOCALDATA/tmp/invoke-*.command" }
+      ]
+    },
+    {
+      "identifier": "fs:allow-write-file",
+      "allow": [
+        { "path": "$REPOS/.spec-workflow/.flow-monitor/audit.log" },
+        { "path": "$REPOS/.spec-workflow/.flow-monitor/audit.log.1" }
+      ]
+    }
   ]
 }
