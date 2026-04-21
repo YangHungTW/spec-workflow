@@ -258,7 +258,7 @@ Each task below has `**what**`, `**why-AC**` (cites R/AC), `**files**`, `**dep**
 
 ### W3 — Peripheral body rewrites + new artefacts
 
-- [ ] T17. Body rewrite in `.claude/hooks/session-start.sh`
+- [x] T17. Body rewrite in `.claude/hooks/session-start.sh`
   - **what**: 6 `specflow|spec-workflow` hits per tech §1.1. Use `sed -i '' -e 's/specflow/scaff/g' -e 's#\.spec-workflow/#\.specaffold/#g' .claude/hooks/session-start.sh` (BSD two-arg form per `bash-32-portability`). Preserve logic; no new fork/exec.
   - **why-AC**: R8, AC7.
   - **files**: `.claude/hooks/session-start.sh`.
@@ -266,7 +266,7 @@ Each task below has `**what**`, `**why-AC**` (cites R/AC), `**files**`, `**dep**
   - **wave**: W3.
   - **acceptance**: `grep -Ec "specflow|spec-workflow" .claude/hooks/session-start.sh` returns 0; `time bash .claude/hooks/session-start.sh < /dev/null` reports wall-clock < 200ms (measured by QA-analyst in validate).
 
-- [ ] T18. Body rewrite in `.claude/hooks/stop.sh`
+- [x] T18. Body rewrite in `.claude/hooks/stop.sh`
   - **what**: 7 hits per tech §1.1 (including the language-config-candidate list `$XDG_CONFIG_HOME/specflow/`, `$HOME/.config/specflow/` which rewrites to `scaff/`). Use `sed -i ''` with BSD two-arg form.
   - **why-AC**: R8, AC7.
   - **files**: `.claude/hooks/stop.sh`.
@@ -274,7 +274,7 @@ Each task below has `**what**`, `**why-AC**` (cites R/AC), `**files**`, `**dep**
   - **wave**: W3.
   - **acceptance**: `grep -Ec "specflow|spec-workflow" .claude/hooks/stop.sh` returns 0; `time bash .claude/hooks/stop.sh < /dev/null` reports wall-clock < 200ms.
 
-- [ ] T19. Rule prose rewrite — `.claude/rules/common/*.md` + `.claude/rules/README.md` + `.claude/rules/index.md`
+- [x] T19. Rule prose rewrite — `.claude/rules/common/*.md` + `.claude/rules/README.md` + `.claude/rules/index.md`
   - **what**: per tech §1.1, 5 rule files have hits; rewrite prose in `absolute-symlink-targets.md` (5 hits), `language-preferences.md` (5), `no-force-on-user-paths.md` (1), `classify-before-mutate.md` (0 but check), plus `README.md` (0) and `index.md` (0). Preserve rule examples that cite archived-feature slugs (those remain as historical references in prose).
   - **why-AC**: R9, R6.
   - **files**: all common/ rule files + README.md + index.md.
@@ -282,7 +282,7 @@ Each task below has `**what**`, `**why-AC**` (cites R/AC), `**files**`, `**dep**
   - **wave**: W3.
   - **acceptance**: `grep -rEc "specflow|spec-workflow" .claude/rules/common/ .claude/rules/README.md .claude/rules/index.md | awk -F: '$2>0 {print}'` returns empty (zero unlisted hits).
 
-- [ ] T20. Rule prose rewrite — `.claude/rules/bash/*.md` + `.claude/rules/reviewer/*.md`
+- [x] T20. Rule prose rewrite — `.claude/rules/bash/*.md` + `.claude/rules/reviewer/*.md`
   - **what**: `reviewer/performance.md` (1 hit — cross-ref to `shareable-hooks` feature which is archived; check whether the reference is in allow-list-compatible prose), `reviewer/security.md` (1 hit — likely a path example), `bash/bash-32-portability.md` (0 hits currently but verify post-merge), `bash/sandbox-home-in-tests.md` (0 hits). Focus on reviewer prose references.
   - **why-AC**: R9, R6.
   - **files**: `.claude/rules/bash/*.md`, `.claude/rules/reviewer/*.md`.
@@ -290,7 +290,7 @@ Each task below has `**what**`, `**why-AC**` (cites R/AC), `**files**`, `**dep**
   - **wave**: W3.
   - **acceptance**: `grep -rEc "specflow|spec-workflow" .claude/rules/bash/ .claude/rules/reviewer/ | awk -F: '$2>0 {print}'` returns empty.
 
-- [ ] T21a. Team-memory prose rewrite — `.claude/team-memory/shared/`
+- [x] T21a. Team-memory prose rewrite — `.claude/team-memory/shared/`
   - **what**: per tech §1.1, 83 hits across 31 memory files repo-wide. The `shared/` subtree contains ~5–10 memories (index, dogfood-paradox, status-notes rule, etc.). Rewrite body prose `specflow` → `scaff` / `Specaffold` context-appropriately. Filename slugs are R10-frozen (no rename). Dogfood-paradox memory contains multi-occurrence historical references to archived features — preserve archived-slug citations verbatim (those are historical record).
   - **why-AC**: R10, R6.
   - **files**: `.claude/team-memory/shared/**/*.md`.
@@ -298,7 +298,7 @@ Each task below has `**what**`, `**why-AC**` (cites R/AC), `**files**`, `**dep**
   - **wave**: W3.
   - **acceptance**: `grep -rEc "specflow|spec-workflow" .claude/team-memory/shared/ | awk -F: '$2>0 {print}'` returns empty.
 
-- [ ] T21b. Team-memory prose rewrite — per-role dirs under `.claude/team-memory/`
+- [x] T21b. Team-memory prose rewrite — per-role dirs under `.claude/team-memory/`
   - **what**: subtrees `tpm/`, `pm/`, `architect/`, `developer/`, `qa-analyst/`, `qa-tester/`, `designer/`. Same discipline as T21a.
   - **why-AC**: R10, R6.
   - **files**: `.claude/team-memory/{tpm,pm,architect,developer,qa-analyst,qa-tester,designer}/**/*.md`.
@@ -306,7 +306,7 @@ Each task below has `**what**`, `**why-AC**` (cites R/AC), `**files**`, `**dep**
   - **wave**: W3.
   - **acceptance**: `grep -rEc "specflow|spec-workflow" .claude/team-memory/tpm/ .claude/team-memory/pm/ .claude/team-memory/architect/ .claude/team-memory/developer/ .claude/team-memory/qa-analyst/ .claude/team-memory/qa-tester/ .claude/team-memory/designer/ | awk -F: '$2>0 {print}'` returns empty.
 
-- [ ] T21c. Body rewrite in `test/**/*.sh` — mechanical carryover sweep [CHANGED 2026-04-21]
+- [x] T21c. Body rewrite in `test/**/*.sh` — mechanical carryover sweep [CHANGED 2026-04-21]
   - **what**: mechanical body rewrite across all 88 `test/*.sh` files that currently contain `specflow` / `spec-workflow` references (path refs, comments, error strings, awk-sniff patterns). Replacements (apply in this exact order per BSD two-arg `sed -i ''` form to avoid order-sensitive overlap): `.claude/agents/specflow/` → `.claude/agents/scaff/`; `.claude/commands/specflow/` → `.claude/commands/scaff/`; `bin/specflow-` → `bin/scaff-`; `.claude/specflow.manifest` → `.claude/scaff.manifest`; `/specflow:` → `/scaff:`; `/specflow-` → `/scaff-`; `.spec-workflow/` → `.specaffold/`; `spec-workflow` → `specaffold`; `specflow` → `scaff`. Per `.claude/rules/bash/bash-32-portability.md` use the BSD two-arg form `sed -i '' -e '...'` (never GNU `sed -i ...`). Preserve test assertion semantics — do not change test logic, do not rename any `tNN_*.sh` file, do not alter control flow. Run `bash -n <file>` against every modified file as a syntax check before declaring the task complete. Edge cases: (a) `test/t39_init_fresh_sandbox.sh` and `test/t42_update_no_conflict.sh` already had narrow edits in T15 retry for the `scaff_ref` awk-sniff key and the `scaff.manifest` path — T21c must re-apply the mechanical sweep against their *remaining* non-T15 carryover refs (T15 retry fixed two specific lines only); (b) `test/smoke.sh` is in the sweep, and T24 subsequently appends a single registration line against the post-T21c body (T24 now depends on T21c — see §2 W3 row and T24 block); (c) no test file is excluded from the sweep — the 88-file count is the full set per `grep -lE "specflow|spec-workflow" test/*.sh | wc -l` at the time of authoring.
   - **why-AC**: R6, AC1 (gates T28; without T21c, T28's grep-allow-list assertion fails because `test/` is not in the R6 allow-list per tech §D2 — tests are the active verification surface for the rename and must carry the new names).
   - **files**: all 88 `*.sh` files under `test/` that match `grep -lE "specflow|spec-workflow" test/*.sh` at time of task start (includes `test/smoke.sh`; excludes `test/t_grep_allowlist.sh` which T23 authors fresh in the new taxonomy).
@@ -314,7 +314,7 @@ Each task below has `**what**`, `**why-AC**` (cites R/AC), `**files**`, `**dep**
   - **wave**: W3.
   - **acceptance**: `grep -rEc "specflow|spec-workflow" test/ | awk -F: '$2>0 {print}' | wc -l` returns 0 (no test file carries any old-prefix reference); every edited file passes `bash -n` syntax check.
 
-- [ ] T22. Author `.claude/carryover-allowlist.txt`
+- [x] T22. Author `.claude/carryover-allowlist.txt`
   - **what**: create the allow-list file per tech §D2 with the initial 6 patterns listed there:
     ```
     .git/**
@@ -331,7 +331,7 @@ Each task below has `**what**`, `**why-AC**` (cites R/AC), `**files**`, `**dep**
   - **wave**: W3.
   - **acceptance**: `test -f .claude/carryover-allowlist.txt && [ "$(grep -cvE '^(#|$)' .claude/carryover-allowlist.txt)" -ge 6 ]` returns 0.
 
-- [ ] T23. Author `test/t_grep_allowlist.sh` (bash 3.2 portable, standalone)
+- [x] T23. Author `test/t_grep_allowlist.sh` (bash 3.2 portable, standalone)
   - **what**: implement the assertion script per tech §4.1 verbatim. Bash 3.2 portable: `while IFS= read -r`, no `mapfile`; `case`-glob pattern matching, no `[[ =~ ]]`. Sandbox-HOME discipline per `.claude/rules/bash/sandbox-home-in-tests.md` (though this script doesn't read or write `$HOME`, per reviewer/style rule 6 the discipline is uniform). Script must be invokable directly via `bash test/t_grep_allowlist.sh` (escape-hatch for architect flag #1).
   - **why-AC**: R6, AC1; closes architect flag #1.
   - **files**: `test/t_grep_allowlist.sh` (new file, exec bit).
@@ -339,7 +339,7 @@ Each task below has `**what**`, `**why-AC**` (cites R/AC), `**files**`, `**dep**
   - **wave**: W3.
   - **acceptance**: `bash test/t_grep_allowlist.sh` exits 0 when run against the current tree state (all waves W1+W2+W3 merged); script passes bash 3.2 portability grep (`grep -En 'readlink -f|realpath|jq|mapfile|\[\[.*=~' test/t_grep_allowlist.sh` returns 0).
 
-- [ ] T24. Wire `t_grep_allowlist.sh` into `test/smoke.sh`
+- [x] T24. Wire `t_grep_allowlist.sh` into `test/smoke.sh`
   - **what**: add a registration line for the new test script in `test/smoke.sh` so it runs as part of the smoke suite. Registration format follows existing `tNN_*.sh` convention in the file. [CHANGED 2026-04-21] Runs after T21c's mechanical body rewrite of `test/smoke.sh` has landed, so T24 only appends the registration line against the already-rewritten file body.
   - **why-AC**: R6, AC1; cross-reference `architect/setup-hook-wired-commitment-must-be-explicit-plan-task.md` (wiring is a distinct task from authorship).
   - **files**: `test/smoke.sh`.
@@ -347,7 +347,7 @@ Each task below has `**what**`, `**why-AC**` (cites R/AC), `**files**`, `**dep**
   - **wave**: W3.
   - **acceptance**: `grep -q 't_grep_allowlist.sh' test/smoke.sh` returns 0; `bash test/smoke.sh` runs the new test without error.
 
-- [ ] T25. Author `ensure_compat_symlink` function in `bin/scaff-seed`
+- [x] T25. Author `ensure_compat_symlink` function in `bin/scaff-seed`
   - **what**: add a bash function implementing the six-state classifier per tech §D5: classifier input is `<repo_root>/.spec-workflow`; enum output is `missing | ok-ours | foreign-symlink | real-dir | real-file | broken-symlink`; dispatch table handles each state (missing → create with absolute target; ok-ours → no-op; foreign-symlink/real-dir/real-file → warn-skip; broken-symlink → warn-skip). Function is pure classifier + dispatch, no side effects in classifier. Absolute target per `common/absolute-symlink-targets.md`. No `--force` per `common/no-force-on-user-paths.md`.
   - **why-AC**: R17, AC15.
   - **files**: `bin/scaff-seed` (add function; no call-site wiring yet).
@@ -355,7 +355,7 @@ Each task below has `**what**`, `**why-AC**` (cites R/AC), `**files**`, `**dep**
   - **wave**: W3.
   - **acceptance**: `bash -n bin/scaff-seed` returns 0 (syntax check); `grep -q 'ensure_compat_symlink()' bin/scaff-seed` returns 0.
 
-- [ ] T26. Wire `ensure_compat_symlink` into `bin/scaff-seed install` and `bin/scaff-seed update` subcommands
+- [x] T26. Wire `ensure_compat_symlink` into `bin/scaff-seed install` and `bin/scaff-seed update` subcommands
   - **what**: add a call to `ensure_compat_symlink` inside the `cmd_install` and `cmd_update` dispatcher arms of `bin/scaff-seed`. Positioned after the main install/update work completes (so the symlink is authored only when `.specaffold/` exists). Cross-reference `architect/setup-hook-wired-commitment-must-be-explicit-plan-task.md` — wiring is an explicit task separate from function-authorship.
   - **why-AC**: R17, AC15.
   - **files**: `bin/scaff-seed` (edit install/update dispatcher arms).
@@ -363,7 +363,7 @@ Each task below has `**what**`, `**why-AC**` (cites R/AC), `**files**`, `**dep**
   - **wave**: W3.
   - **acceptance**: `grep -c 'ensure_compat_symlink' bin/scaff-seed` returns ≥ 3 (one definition + two call sites); an integration smoke test invoking `bin/scaff-seed install --dry-run` reaches the call-site without error (acceptance measured by running the existing `test/t39_init_fresh_sandbox.sh` or equivalent, post-migration).
 
-- [ ] T27. Author migration notes document `docs/rename-migration.md`
+- [x] T27. Author migration notes document `docs/rename-migration.md`
   - **what**: create the migration notes file per R15. Content: (a) old-prefix → new-prefix mapping table (`/specflow:request` → `/scaff:request`; `bin/specflow-seed` → `bin/scaff-seed`; `.spec-workflow/` → `.specaffold/`; `specflow-pm` → `scaff-pm`; etc.); (b) hard-cutover rationale (D1 no alias window); (c) `claude-symlink install` recovery step for stale global installs (D3); (d) one-line orphan cleanup command `rm -rf ~/.claude/agents/specflow ~/.claude/commands/specflow` (D6); (e) note about repo-dir on-disk rename being out of scope (D2). This file is allowed to mention old names; it's in the R6 allow-list (T22).
   - **why-AC**: R15, AC12.
   - **files**: `docs/rename-migration.md` (new file).
