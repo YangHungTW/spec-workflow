@@ -29,6 +29,7 @@ fn make_state(slug: &str, stage: Stage, ago_secs: u64) -> SessionState {
         slug: slug.to_string(),
         stage,
         last_activity,
+        has_ui: false,
         stage_checklist: Vec::new(),
         notes: Vec::new(),
         raw_status_path: PathBuf::from(format!("/fake/{}/STATUS.md", slug)),

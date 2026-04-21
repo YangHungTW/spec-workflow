@@ -28,3 +28,6 @@ target/
 *.njsproj
 *.sln
 *.sw?
+
+# Generated files from build.rs (T109) — do not hand-edit; regenerated on cargo build
+src/generated/
