@@ -12,7 +12,7 @@ Cross-role conventions that require per-role discipline (STATUS Notes append per
 
 ## Why
 
-Observed drift across the specflow feature series:
+Observed drift across the Specaffold feature series:
 
 - **20260419-flow-monitor** — multiple developers forgot STATUS Notes lines; TPM caught at archive, lines backfilled from git log.
 - **20260420-tier-model W0a** — T7 developer appended a STATUS Notes line to the working tree but did NOT commit it; orchestrator had to surgically remove.

@@ -22,28 +22,28 @@ exposed bug, so no new pattern is added — the entries below (4th and
 6th occurrences) still cover the observed failure modes. -->
 
 <!-- 2026-04-20 update: 9th occurrence = 20260420-tier-model (the
-three-tier workflow ships the `/specflow:validate` aggregator + new
+three-tier workflow ships the `/scaff:validate` aggregator + new
 merged 05-plan.md shape + retired-command stubs that THIS feature's
 own implement would have to dispatch through). Three tier-model
 archive-stage symptoms surfaced, each a dogfood-paradox variant:
 
 1. **06-tasks.md symlink bridge** — the feature authored only
-   `05-plan.md` (new shape per R19) but `/specflow:implement` and
+   `05-plan.md` (new shape per R19) but `/scaff:implement` and
    the developer-agent briefing flow still read `06-tasks.md`. A
    bootstrap symlink `06-tasks.md → 05-plan.md` was installed to
    let this feature run through its own implement; removed at
    archive. Classic "mechanism not yet installed on itself" mode.
 
 2. **archive.md expected `08-verify.md`** — the stage-transition
-   check in `/specflow:archive` grep'd for `08-verify.md` verdict=PASS,
+   check in `/scaff:archive` grep'd for `08-verify.md` verdict=PASS,
    but this feature authored `08-validate.md` (new name per R15).
    Dispatch code was updated in W3 (T21), but the archive command's
    own contract still referenced the old name. Surfaced as a
    stage-advance refusal at archive attempt.
 
 3. **aggregator expected `## Reviewer verdict`** — the new-shape
-   `/specflow:validate` emits `## Validate verdict` footers (R17),
-   but `bin/specflow-aggregate-verdicts` (extracted in W1 T7) still
+   `/scaff:validate` emits `## Validate verdict` footers (R17),
+   but `bin/scaff-aggregate-verdicts` (extracted in W1 T7) still
    accepted only `## Reviewer verdict` at line 137. All validate
    footers were rejected as malformed, forcing a BLOCK verdict.
    Fixed during validate-cycle by accepting both headers (orchestrator
@@ -84,7 +84,7 @@ coverage.
 
 ## Why
 
-Third-occurrence pattern across the specflow harness upgrade series:
+Third-occurrence pattern across the Specaffold harness upgrade series:
 
 - **B1 (prompt-rules-surgery)** — shipped SessionStart hook. Hook
   itself doesn't fire during the feature's own session (was already
@@ -92,7 +92,7 @@ Third-occurrence pattern across the specflow harness upgrade series:
   First real exercise: user manually opened a fresh session after
   merge.
 - **B2.a (shareable-hooks)** — shipped Stop hook. Same paradox:
-  the hook would fire on `/specflow:implement` stopping, but the
+  the hook would fire on `/scaff:implement` stopping, but the
   hook was installed only at the end of implement. Deferred first
   exercise.
 - **B2.b (review-capability)** — shipped inline reviewers. `--skip-
@@ -120,7 +120,7 @@ assume runtime will work (creates a deferred failure).
 ### Architect (writing 04-tech.md)
 
 - Design an opt-out or skip flag that lets the feature's own
-  `/specflow:implement` run cleanly during bootstrapping.
+  `/scaff:implement` run cleanly during bootstrapping.
 - Ensure the flag's use writes a STATUS Notes trace (see
   `architect/opt-out-bypass-trace-required.md`).
 
@@ -214,13 +214,13 @@ first session after restart.
 
 **Sixth occurrence** — same feature, option-B execution variant:
 the developer's machine had no pre-existing global install of
-specflow, so running `migrate --from .` meant consumer == source
+Specaffold, so running `migrate --from .` meant consumer == source
 tree. This surfaced a bug invisible to all synthetic sandboxes: the
 W2-hotfix idempotent-exit short-circuit fired when ALL files
 classified as `ok` AND the manifest didn't yet exist (the
 first-time-dogfood case). Net effect: migrate succeeded, but no
 manifest was written — the consumer looked like an unmanaged tree
-on the next run. Fix: add `[ -f "${consumer_root}/.claude/specflow.manifest" ]`
+on the next run. Fix: add `[ -f "${consumer_root}/.claude/scaff.manifest" ]`
 to the short-circuit condition in both `cmd_init` and `cmd_migrate`,
 so first-time writes still author the manifest.
 
@@ -251,7 +251,7 @@ structural-only / runtime-deferred split is stable at scale:
 Sub-pattern promoted to discipline: **pre-commit the RUNTIME HANDOFF line as a TPM-owned task
 in the final wave**, not as an archive-time afterthought. The handoff line reads:
 
-> `RUNTIME HANDOFF (for successor feature): opening STATUS Notes line must read "YYYY-MM-DD orchestrator — B2 control plane exercised on this feature's first live session". 15 runtime ACs deferred; list at .spec-workflow/archive/<slug>/03-prd.md §9.`
+> `RUNTIME HANDOFF (for successor feature): opening STATUS Notes line must read "YYYY-MM-DD orchestrator — B2 control plane exercised on this feature's first live session". 15 runtime ACs deferred; list at .specaffold/archive/<slug>/03-prd.md §9.`
 
 If the feature invokes the paradox, the TPM should reference this shared memory
 at plan time (not just the PM at PRD time). The ninth occurrence's 05-plan.md §1.2
