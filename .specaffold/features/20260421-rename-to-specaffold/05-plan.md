@@ -192,7 +192,7 @@ Each task below has `**what**`, `**why-AC**` (cites R/AC), `**files**`, `**dep**
 
 ### W2 — Body rewrites inside renamed files
 
-- [ ] T9. Body rewrite in `.claude/commands/scaff/**/*.md`
+- [x] T9. Body rewrite in `.claude/commands/scaff/**/*.md`
   - **what**: inside each of the 20 command files, rewrite prose and codefence references: `specflow` → `scaff` (slash-command namespace references in prose, dispatch examples); `spec-workflow` → `specaffold` where the dir is mentioned; `.spec-workflow/` → `.specaffold/` in path references. Preserve YAML frontmatter `description:` where it references the product name as "Specaffold" (product-name prose) vs. `scaff` (CLI/command prose).
   - **why-AC**: R2, AC9 (specifically `.claude/commands/scaff/request.md` must reference the PM agent name `scaff-pm`).
   - **files**: all 20 `.md` files under `.claude/commands/scaff/`.
@@ -200,7 +200,7 @@ Each task below has `**what**`, `**why-AC**` (cites R/AC), `**files**`, `**dep**
   - **wave**: W2.
   - **acceptance**: `grep -rE "specflow|spec-workflow" .claude/commands/scaff/ | wc -l` returns 0; `grep -q '\bscaff-pm\b' .claude/commands/scaff/request.md` returns 0.
 
-- [ ] T10. Body rewrite in `.claude/agents/scaff/**/*.md` — frontmatter `name:` + `description:` + body prose
+- [x] T10. Body rewrite in `.claude/agents/scaff/**/*.md` — frontmatter `name:` + `description:` + body prose
   - **what**: for each agent file, rewrite the frontmatter `name:` field from `specflow-<role>` to `scaff-<role>` (e.g. `scaff-pm`, `scaff-architect`); rewrite `description:` to say "Specaffold" where the product is named; rewrite body prose `specflow` → `scaff` where command/agent references appear. The 14 files are: pm, architect, tpm, designer, developer, qa-analyst, qa-tester, reviewer-security, reviewer-performance, reviewer-style, + architect.appendix, developer.appendix, qa-analyst.appendix, tpm.appendix. Constraint from `.claude/rules/README.md`: filename stem matches `name:` in frontmatter — so `pm.md` has `name: scaff-pm`, `architect.md` has `name: scaff-architect`, etc.
   - **why-AC**: R3, R10, AC5, AC10 (specifically `.claude/agents/scaff/pm.md` frontmatter must read `name: scaff-pm`).
   - **files**: all 14 `.md` files under `.claude/agents/scaff/`.
@@ -208,7 +208,7 @@ Each task below has `**what**`, `**why-AC**` (cites R/AC), `**files**`, `**dep**
   - **wave**: W2.
   - **acceptance**: `grep -rE '^name: specflow-' .claude/agents/scaff/ | wc -l` returns 0; `grep -rE '^name: scaff-' .claude/agents/scaff/ | wc -l` returns ≥ 10 (seven roles + three reviewers minimum); `grep -E '^name: scaff-pm$' .claude/agents/scaff/pm.md` returns exactly one match.
 
-- [ ] T11. Body rewrite in `bin/scaff-*` — internal references + path-authoring logic
+- [x] T11. Body rewrite in `bin/scaff-*` — internal references + path-authoring logic
   - **what**: inside each of the 5 renamed binaries, rewrite string literals, comments, and variables that reference `specflow`, `spec-workflow`, or `.spec-workflow/`. Hit counts per tech §1.1: `scaff-seed` (63), `scaff-lint` (25), `scaff-aggregate-verdicts` (11), `scaff-install-hook` (5), `scaff-tier` (3); plus `bin/claude-symlink` (15) — NOT renamed, but its body must be rewritten too.
   - **why-AC**: R7, R6 (grep zero-hits).
   - **files**: 6 binaries total — `bin/scaff-seed`, `bin/scaff-lint`, `bin/scaff-aggregate-verdicts`, `bin/scaff-install-hook`, `bin/scaff-tier`, `bin/claude-symlink`.
@@ -216,7 +216,7 @@ Each task below has `**what**`, `**why-AC**` (cites R/AC), `**files**`, `**dep**
   - **wave**: W2.
   - **acceptance**: `grep -rEc "specflow|spec-workflow" bin/ | awk -F: '$2>0 {print}' | wc -l` returns 0.
 
-- [ ] T12. Body rewrite in `.claude/skills/scaff-init/**`
+- [x] T12. Body rewrite in `.claude/skills/scaff-init/**`
   - **what**: rewrite `SKILL.md` and `init.sh` contents — replace `specflow-init` skill-name references with `scaff-init`; replace `.spec-workflow/` path references with `.specaffold/`; any slash-command example `/specflow-init` → `/scaff-init` (the skill slash-command gets the new name via filename, so this is just a prose alignment).
   - **why-AC**: R4, R6.
   - **files**: `.claude/skills/scaff-init/SKILL.md`, `.claude/skills/scaff-init/init.sh`.
@@ -224,7 +224,7 @@ Each task below has `**what**`, `**why-AC**` (cites R/AC), `**files**`, `**dep**
   - **wave**: W2.
   - **acceptance**: `grep -rEc "specflow|spec-workflow" .claude/skills/scaff-init/` returns 0 per file.
 
-- [ ] T13. Body rewrite in `README.md` + any root-level `*.md` docs
+- [x] T13. Body rewrite in `README.md` + any root-level `*.md` docs
   - **what**: top-line heading `# spec-workflow` → `# Specaffold`; tagline and prose references to old product name → Specaffold; install-example blocks update `bin/specflow-seed` → `bin/scaff-seed`, `cp -R .claude/skills/specflow-init` → `cp -R .claude/skills/scaff-init`, `/specflow-init` → `/scaff-init`, and add at least one `scaff` reference in an install example (AC3).
   - **why-AC**: R1, R4, AC2, AC3.
   - **files**: `README.md` (plus any root-level `*.md` discovered; none currently exist besides README).
@@ -232,7 +232,7 @@ Each task below has `**what**`, `**why-AC**` (cites R/AC), `**files**`, `**dep**
   - **wave**: W2.
   - **acceptance**: `head -1 README.md` reads exactly `# Specaffold`; `grep -c '\bscaff\b' README.md` returns ≥ 1; `grep -Ec "specflow|spec-workflow" README.md` returns 0 (or only hits inside the R6 allow-list, which README is not part of).
 
-- [ ] T14. Residual pass over `.claude/settings.local.json` for non-manifest strings
+- [x] T14. Residual pass over `.claude/settings.local.json` for non-manifest strings
   - **what**: after T7 handled the two manifest-path keys, grep `.claude/settings.local.json` for any remaining `specflow` / `spec-workflow` strings (e.g. command strings like `/specflow:next` in permission entries, if any exist). Rewrite each to the new prefix.
   - **why-AC**: R6.
   - **files**: `.claude/settings.local.json`.
@@ -240,7 +240,7 @@ Each task below has `**what**`, `**why-AC**` (cites R/AC), `**files**`, `**dep**
   - **wave**: W2.
   - **acceptance**: `grep -Ec "specflow|spec-workflow" .claude/settings.local.json` returns 0.
 
-- [ ] T15. Body rewrite in `.claude/scaff.manifest`
+- [x] T15. Body rewrite in `.claude/scaff.manifest`
   - **what**: the manifest's `files:` keys are path strings like `.claude/agents/specflow/pm.md`. Rewrite each to `.claude/agents/scaff/pm.md` to match the W1 dir renames. Preserve the sha hashes verbatim — they are content hashes of file bodies, not paths; re-hashing is out of scope (hashes get refreshed on the next `scaff-seed init` cycle organically).
   - **why-AC**: R6, R7.
   - **files**: `.claude/scaff.manifest`.
@@ -248,7 +248,7 @@ Each task below has `**what**`, `**why-AC**` (cites R/AC), `**files**`, `**dep**
   - **wave**: W2.
   - **acceptance**: `grep -Ec "specflow|spec-workflow" .claude/scaff.manifest` returns 0.
 
-- [ ] T16. W2 cross-class consistency check (read-only)
+- [x] T16. W2 cross-class consistency check (read-only)
   - **what**: structural read-only check that the AC9 ↔ AC10 anchor pair is consistent — `.claude/commands/scaff/request.md` references the string `scaff-pm`, and `.claude/agents/scaff/pm.md` frontmatter has `name: scaff-pm`. Both strings must match verbatim. No file edits; this is a gate task.
   - **why-AC**: AC9, AC10.
   - **files**: read-only: `.claude/commands/scaff/request.md`, `.claude/agents/scaff/pm.md`.

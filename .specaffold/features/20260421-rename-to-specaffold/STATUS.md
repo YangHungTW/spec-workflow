@@ -33,3 +33,6 @@
 - 2026-04-21 review dispatched — slug=20260421-rename-to-specaffold wave=2 tasks=T9,T10,T11,T12,T13,T14,T15 axes=security,performance,style
 - 2026-04-21 review result — wave 2 verdict=BLOCK blocking-tasks=T15 (style axis; 2 must-severity findings — test/t39_init_fresh_sandbox.sh:155 and test/t42_update_no_conflict.sh:187 grep stale "specflow_ref" key after T15 renamed it to "scaff_ref"); merge loop NOT executed; worktrees/branches retained for retry
 - 2026-04-21 implement — PLAN GAP surfaced by T15 review: 88 test/**/*.sh files contain specflow|spec-workflow references; no W2/W3 task covers test/ body rewrites; T28 (W4 grep-allow-list) will fail unless a new task is added via /specflow:update-plan before W4
+- 2026-04-21 T15 retry — narrow scope (2 consumer test files, 10 lines) fixing scaff_ref awk-sniff + scaff.manifest path; commit e2740fb
+- 2026-04-21 review result — wave 2 retry verdict=PASS (T15 re-reviewed all 3 axes; T9-T14 unchanged verdicts retained from first dispatch)
+- 2026-04-21 implement wave 2 done — T9, T10, T11, T12, T13, T14, T15, T16 (W2 merged; 8 tasks done; 16/32 tasks remain for W3+W4); test/**/*.sh plan gap still open — /specflow:update-plan required before W4 T28
