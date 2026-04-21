@@ -27,7 +27,7 @@ fn build_seam3_fixture() -> (tempfile::TempDir, PathBuf) {
     let tmp = tempfile::tempdir().expect("tempdir allocation failed");
     let root = tmp.path().to_path_buf();
 
-    let features = root.join(".spec-workflow").join("features");
+    let features = root.join(".specaffold").join("features");
     fs::create_dir_all(&features).expect("create features dir");
 
     // --- alpha: stage:implement, recent updated: field (AC1.a, AC3.a) ---
@@ -89,7 +89,7 @@ fn build_seam3_fixture() -> (tempfile::TempDir, PathBuf) {
     .unwrap();
 
     // --- archive/foxtrot: excluded by location — sits alongside features/, not inside (AC1.c) ---
-    let archive = root.join(".spec-workflow").join("archive").join("foxtrot");
+    let archive = root.join(".specaffold").join("archive").join("foxtrot");
     fs::create_dir_all(&archive).unwrap();
     fs::write(
         archive.join("STATUS.md"),
@@ -306,7 +306,7 @@ async fn test_wall_clock_20_sessions_under_1500ms_at_3s_interval() {
     // (alpha + bravo + charlie + 17 synthetic = 20).
     // echo is excluded by stage:archive; delta by missing STATUS.md;
     // _template by name — none of these count toward the 20.
-    let features = root.join(".spec-workflow").join("features");
+    let features = root.join(".specaffold").join("features");
     add_synthetic_sessions(&features, 17);
 
     let (event, elapsed) = one_tick(&root, 3).await;

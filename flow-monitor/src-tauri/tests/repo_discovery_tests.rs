@@ -6,7 +6,7 @@ use std::path::PathBuf;
 ///
 /// ```
 /// <root>/
-///   .spec-workflow/
+///   .specaffold/
 ///     features/
 ///       _template/          <- Template; excluded
 ///       session-alpha/      <- valid session (has STATUS.md)
@@ -22,7 +22,7 @@ fn build_fixture() -> tempfile::TempDir {
     let tmp = tempfile::tempdir().expect("tempdir");
     let root = tmp.path();
 
-    let features = root.join(".spec-workflow").join("features");
+    let features = root.join(".specaffold").join("features");
     fs::create_dir_all(&features).unwrap();
 
     // _template/ — no STATUS.md required; classified by name
@@ -42,7 +42,7 @@ fn build_fixture() -> tempfile::TempDir {
     fs::create_dir_all(features.join("no-status-dir")).unwrap();
 
     // archive dir sits alongside features/, NOT inside it; discover_sessions never touches it
-    let archive_old = root.join(".spec-workflow").join("archive").join("old-session");
+    let archive_old = root.join(".specaffold").join("archive").join("old-session");
     fs::create_dir_all(&archive_old).unwrap();
     fs::write(archive_old.join("STATUS.md"), "# archived\n").unwrap();
 
@@ -54,7 +54,7 @@ fn build_fixture() -> tempfile::TempDir {
 #[test]
 fn classify_template_dir_returns_template() {
     let tmp = build_fixture();
-    let features = tmp.path().join(".spec-workflow").join("features");
+    let features = tmp.path().join(".specaffold").join("features");
 
     for entry in fs::read_dir(&features).unwrap() {
         let entry = entry.unwrap();
@@ -69,7 +69,7 @@ fn classify_template_dir_returns_template() {
 #[test]
 fn classify_valid_session_returns_session_with_slug() {
     let tmp = build_fixture();
-    let features = tmp.path().join(".spec-workflow").join("features");
+    let features = tmp.path().join(".specaffold").join("features");
 
     for entry in fs::read_dir(&features).unwrap() {
         let entry = entry.unwrap();
@@ -87,7 +87,7 @@ fn classify_valid_session_returns_session_with_slug() {
 #[test]
 fn classify_dir_without_status_md_returns_not_a_session() {
     let tmp = build_fixture();
-    let features = tmp.path().join(".spec-workflow").join("features");
+    let features = tmp.path().join(".specaffold").join("features");
 
     for entry in fs::read_dir(&features).unwrap() {
         let entry = entry.unwrap();
@@ -175,7 +175,7 @@ fn discover_status_path_points_to_status_md() {
 #[test]
 fn discover_returns_empty_when_features_dir_missing() {
     let tmp = tempfile::tempdir().unwrap();
-    // No .spec-workflow/features/ created — read_dir will fail gracefully
+    // No .specaffold/features/ created — read_dir will fail gracefully
     let sessions = discover_sessions(tmp.path());
     assert!(sessions.is_empty(), "must return empty vec when features dir is absent");
 }
@@ -183,7 +183,7 @@ fn discover_returns_empty_when_features_dir_missing() {
 #[test]
 fn session_dir_field_matches_entry_path() {
     let tmp = build_fixture();
-    let features = tmp.path().join(".spec-workflow").join("features");
+    let features = tmp.path().join(".specaffold").join("features");
     let sessions = discover_sessions(tmp.path());
 
     for session in &sessions {
