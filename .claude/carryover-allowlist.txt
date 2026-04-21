@@ -24,8 +24,8 @@ docs/rename-migration.md
 test/t_grep_allowlist.sh
 # .specaffold/features/20260421-rename-to-specaffold/** — this feature's own PRD/tech/plan/STATUS/request docs reference old names by design
 .specaffold/features/20260421-rename-to-specaffold/**
-# flow-monitor/** — independent co-located Tauri sub-project; rename is out of scope
-flow-monitor/**
+# flow-monitor/README.md — R10 upgrade-notes line documents legacy .spec-workflow/.flow-monitor/ audit-log path per D4 lazy-migration
+flow-monitor/README.md
 # test/t_T25_ensure_compat_symlink.sh — tests the compat-symlink function; must reference .spec-workflow as the compat link name (R17/AC15)
 test/t_T25_ensure_compat_symlink.sh
 # bin/scaff-seed — contains .spec-workflow as the compat symlink path in classify/ensure_compat_symlink (R17/AC15)
