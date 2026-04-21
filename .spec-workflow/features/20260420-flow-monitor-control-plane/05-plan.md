@@ -338,7 +338,7 @@ Conventions in this section (new merged shape):
 
 ### Wave 2 — Backend wiring (3 tasks)
 
-## T108 — [ ] `lib.rs::run_session_polling` — wire store::diff + notify::fire_stalled_notification
+## T108 — [x] `lib.rs::run_session_polling` — wire store::diff + notify::fire_stalled_notification
 - **Milestone**: M2
 - **Requirements**: R1
 - **Decisions**: D5
@@ -357,7 +357,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T109, T110
 - [ ]
 
-## T109 — [ ] `ipc.rs` handlers + `build.rs` TS taxonomy projection
+## T109 — [x] `ipc.rs` handlers + `build.rs` TS taxonomy projection
 - **Milestone**: M2
 - **Requirements**: R4, R5, R6, R7, R8
 - **Decisions**: D3, D6
@@ -383,7 +383,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T108, T110 (with the "disjoint regions of lib.rs" caveat above — developer coordinates)
 - [ ]
 
-## T110 — [ ] `invokeStore.ts` — renderer dispatch wrapper + in-flight set
+## T110 — [x] `invokeStore.ts` — renderer dispatch wrapper + in-flight set
 - **Milestone**: M2
 - **Requirements**: R2, R3, R4, R5, R7
 - **Decisions**: D6
