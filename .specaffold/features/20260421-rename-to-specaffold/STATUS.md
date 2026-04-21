@@ -36,3 +36,4 @@
 - 2026-04-21 T15 retry — narrow scope (2 consumer test files, 10 lines) fixing scaff_ref awk-sniff + scaff.manifest path; commit e2740fb
 - 2026-04-21 review result — wave 2 retry verdict=PASS (T15 re-reviewed all 3 axes; T9-T14 unchanged verdicts retained from first dispatch)
 - 2026-04-21 implement wave 2 done — T9, T10, T11, T12, T13, T14, T15, T16 (W2 merged; 8 tasks done; 16/32 tasks remain for W3+W4); test/**/*.sh plan gap still open — /specflow:update-plan required before W4 T28
+- 2026-04-21 update-plan — TPM added T21c: body rewrite in test/**/*.sh; W3 task count 12→13, total 32→33; closes plan gap surfaced by T15 review; dep chain binds to T3/T5/T11/T15 so path refs rewrite after renames complete; T24 now depends on T21c (both edit test/smoke.sh — serialised within W3)
