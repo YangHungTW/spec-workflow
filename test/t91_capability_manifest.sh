@@ -13,12 +13,12 @@
 #        name == "open-terminal"
 #        cmd  == "/usr/bin/open"
 #        args beginning with ["-a", "Terminal.app", <regex-validator-object>]
-#   C. permissions[] contains identifier == "fs:allow-append-file"
+#   C. permissions[] contains identifier == "fs:allow-write-file"
 #      with exactly 2 allow entries, targeting audit.log and audit.log.1
 #   D. Malformed JSON → exit 2 (fail-loud)
 #
 # SKIP behaviour:
-#   - If shell:allow-execute or fs:allow-append-file blocks are absent
+#   - If shell:allow-execute or fs:allow-write-file blocks are absent
 #     (T91 not yet merged), the B and C assertions skip gracefully and
 #     exit 0.  A is always asserted (those 4 strings pre-exist T91).
 #
@@ -40,7 +40,32 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd -P)"
 MANIFEST="${MANIFEST:-$REPO_ROOT/flow-monitor/src-tauri/capabilities/default.json}"
 
 # ---------------------------------------------------------------------------
-# Preflight: manifest file must exist
+# Input validation — canonicalise MANIFEST and assert path is under REPO_ROOT
+# (security: path-traversal on user-supplied env var, rule: input-validation-at-boundaries).
+# Uses cd+dirname+pwd-P (BSD-safe; no readlink -f).
+# Falls back to raw value when parent dir is absent; sub-test will SKIP on
+# [ ! -f ] — boundary check still fires on whatever value is presented.
+# ---------------------------------------------------------------------------
+_resolve_file_path() {
+  local p="$1"
+  local dir base resolved_dir
+  dir="$(dirname "$p")"
+  base="$(basename "$p")"
+  if resolved_dir="$(cd "$dir" 2>/dev/null && pwd -P)"; then
+    printf '%s/%s\n' "$resolved_dir" "$base"
+  else
+    printf '%s\n' "$p"
+  fi
+}
+
+MANIFEST="$(_resolve_file_path "$MANIFEST")"
+if [ "${MANIFEST#$REPO_ROOT/}" = "$MANIFEST" ]; then
+  printf 'ERROR: MANIFEST must be under %s (got: %s)\n' "$REPO_ROOT" "$MANIFEST" >&2
+  exit 2
+fi
+
+# ---------------------------------------------------------------------------
+# Preflight — skip gracefully when T91 has not yet been merged
 # ---------------------------------------------------------------------------
 if [ ! -f "$MANIFEST" ]; then
   printf 'SKIP: %s not found — capabilities/default.json absent; re-run after T91.\n' \
@@ -60,9 +85,7 @@ fail() { printf 'FAIL: %s\n' "$1" >&2; FAIL=$((FAIL + 1)); }
 skip() { printf 'SKIP: %s\n' "$1" >&2; SKIP=$((SKIP + 1)); }
 
 # ---------------------------------------------------------------------------
-# D. Malformed JSON guard — exit 2 fail-loud
-# This must run before any assertion that parses JSON.
-# We invoke python3 in --check mode (attempt json.load; exit 2 on error).
+# D. Malformed JSON guard — exit 2 fail-loud; must precede all JSON assertions
 # ---------------------------------------------------------------------------
 if ! python3 - "$MANIFEST" <<'PYEOF' 2>/dev/null
 import json, sys
@@ -90,27 +113,37 @@ MANIFEST_CONTENT="$(cat "$MANIFEST")"
 # ---------------------------------------------------------------------------
 printf '=== A: baseline string permissions ===\n'
 
-check_string_permission() {
-  local perm="$1"
-  if printf '%s' "$MANIFEST_CONTENT" | python3 -c "
+# Batch all 4 string-permission checks into a single python3 invocation
+# (perf: avoids spawning 4 separate interpreter processes for 4 checks).
+A_RESULTS="$(printf '%s' "$MANIFEST_CONTENT" | python3 -c "
 import json, sys
 data = json.load(sys.stdin)
-perm = sys.argv[1]
-if perm in data.get('permissions', []):
-    sys.exit(0)
-else:
-    sys.exit(1)
-" "$perm" 2>/dev/null; then
-    pass "A: '$perm' present in permissions[]"
-  else
-    fail "A: '$perm' missing from permissions[]"
-  fi
-}
+perms = data.get('permissions', [])
+checks = ['core:default', 'dialog:default', 'clipboard-manager:default', 'notification:default']
+for c in checks:
+    if c in perms:
+        print('PASS:' + c)
+    else:
+        print('FAIL:' + c)
+" 2>/dev/null)"
 
-check_string_permission "core:default"
-check_string_permission "dialog:default"
-check_string_permission "clipboard-manager:default"
-check_string_permission "notification:default"
+while IFS= read -r line; do
+  case "$line" in
+    PASS:*)
+      perm="${line#PASS:}"
+      pass "A: '$perm' present in permissions[]"
+      ;;
+    FAIL:*)
+      perm="${line#FAIL:}"
+      fail "A: '$perm' missing from permissions[]"
+      ;;
+    *)
+      fail "A: unexpected python3 output: '$line'"
+      ;;
+  esac
+done <<EOF
+$A_RESULTS
+EOF
 
 # ---------------------------------------------------------------------------
 # B. shell:allow-execute object — skip if absent (T91 not yet merged)
@@ -215,9 +248,9 @@ case "$SHELL_ALLOW_RESULT" in
 esac
 
 # ---------------------------------------------------------------------------
-# C. fs:allow-append-file object — skip if absent (T91 not yet merged)
+# C. fs:allow-write-file object — skip if absent (T91 not yet merged)
 # ---------------------------------------------------------------------------
-printf '\n=== C: fs:allow-append-file permission object ===\n'
+printf '\n=== C: fs:allow-write-file permission object ===\n'
 
 FS_ALLOW_RESULT="$(printf '%s' "$MANIFEST_CONTENT" | python3 -c "
 import json, sys
@@ -225,10 +258,10 @@ import json, sys
 data = json.load(sys.stdin)
 perms = data.get('permissions', [])
 
-# Find the fs:allow-append-file object
+# Find the fs:allow-write-file object
 obj = None
 for p in perms:
-    if isinstance(p, dict) and p.get('identifier') == 'fs:allow-append-file':
+    if isinstance(p, dict) and p.get('identifier') == 'fs:allow-write-file':
         obj = p
         break
 
@@ -274,22 +307,22 @@ print('PASS')
 
 case "$FS_ALLOW_RESULT" in
   SKIP_NOT_FOUND)
-    skip "C: fs:allow-append-file object not present — T91 not yet merged; re-run post-wave"
+    skip "C: fs:allow-write-file object not present — T91 not yet merged; re-run post-wave"
     ;;
   PASS)
-    pass "C: fs:allow-append-file has 2 allow entries targeting audit.log and audit.log.1"
+    pass "C: fs:allow-write-file has 2 allow entries targeting audit.log and audit.log.1"
     ;;
   FAIL_ALLOW_COUNT:*)
     count="${FS_ALLOW_RESULT#FAIL_ALLOW_COUNT:}"
-    fail "C: fs:allow-append-file allow[] has $count entries — expected exactly 2"
+    fail "C: fs:allow-write-file allow[] has $count entries — expected exactly 2"
     ;;
   FAIL_MISSING_AUDIT_LOG:*)
     paths="${FS_ALLOW_RESULT#FAIL_MISSING_AUDIT_LOG:}"
-    fail "C: fs:allow-append-file missing audit.log target — found: $paths"
+    fail "C: fs:allow-write-file missing audit.log target — found: $paths"
     ;;
   FAIL_MISSING_AUDIT_LOG_1:*)
     paths="${FS_ALLOW_RESULT#FAIL_MISSING_AUDIT_LOG_1:}"
-    fail "C: fs:allow-append-file missing audit.log.1 target — found: $paths"
+    fail "C: fs:allow-write-file missing audit.log.1 target — found: $paths"
     ;;
   *)
     fail "C: unexpected python3 output: '$FS_ALLOW_RESULT'"
