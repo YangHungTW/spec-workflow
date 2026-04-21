@@ -6,15 +6,15 @@
 #            D4 (warning message names $cfg_source)
 #
 # Fixture:
-#   project-level .spec-workflow/config.yml → chat: fr  (INVALID — outside {zh-TW, en})
-#   user-home ~/.config/specflow/config.yml  → chat: zh-TW (VALID)
+#   project-level .specaffold/config.yml → chat: fr  (INVALID — outside {zh-TW, en})
+#   user-home ~/.config/scaff/config.yml  → chat: zh-TW (VALID)
 #
 # Assertions per AC4.a (reworded, verbatim anchor):
 #   1. Exit code 0  (AC4.b — session never blocked)
 #   2. Stdout has NO LANG_CHAT= substring at all
 #      (stop-on-first-hit: project held the key and was invalid → default-off;
 #       user's valid zh-TW is NOT consulted)
-#   3. Stderr has exactly ONE line mentioning .spec-workflow/config.yml
+#   3. Stderr has exactly ONE line mentioning .specaffold/config.yml
 #   4. That warning line also mentions the invalid value fr
 #   5. Stderr has NO mention of zh-TW (confirms user-home value was never read)
 #   6. Stderr has NO mention of the user-home path (confirms iteration stopped)
@@ -64,14 +64,14 @@ fi
 # ---------------------------------------------------------------------------
 CONSUMER="$SANDBOX/consumer"
 mkdir -p "$CONSUMER/.claude/rules/common"
-mkdir -p "$CONSUMER/.spec-workflow"
+mkdir -p "$CONSUMER/.specaffold"
 
 # Project-level: chat: fr (invalid — outside {zh-TW, en})
-printf 'lang:\n  chat: fr\n' > "$CONSUMER/.spec-workflow/config.yml"
+printf 'lang:\n  chat: fr\n' > "$CONSUMER/.specaffold/config.yml"
 
 # User-home: chat: zh-TW (valid — but must NOT be consulted; stop-on-first-hit)
-mkdir -p "$HOME/.config/specflow"
-printf 'lang:\n  chat: zh-TW\n' > "$HOME/.config/specflow/config.yml"
+mkdir -p "$HOME/.config/scaff"
+printf 'lang:\n  chat: zh-TW\n' > "$HOME/.config/scaff/config.yml"
 
 # Unset XDG so only project-level and tilde candidates are in play
 unset XDG_CONFIG_HOME
@@ -130,22 +130,22 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# Check 3: stderr must contain exactly one line mentioning .spec-workflow/config.yml
+# Check 3: stderr must contain exactly one line mentioning .specaffold/config.yml
 # The D7 log_warn format is:
-#   session-start.sh: WARN: .spec-workflow/config.yml: lang.chat has unknown value 'fr' — ignored
+#   session-start.sh: WARN: .specaffold/config.yml: lang.chat has unknown value 'fr' — ignored
 # grep -c counts matching lines; exactly 1 is required.
 # ---------------------------------------------------------------------------
-PROJ_WARN_COUNT=$(grep -c '\.spec-workflow/config\.yml' "$STDERR_FILE" 2>/dev/null || echo "0")
+PROJ_WARN_COUNT=$(grep -c '\.specaffold/config\.yml' "$STDERR_FILE" 2>/dev/null || echo "0")
 if [ "$PROJ_WARN_COUNT" -eq 1 ]; then
-  pass "Check 3: stderr has exactly 1 line mentioning .spec-workflow/config.yml (count: $PROJ_WARN_COUNT)"
+  pass "Check 3: stderr has exactly 1 line mentioning .specaffold/config.yml (count: $PROJ_WARN_COUNT)"
 else
-  fail "Check 3: .spec-workflow/config.yml mention count $PROJ_WARN_COUNT (expected 1) — stderr: $(cat "$STDERR_FILE")"
+  fail "Check 3: .specaffold/config.yml mention count $PROJ_WARN_COUNT (expected 1) — stderr: $(cat "$STDERR_FILE")"
 fi
 
 # ---------------------------------------------------------------------------
 # Check 4: that same warning line also mentions the invalid value fr
 # ---------------------------------------------------------------------------
-if grep '\.spec-workflow/config\.yml' "$STDERR_FILE" 2>/dev/null | grep -q "'fr'"; then
+if grep '\.specaffold/config\.yml' "$STDERR_FILE" 2>/dev/null | grep -q "'fr'"; then
   pass "Check 4: warning line mentions the invalid value 'fr'"
 else
   fail "Check 4: warning line does not mention 'fr' — stderr: $(cat "$STDERR_FILE")"
@@ -163,7 +163,7 @@ fi
 # ---------------------------------------------------------------------------
 # Check 6: stderr must NOT mention the user-home config path (iteration stopped)
 # ---------------------------------------------------------------------------
-if grep -q '\.config/specflow/config\.yml' "$STDERR_FILE" 2>/dev/null; then
+if grep -q '\.config/scaff/config\.yml' "$STDERR_FILE" 2>/dev/null; then
   fail "Check 6: stderr mentions user-home path (must not — iteration stopped at project)"
 else
   pass "Check 6: stderr has no mention of user-home path (stop-on-first-hit confirmed)"

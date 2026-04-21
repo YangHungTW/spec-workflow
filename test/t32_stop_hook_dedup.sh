@@ -49,7 +49,7 @@ esac
 # Seed a fake feature + git worktree (mirrors T4 fixture shape)
 # ---------------------------------------------------------------------------
 FEATURE_SLUG="20260418-fixture-dedup"
-FEATURE_DIR="$SANDBOX/repo/.spec-workflow/features/$FEATURE_SLUG"
+FEATURE_DIR="$SANDBOX/repo/.specaffold/features/$FEATURE_SLUG"
 SENTINEL="$FEATURE_DIR/.stop-hook-last-epoch"
 
 mkdir -p "$FEATURE_DIR"

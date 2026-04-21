@@ -3,10 +3,10 @@
 #
 # Structural tests for T20: tier-aware stage skip in next.md.
 #
-# Verifies that .claude/commands/specflow/next.md contains the required
+# Verifies that .claude/commands/scaff/next.md contains the required
 # tier-aware dispatch constructs per tech §2.2 Flow B and T20 acceptance
 # criteria:
-#   1. `bin/specflow-tier` is sourced near the top.
+#   1. `bin/scaff-tier` is sourced near the top.
 #   2. `tier_skips_stage` is called before stage dispatch.
 #   3. `get_tier` is called to read the feature's tier.
 #   4. `missing` state is handled (treated as standard).
@@ -20,7 +20,7 @@ set -u -o pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd -P)"
-NEXT_MD="$REPO_ROOT/.claude/commands/specflow/next.md"
+NEXT_MD="$REPO_ROOT/.claude/commands/scaff/next.md"
 
 PASS=0
 FAIL=0
@@ -33,11 +33,11 @@ if [ ! -f "$NEXT_MD" ]; then
   exit 1
 fi
 
-# 1. bin/specflow-tier is sourced
-if grep -q 'specflow-tier' "$NEXT_MD"; then
-  pass "next.md sources specflow-tier"
+# 1. bin/scaff-tier is sourced
+if grep -q 'scaff-tier' "$NEXT_MD"; then
+  pass "next.md sources scaff-tier"
 else
-  fail "next.md does not source specflow-tier"
+  fail "next.md does not source scaff-tier"
 fi
 
 # 2. tier_skips_stage is called

@@ -2,7 +2,7 @@
 # test/t60_lint_request_quote_allowlist.sh
 #
 # Integration test for D6 allowlist surface 1: path-based allowlist for
-# .spec-workflow/features/**/00-request.md files.
+# .specaffold/features/**/00-request.md files.
 #
 # Case A: zh-TW inside the **Raw ask**: block → exit 0 + allowlisted:…:request-quote
 # Case B: zh-TW outside the allowlist block (in ## Normalised intent) → exit 1 + cjk-hit:
@@ -11,7 +11,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-LINT="${LINT:-$REPO_ROOT/bin/specflow-lint}"
+LINT="${LINT:-$REPO_ROOT/bin/scaff-lint}"
 
 # ---------------------------------------------------------------------------
 # Sandbox + HOME isolation (sandbox-home-in-tests.md — mandatory)
@@ -41,7 +41,7 @@ fi
 # Preflight: lint CLI must exist and be executable
 # ---------------------------------------------------------------------------
 if [ ! -x "$LINT" ]; then
-  echo "FAIL: setup: bin/specflow-lint not found or not executable: $LINT" >&2
+  echo "FAIL: setup: bin/scaff-lint not found or not executable: $LINT" >&2
   exit 1
 fi
 
@@ -66,7 +66,7 @@ FAILS=0
 # ===========================================================================
 CONSUMER="$(init_consumer)"
 
-FIXTURE_DIR="$CONSUMER/.spec-workflow/features/fixture"
+FIXTURE_DIR="$CONSUMER/.specaffold/features/fixture"
 mkdir -p "$FIXTURE_DIR"
 FIXTURE="$FIXTURE_DIR/00-request.md"
 
@@ -82,7 +82,7 @@ cat > "$FIXTURE" <<'EOF'
 English-only body here.
 EOF
 
-git -C "$CONSUMER" add ".spec-workflow/features/fixture/00-request.md"
+git -C "$CONSUMER" add ".specaffold/features/fixture/00-request.md"
 
 STDOUT_A="$SANDBOX/stdout_a.txt"
 STDERR_A="$SANDBOX/stderr_a.txt"
@@ -122,7 +122,7 @@ fi
 # ===========================================================================
 CONSUMER="$(init_consumer)"
 
-FIXTURE_DIR_B="$CONSUMER/.spec-workflow/features/fixture"
+FIXTURE_DIR_B="$CONSUMER/.specaffold/features/fixture"
 mkdir -p "$FIXTURE_DIR_B"
 FIXTURE_B="$FIXTURE_DIR_B/00-request.md"
 
@@ -137,7 +137,7 @@ English-only raw ask content.
 這是中文內容在非允許區塊中。
 EOF
 
-git -C "$CONSUMER" add ".spec-workflow/features/fixture/00-request.md"
+git -C "$CONSUMER" add ".specaffold/features/fixture/00-request.md"
 
 STDOUT_B="$SANDBOX/stdout_b.txt"
 STDERR_B="$SANDBOX/stderr_b.txt"

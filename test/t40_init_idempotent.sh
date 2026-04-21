@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # test/t40_init_idempotent.sh — AC2.b: second init at same ref must be byte-identical
 #
-# Verifies PRD AC2.b: running specflow-seed init a SECOND time on an already-
+# Verifies PRD AC2.b: running scaff-seed init a SECOND time on an already-
 # initialised consumer at the same ref leaves every file in an "already" state,
 # reports skipped=0, and produces a byte-identical filesystem hash before/after.
 #
@@ -9,15 +9,15 @@
 set -euo pipefail
 
 # ---------------------------------------------------------------------------
-# Locate bin/specflow-seed relative to this script — never hardcode the path
+# Locate bin/scaff-seed relative to this script — never hardcode the path
 # so the test survives worktree moves and CI checkouts.
 # ---------------------------------------------------------------------------
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-SEED="${SEED:-$REPO_ROOT/bin/specflow-seed}"
+SEED="${SEED:-$REPO_ROOT/bin/scaff-seed}"
 
 if [ ! -x "$SEED" ]; then
-  echo "FAIL: setup: specflow-seed not found or not executable: $SEED" >&2
+  echo "FAIL: setup: scaff-seed not found or not executable: $SEED" >&2
   exit 1
 fi
 
@@ -50,14 +50,14 @@ SRC_REF="$(git -C "$REPO_ROOT" rev-parse HEAD)"
 
 # ---------------------------------------------------------------------------
 # Build a minimal consumer repo — needs at least one commit so git commands
-# inside specflow-seed (git rev-parse --show-toplevel) resolve cleanly.
+# inside scaff-seed (git rev-parse --show-toplevel) resolve cleanly.
 # ---------------------------------------------------------------------------
 CONSUMER="$SANDBOX/consumer"
 mkdir -p "$CONSUMER"
 git -C "$CONSUMER" init -q
 git -C "$CONSUMER" config user.email "t@example.com"
 git -C "$CONSUMER" config user.name "t"
-printf '.specflow-seed-ignore\n' > "$CONSUMER/.gitignore"
+printf '.scaff-seed-ignore\n' > "$CONSUMER/.gitignore"
 git -C "$CONSUMER" add .gitignore
 git -C "$CONSUMER" commit -q -m "init"
 

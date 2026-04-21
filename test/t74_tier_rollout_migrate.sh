@@ -11,7 +11,7 @@
 #      line is byte-identical.
 #   3. Idempotent re-run — second invocation is a no-op; backup is unchanged;
 #      stdout contains "skipped: already migrated".
-#   4. Archived feature dir (under .spec-workflow/archive/) is NOT touched.
+#   4. Archived feature dir (under .specaffold/archive/) is NOT touched.
 #   5. Sandbox-HOME discipline per .claude/rules/bash/sandbox-home-in-tests.md.
 #
 # RED until scripts/tier-rollout-migrate.sh (T4) is merged.
@@ -63,18 +63,18 @@ fail() {
 }
 
 # ---------------------------------------------------------------------------
-# Build fixture .spec-workflow tree inside the sandbox.
+# Build fixture .specaffold tree inside the sandbox.
 #
 # Structure:
-#   $HOME/.spec-workflow/features/test-feature-A/STATUS.md   (no tier: field)
-#   $HOME/.spec-workflow/features/test-feature-B/STATUS.md   (already has tier:)
-#   $HOME/.spec-workflow/archive/old-feature/STATUS.md       (archived — must NOT be touched)
+#   $HOME/.specaffold/features/test-feature-A/STATUS.md   (no tier: field)
+#   $HOME/.specaffold/features/test-feature-B/STATUS.md   (already has tier:)
+#   $HOME/.specaffold/archive/old-feature/STATUS.md       (archived — must NOT be touched)
 #
-# The migration script must walk .spec-workflow/features/ only; it must not
-# walk .spec-workflow/archive/.
+# The migration script must walk .specaffold/features/ only; it must not
+# walk .specaffold/archive/.
 # ---------------------------------------------------------------------------
-FEATURES="$HOME/.spec-workflow/features"
-ARCHIVE="$HOME/.spec-workflow/archive"
+FEATURES="$HOME/.specaffold/features"
+ARCHIVE="$HOME/.specaffold/archive"
 mkdir -p "$FEATURES/test-feature-A"
 mkdir -p "$FEATURES/test-feature-B"
 mkdir -p "$ARCHIVE/old-feature"

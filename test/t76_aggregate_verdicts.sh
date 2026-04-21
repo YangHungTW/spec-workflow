@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # test/t76_aggregate_verdicts.sh
 #
-# Unit tests for bin/specflow-aggregate-verdicts (T7).
+# Unit tests for bin/scaff-aggregate-verdicts (T7).
 #
 # Coverage per tech §4.4 and T8 spec:
 #   1. Three-axis review case: PASS/PASS/PASS → PASS;
@@ -20,7 +20,7 @@
 # Bash 3.2 / BSD portable: no readlink -f, realpath, jq, mapfile, [[ =~ ]].
 #
 # Behaviour while T7 is absent (parallel authoring):
-#   Tests are RED until T7 merges.  If bin/specflow-aggregate-verdicts is
+#   Tests are RED until T7 merges.  If bin/scaff-aggregate-verdicts is
 #   absent the script emits a SKIP notice and exits 0 so CI stays green
 #   before the wave merge.
 
@@ -32,7 +32,7 @@ set -u -o pipefail
 # ---------------------------------------------------------------------------
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd -P)"
-AGG="${AGG:-$REPO_ROOT/bin/specflow-aggregate-verdicts}"
+AGG="${AGG:-$REPO_ROOT/bin/scaff-aggregate-verdicts}"
 
 # ---------------------------------------------------------------------------
 # Sandbox — HOME isolation (sandbox-home-in-tests.md)

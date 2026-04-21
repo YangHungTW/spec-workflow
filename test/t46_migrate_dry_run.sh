@@ -2,7 +2,7 @@
 # test/t46_migrate_dry_run.sh
 #
 # Verifies R6 AC6.a + R9 AC9.c:
-#   `specflow-seed migrate --dry-run` must be byte-identical across all three
+#   `scaff-seed migrate --dry-run` must be byte-identical across all three
 #   roots (consumer, $HOME/.claude/, source repo) — no mutation anywhere.
 #   Output must contain at least one `would-create` line (non-empty plan).
 #   Exit code must be 0.
@@ -11,15 +11,15 @@
 set -euo pipefail
 
 # ---------------------------------------------------------------------------
-# Locate bin/specflow-seed relative to this script — never hardcode the path
+# Locate bin/scaff-seed relative to this script — never hardcode the path
 # so the test survives worktree moves and CI checkouts.
 # ---------------------------------------------------------------------------
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-SEED="${SEED:-$REPO_ROOT/bin/specflow-seed}"
+SEED="${SEED:-$REPO_ROOT/bin/scaff-seed}"
 
 if [ ! -x "$SEED" ]; then
-  echo "FAIL: setup: specflow-seed not found or not executable: $SEED" >&2
+  echo "FAIL: setup: scaff-seed not found or not executable: $SEED" >&2
   exit 1
 fi
 
@@ -60,8 +60,8 @@ mkdir -p "$HOME/.claude/agents" \
 # for some platforms when resolving, but we create unconditionally — the test
 # later uses `ls -lR` (not shasum) to hash symlink-target strings, so dangling
 # is acceptable here for the dry-run invariant.
-ln -s "$REPO_ROOT/.claude/agents/specflow"         "$HOME/.claude/agents/specflow"
-ln -s "$REPO_ROOT/.claude/commands/specflow"        "$HOME/.claude/commands/specflow"
+ln -s "$REPO_ROOT/.claude/agents/scaff"         "$HOME/.claude/agents/scaff"
+ln -s "$REPO_ROOT/.claude/commands/scaff"        "$HOME/.claude/commands/scaff"
 
 # hooks and team-memory are dirs in the source repo; link them directly
 if [ -d "$REPO_ROOT/.claude/hooks" ]; then

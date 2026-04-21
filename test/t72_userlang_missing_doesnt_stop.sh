@@ -47,7 +47,7 @@ fi
 
 # ---------------------------------------------------------------------------
 # Fixture — XDG unset so candidate 2 is skipped by the env gate.
-# No .spec-workflow/config.yml (candidate 1 absent).
+# No .specaffold/config.yml (candidate 1 absent).
 # Tilde fallback (candidate 3) present with lang.chat: zh-TW.
 # Iteration must walk past 2 absent paths and find the third.
 # ---------------------------------------------------------------------------
@@ -83,8 +83,8 @@ No-op.
 RULE
 
 # Tilde fallback — the only candidate file present
-mkdir -p "$HOME/.config/specflow"
-printf 'lang:\n  chat: zh-TW\n' > "$HOME/.config/specflow/config.yml"
+mkdir -p "$HOME/.config/scaff"
+printf 'lang:\n  chat: zh-TW\n' > "$HOME/.config/scaff/config.yml"
 
 # ---------------------------------------------------------------------------
 # Invoke hook from consumer cwd; capture stdout and stderr separately.

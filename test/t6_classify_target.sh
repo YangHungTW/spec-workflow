@@ -9,7 +9,7 @@
 
 set -u -o pipefail
 
-WORKTREE="/Users/yanghungtw/Tools/spec-workflow/.worktrees/symlink-operation-T10"
+WORKTREE="/Users/yanghungtw/Tools/specaffold/.worktrees/symlink-operation-T10"
 SCRIPT="$WORKTREE/bin/claude-symlink"
 REPO="$WORKTREE"
 PASS=0
@@ -70,9 +70,9 @@ assert_classify() {
 
 # We need a real source path inside REPO/.claude/ for "ours" tests.
 # Use a real file/dir that exists (team-memory is walked by plan_links, so it exists).
-OUR_SRC="$REPO/.claude/agents/specflow"
+OUR_SRC="$REPO/.claude/agents/scaff"
 # An expected_src that is ours but different from what the link actually points to
-OUR_ALT_SRC="$REPO/.claude/commands/specflow"
+OUR_ALT_SRC="$REPO/.claude/commands/scaff"
 # A foreign source (not inside this repo's .claude/)
 FOREIGN_SRC="/tmp/foreign-target-$$"
 

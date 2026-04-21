@@ -3,7 +3,7 @@
 #
 # Verifies:
 #   1. README.md contains the section heading "## Language preferences" (exact match).
-#   2. That section mentions .spec-workflow/config.yml.
+#   2. That section mentions .specaffold/config.yml.
 #   3. That section mentions lang.chat.
 #   4. That section mentions zh-TW.
 #   5. That section contains a YAML block matching the D9 schema shape
@@ -53,10 +53,10 @@ if ! grep -qF '## Language preferences' "$README"; then
 fi
 
 # ---------------------------------------------------------------------------
-# Check 2: section mentions .spec-workflow/config.yml
+# Check 2: section mentions .specaffold/config.yml
 # ---------------------------------------------------------------------------
-if ! grep -qF '.spec-workflow/config.yml' "$README"; then
-  echo "FAIL: README.md missing '.spec-workflow/config.yml' in Language preferences section" >&2
+if ! grep -qF '.specaffold/config.yml' "$README"; then
+  echo "FAIL: README.md missing '.specaffold/config.yml' in Language preferences section" >&2
   exit 1
 fi
 

@@ -58,9 +58,9 @@ fi
 # ---------------------------------------------------------------------------
 CONSUMER="$SANDBOX/consumer"
 mkdir -p "$CONSUMER/.claude/rules/common"
-mkdir -p "$CONSUMER/.spec-workflow"
+mkdir -p "$CONSUMER/.specaffold"
 
-cat > "$CONSUMER/.spec-workflow/config.yml" <<'YAML'
+cat > "$CONSUMER/.specaffold/config.yml" <<'YAML'
 lang:
   chat: fr
 YAML

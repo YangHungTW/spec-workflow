@@ -9,7 +9,7 @@
 # a clear error, not a silent read/write outside the repo boundary.
 #
 # Requirements: security/path-traversal rule (reviewer/security.md check 2).
-# Depends on: T2 (bin/specflow-tier).
+# Depends on: T2 (bin/scaff-tier).
 
 set -u -o pipefail
 
@@ -18,7 +18,7 @@ set -u -o pipefail
 # ---------------------------------------------------------------------------
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd -P)"
-TIER_LIB="$REPO_ROOT/bin/specflow-tier"
+TIER_LIB="$REPO_ROOT/bin/scaff-tier"
 
 # ---------------------------------------------------------------------------
 # Sandbox — HOME isolation (mandatory per sandbox-home-in-tests rule).
@@ -48,7 +48,7 @@ fail() { echo "FAIL: $1" >&2; FAIL=$((FAIL + 1)); }
 # Sanity: library must exist and be parseable
 # ---------------------------------------------------------------------------
 if [ ! -f "$TIER_LIB" ]; then
-  echo "FAIL: bin/specflow-tier not found: $TIER_LIB" >&2
+  echo "FAIL: bin/scaff-tier not found: $TIER_LIB" >&2
   exit 1
 fi
 
@@ -106,9 +106,9 @@ _LAST_STDERR=""
 # ---------------------------------------------------------------------------
 # Setup: a valid feature dir INSIDE REPO_ROOT
 # ---------------------------------------------------------------------------
-VALID_FEATURE="$REPO_ROOT/.spec-workflow/features/_t74_test_fixture"
+VALID_FEATURE="$REPO_ROOT/.specaffold/features/_t74_test_fixture"
 make_status_md "$VALID_FEATURE" "tiny"
-trap 'rm -rf "$SANDBOX" "$REPO_ROOT/.spec-workflow/features/_t74_test_fixture"' EXIT
+trap 'rm -rf "$SANDBOX" "$REPO_ROOT/.specaffold/features/_t74_test_fixture"' EXIT
 
 # ---------------------------------------------------------------------------
 # Check 1: get_tier succeeds for a path inside REPO_ROOT
@@ -202,9 +202,9 @@ fi
 # Check 6: set_tier succeeds for a valid inside-REPO_ROOT path
 # (regression guard — the fix must not break the happy path)
 # ---------------------------------------------------------------------------
-VALID_SET_DIR="$REPO_ROOT/.spec-workflow/features/_t74_set_test"
+VALID_SET_DIR="$REPO_ROOT/.specaffold/features/_t74_set_test"
 make_status_md "$VALID_SET_DIR" "tiny"
-trap 'rm -rf "$SANDBOX" "$REPO_ROOT/.spec-workflow/features/_t74_test_fixture" "$REPO_ROOT/.spec-workflow/features/_t74_set_test"' EXIT
+trap 'rm -rf "$SANDBOX" "$REPO_ROOT/.specaffold/features/_t74_test_fixture" "$REPO_ROOT/.specaffold/features/_t74_set_test"' EXIT
 
 stderr_file6="$SANDBOX/check6_err.txt"
 SPECFLOW_TIER_LOADED=0 REPO_ROOT="$REPO_ROOT" bash -c \

@@ -49,11 +49,11 @@ line_how=$(grep -n "^## How to apply$" "$RULE" | awk -F: '{print $1}' | head -1)
 
 # ---------------------------------------------------------------------------
 # 5. Self-lint: body is English-only (no CJK hits)
-#    bin/specflow-lint scan-paths exits 0 on a clean file
+#    bin/scaff-lint scan-paths exits 0 on a clean file
 # ---------------------------------------------------------------------------
-LINT="$REPO_ROOT/bin/specflow-lint"
-[ -x "$LINT" ] || fail "self-lint: bin/specflow-lint not executable or missing"
-"$LINT" scan-paths "$RULE" >/dev/null || fail "self-lint: bin/specflow-lint scan-paths returned non-zero (CJK hit in rule body)"
+LINT="$REPO_ROOT/bin/scaff-lint"
+[ -x "$LINT" ] || fail "self-lint: bin/scaff-lint not executable or missing"
+"$LINT" scan-paths "$RULE" >/dev/null || fail "self-lint: bin/scaff-lint scan-paths returned non-zero (CJK hit in rule body)"
 
 # ---------------------------------------------------------------------------
 # 6. Conditional documentation: LANG_CHAT=zh-TW and a no-op/otherwise phrase

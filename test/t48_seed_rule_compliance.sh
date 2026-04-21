@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # test/t48_seed_rule_compliance.sh — static portability + no-force compliance check
-# for bin/specflow-seed and .claude/skills/specflow-init/
+# for bin/scaff-seed and .claude/skills/scaff-init/
 #
 # STATIC test: pure grep + bash -n, no CLI invocation, no HOME mutation.
 # sandbox-HOME preamble is intentionally omitted — the rule targets tests
@@ -18,12 +18,12 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd -P)"
 
-SEED="$REPO_ROOT/bin/specflow-seed"
-SKILL_DIR="$REPO_ROOT/.claude/skills/specflow-init"
+SEED="$REPO_ROOT/bin/scaff-seed"
+SKILL_DIR="$REPO_ROOT/.claude/skills/scaff-init"
 SKILL_INIT="$SKILL_DIR/init.sh"
 
 # ---------------------------------------------------------------------------
-# Check 1: prohibited-token grep across specflow-seed + skill dir (if present)
+# Check 1: prohibited-token grep across scaff-seed + skill dir (if present)
 #
 # Pattern rationale:
 #   readlink -f / realpath — GNU-only (bash-32-portability.md)
@@ -51,10 +51,10 @@ if [ -n "$HITS" ]; then
 fi
 
 # ---------------------------------------------------------------------------
-# Check 2: bash -n syntax check on specflow-seed
+# Check 2: bash -n syntax check on scaff-seed
 # ---------------------------------------------------------------------------
 if ! bash -n "$SEED" 2>/tmp/t48_bash_n_seed.err; then
-  echo "FAIL: bash -n failed on bin/specflow-seed:" >&2
+  echo "FAIL: bash -n failed on bin/scaff-seed:" >&2
   cat /tmp/t48_bash_n_seed.err >&2
   exit 1
 fi
@@ -64,21 +64,21 @@ fi
 # ---------------------------------------------------------------------------
 if [ -f "$SKILL_INIT" ]; then
   if ! bash -n "$SKILL_INIT" 2>/tmp/t48_bash_n_init.err; then
-    echo "FAIL: bash -n failed on .claude/skills/specflow-init/init.sh:" >&2
+    echo "FAIL: bash -n failed on .claude/skills/scaff-init/init.sh:" >&2
     cat /tmp/t48_bash_n_init.err >&2
     exit 1
   fi
 fi
 
 # ---------------------------------------------------------------------------
-# Check 4: strict-mode marker — specflow-seed must contain 'set -u'
+# Check 4: strict-mode marker — scaff-seed must contain 'set -u'
 #
 # set -u prevents unbound variable expansion bugs; verifying its presence
 # enforces the strict-mode convention across all repo-shipped scripts.
 # ---------------------------------------------------------------------------
 STRICT_COUNT="$(grep -c 'set -u' "$SEED" || true)"
 if [ "$STRICT_COUNT" -lt 1 ]; then
-  echo "FAIL: strict-mode: 'set -u' not found in bin/specflow-seed" >&2
+  echo "FAIL: strict-mode: 'set -u' not found in bin/scaff-seed" >&2
   exit 1
 fi
 

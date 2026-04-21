@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# test/t39_init_fresh_sandbox.sh — smoke test for `specflow-seed init` on a fresh consumer repo.
+# test/t39_init_fresh_sandbox.sh — smoke test for `scaff-seed init` on a fresh consumer repo.
 # Verifies: AC1.a (files are regular + byte-match source), AC1.c (no symlinks under .claude/),
 # AC2.a (self-contained install, manifest present, settings.json wired with consumer-local hooks),
 # AC4.a (team-memory skeleton: role dirs with index.md only), AC5.a (rules byte-identical),
@@ -13,14 +13,14 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd -P)"
 SPECFLOW_SRC="${SPECFLOW_SRC:-$REPO_ROOT}"
-SEED="${SEED:-$SPECFLOW_SRC/bin/specflow-seed}"
+SEED="${SEED:-$SPECFLOW_SRC/bin/scaff-seed}"
 
 # ---------------------------------------------------------------------------
 # Sandbox + HOME isolation (sandbox-home-in-tests.md — non-negotiable)
 # Capture real HOME before sandboxing so asdf .tool-versions can be copied in.
 # ---------------------------------------------------------------------------
 _REAL_HOME="$HOME"
-SANDBOX="$(mktemp -d 2>/dev/null || mktemp -d -t specflow-t39)"
+SANDBOX="$(mktemp -d 2>/dev/null || mktemp -d -t scaff-t39)"
 trap 'rm -rf "$SANDBOX"' EXIT
 
 export HOME="$SANDBOX/home"
@@ -68,10 +68,10 @@ fail() {
 }
 
 # ---------------------------------------------------------------------------
-# AC1.a — every managed file under agents/specflow, commands/specflow, hooks
+# AC1.a — every managed file under agents/scaff, commands/scaff, hooks
 #          is a regular file (not a symlink) whose bytes match the source.
 # ---------------------------------------------------------------------------
-for subdir in ".claude/agents/specflow" ".claude/commands/specflow" ".claude/hooks"; do
+for subdir in ".claude/agents/scaff" ".claude/commands/scaff" ".claude/hooks"; do
   src_dir="$SPECFLOW_SRC/$subdir"
   dst_dir="$CONSUMER/$subdir"
   [ -d "$src_dir" ] || continue
@@ -96,7 +96,7 @@ symlink_count="$(find "$CONSUMER/.claude" -type l | wc -l | tr -d ' ')"
 # AC2.a — key directories populated; manifest present; settings.json wired
 #          with consumer-local hook paths (not ~/.claude/hooks/…)
 # ---------------------------------------------------------------------------
-for subdir in ".claude/agents/specflow" ".claude/commands/specflow" ".claude/hooks" ".claude/rules" ".spec-workflow/features/_template"; do
+for subdir in ".claude/agents/scaff" ".claude/commands/scaff" ".claude/hooks" ".claude/rules" ".specaffold/features/_template"; do
   dir_count="$(find "$CONSUMER/$subdir" -mindepth 1 -maxdepth 1 | wc -l | tr -d ' ')"
   [ "$dir_count" -gt 0 ] || fail "AC2.a" "$subdir is empty or missing"
 done

@@ -22,7 +22,7 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd -P)"
 # ---------------------------------------------------------------------------
 # Sandbox / HOME preflight (template discipline)
 # ---------------------------------------------------------------------------
-SANDBOX="$(mktemp -d 2>/dev/null || mktemp -d -t specflow-t15)"
+SANDBOX="$(mktemp -d 2>/dev/null || mktemp -d -t scaff-t15)"
 trap 'rm -rf "$SANDBOX"' EXIT
 
 export HOME="$SANDBOX/home"

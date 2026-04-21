@@ -46,8 +46,8 @@ if [ ! -x "$HOOK" ]; then
 fi
 
 # ---------------------------------------------------------------------------
-# Build a minimal consumer repo — NO .spec-workflow/config.yml
-# No $XDG_CONFIG_HOME set, no ~/.config/specflow/config.yml.
+# Build a minimal consumer repo — NO .specaffold/config.yml
+# No $XDG_CONFIG_HOME set, no ~/.config/scaff/config.yml.
 # All three candidates from D1 are absent — this is the all-absent baseline.
 # A minimal .claude/rules/common/ stub keeps the hook running past the early-
 # exit guard so the config-walk section is genuinely exercised.
@@ -82,7 +82,7 @@ RULE
 
 # ---------------------------------------------------------------------------
 # Invoke hook from consumer cwd; capture stdout and stderr separately.
-# No .spec-workflow/config.yml, no XDG path, no ~/.config/specflow/config.yml.
+# No .specaffold/config.yml, no XDG path, no ~/.config/scaff/config.yml.
 # All three candidates from the D1 ordered list are absent.
 # ---------------------------------------------------------------------------
 STDERR_FILE="$SANDBOX/stderr.txt"

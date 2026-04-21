@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # test/t58_lint_clean_diff.sh — integration test: clean ASCII diff passes scan-staged
 #
-# Stages ASCII-only files across .claude/**, .spec-workflow/features/**, and bin/**
-# inside a sandbox git repo, then runs bin/specflow-lint scan-staged.
+# Stages ASCII-only files across .claude/**, .specaffold/features/**, and bin/**
+# inside a sandbox git repo, then runs bin/scaff-lint scan-staged.
 #
 # Assertions (AC5.b, D6 ok-path):
 #   1. Exit code 0.
@@ -16,7 +16,7 @@ set -u -o pipefail
 # ---------------------------------------------------------------------------
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-LINT="$REPO_ROOT/bin/specflow-lint"
+LINT="$REPO_ROOT/bin/scaff-lint"
 
 PASS=0
 FAIL=0
@@ -28,7 +28,7 @@ fail() { echo "FAIL: $1" >&2; FAIL=$((FAIL + 1)); }
 # Preflight: lint binary must exist and be executable.
 # ---------------------------------------------------------------------------
 if [ ! -x "$LINT" ]; then
-  echo "FAIL: setup: bin/specflow-lint not found or not executable: $LINT" >&2
+  echo "FAIL: setup: bin/scaff-lint not found or not executable: $LINT" >&2
   exit 1
 fi
 
@@ -37,7 +37,7 @@ fi
 # asdf/pyenv shims consult $HOME for version selection; sandboxing HOME would
 # make the shim unable to resolve the runtime. Ask python3 itself for its
 # executable path (sys.executable), then prepend that directory to PATH so
-# specflow-lint can spawn python3 inside the sandboxed environment.
+# scaff-lint can spawn python3 inside the sandboxed environment.
 # ---------------------------------------------------------------------------
 PYTHON3_REAL="$(python3 -c 'import sys; print(sys.executable)' 2>/dev/null || true)"
 if [ -n "$PYTHON3_REAL" ]; then
@@ -62,7 +62,7 @@ esac
 
 # ---------------------------------------------------------------------------
 # Build a minimal sandbox git consumer repo.
-# All git operations happen inside this consumer so specflow-lint's
+# All git operations happen inside this consumer so scaff-lint's
 # git rev-parse resolves the consumer, not the source repo
 # (consumer-cwd-discipline memory).
 # ---------------------------------------------------------------------------
@@ -77,25 +77,25 @@ mkdir -p "$CONSUMER"
 
   # Create ASCII-only fixture files across the three required path namespaces.
   mkdir -p ".claude/rules/common"
-  mkdir -p ".spec-workflow/features/my-feature"
+  mkdir -p ".specaffold/features/my-feature"
   mkdir -p "bin"
 
   printf 'ascii-only rules content\n' > ".claude/rules/common/example.md"
-  printf 'feature spec content\n'     > ".spec-workflow/features/my-feature/01-brainstorm.md"
+  printf 'feature spec content\n'     > ".specaffold/features/my-feature/01-brainstorm.md"
   printf '#!/usr/bin/env bash\necho hello\n' > "bin/helper.sh"
 
   git add ".claude/rules/common/example.md" \
-          ".spec-workflow/features/my-feature/01-brainstorm.md" \
+          ".specaffold/features/my-feature/01-brainstorm.md" \
           "bin/helper.sh"
 )
 
 # ---------------------------------------------------------------------------
-# Run specflow-lint scan-staged from inside the consumer repo so that
+# Run scaff-lint scan-staged from inside the consumer repo so that
 # git rev-parse --show-toplevel resolves to $CONSUMER.
 # ---------------------------------------------------------------------------
 STAGED_FILES=(
   ".claude/rules/common/example.md"
-  ".spec-workflow/features/my-feature/01-brainstorm.md"
+  ".specaffold/features/my-feature/01-brainstorm.md"
   "bin/helper.sh"
 )
 

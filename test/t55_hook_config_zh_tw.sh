@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # test/t55_hook_config_zh_tw.sh — hook emits LANG_CHAT=zh-TW when config opts in
-# Creates a sandbox consumer repo with .spec-workflow/config.yml (lang.chat: zh-TW).
+# Creates a sandbox consumer repo with .specaffold/config.yml (lang.chat: zh-TW).
 # Asserts: stdout contains LANG_CHAT=zh-TW; stderr empty; exit 0.
 
 set -u
@@ -48,7 +48,7 @@ fi
 # and a minimal .claude/rules/common/ so the hook passes its early-exit guard.
 # ---------------------------------------------------------------------------
 CONSUMER="$SANDBOX/consumer"
-mkdir -p "$CONSUMER/.spec-workflow"
+mkdir -p "$CONSUMER/.specaffold"
 mkdir -p "$CONSUMER/.claude/rules/common"
 
 # Minimal valid rule so the hook does not exit early (rules dir must exist)
@@ -75,7 +75,7 @@ No-op.
 RULE
 
 # Exact D9 schema — two-space indent under lang:, no quoting, no inline comment
-cat > "$CONSUMER/.spec-workflow/config.yml" <<'CONFIG'
+cat > "$CONSUMER/.specaffold/config.yml" <<'CONFIG'
 lang:
   chat: zh-TW
 CONFIG

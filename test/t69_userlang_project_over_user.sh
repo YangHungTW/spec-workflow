@@ -46,18 +46,18 @@ fi
 # ---------------------------------------------------------------------------
 # Set up user-home config: lang.chat = en
 # ---------------------------------------------------------------------------
-mkdir -p "$HOME/.config/specflow"
-printf 'lang:\n  chat: en\n' > "$HOME/.config/specflow/config.yml"
+mkdir -p "$HOME/.config/scaff"
+printf 'lang:\n  chat: en\n' > "$HOME/.config/scaff/config.yml"
 
 # ---------------------------------------------------------------------------
-# Set up project repo with .spec-workflow/config.yml: lang.chat = zh-TW
+# Set up project repo with .specaffold/config.yml: lang.chat = zh-TW
 # and a minimal .claude/rules/common/ so the hook body is fully exercised.
 # ---------------------------------------------------------------------------
 REPO="$SANDBOX/repo"
-mkdir -p "$REPO/.spec-workflow"
+mkdir -p "$REPO/.specaffold"
 mkdir -p "$REPO/.claude/rules/common"
 
-printf 'lang:\n  chat: zh-TW\n' > "$REPO/.spec-workflow/config.yml"
+printf 'lang:\n  chat: zh-TW\n' > "$REPO/.specaffold/config.yml"
 
 # Stub rule so the hook has a valid rules dir to digest
 cat > "$REPO/.claude/rules/common/stub-rule.md" <<'RULE'

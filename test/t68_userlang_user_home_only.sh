@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # test/t68_userlang_user_home_only.sh — hook emits LANG_CHAT=zh-TW from user-home fallback
 # R1 AC1.b; R4 AC4.b
-# Fixture: no project-level .spec-workflow/config.yml; XDG_CONFIG_HOME unset;
-# $HOME/.config/specflow/config.yml contains lang.chat: zh-TW.
+# Fixture: no project-level .specaffold/config.yml; XDG_CONFIG_HOME unset;
+# $HOME/.config/scaff/config.yml contains lang.chat: zh-TW.
 # Assert: stdout contains LANG_CHAT=zh-TW; stderr empty; exit 0.
 
 set -u
@@ -46,7 +46,7 @@ if [ ! -x "$HOOK" ]; then
 fi
 
 # ---------------------------------------------------------------------------
-# Set up consumer repo — no .spec-workflow/config.yml (project-level absent)
+# Set up consumer repo — no .specaffold/config.yml (project-level absent)
 # Minimal .claude/rules/common/ so the hook reaches the config-sniff block.
 # ---------------------------------------------------------------------------
 CONSUMER="$SANDBOX/consumer"
@@ -77,17 +77,17 @@ No-op.
 RULE
 
 # ---------------------------------------------------------------------------
-# Set up user-home fallback config: $HOME/.config/specflow/config.yml
+# Set up user-home fallback config: $HOME/.config/scaff/config.yml
 # Two-space indent under lang:, LF endings (printf — no trailing noise).
 # ---------------------------------------------------------------------------
-mkdir -p "$HOME/.config/specflow"
-printf 'lang:\n  chat: zh-TW\n' > "$HOME/.config/specflow/config.yml"
+mkdir -p "$HOME/.config/scaff"
+printf 'lang:\n  chat: zh-TW\n' > "$HOME/.config/scaff/config.yml"
 
 # XDG_CONFIG_HOME must be unset so only the tilde-fallback candidate fires.
 unset XDG_CONFIG_HOME
 
 # ---------------------------------------------------------------------------
-# Invoke hook from consumer cwd (no .spec-workflow/config.yml present).
+# Invoke hook from consumer cwd (no .specaffold/config.yml present).
 # Capture stdout and stderr separately.
 # ---------------------------------------------------------------------------
 STDERR_LOG="$SANDBOX/stderr.log"
