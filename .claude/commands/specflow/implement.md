@@ -159,7 +159,7 @@ Wave-based parallel execution. Default behaviour: run **every remaining wave** e
 $(git diff --shortstat "$BASE...HEAD" | awk '{files=$1; s+=$4+$6} END {print files+0, s+0}')
 EOF
 
-   FEATURE_TIER="$(get_tier "$feature_dir")"   # bin/specflow-tier already sourced above
+   # FEATURE_TIER set at step 7 (line ~53); reuse here — no re-fork needed.
    if [ "$FEATURE_TIER" = "tiny" ]; then
      TIER_DIFF_LINES="${SPECFLOW_TIER_DIFF_LINES:-200}"
      TIER_DIFF_FILES="${SPECFLOW_TIER_DIFF_FILES:-3}"
@@ -167,13 +167,6 @@ EOF
         [ "$diff_files" -gt "$TIER_DIFF_FILES" ]; then
        printf 'WARNING: tiny-tier feature exceeds threshold after wave %s: %s lines, %s files (limits: %s lines, %s files). TPM should confirm or upgrade tier via set_tier.\n' \
          "$WAVE_N" "$diff_lines" "$diff_files" "$TIER_DIFF_LINES" "$TIER_DIFF_FILES" >&2
-       # STATUS Notes pending line — logged immediately per tech §4.2 audit rule.
-       # Use backup-then-temp-then-mv discipline (no-force-on-user-paths rule):
-       #   cp "$feature_dir/STATUS.md" "$feature_dir/STATUS.md.bak"
-       #   { cat "$feature_dir/STATUS.md"; \
-       #     printf '%s implement — auto-upgrade SUGGESTED ...\n' "$(date '+%Y-%m-%d')"; \
-       #   } > "$feature_dir/STATUS.md.tmp"
-       #   mv "$feature_dir/STATUS.md.tmp" "$feature_dir/STATUS.md"
        STATUS_NOTE="$(printf '%s implement — auto-upgrade SUGGESTED tiny→standard (diff: %s lines, %s files; threshold %s/%s); awaiting TPM confirmation\n' \
          "$(date '+%Y-%m-%d')" "$diff_lines" "$diff_files" "$TIER_DIFF_LINES" "$TIER_DIFF_FILES")"
        cp "$feature_dir/STATUS.md" "$feature_dir/STATUS.md.bak"
