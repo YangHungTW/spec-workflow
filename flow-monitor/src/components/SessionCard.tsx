@@ -1,7 +1,10 @@
 import { invoke } from "@tauri-apps/api/core";
 import { useTranslation } from "../i18n";
-import { StagePill, type StageKey } from "./StagePill";
+import { StagePill, STAGE_KEYS, type StageKey } from "./StagePill";
 import { IdleBadge, type IdleState } from "./IdleBadge";
+import { ActionStrip } from "./ActionStrip";
+import type { SessionState } from "../stores/sessionStore";
+import type { InvokeStore } from "../stores/invokeStore";
 
 export interface SessionCardProps {
   slug: string;
@@ -19,6 +22,16 @@ export interface SessionCardProps {
   hasUi?: boolean;
   /** Called when card body is clicked — opens CardDetail view */
   onClick?: () => void;
+  /**
+   * Full session state — required to mount ActionStrip on stalled cards (T106).
+   * When absent the stalled gate is skipped (backward-compatible with B1 callers).
+   */
+  session?: SessionState;
+  /**
+   * Invoke store — required to wire ActionStrip's onAdvance handler (T106).
+   * When absent the stalled gate is skipped.
+   */
+  invokeStore?: InvokeStore;
 }
 
 /**
@@ -66,6 +79,8 @@ export function SessionCard({
   repoName,
   hasUi = false,
   onClick,
+  session,
+  invokeStore,
 }: SessionCardProps) {
   const { t } = useTranslation();
 
@@ -93,6 +108,14 @@ export function SessionCard({
 
   // "Active" badge shown when session is healthy (no idle state)
   const showActiveBadge = idleState === "none";
+
+  // Compute next stage for ActionStrip dispatch — mirrors ActionStrip.tsx logic.
+  // Resolves to the stage key that follows the current one in the STAGE_KEYS list.
+  const currentStageIndex = STAGE_KEYS.indexOf(stage as StageKey);
+  const nextStageKey: string | undefined =
+    currentStageIndex >= 0 && currentStageIndex < STAGE_KEYS.length - 1
+      ? STAGE_KEYS[currentStageIndex + 1]
+      : undefined;
 
   return (
     <article
@@ -172,6 +195,32 @@ export function SessionCard({
           {t("btn.copyPath")}
         </button>
       </div>
+
+      {/* AC2.b — ActionStrip only on stalled cards; session + invokeStore must be present.
+          stopPropagation prevents ActionStrip button clicks from bubbling to the card's
+          onClick handler, which would navigate to Card Detail unintentionally on Advance. */}
+      {idleState === "stalled" && session && invokeStore && nextStageKey && (
+        <div
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
+        >
+          <ActionStrip
+            session={session}
+            onAdvance={() => {
+              void invokeStore.dispatch(
+                nextStageKey,
+                slug,
+                repoPath,
+                "card-action",
+                "terminal",
+              );
+            }}
+            onMessage={() => {
+              onClick?.();
+            }}
+          />
+        </div>
+      )}
     </article>
   );
 }

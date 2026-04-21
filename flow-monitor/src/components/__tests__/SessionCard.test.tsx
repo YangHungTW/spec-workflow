@@ -5,10 +5,18 @@
  *          note excerpt (≤80 chars), hover actions
  * AC7.d — hover actions are EXACTLY "Open in Finder" + "Copy path" (no others)
  * B2 boundary — NO "Send instruction", "Advance stage", or "Edit" action
+ *
+ * T106 additions (AC2.b):
+ *   - ActionStrip renders when idleState === "stalled" + session + invokeStore
+ *   - ActionStrip does NOT render when idleState !== "stalled"
+ *   - onAdvance wires to invokeStore.dispatch with correct args
+ *   - onMessage wires to onClick (Card Detail navigation)
  */
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { SessionCard, type SessionCardProps } from "../SessionCard";
+import type { SessionState } from "../../stores/sessionStore";
+import type { InvokeStore } from "../../stores/invokeStore";
 
 // Stub i18n
 vi.mock("../../i18n", () => ({
@@ -21,6 +29,9 @@ vi.mock("../../i18n", () => ({
         "idle.stale": "Stale",
         "idle.none": "none",
         "idle.stalled": "Stalled",
+        // T106: ActionStrip i18n keys (implement → gap-check is the next stage)
+        "action.advance_to.gap-check": "Advance to gap-check",
+        "action.message": "Message / Choice",
       };
       return map[key] ?? key;
     },
@@ -41,6 +52,26 @@ const BASE_PROPS: SessionCardProps = {
   lastUpdatedMs: Date.now() - 5 * 60 * 1000, // 5 min ago
   noteExcerpt: "First 80 chars of the newest note line goes here for display",
   repoPath: "/Users/alice/projects/my-repo",
+};
+
+/** Minimal InvokeStore mock — dispatch is a spy. */
+function makeInvokeStore(): InvokeStore {
+  return {
+    inFlight: new Set(),
+    preflightCommand: null,
+    preflightSlug: null,
+    dispatch: vi.fn().mockResolvedValue(undefined),
+  };
+}
+
+const STALLED_SESSION: SessionState = {
+  slug: "my-feature",
+  stage: "implement",
+  idleState: "stalled",
+  lastUpdatedMs: Date.now() - 60 * 60 * 1000,
+  noteExcerpt: "Stalled note",
+  repoPath: "/Users/alice/projects/my-repo",
+  repoId: "my-repo",
 };
 
 describe("SessionCard", () => {
@@ -154,5 +185,101 @@ describe("SessionCard", () => {
       name: /open in finder|copy path/i,
     });
     expect(buttons).toHaveLength(2);
+  });
+});
+
+describe("SessionCard — T106 ActionStrip gate (AC2.b)", () => {
+  it("renders ActionStrip when idleState is stalled and session + invokeStore are provided", () => {
+    const invokeStore = makeInvokeStore();
+    render(
+      <SessionCard
+        {...BASE_PROPS}
+        idleState="stalled"
+        session={STALLED_SESSION}
+        invokeStore={invokeStore}
+      />,
+    );
+    // ActionStrip's primary button — implement → gap-check is the next stage
+    expect(screen.getByRole("button", { name: /advance to gap-check/i })).toBeTruthy();
+  });
+
+  it("does NOT render ActionStrip when idleState is not stalled (AC2.b)", () => {
+    const invokeStore = makeInvokeStore();
+    render(
+      <SessionCard
+        {...BASE_PROPS}
+        idleState="none"
+        session={{ ...STALLED_SESSION, idleState: "none" }}
+        invokeStore={invokeStore}
+      />,
+    );
+    expect(
+      screen.queryByRole("button", { name: /advance to/i }),
+    ).toBeNull();
+  });
+
+  it("does NOT render ActionStrip when idleState is stale (AC2.b)", () => {
+    const invokeStore = makeInvokeStore();
+    render(
+      <SessionCard
+        {...BASE_PROPS}
+        idleState="stale"
+        session={{ ...STALLED_SESSION, idleState: "stale" }}
+        invokeStore={invokeStore}
+      />,
+    );
+    expect(
+      screen.queryByRole("button", { name: /advance to/i }),
+    ).toBeNull();
+  });
+
+  it("onAdvance calls invokeStore.dispatch with nextStage command, slug, repoPath, card-action, terminal", async () => {
+    const invokeStore = makeInvokeStore();
+    render(
+      <SessionCard
+        {...BASE_PROPS}
+        idleState="stalled"
+        session={STALLED_SESSION}
+        invokeStore={invokeStore}
+      />,
+    );
+    // implement → next stage is gap-check
+    const advanceBtn = screen.getByRole("button", { name: /advance to gap-check/i });
+    fireEvent.click(advanceBtn);
+    expect(invokeStore.dispatch).toHaveBeenCalledWith(
+      "gap-check",
+      STALLED_SESSION.slug,
+      STALLED_SESSION.repoPath,
+      "card-action",
+      "terminal",
+    );
+  });
+
+  it("onMessage calls onClick (Card Detail navigation)", () => {
+    const invokeStore = makeInvokeStore();
+    const onClick = vi.fn();
+    render(
+      <SessionCard
+        {...BASE_PROPS}
+        idleState="stalled"
+        session={STALLED_SESSION}
+        invokeStore={invokeStore}
+        onClick={onClick}
+      />,
+    );
+    // "Message / Choice" is the ActionStrip secondary button label.
+    // Use getAllByRole and filter to the <button> element (not the <article role="button">).
+    const messageBtns = screen.getAllByRole("button", { name: /message \/ choice/i });
+    const messageBtn = messageBtns.find((el) => el.tagName === "BUTTON");
+    expect(messageBtn).toBeTruthy();
+    fireEvent.click(messageBtn!);
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
+  it("ActionStrip does not render when session prop is absent (no stalled data)", () => {
+    render(<SessionCard {...BASE_PROPS} idleState="stalled" />);
+    expect(
+      screen.queryByRole("button", { name: /advance to/i }),
+    ).toBeNull();
   });
 });
