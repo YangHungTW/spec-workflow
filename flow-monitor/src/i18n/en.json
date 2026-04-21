@@ -48,7 +48,7 @@
   "tab.notYetGenerated": "Not yet generated",
 
   "empty.title": "No repos yet",
-  "empty.body": "Add a repository that contains a .spec-workflow/ folder to start monitoring your specflow sessions.",
+  "empty.body": "Add a repository that contains a .specaffold/ folder to start monitoring your scaff sessions.",
   "empty.cta": "Add repository…",
   "empty.notificationPrompt": "You'll see notifications when sessions stall. macOS will ask for permission on first use.",
   "empty.notificationHint": "You'll see notifications when sessions stall. macOS may ask permission on first stalled-transition.",
@@ -70,7 +70,7 @@
   "settings.notifications.statusDenied": "Denied",
   "settings.notifications.statusDefault": "Not yet requested",
   "settings.notifications.deniedHint": "Notifications denied — open System Settings → Notifications → Flow Monitor to enable.",
-  "settings.repoNotSpecflow": "Not a specflow repository: missing .spec-workflow/ folder.",
+  "settings.repoNotSpecflow": "Not a scaff repository: missing .specaffold/ folder.",
   "settings.repoAddFailed": "Failed to add repository.",
   "settings.language": "Language",
   "settings.about": "About",
@@ -106,7 +106,7 @@
   "stalled.badge": "Stalled · {duration}",
 
   "palette.group.control": "Control Actions",
-  "palette.group.specflow": "Specflow Commands",
+  "palette.group.scaff": "Scaff Commands",
   "palette.group.destroy": "Destructive Commands",
 
   "modal.destroy.title": "Destructive command",

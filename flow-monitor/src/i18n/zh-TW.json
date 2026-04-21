@@ -48,7 +48,7 @@
   "tab.notYetGenerated": "尚未產生",
 
   "empty.title": "尚無倉庫",
-  "empty.body": "新增含有 .spec-workflow/ 資料夾的倉庫，以開始監控您的 specflow 工作階段。",
+  "empty.body": "新增含有 .specaffold/ 資料夾的倉庫，以開始監控您的 scaff 工作階段。",
   "empty.cta": "新增倉庫…",
   "empty.notificationPrompt": "當工作階段停滯時，您將收到通知。macOS 會在首次使用時詢問權限。",
   "empty.notificationHint": "當工作階段停滯時，您將收到通知。macOS 可能在首次停滯轉換時詢問權限。",
@@ -70,7 +70,7 @@
   "settings.notifications.statusDenied": "已拒絕",
   "settings.notifications.statusDefault": "尚未申請",
   "settings.notifications.deniedHint": "通知已被拒絕 — 請開啟「系統設定」→「通知」→「Flow Monitor」以啟用。",
-  "settings.repoNotSpecflow": "不是 specflow 倉庫：缺少 .spec-workflow/ 資料夾。",
+  "settings.repoNotSpecflow": "不是 scaff 倉庫：缺少 .specaffold/ 資料夾。",
   "settings.repoAddFailed": "新增倉庫失敗。",
   "settings.language": "語言",
   "settings.about": "關於",
@@ -106,7 +106,7 @@
   "stalled.badge": "已停滯 · {duration}",
 
   "palette.group.control": "控制動作",
-  "palette.group.specflow": "Specflow 指令",
+  "palette.group.scaff": "Scaff 指令",
   "palette.group.destroy": "破壞性指令",
 
   "modal.destroy.title": "破壞性指令",
