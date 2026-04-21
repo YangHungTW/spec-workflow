@@ -82,7 +82,7 @@ verdict=$(awk '/^## Reviewer verdict/{flag=1} flag && /^verdict:/ {print $2; exi
 The reviewer subagents in feature `review-capability` (B2.b) use this
 shape. Each of `reviewer-security.md`, `reviewer-performance.md`,
 `reviewer-style.md` ends with a `## Reviewer verdict` footer defined
-by axis / verdict / summary / findings. The `/specflow:implement`
+by axis / verdict / summary / findings. The `/scaff:implement`
 step-7 aggregator parses all 3N footers with `awk` and reduces per
 task via the severity classifier (see
 `architect/aggregator-as-classifier.md`).

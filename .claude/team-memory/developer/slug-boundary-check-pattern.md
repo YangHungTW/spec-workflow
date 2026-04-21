@@ -1,7 +1,7 @@
 # Slug boundary check — path traversal prevention pattern
 
 When a command or script builds a filesystem path from a user-supplied slug
-(e.g. `feature_dir="$REPO_ROOT/.spec-workflow/features/$slug"`), apply the
+(e.g. `feature_dir="$REPO_ROOT/.specaffold/features/$slug"`), apply the
 two-layer boundary check or reviewers will block it as a path traversal finding:
 
 **Layer 1 — character deny-list (fast fail before any filesystem access):**
@@ -14,11 +14,11 @@ esac
 
 **Layer 2 — canonical resolve + prefix assert (catches symlink escapes):**
 ```bash
-feature_dir="$REPO_ROOT/.spec-workflow/features/$slug"
+feature_dir="$REPO_ROOT/.specaffold/features/$slug"
 canonical_dir="$(cd "$feature_dir" 2>/dev/null && pwd -P)" || {
   printf 'ERROR: feature dir not found: %s\n' "$feature_dir" >&2; exit 2
 }
-features_root="$REPO_ROOT/.spec-workflow/features"
+features_root="$REPO_ROOT/.specaffold/features"
 case "$canonical_dir" in
   "$features_root"/*) ;;
   *) printf 'ERROR: feature_dir escapes features root\n' >&2; exit 2 ;;

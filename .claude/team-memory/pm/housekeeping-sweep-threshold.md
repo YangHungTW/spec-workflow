@@ -23,7 +23,7 @@ absorb in-stream.
 
 ## How to apply
 
-1. After a feature's `/specflow:review` returns a NITS verdict with
+1. After a feature's `/scaff:review` returns a NITS verdict with
    ≥10 findings, consider bundling into a housekeeping sweep feature.
 2. Sources may be combined: current review output + deferred findings
    from earlier gap-checks (keep the X-tag identifiers so traceability

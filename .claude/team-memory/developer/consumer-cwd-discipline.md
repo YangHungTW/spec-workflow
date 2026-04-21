@@ -1,6 +1,6 @@
 ---
-name: cd into $CONSUMER before invoking specflow-seed (init/update/migrate)
-description: Any test or caller of `bin/specflow-seed init|update|migrate` must change working directory into the consumer tree first — otherwise `repo_root()` resolves via `git rev-parse --show-toplevel` from the caller's cwd and writes into the wrong repo.
+name: cd into $CONSUMER before invoking scaff-seed (init/update/migrate)
+description: Any test or caller of `bin/scaff-seed init|update|migrate` must change working directory into the consumer tree first — otherwise `repo_root()` resolves via `git rev-parse --show-toplevel` from the caller's cwd and writes into the wrong repo.
 type: feedback
 created: 2026-04-18
 updated: 2026-04-18
@@ -10,17 +10,17 @@ source: 20260418-per-project-install
 ## Rule
 
 Every test script (and every manual invocation) that calls
-`bin/specflow-seed init|update|migrate` must first `cd "$CONSUMER"`
+`bin/scaff-seed init|update|migrate` must first `cd "$CONSUMER"`
 (or wrap the call in `(cd "$CONSUMER" && "$SEED" <subcmd> …)`). If
-the caller is already in the spec-workflow source tree (`$PWD` is
-inside the repo that ships `specflow-seed`), the CLI will resolve
+the caller is already in the specaffold source tree (`$PWD` is
+inside the repo that ships `scaff-seed`), the CLI will resolve
 `repo_root()` to the source tree via `git rev-parse --show-toplevel`
 and write the managed subtree + manifest there — silently corrupting
 the source repo you're developing against.
 
 ## Why
 
-`specflow-seed` derives the consumer root from `$PWD` by calling
+`scaff-seed` derives the consumer root from `$PWD` by calling
 `git rev-parse --show-toplevel`. There is no way for the CLI to
 disambiguate between two adjacent git repos (source vs consumer)
 when the caller's cwd happens to sit inside one of them. The test
@@ -34,7 +34,7 @@ The failure mode is especially pernicious because:
 - The sandbox `$CONSUMER` looks untouched, so post-run assertions
   that check `$CONSUMER` find nothing out of place.
 - The source repo gains a `.claude/` subtree and a
-  `.claude/specflow.manifest` that the developer didn't author.
+  `.claude/scaff.manifest` that the developer didn't author.
 - Git status surfaces the mutation, but only if the developer
   happens to run `git status` before the next commit.
 
@@ -47,7 +47,7 @@ one-line `cd $CONSUMER` addition to the missing test fixture.
 
 ## How to apply
 
-For every new `t*_*.sh` that invokes `specflow-seed`:
+For every new `t*_*.sh` that invokes `scaff-seed`:
 
 ```bash
 # GOOD — subshell makes cwd change local to this invocation.
@@ -70,7 +70,7 @@ to the one line that needs it and needs no cleanup.
 Exemplar: `test/t40_init_idempotent.sh` in feature
 `20260418-per-project-install`. Every invocation of `"$SEED"` is
 wrapped in `(cd "$CONSUMER" && …)`. This is the pattern all new
-specflow-seed tests should mirror.
+scaff-seed tests should mirror.
 
 Cross-ref: `developer/python-heredoc-exit-code-propagation.md` (the
 other half of the W2 hotfix — explicit pipeline-exit checks — which

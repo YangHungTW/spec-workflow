@@ -1,5 +1,5 @@
 ---
-name: Post-/specflow:update-plan drift detection pattern
+name: Post-/scaff:update-plan drift detection pattern
 description: At validate, always cross-grep PRD concrete values (command lists, paths, named constants) against shipped code + 04-tech.md; update-plan may have narrowed to the plan file without mirroring upstream.
 type: pattern
 created: 2026-04-21
@@ -8,7 +8,7 @@ updated: 2026-04-21
 
 ## Rule
 
-At QA-analyst axis time, ALWAYS run a cross-artefact grep for any PRD or 04-tech.md concrete value that appears as an AC literal (command name lists, file paths, taxonomy constants, configuration keys). If an `/specflow:update-plan` commit exists in the feature branch, this grep is especially load-bearing: update-plan may have narrowed a rename to the plan file alone without mirroring to PRD/tech. File findings as `should`-severity drift with the specific update-plan commit hash as evidence.
+At QA-analyst axis time, ALWAYS run a cross-artefact grep for any PRD or 04-tech.md concrete value that appears as an AC literal (command name lists, file paths, taxonomy constants, configuration keys). If an `/scaff:update-plan` commit exists in the feature branch, this grep is especially load-bearing: update-plan may have narrowed a rename to the plan file alone without mirroring to PRD/tech. File findings as `should`-severity drift with the specific update-plan commit hash as evidence.
 
 ## Why
 

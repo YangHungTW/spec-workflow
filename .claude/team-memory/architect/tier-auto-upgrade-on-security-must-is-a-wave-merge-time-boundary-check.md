@@ -22,7 +22,7 @@ The placement is load-bearing. If the upgrade fired at plan time, the feature wo
 
 ## How to apply
 
-1. The tier auto-upgrade check belongs in `bin/specflow-aggregate-verdicts` or its equivalent, immediately after axis reduction. Pseudocode: `if aggregate.severity == must and any(f.axis == security for f in findings): tier_upgrade("audited")`.
+1. The tier auto-upgrade check belongs in `bin/scaff-aggregate-verdicts` or its equivalent, immediately after axis reduction. Pseudocode: `if aggregate.severity == must and any(f.axis == security for f in findings): tier_upgrade("audited")`.
 2. The upgrade is one-way within a feature: standard→audited. It does NOT downgrade if subsequent waves are clean. The rationale is that the feature has demonstrated security-relevance and the remaining waves should carry that scrutiny.
 3. STATUS Notes must record the upgrade as a separate line at the moment of firing — the 2026-04-21 line in this feature is the template: "tier upgrade standard→audited: security-must findings in T109 (…) and T110 (…)".
 4. The 05-plan.md header tier field is NOT rewritten on upgrade — it captures the intent at plan time. The STATUS header is the live tier field. Readers should consult STATUS for the enforcement tier, plan.md for the planning intent.

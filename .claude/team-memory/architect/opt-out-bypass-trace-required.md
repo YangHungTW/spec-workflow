@@ -68,7 +68,7 @@ required) reason.
 
 ## Example
 
-`/specflow:implement <slug> --skip-inline-review` (from feature
+`/scaff:implement <slug> --skip-inline-review` (from feature
 `review-capability`, B2.b, R7). Each use appends:
 
 ```
