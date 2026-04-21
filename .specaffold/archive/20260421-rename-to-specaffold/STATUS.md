@@ -15,7 +15,7 @@
 - [x] plan          (05-plan.md)                 — TPM  [merged: narrative + task checklist]
 - [x] implement     (05-plan.md tasks checked off) — Developer
 - [x] validate      (08-validate.md, verdict PASS) — QA-tester + QA-analyst  [merged: verify + gap-check]
-- [ ] archive       (moved to .spec-workflow/archive/)     — TPM
+- [x] archive       (moved to .spec-workflow/archive/)     — TPM
 
 ## Notes
 <!-- date + role + what changed -->
@@ -53,3 +53,4 @@
 - 2026-04-21 review result — wave 4 verdict=PASS across all 4 tasks (T28 grep-allow-list assertion PASS; T29 STATUS edit clean; T30 AC9/AC10 structural PASS; T31 AC15 symlink verified absolute-target + archive resolves)
 - 2026-04-21 implement wave 4 done — T28, T29, T30, T31 (W4 merged; 4 tasks done; 34/34 tasks complete); implement stage [x]; next /specflow:next → validate stage
 - 2026-04-21 validate — slug=20260421-rename-to-specaffold verdict=NITS (advisory findings in 08-validate.md: AC7 latency margin, AC13 no bare scaff binary per D3, R6 RETROSPECTIVE pre-allow, R8 stop.sh:95 spacing; zero must-severity, zero BLOCK); validate stage [x]; next /specflow:next → archive stage
+- 2026-04-21 archive — feature branch merged to main (eb858c4); retrospective captured 8 memory entries (2 tpm, 3 developer, 1 architect, 1 qa-tester, 1 qa-analyst; all local scope) in commit 5086f74; feature dir moved to .specaffold/archive/20260421-rename-to-specaffold/; stage [x] archive
