@@ -3,7 +3,7 @@
 # Verifies: AC1.a (files are regular + byte-match source), AC1.c (no symlinks under .claude/),
 # AC2.a (self-contained install, manifest present, settings.json wired with consumer-local hooks),
 # AC4.a (team-memory skeleton: role dirs with index.md only), AC5.a (rules byte-identical),
-# and manifest specflow_ref matches the captured SHA.
+# and manifest scaff_ref matches the captured SHA.
 #
 # RED pre-T3: cmd_init stub emits "not-yet-implemented" — that is the expected failure state.
 # GREEN post-T3 merge: all assertions pass.
@@ -101,7 +101,7 @@ for subdir in ".claude/agents/specflow" ".claude/commands/specflow" ".claude/hoo
   [ "$dir_count" -gt 0 ] || fail "AC2.a" "$subdir is empty or missing"
 done
 
-[ -f "$CONSUMER/.claude/specflow.manifest" ] || fail "AC2.a" "specflow.manifest not found"
+[ -f "$CONSUMER/.claude/scaff.manifest" ] || fail "AC2.a" "scaff.manifest not found"
 
 SETTINGS="$CONSUMER/settings.json"
 [ -f "$SETTINGS" ] || fail "AC2.a" "settings.json not found"
@@ -150,9 +150,9 @@ while IFS= read -r src_file; do
 done < <(find "$src_rules" -type f)
 
 # ---------------------------------------------------------------------------
-# Manifest specflow_ref matches captured SHA (D3 awk-sniff pattern)
+# Manifest scaff_ref matches captured SHA (D3 awk-sniff pattern)
 # ---------------------------------------------------------------------------
-manifest_ref="$(awk -F'"' '/"specflow_ref"/ { print $4; exit }' "$CONSUMER/.claude/specflow.manifest")"
-[ "$manifest_ref" = "$AT_REF" ] || fail "manifest-ref" "specflow_ref mismatch: manifest=$manifest_ref expected=$AT_REF"
+manifest_ref="$(awk -F'"' '/"scaff_ref"/ { print $4; exit }' "$CONSUMER/.claude/scaff.manifest")"
+[ "$manifest_ref" = "$AT_REF" ] || fail "manifest-ref" "scaff_ref mismatch: manifest=$manifest_ref expected=$AT_REF"
 
 echo "PASS"

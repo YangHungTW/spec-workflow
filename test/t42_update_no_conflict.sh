@@ -5,7 +5,7 @@
 #   - A drifted-ours file (source changed, consumer still at baseline) gets
 #     backed up to <path>.bak and replaced with ref-B content.
 #   - Every other managed file reports "already".
-#   - Manifest specflow_ref advances to the new ref.
+#   - Manifest scaff_ref advances to the new ref.
 #   - Exit code is 0.
 #
 # RED until T7 (cmd_update implementation) is merged; the current stub exits 0
@@ -178,15 +178,15 @@ if [ "$ALREADY_COUNT" -lt 1 ]; then
   exit 1
 fi
 
-# AC8.a — manifest specflow_ref advanced to REF_B
-MANIFEST="$CONSUMER/.claude/specflow.manifest"
+# AC8.a — manifest scaff_ref advanced to REF_B
+MANIFEST="$CONSUMER/.claude/scaff.manifest"
 if [ ! -f "$MANIFEST" ]; then
   echo "FAIL: AC8.a: manifest not found at $MANIFEST" >&2
   exit 1
 fi
-MANIFEST_REF="$(awk -F'"' '/"specflow_ref"/{print $4; exit}' "$MANIFEST")"
+MANIFEST_REF="$(awk -F'"' '/"scaff_ref"/{print $4; exit}' "$MANIFEST")"
 if [ "$MANIFEST_REF" != "$REF_B" ]; then
-  echo "FAIL: AC8.a: manifest specflow_ref='$MANIFEST_REF', expected '$REF_B'" >&2
+  echo "FAIL: AC8.a: manifest scaff_ref='$MANIFEST_REF', expected '$REF_B'" >&2
   exit 1
 fi
 
