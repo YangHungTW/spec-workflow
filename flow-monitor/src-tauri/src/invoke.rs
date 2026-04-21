@@ -106,19 +106,28 @@ pub struct InvokeResult {
 // Path construction helpers
 // ---------------------------------------------------------------------------
 
-/// Generate a 16-character lowercase hex string from 8 random bytes.
+/// Generate a 16-character lowercase hex string from 8 OS-sourced random bytes.
 ///
-/// Uses `rand`-free approach: XOR of system time nanos with the address of a
-/// stack variable for lightweight uniqueness. Not cryptographically secure —
-/// the intent is collision-avoidance for temp file names, not secrecy.
+/// Reads 8 bytes from `/dev/urandom` for unpredictable filenames that close
+/// the /tmp symlink race window (security finding 5).  Falls back to a
+/// time-XOR mix only if the OS device is unavailable — an unlikely degraded
+/// path on any UNIX system.
 fn gen_hex16() -> String {
+    // Primary: OS entropy via /dev/urandom — no crate dep required.
+    use std::io::Read;
+    let mut buf = [0u8; 8];
+    if let Ok(mut f) = std::fs::File::open("/dev/urandom") {
+        if f.read_exact(&mut buf).is_ok() {
+            let v = u64::from_ne_bytes(buf);
+            return format!("{:016x}", v);
+        }
+    }
+    // Fallback (should never be reached on macOS/Linux): time + stack addr mix.
     use std::time::{SystemTime, UNIX_EPOCH};
     let nanos = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .map(|d| d.subsec_nanos())
         .unwrap_or(0) as u64;
-    // Mix in a per-call stack address to reduce collisions within the same
-    // nanosecond (defensive — user action cadence is far slower).
     let addr: u64 = (&nanos as *const u64) as u64;
     let combined = nanos ^ addr ^ (nanos.wrapping_mul(6364136223846793005));
     format!("{:016x}", combined)
@@ -221,6 +230,53 @@ pub fn path_matches_capability_regex(s: &str) -> bool {
 }
 
 // ---------------------------------------------------------------------------
+// Command allow-list guard
+//
+// Mirrors the list from command_taxonomy.rs (T96).  When T96 merges and
+// `crate::command_taxonomy` is available, replace this with:
+//   `use crate::command_taxonomy; command_taxonomy::allow_list_contains(cmd)`
+// ---------------------------------------------------------------------------
+
+/// Returns true if `cmd` is in the hardcoded specflow allow-list.
+///
+/// This is a defence-in-depth check inside `invoke.rs`; the primary check
+/// lives (or will live) in `ipc.rs` which calls `command_taxonomy::classify`.
+/// Keeping the check here too means `dispatch` is safe to call even from
+/// test code that bypasses the IPC layer.
+///
+/// The list is the post-tier-model live command set (D3):
+///   SAFE  — next, review, remember, promote
+///   WRITE — request, prd, tech, plan, implement, validate, design
+///   DESTROY — archive, update-req, update-tech, update-plan, update-task
+fn cmd_is_in_allow_list(cmd: &str) -> bool {
+    const ALLOWED: &[&str] = &[
+        // SAFE
+        "next", "review", "remember", "promote",
+        // WRITE
+        "request", "prd", "tech", "plan", "implement", "validate", "design",
+        // DESTROY
+        "archive", "update-req", "update-tech", "update-plan", "update-task",
+    ];
+    ALLOWED.contains(&cmd)
+}
+
+// ---------------------------------------------------------------------------
+// Shell single-quote escape helper
+// ---------------------------------------------------------------------------
+
+/// Escape a string for embedding inside a bash single-quoted string.
+///
+/// Single-quoted strings in bash cannot contain a literal single quote.
+/// The idiom `'\''` ends the current quote, inserts a literal `'` via
+/// `\'`, then reopens the quote.  Applied to every occurrence of `'`
+/// in the input value.
+///
+/// Example: `o'malley` → `o'\''malley`; embedded as `'o'\''malley'`.
+fn shell_single_quote_escape(s: &str) -> String {
+    s.replace('\'', "'\\''")
+}
+
+// ---------------------------------------------------------------------------
 // Script content builder
 // ---------------------------------------------------------------------------
 
@@ -234,16 +290,18 @@ pub fn path_matches_capability_regex(s: &str) -> bool {
 /// The slug is embedded in a comment for traceability; it is not passed to
 /// the specflow invocation (specflow infers context from the working dir).
 fn build_script_content(cmd: &str, slug: &str, repo: &Path) -> String {
-    // Use single-quoted strings to avoid shell-expansion of the repo path
-    // and command name. Both are validated upstream (command is from the
-    // taxonomy allow-list; repo is a registered canonical path).
-    let repo_str = repo.to_string_lossy();
+    // Use single-quoted strings to prevent shell-expansion of the repo path
+    // and command name.  Single-quote characters inside either value are
+    // escaped using the `'\''` idiom so they cannot escape the shell quote
+    // boundary (security findings 1 and 2).
+    let repo_escaped = shell_single_quote_escape(&repo.to_string_lossy());
+    let cmd_escaped = shell_single_quote_escape(cmd);
     format!(
         "#!/usr/bin/env bash\n\
          # flow-monitor terminal spawn — slug: {slug}\n\
          set -euo pipefail\n\
-         cd '{repo_str}'\n\
-         specflow {cmd}\n"
+         cd '{repo_escaped}'\n\
+         specflow '{cmd_escaped}'\n"
     )
 }
 
@@ -396,6 +454,15 @@ pub fn dispatch(
     repo: &Path,
     clipboard: Option<&dyn ClipboardWriter>,
 ) -> Result<InvokeResult, InvokeError> {
+    // Defence-in-depth allow-list check (security finding 3).
+    // The primary check is in ipc.rs `invoke_command` (caller validates via
+    // command_taxonomy::allow_list_contains before calling dispatch).
+    // This second check ensures dispatch() is safe even when called directly
+    // from tests or future callers that bypass the IPC layer.
+    if !cmd_is_in_allow_list(cmd) {
+        return Err(InvokeError::UnknownCommand);
+    }
+
     match delivery {
         DeliveryMethod::Terminal => {
             dispatch_terminal(cmd, slug, repo)
@@ -434,12 +501,13 @@ fn dispatch_clipboard(
     repo: &Path,
     clipboard: &dyn ClipboardWriter,
 ) -> Result<InvokeResult, InvokeError> {
-    // Build the command string: `cd <repo> && specflow <cmd>` — single line
-    // suitable for pasting in a terminal.  The repo path and command name
-    // land in the clipboard string (user sees them), not on any argv.
+    // Build the command string: `cd '<repo>' && specflow '<cmd>'` — single line
+    // suitable for pasting in a terminal.  Single-quote characters in either
+    // value are escaped using the `'\''` idiom (security findings 2 and 4).
     let _ = slug; // slug embedded in comment only; not needed for clipboard text
-    let repo_str = repo.to_string_lossy();
-    let text = format!("cd '{}' && specflow {}", repo_str, cmd);
+    let repo_escaped = shell_single_quote_escape(&repo.to_string_lossy());
+    let cmd_escaped = shell_single_quote_escape(cmd);
+    let text = format!("cd '{repo_escaped}' && specflow '{cmd_escaped}'");
     clipboard
         .write_text(&text)
         .map_err(|e| {
@@ -465,8 +533,10 @@ mod tests {
     #[test]
     fn pipe_arm_returns_not_available() {
         // Pipe delivery must always return Err(NotAvailable) — no side effects.
+        // Use a known-good command so the allow-list check passes and we reach
+        // the Pipe arm's NotAvailable return.
         let repo = Path::new("/tmp/fake-repo");
-        let result = dispatch(DeliveryMethod::Pipe, "verify", "my-session", repo, None);
+        let result = dispatch(DeliveryMethod::Pipe, "implement", "my-session", repo, None);
         assert!(
             matches!(result, Err(InvokeError::NotAvailable)),
             "Pipe arm must return NotAvailable, got: {:?}",
@@ -606,9 +676,10 @@ mod tests {
     fn clipboard_arm_writes_cd_and_command() {
         let spy = SpyClipboard { recorded: Mutex::new(None) };
         let repo = Path::new("/some/repo");
+        // Use a known-good command so the allow-list check passes.
         let result = dispatch(
             DeliveryMethod::Clipboard,
-            "verify",
+            "implement",
             "my-session",
             repo,
             Some(&spy),
@@ -620,7 +691,7 @@ mod tests {
         );
         let text = spy.recorded.lock().unwrap();
         let text = text.as_ref().expect("clipboard must have been written");
-        assert!(text.contains("specflow verify"), "must contain command");
+        assert!(text.contains("specflow 'implement'"), "must contain command");
         assert!(text.contains("/some/repo"), "must contain repo path");
         // No shell metachar $, `, ; outside the single-quoted path
         assert!(!text.contains('`'), "no backtick in clipboard text");
@@ -629,9 +700,11 @@ mod tests {
     #[test]
     fn clipboard_arm_error_when_no_writer_provided() {
         let repo = Path::new("/some/repo");
+        // Use a known-good command; the missing-writer error must fire at the
+        // clipboard layer, not at the allow-list gate.
         let result = dispatch(
             DeliveryMethod::Clipboard,
-            "verify",
+            "implement",
             "my-session",
             repo,
             None,
@@ -651,9 +724,171 @@ mod tests {
     fn script_content_contains_cd_and_specflow() {
         let content = build_script_content("implement", "my-slug", Path::new("/home/user/project"));
         assert!(content.contains("cd '/home/user/project'"), "must cd to repo");
-        assert!(content.contains("specflow implement"), "must invoke specflow");
+        // Command is now single-quoted in the generated script.
+        assert!(content.contains("specflow 'implement'"), "must invoke specflow");
         assert!(content.contains("my-slug"), "must reference slug in comment");
         assert!(content.starts_with("#!/usr/bin/env bash"), "must have shebang");
+    }
+
+    // -----------------------------------------------------------------------
+    // Security: single-quote injection in repo path (finding 1)
+    //
+    // A repo path containing a single quote must not escape the
+    // single-quoted shell string.  The `'\''` idiom must be applied.
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn script_content_repo_single_quote_is_escaped() {
+        // A path with a single-quote must be safely embedded — the quote
+        // must be escaped so that the `cd '...'` shell construct remains
+        // a single shell word and does not allow injection.
+        let repo = Path::new("/home/user/o'malley/project");
+        let content = build_script_content("implement", "slug", repo);
+        // The raw single quote must not appear unescaped between the outer quotes.
+        // After applying '\'' idiom the cd line becomes:
+        //   cd '/home/user/o'\''malley/project'
+        assert!(
+            !content.contains("cd '/home/user/o'malley/project'"),
+            "unescaped single-quote in repo path is a shell injection vector"
+        );
+        // The escaped form must be present.
+        assert!(
+            content.contains(r"cd '/home/user/o'\''malley/project'"),
+            "repo single-quote must use the '\\''  escape idiom; content:\n{content}"
+        );
+    }
+
+    // -----------------------------------------------------------------------
+    // Security: cmd must be shell-quoted in build_script_content (finding 2)
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn script_content_cmd_single_quote_is_escaped() {
+        // A cmd containing a single quote must be safely embedded.
+        let content = build_script_content("bad'cmd", "slug", Path::new("/tmp/repo"));
+        // The unescaped form must not appear.
+        assert!(
+            !content.contains("specflow bad'cmd\n"),
+            "unescaped single-quote in cmd is a shell injection vector"
+        );
+        // The escaped form must be present.
+        assert!(
+            content.contains(r"specflow 'bad'\''cmd'"),
+            "cmd single-quote must use the '\\'' escape idiom; content:\n{content}"
+        );
+    }
+
+    // -----------------------------------------------------------------------
+    // Security: dispatch() rejects unknown commands (finding 3)
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn dispatch_rejects_unknown_command_terminal() {
+        // Pipe arm already returns NotAvailable; this test checks the
+        // allow-list guard at the top of dispatch for Terminal delivery.
+        // An unknown command must return Err(UnknownCommand) before any
+        // script is written or process is spawned.
+        let repo = Path::new("/tmp/fake-repo");
+        let result = dispatch(
+            DeliveryMethod::Terminal,
+            "totally-unknown-cmd",
+            "slug",
+            repo,
+            None,
+        );
+        assert!(
+            matches!(result, Err(InvokeError::UnknownCommand)),
+            "dispatch must reject unknown commands with UnknownCommand, got: {:?}",
+            result
+        );
+    }
+
+    #[test]
+    fn dispatch_rejects_unknown_command_clipboard() {
+        let spy = SpyClipboard { recorded: Mutex::new(None) };
+        let repo = Path::new("/tmp/fake-repo");
+        let result = dispatch(
+            DeliveryMethod::Clipboard,
+            "not-a-real-cmd",
+            "slug",
+            repo,
+            Some(&spy),
+        );
+        assert!(
+            matches!(result, Err(InvokeError::UnknownCommand)),
+            "clipboard arm must also reject unknown commands, got: {:?}",
+            result
+        );
+        // Clipboard must NOT have been written.
+        assert!(
+            spy.recorded.lock().unwrap().is_none(),
+            "clipboard must not be written for an unknown command"
+        );
+    }
+
+    // -----------------------------------------------------------------------
+    // Security: clipboard arm also escapes single quotes (finding 4)
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn clipboard_arm_repo_single_quote_is_escaped() {
+        let spy = SpyClipboard { recorded: Mutex::new(None) };
+        // Use a known-good command so the allow-list check passes.
+        let repo = Path::new("/home/user/o'malley/project");
+        let result = dispatch(
+            DeliveryMethod::Clipboard,
+            "implement",
+            "slug",
+            repo,
+            Some(&spy),
+        );
+        assert!(
+            matches!(result, Ok(InvokeResult { outcome: Outcome::Copied })),
+            "clipboard arm must succeed: {:?}",
+            result
+        );
+        let text = spy.recorded.lock().unwrap();
+        let text = text.as_ref().expect("clipboard must have been written");
+        // The raw unescaped single-quote must not appear in a way that breaks
+        // the shell single-quote boundary.
+        assert!(
+            !text.contains("cd '/home/user/o'malley/project'"),
+            "unescaped single-quote in clipboard repo path is a shell injection vector"
+        );
+        assert!(
+            text.contains(r"cd '/home/user/o'\''malley/project'"),
+            "clipboard repo path single-quote must use the '\\'' escape idiom; text:\n{text}"
+        );
+    }
+
+    // -----------------------------------------------------------------------
+    // Security: gen_hex16 returns 16 lowercase hex chars using OS entropy
+    //
+    // This is a basic sanity check — the exact output is random.
+    // We verify format (16 hex chars), not value.  The weak-entropy
+    // `time ^ addr` approach must be replaced with OS-sourced bytes.
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn gen_hex16_format_is_16_lowercase_hex() {
+        for _ in 0..20 {
+            let h = gen_hex16();
+            assert_eq!(h.len(), 16, "gen_hex16 must return 16 chars, got {:?}", h);
+            assert!(
+                h.bytes().all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'f')),
+                "gen_hex16 must be lowercase hex, got {:?}",
+                h
+            );
+        }
+    }
+
+    #[test]
+    fn gen_hex16_is_not_constant() {
+        // OS entropy must produce different values across calls.
+        // With 16 hex chars (64 bits of entropy) the probability of a
+        // collision in 100 calls is astronomically low.
+        let values: std::collections::HashSet<String> = (0..100).map(|_| gen_hex16()).collect();
+        assert!(values.len() > 90, "gen_hex16 must not be near-constant: only {} unique in 100 calls", values.len());
     }
 
     // -----------------------------------------------------------------------
