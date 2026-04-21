@@ -2,7 +2,7 @@
 
 - **slug**: 20260420-flow-monitor-control-plane
 - **has-ui**: true
-- **tier**: standard
+- **tier**: audited
 - **stage**: plan
 - **created**: 2026-04-20
 - **updated**: 2026-04-20
@@ -26,3 +26,8 @@
 - 2026-04-20 PM — 03-prd.md authored (new shape: `## Exploration` merged brainstorm per R4); 12 R, 31 ACs (15 runtime / 15 structural / 1 both); Q1 resolved terminal-spawn, Q2 resolved WRITE+safe only (DESTROY→B3), Q3 resolved modal-for-DESTROY-only (scaffold-only in B2), Q4 resolved per-repo audit.log; 0 blocker questions in §7
 - 2026-04-20 Architect — 04-tech.md authored; 11 decisions (D1–D11) resolving all 5 Q-arch carry-forwards plus 6 additional items (terminal-spawn mechanics, clipboard fallback, preflight toast, DESTROY scaffold structural unreachability, audit format, plugin deps, i18n, theme token reuse, dogfood); 0 blocker questions in §5; adds `tauri-plugin-shell` + `tauri-plugin-fs` with exact-path `/usr/bin/open` allow-list + runtime `.flow-monitor/` boundary guard; new Rust modules invoke.rs / audit.rs / lock.rs / command_taxonomy.rs; 13 structural test seams enumerated, 15 runtime ACs handed off to next feature per dogfood paradox
 - 2026-04-20 TPM — 05-plan.md authored (new merged shape per R19 — narrative + task checklist in one file, no 06-tasks.md); 7 waves W0–W6 / 30 tasks T91–T122; test range t91–t101 (avoids tier-model's t74–t90); W0 foundation (plugins+manifest), W1 4 parallel Rust modules, W2 lib.rs+ipc.rs+invokeStore (3 parallel; same-file region coordination flagged), W3 scaffold docs+tests+DESTROY grep, W4 6 parallel React components, W5 5a parallel integration+i18n then 5b B1 nits sweep serial, W6 structural tests + runtime handoff + smoke.sh append; 0 blockers; STATUS Notes enforcement elevated to reviewer-style check per shared/status-notes-rule-requires-enforcement-not-just-documentation; runtime handoff pre-committed in T113 for successor feature per dogfood-paradox-ninth-occurrence
+
+- 2026-04-21 next — tier upgrade standard→audited: security-must findings in T109 (path-traversal in invoke_command + get_audit_tail) and T110 (unknown-command null-classify)
+- 2026-04-21 review dispatched — slug=20260420-flow-monitor-control-plane wave=2 tasks=T108,T109,T110 axes=security,performance,style
+- 2026-04-21 review result — wave 2 verdict=BLOCK blocking-tasks=T109,T110. T108 NITS (security input-validation advisory, performance allocation advisories, style WHAT-comment). T109 BLOCK (security must: ipc.rs:1365 invoke_command drops settings without assert_under_registered_root boundary check; ipc.rs:1502 get_audit_tail_inner accepts raw repo with no canonicalize + no boundary check; build.rs:65 non-atomic fs::write advisory). T110 BLOCK (security must: invokeStore.ts:165 classify() null-return falls through dispatch to backend without rejection; payload shape-guard advisory; performance classify uses Array.includes instead of Set.has). Wave verdict triggered auto-upgrade to audited tier per tech §4.3. Recovery: `/specflow:implement 20260420-flow-monitor-control-plane --task T109` and `--task T110`. T108 branch + worktree preserved (not merged since wave blocked).
+- 2026-04-21 next — plan drift noted: T112a and T112b marked [x] in 05-plan.md §3 but no commits exist; pre-check artefact from a268d2f unflip miss. Flag for TPM to address via /specflow:update-plan before W5 starts; does not affect W2 execution.
