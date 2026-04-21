@@ -3,7 +3,7 @@ name: Dogfood paradox — structural verify during bootstrap, runtime exercise n
 description: Features that deliver the tool they would themselves use need structural-only verification; live runtime exercise happens on the next feature.
 type: pattern
 created: 2026-04-18
-updated: 2026-04-19
+updated: 2026-04-20
 ---
 
 <!-- 2026-04-18 update: added fifth and sixth occurrences from
@@ -20,6 +20,45 @@ carried by the 8th's own T1 hook edit; runtime handoff from the 8th
 falls to the NEXT feature archived. Neither surfaced a new dogfood-
 exposed bug, so no new pattern is added — the entries below (4th and
 6th occurrences) still cover the observed failure modes. -->
+
+<!-- 2026-04-20 update: 9th occurrence = 20260420-tier-model (the
+three-tier workflow ships the `/specflow:validate` aggregator + new
+merged 05-plan.md shape + retired-command stubs that THIS feature's
+own implement would have to dispatch through). Three tier-model
+archive-stage symptoms surfaced, each a dogfood-paradox variant:
+
+1. **06-tasks.md symlink bridge** — the feature authored only
+   `05-plan.md` (new shape per R19) but `/specflow:implement` and
+   the developer-agent briefing flow still read `06-tasks.md`. A
+   bootstrap symlink `06-tasks.md → 05-plan.md` was installed to
+   let this feature run through its own implement; removed at
+   archive. Classic "mechanism not yet installed on itself" mode.
+
+2. **archive.md expected `08-verify.md`** — the stage-transition
+   check in `/specflow:archive` grep'd for `08-verify.md` verdict=PASS,
+   but this feature authored `08-validate.md` (new name per R15).
+   Dispatch code was updated in W3 (T21), but the archive command's
+   own contract still referenced the old name. Surfaced as a
+   stage-advance refusal at archive attempt.
+
+3. **aggregator expected `## Reviewer verdict`** — the new-shape
+   `/specflow:validate` emits `## Validate verdict` footers (R17),
+   but `bin/specflow-aggregate-verdicts` (extracted in W1 T7) still
+   accepted only `## Reviewer verdict` at line 137. All validate
+   footers were rejected as malformed, forcing a BLOCK verdict.
+   Fixed during validate-cycle by accepting both headers (orchestrator
+   surgical fix noted in STATUS 2026-04-20 line 22).
+
+Common failure mode across all three: the feature redefines a
+contract (task-doc filename, verify artefact name, verdict-footer
+header), and at least one consumer of the old contract survives the
+migration because it was not explicitly enumerated in the plan.
+Implication for next dogfood-paradox feature: TPM should grep-enumerate
+every consumer of a renamed contract BEFORE planning the rename wave
+(cross-reference `tpm/tasks-doc-format-migration.md`). Symptom
+severity is "archive-blocker" not "runtime surprise", because the
+self-shipping mechanism collides with itself during its own archive
+sequence, not on the next feature. -->
 
 <!-- Discipline at archive time: every feature that invokes the
 dogfood paradox in its PRD/tech/plan should bump the occurrence log
