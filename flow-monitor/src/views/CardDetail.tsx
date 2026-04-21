@@ -10,6 +10,7 @@ import CardDetailMarkdownPane from "../components/CardDetailMarkdownPane";
 import { DesignFolderIndex } from "../components/DesignFolderIndex";
 import type { StageKey } from "../components/StagePill";
 import type { IdleState } from "../components/IdleBadge";
+import { useInvokeStore } from "../stores/invokeStore";
 
 const SAFE_ID = /^[A-Za-z0-9_-]+$/;
 function isSafeId(s: string | undefined): s is string {
@@ -36,6 +37,7 @@ function CardDetail() {
   const { repoId, slug } = useParams<{ repoId: string; slug: string }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const invokeStore = useInvokeStore();
 
   const [activeTabId, setActiveTabId] = useState<string>(TAB_DEFINITIONS[0].id);
   const [repoFullPath, setRepoFullPath] = useState<string | null>(null);
@@ -130,6 +132,7 @@ function CardDetail() {
         idleState={idleState}
         featurePath={featurePath}
         onBack={handleBack}
+        invokeStore={invokeStore}
       />
 
       <div className="card-detail__body">
