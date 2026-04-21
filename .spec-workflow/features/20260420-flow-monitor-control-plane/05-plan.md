@@ -401,7 +401,7 @@ Conventions in this section (new merged shape):
 
 ### Wave 3 — Renderer stores + scaffolds (3 tasks)
 
-## T97 — [ ] Theme token reuse mapping doc
+## T97 — [x] Theme token reuse mapping doc
 - **Milestone**: M3
 - **Requirements**: R11
 - **Decisions**: D10
@@ -421,7 +421,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T98, T99
 - [ ]
 
-## T98 — [ ] `invokeStore.test.ts` — unit test for renderer dispatch wrapper
+## T98 — [x] `invokeStore.test.ts` — unit test for renderer dispatch wrapper
 - **Milestone**: M3
 - **Requirements**: R4, R5, R7
 - **Decisions**: D6
@@ -439,7 +439,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T97, T99
 - [ ]
 
-## T99 — [ ] Seam B partial: DESTROY unreachability cross-file grep test
+## T99 — [x] Seam B partial: DESTROY unreachability cross-file grep test
 - **Milestone**: M3
 - **Requirements**: R8
 - **Decisions**: D3
