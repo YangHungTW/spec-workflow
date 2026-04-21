@@ -32,6 +32,18 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd -P)"
 TIER_LIB="${TIER_LIB:-$REPO_ROOT/bin/specflow-tier}"
 
+# Security boundary check: reject TIER_LIB that resolves outside REPO_ROOT.
+# Prevents a tampered env var from sourcing arbitrary code.
+_tier_lib_parent="$(cd "$(dirname "$TIER_LIB")" 2>/dev/null && pwd -P)" || {
+  printf 'FAIL: TIER_LIB parent directory not resolvable: %s\n' "$TIER_LIB" >&2
+  exit 2
+}
+case "$_tier_lib_parent" in
+  "$REPO_ROOT"/*|"$REPO_ROOT") ;;  # inside repo tree — OK
+  *) printf 'FAIL: TIER_LIB outside REPO_ROOT (security): %s\n' "$TIER_LIB" >&2; exit 2 ;;
+esac
+unset _tier_lib_parent
+
 # ---------------------------------------------------------------------------
 # Sandbox — HOME isolation (sandbox-home-in-tests.md)
 # ---------------------------------------------------------------------------
@@ -59,7 +71,6 @@ fi
 # ---------------------------------------------------------------------------
 # Guard: set_tier must be present in the library
 # ---------------------------------------------------------------------------
-SPECFLOW_TIER_LOADED=0
 # shellcheck source=/dev/null
 . "$TIER_LIB"
 
@@ -131,11 +142,11 @@ else
   if [ -n "$r13_line" ]; then
     pass "test1: STATUS Notes contains R13 audit line (stable tokens)"
   else
-    fail "test1: STATUS Notes missing R13 audit line; STATUS.md content: $(cat "$d/STATUS.md")"
+    fail "test1: STATUS Notes missing R13 audit line; STATUS.md content: $status_content"
   fi
 
-  # Assert the date prefix looks like YYYY-MM-DD (four digits, dash, two, dash, two)
-  # Extract the first field of the audit line and check its shape.
+  # Assert the date prefix looks like YYYY-MM-DD (four digits, dash, two, dash, two).
+  # Audit line starts with "- YYYY-MM-DD …"; $2 is the date (after the leading "-").
   date_prefix="$(printf '%s\n' "$r13_line" | awk '{print $2}')"
   case "$date_prefix" in
     [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9])
