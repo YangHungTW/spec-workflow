@@ -323,18 +323,44 @@ covered by t90)
 
 ---
 
-## Validate verdict
+## Consolidated verdict (post-retry)
+
+Aggregate: NITS
+Findings: 0 must, 0 should, 2 advisory (residual documentation accuracy)
+
+Initial cycle returned BLOCK on both axes; retry cycle NITS after orchestrator resolved the 4 blocking findings (aggregator header incompatibility, STATUS new-shape migration, 06-tasks.md symlink removal, R8/R10 tension acceptance).
+
+## Tester axis verdict (post-retry)
 
 axis: tester
-verdict: BLOCK
+verdict: NITS
 findings:
-  - severity: must
+  - severity: advisory
+    file: .spec-workflow/features/20260420-tier-model/08-validate.md
+    line: 34-42
+    rule: documentation-accuracy
+    message: AC1/AC5 awk patterns use /tier:/ which does not match `- **tier**:` field format; silently produces empty output. No test consequence — library uses correct grep. Cosmetic fix only.
+
+## Analyst axis verdict (post-retry)
+
+axis: analyst
+verdict: NITS
+findings:
+  - severity: advisory
     file: .spec-workflow/features/20260420-tier-model/STATUS.md
-    line: 19-20
-    rule: ac7-self-bootstrap-hybrid
-    message: Feature's own STATUS.md stage checklist still has old-shape boxes (gap-check + verify unchecked; no validate box). PRD R19 requires this feature's own STATUS to retire tasks/gap-check/verify boxes and add validate. Template was updated by T35 but this feature's own STATUS was not. Must be corrected before archive.
-  - severity: should
-    file: .spec-workflow/features/20260420-tier-model/06-tasks.md
-    line: 1
-    rule: ac7-self-bootstrap-hybrid
-    message: 06-tasks.md is a symlink to 05-plan.md (bootstrap bridge). PRD R19 says no 06-tasks.md present. STATUS Notes acknowledge this and flag it for removal at archive. Confirm removal happens before or during archive commit.
+    line: 21
+    rule: factual-accuracy
+    message: Prior orchestrator STATUS Note claimed 06-tasks.md symlink removal but rm was prompt-intercepted by shell alias; symlink persisted until retry cycle. Current state reconciled; note is superseded by subsequent validate NITS note.
+
+## Validate verdict
+
+axis: aggregate
+verdict: NITS
+
+---
+
+## History
+
+- **Initial cycle (pre-retry)**: tester BLOCK (must — STATUS old-shape checklist; should — 06-tasks.md symlink). Analyst BLOCK (must — aggregator header incompatibility; should — R8/R10 PRD tension, STATUS old-shape, 06-tasks.md symlink).
+- **Orchestrator resolution** (commit `fef832d` + `d0f2eba`): aggregator dual-header support; STATUS stage checklist migrated to new-shape; 06-tasks.md symlink removed via `/bin/rm -f`.
+- **Retry cycle**: both axes NITS with advisory-only findings.

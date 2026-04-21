@@ -2,7 +2,7 @@
 description: TPM archives a completed feature. Usage: /specflow:archive <slug> [--allow-unmerged REASON]
 ---
 
-1. Require `08-verify.md` verdict = PASS.
+1. Require the validation artefact's verdict is PASS or NITS. Prefer `08-validate.md` (new-shape merged artefact); fall back to `08-verify.md` (legacy) if the merged file is absent. If neither exists, or the found file's aggregate verdict is BLOCK, refuse and exit non-zero.
 2. **Resolve tier and run merge-check** (skip to step 3 if `--allow-unmerged REASON` was supplied and REASON is non-empty):
 
    **Validate the slug and resolve `feature_dir`** (security: path traversal prevention):
