@@ -78,8 +78,6 @@
   "notification.stalled-title": "Session stalled: {slug}",
   "notification.stalled-body": "{stage} · idle for {duration} · {repo}",
 
-  "markdown.footer": "Read-only preview. Open in Finder to edit.",
-
   "sort.label": "Sort by",
   "sort.lastUpdatedDesc": "Last Updated",
   "sort.stage": "Stage",
