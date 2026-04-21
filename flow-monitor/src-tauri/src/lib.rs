@@ -1,3 +1,4 @@
+pub mod audit;
 pub mod ipc;
 pub mod invoke;
 pub mod notify;

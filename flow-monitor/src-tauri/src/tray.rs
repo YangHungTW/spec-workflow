@@ -152,6 +152,7 @@ mod tests {
             last_activity: SystemTime::now(),
             stage_checklist: vec![],
             notes: vec![],
+            // has_ui added to SessionState when B1 merged the field; keep default.
             has_ui: false,
             raw_status_path: PathBuf::new(),
         }
