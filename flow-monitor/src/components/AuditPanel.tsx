@@ -13,7 +13,7 @@ export interface AuditLine {
   ts: string;
   /** Session slug. */
   slug: string;
-  /** specflow command name (e.g. "implement"). */
+  /** scaff command name (e.g. "implement"). */
   command: string;
   /** Entry-point that triggered the dispatch (kebab-case). */
   entry_point: string;

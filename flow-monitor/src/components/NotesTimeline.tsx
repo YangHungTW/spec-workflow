@@ -1,5 +1,5 @@
 /**
- * NotesTimeline — renders the STATUS Notes timeline for a specflow feature.
+ * NotesTimeline — renders the STATUS Notes timeline for a scaff feature.
  *
  * Ordering: newest-first (AC9.i). The component sorts a copy of the input
  * descending by date string. ISO-8601 date strings (YYYY-MM-DD) sort
