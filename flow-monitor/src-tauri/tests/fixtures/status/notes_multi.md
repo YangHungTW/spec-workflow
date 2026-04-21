@@ -17,7 +17,7 @@
 - [x] implement     (tasks checked off)          — Developer
 - [x] gap-check     (07-gaps.md, verdict PASS)   — QA-analyst
 - [ ] verify        (08-verify.md, verdict PASS) — QA-tester
-- [ ] archive       (moved to .spec-workflow/archive/)     — TPM
+- [ ] archive       (moved to .specaffold/archive/)     — TPM
 
 ## Notes
 - 2026-01-05 PM — created initial request
