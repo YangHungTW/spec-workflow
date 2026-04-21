@@ -47,7 +47,7 @@ fi
 # 2. Seed a sandbox git worktree with matching branch
 # ---------------------------------------------------------------------------
 FEAT_SLUG="20260418-fixture-feature"
-FEAT_DIR="$SANDBOX/repo/.spec-workflow/features/$FEAT_SLUG"
+FEAT_DIR="$SANDBOX/repo/.specaffold/features/$FEAT_SLUG"
 REPO_SANDBOX="$SANDBOX/repo"
 
 mkdir -p "$REPO_SANDBOX"

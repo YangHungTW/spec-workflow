@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# test/t37_review_oneshot.sh — shape test for .claude/commands/specflow/review.md
+# test/t37_review_oneshot.sh — shape test for .claude/commands/scaff/review.md
 # Verifies the command file exists with the required frontmatter, documented flags,
 # report filename pattern, STATUS policy, and exit code semantics.
 # Usage: bash test/t37_review_oneshot.sh
@@ -16,7 +16,7 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd -P)"
 # ---------------------------------------------------------------------------
 # Sandbox / HOME preflight (sandbox-home-in-tests rule — non-negotiable)
 # ---------------------------------------------------------------------------
-SANDBOX="$(mktemp -d 2>/dev/null || mktemp -d -t specflow-t37)"
+SANDBOX="$(mktemp -d 2>/dev/null || mktemp -d -t scaff-t37)"
 trap 'rm -rf "$SANDBOX"' EXIT
 
 export HOME="$SANDBOX/home"
@@ -36,7 +36,7 @@ FAIL=0
 pass() { echo "PASS: $1"; PASS=$((PASS + 1)); }
 fail() { echo "FAIL: $1"; FAIL=$((FAIL + 1)); }
 
-REVIEW_MD="$REPO_ROOT/.claude/commands/specflow/review.md"
+REVIEW_MD="$REPO_ROOT/.claude/commands/scaff/review.md"
 
 echo "=== t37_review_oneshot ==="
 
@@ -63,12 +63,12 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# Check 3: description mentions /specflow:review <slug>
+# Check 3: description mentions /scaff:review <slug>
 # ---------------------------------------------------------------------------
-if grep -q '/specflow:review' "$REVIEW_MD"; then
-  pass "Check 3: description mentions /specflow:review <slug>"
+if grep -q '/scaff:review' "$REVIEW_MD"; then
+  pass "Check 3: description mentions /scaff:review <slug>"
 else
-  fail "Check 3: description does not mention /specflow:review <slug>"
+  fail "Check 3: description does not mention /scaff:review <slug>"
 fi
 
 # ---------------------------------------------------------------------------

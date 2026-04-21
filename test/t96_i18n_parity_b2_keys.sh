@@ -84,7 +84,7 @@ audit.panel.title
 audit.entry.via
 stalled.badge
 palette.group.control
-palette.group.specflow
+palette.group.scaff
 palette.group.destroy
 modal.destroy.title
 modal.destroy.cancel
@@ -124,7 +124,7 @@ audit.panel.title
 audit.entry.via
 stalled.badge
 palette.group.control
-palette.group.specflow
+palette.group.scaff
 palette.group.destroy
 modal.destroy.title
 modal.destroy.cancel
@@ -193,7 +193,7 @@ audit.panel.title
 audit.entry.via
 stalled.badge
 palette.group.control
-palette.group.specflow
+palette.group.scaff
 palette.group.destroy
 modal.destroy.title
 modal.destroy.cancel

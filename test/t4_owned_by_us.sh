@@ -8,7 +8,7 @@
 
 set -u -o pipefail
 
-WORKTREE="/Users/yanghungtw/Tools/spec-workflow/.worktrees/symlink-operation-T10"
+WORKTREE="/Users/yanghungtw/Tools/specaffold/.worktrees/symlink-operation-T10"
 SCRIPT="$WORKTREE/bin/claude-symlink"
 PASS=0
 FAIL=0
@@ -44,28 +44,28 @@ assert_owned() {
   fi
 }
 
-# Case 1: Symlink whose target is inside $REPO/.claude/agents/specflow → returns 0 (ours)
+# Case 1: Symlink whose target is inside $REPO/.claude/agents/scaff → returns 0 (ours)
 # We create a real directory to point to, then a symlink pointing at it.
-mkdir -p "$WORKTREE/.claude/agents/specflow"
+mkdir -p "$WORKTREE/.claude/agents/scaff"
 LINK1="$SANDBOX/link_ours"
-ln -s "$WORKTREE/.claude/agents/specflow" "$LINK1"
+ln -s "$WORKTREE/.claude/agents/scaff" "$LINK1"
 assert_owned \
-  "1. symlink into repo .claude/agents/specflow → owned (exit 0)" \
+  "1. symlink into repo .claude/agents/scaff → owned (exit 0)" \
   0 \
   "$LINK1"
 
-# Case 2: Symlink whose target is /tmp/fake/.claude/agents/specflow → returns 1 (foreign)
+# Case 2: Symlink whose target is /tmp/fake/.claude/agents/scaff → returns 1 (foreign)
 # The target doesn't need to exist; owned_by_us checks the path prefix only.
 LINK2="$SANDBOX/link_foreign"
-ln -s "/tmp/fake/.claude/agents/specflow" "$LINK2"
+ln -s "/tmp/fake/.claude/agents/scaff" "$LINK2"
 assert_owned \
-  "2. symlink into /tmp/fake/.claude/agents/specflow → foreign (exit 1)" \
+  "2. symlink into /tmp/fake/.claude/agents/scaff → foreign (exit 1)" \
   1 \
   "$LINK2"
 
 # Case 3: Sibling-repo path — shares string prefix WITHOUT trailing slash boundary
-# e.g. ${REPO}-fork/.claude/agents/specflow. With trailing slash this must NOT match.
-SIBLING_TARGET="${WORKTREE}-fork/.claude/agents/specflow"
+# e.g. ${REPO}-fork/.claude/agents/scaff. With trailing slash this must NOT match.
+SIBLING_TARGET="${WORKTREE}-fork/.claude/agents/scaff"
 LINK3="$SANDBOX/link_sibling"
 ln -s "$SIBLING_TARGET" "$LINK3"
 assert_owned \

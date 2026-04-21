@@ -18,7 +18,7 @@
 
 set -u -o pipefail
 
-WORKTREE="/Users/yanghungtw/Tools/spec-workflow/.worktrees/symlink-operation-T10"
+WORKTREE="/Users/yanghungtw/Tools/specaffold/.worktrees/symlink-operation-T10"
 SCRIPT="$WORKTREE/bin/claude-symlink"
 REPO="$WORKTREE"
 PASS=0
@@ -272,8 +272,8 @@ echo "--- Scenario D: real-file conflict → skip conflicted path, reconcile oth
   SANDBOX_HOME=$(make_sandbox_home "scenario_d")
   export HOME="$SANDBOX_HOME"
 
-  # Pre-place a real file at the agents/specflow managed target
-  conflict_path="$SANDBOX_HOME/.claude/agents/specflow"
+  # Pre-place a real file at the agents/scaff managed target
+  conflict_path="$SANDBOX_HOME/.claude/agents/scaff"
   mkdir -p "$(dirname "$conflict_path")"
   echo "user content — do not overwrite" > "$conflict_path"
 
@@ -298,12 +298,12 @@ echo "--- Scenario D: real-file conflict → skip conflicted path, reconcile oth
     fail "D: real file was modified or removed"
   fi
 
-  # Other links must still be created (commands/specflow should exist as a symlink)
-  commands_link="$SANDBOX_HOME/.claude/commands/specflow"
+  # Other links must still be created (commands/scaff should exist as a symlink)
+  commands_link="$SANDBOX_HOME/.claude/commands/scaff"
   if [ -L "$commands_link" ]; then
-    pass "D: other links (commands/specflow) reconciled despite conflict"
+    pass "D: other links (commands/scaff) reconciled despite conflict"
   else
-    fail "D: commands/specflow was not created — update should continue past conflicts"
+    fail "D: commands/scaff was not created — update should continue past conflicts"
   fi
 }
 

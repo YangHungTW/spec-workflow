@@ -9,21 +9,21 @@
 # The hash captures both content (shasum) and mtime so a write-then-restore
 # would still be caught.  A pure read does NOT change mtime, which is
 # intentional — R8 AC8.c is a disk-mutation guard, not a syscall-count guard.
-# Static analysis of bin/specflow-seed (grep) is the appropriate read-check.
+# Static analysis of bin/scaff-seed (grep) is the appropriate read-check.
 #
 # RED until T7 (cmd_update implementation) is merged.
 set -euo pipefail
 
 # ---------------------------------------------------------------------------
-# Locate bin/specflow-seed relative to this script — never hardcode the path
+# Locate bin/scaff-seed relative to this script — never hardcode the path
 # so the test survives worktree moves and CI checkouts.
 # ---------------------------------------------------------------------------
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-SEED="${SEED:-$REPO_ROOT/bin/specflow-seed}"
+SEED="${SEED:-$REPO_ROOT/bin/scaff-seed}"
 
 if [ ! -x "$SEED" ]; then
-  echo "FAIL: setup: specflow-seed not found or not executable: $SEED" >&2
+  echo "FAIL: setup: scaff-seed not found or not executable: $SEED" >&2
   exit 1
 fi
 
@@ -105,17 +105,17 @@ SRC_B="$SANDBOX/src-at-ref-b"
 mkdir -p "$SRC_B"
 
 cp -R "$REPO_ROOT/.claude" "$SRC_B/.claude"
-mkdir -p "$SRC_B/bin" "$SRC_B/.spec-workflow/features/_template"
+mkdir -p "$SRC_B/bin" "$SRC_B/.specaffold/features/_template"
 
-cp "$REPO_ROOT/bin/specflow-seed"         "$SRC_B/bin/specflow-seed"
-cp "$REPO_ROOT/bin/specflow-install-hook" "$SRC_B/bin/specflow-install-hook"
+cp "$REPO_ROOT/bin/scaff-seed"         "$SRC_B/bin/scaff-seed"
+cp "$REPO_ROOT/bin/scaff-install-hook" "$SRC_B/bin/scaff-install-hook"
 
-if [ -d "$REPO_ROOT/.spec-workflow/features/_template" ]; then
-  cp -R "$REPO_ROOT/.spec-workflow/features/_template/." \
-        "$SRC_B/.spec-workflow/features/_template/"
+if [ -d "$REPO_ROOT/.specaffold/features/_template" ]; then
+  cp -R "$REPO_ROOT/.specaffold/features/_template/." \
+        "$SRC_B/.specaffold/features/_template/"
 fi
 
-echo '# ref-B change' >> "$SRC_B/.claude/agents/specflow/architect.md"
+echo '# ref-B change' >> "$SRC_B/.claude/agents/scaff/architect.md"
 
 git -C "$SRC_B" init -q
 git -C "$SRC_B" config user.email "t@example.com"

@@ -2,14 +2,14 @@
 # test/t77_deprecation_stubs.sh
 #
 # Structural tests for the four retired-command deprecation stubs:
-#   brainstorm → /specflow:prd   (PRD R4)
-#   tasks      → /specflow:plan  (PRD R4)
-#   verify     → /specflow:validate  (PRD R4)
-#   gap-check  → /specflow:validate  (PRD R4)
+#   brainstorm → /scaff:prd   (PRD R4)
+#   tasks      → /scaff:plan  (PRD R4)
+#   verify     → /scaff:validate  (PRD R4)
+#   gap-check  → /scaff:validate  (PRD R4)
 #
 # Per-command assertions (tech §D8, tech §4.4):
 #   1. Command file exists.
-#   2. Frontmatter description: line matches RETIRED — see /specflow:<successor> shape.
+#   2. Frontmatter description: line matches RETIRED — see /scaff:<successor> shape.
 #   3. Successor mapping matches PRD R4 verbatim.
 #   4. Structural invocation proxy: body contains expected no-mutation and
 #      non-zero-exit sentinels (full slash-command invocation from bash is
@@ -61,14 +61,14 @@ pass() { printf 'PASS: %s\n' "$1"; PASS=$((PASS + 1)); }
 fail() { printf 'FAIL: %s\n' "$1" >&2; FAIL=$((FAIL + 1)); }
 skip() { printf 'SKIP: %s\n' "$1" >&2; SKIP=$((SKIP + 1)); }
 
-COMMANDS_DIR="$REPO_ROOT/.claude/commands/specflow"
+COMMANDS_DIR="$REPO_ROOT/.claude/commands/scaff"
 
 # ---------------------------------------------------------------------------
 # check_stub <command> <expected_successor>
 #
 # Asserts for one retired command:
 #   A. File exists.
-#   B. description: line begins with "RETIRED — see /specflow:<successor>"
+#   B. description: line begins with "RETIRED — see /scaff:<successor>"
 #      (shape per D8 stub template).
 #   C. Successor token in description matches <expected_successor> exactly.
 #   D. Structural proxy: body contains "No STATUS mutation occurs" (D8 template).
@@ -81,7 +81,7 @@ check_stub() {
   local cmd="$1"
   local expected_successor="$2"
   local file="$COMMANDS_DIR/${cmd}.md"
-  local label="$cmd → /specflow:${expected_successor}"
+  local label="$cmd → /scaff:${expected_successor}"
 
   # A. File must exist
   if [ ! -f "$file" ]; then
@@ -105,9 +105,9 @@ check_stub() {
       ;;
   esac
 
-  # B. description: line matches RETIRED — see /specflow:<successor> shape
+  # B. description: line matches RETIRED — see /scaff:<successor> shape
   case "$desc_line" in
-    "description: RETIRED — see /specflow:"*)
+    "description: RETIRED — see /scaff:"*)
       pass "[$label] B: description: line has RETIRED shape"
       ;;
     *)
@@ -116,9 +116,9 @@ check_stub() {
   esac
 
   # C. Successor token matches expected_successor
-  # Extract token after "see /specflow:" — stop at first non-word char (. space etc.)
+  # Extract token after "see /scaff:" — stop at first non-word char (. space etc.)
   local desc_after
-  desc_after="${desc_line##*see /specflow:}"
+  desc_after="${desc_line##*see /scaff:}"
   # Trim everything from first non-alphanumeric-hyphen character
   local actual_successor
   actual_successor="$(printf '%s' "$desc_after" | awk '{gsub(/[^a-zA-Z0-9-].*/, ""); print}')"

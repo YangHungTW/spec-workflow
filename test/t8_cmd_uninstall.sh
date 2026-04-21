@@ -15,7 +15,7 @@
 
 set -u -o pipefail
 
-WORKTREE="/Users/yanghungtw/Tools/spec-workflow/.worktrees/symlink-operation-T13"
+WORKTREE="/Users/yanghungtw/Tools/specaffold/.worktrees/symlink-operation-T13"
 SCRIPT="$WORKTREE/bin/claude-symlink"
 REPO="$WORKTREE"
 PASS=0
@@ -118,20 +118,20 @@ echo "--- Scenario A: Install then uninstall — no owned symlinks remain ---"
   assert_zero "A: uninstall exit code is 0" "$exit_code"
 
   # No tool-owned symlinks should remain under managed roots
-  # Check agents/specflow
-  agents_link="$SANDBOX_HOME/.claude/agents/specflow"
+  # Check agents/scaff
+  agents_link="$SANDBOX_HOME/.claude/agents/scaff"
   if [ ! -L "$agents_link" ]; then
-    pass "A: agents/specflow symlink removed"
+    pass "A: agents/scaff symlink removed"
   else
-    fail "A: agents/specflow symlink still present after uninstall"
+    fail "A: agents/scaff symlink still present after uninstall"
   fi
 
-  # Check commands/specflow
-  commands_link="$SANDBOX_HOME/.claude/commands/specflow"
+  # Check commands/scaff
+  commands_link="$SANDBOX_HOME/.claude/commands/scaff"
   if [ ! -L "$commands_link" ]; then
-    pass "A: commands/specflow symlink removed"
+    pass "A: commands/scaff symlink removed"
   else
-    fail "A: commands/specflow symlink still present after uninstall"
+    fail "A: commands/scaff symlink still present after uninstall"
   fi
 
   # No owned symlinks remain under team-memory
@@ -191,10 +191,10 @@ echo "--- Scenario C: Foreign symlink at managed path → skipped:not-ours ---"
   SANDBOX_HOME=$(make_sandbox_home "scenario_c")
   export HOME="$SANDBOX_HOME"
 
-  # Ensure the agents dir exists but place a foreign symlink at agents/specflow
+  # Ensure the agents dir exists but place a foreign symlink at agents/scaff
   agents_dir="$SANDBOX_HOME/.claude/agents"
   mkdir -p "$agents_dir"
-  decoy_link="$agents_dir/specflow"
+  decoy_link="$agents_dir/scaff"
   ln -s /tmp/decoy "$decoy_link"
 
   # Uninstall

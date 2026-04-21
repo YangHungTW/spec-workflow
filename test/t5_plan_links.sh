@@ -5,7 +5,7 @@
 
 set -u -o pipefail
 
-WORKTREE="/Users/yanghungtw/Tools/spec-workflow/.worktrees/symlink-operation-T10"
+WORKTREE="/Users/yanghungtw/Tools/specaffold/.worktrees/symlink-operation-T10"
 SCRIPT="$WORKTREE/bin/claude-symlink"
 REPO="$WORKTREE"
 PASS=0
@@ -55,8 +55,8 @@ second_line=$(HOME="$FAKE_HOME" SPECFLOW_PROBE=1 "$SCRIPT" __probe plan 2>/dev/n
 first_tgt=$(printf '%s' "$first_line" | cut -f2)
 second_tgt=$(printf '%s' "$second_line" | cut -f2)
 
-expected_first_tgt="$FAKE_HOME/.claude/agents/specflow"
-expected_second_tgt="$FAKE_HOME/.claude/commands/specflow"
+expected_first_tgt="$FAKE_HOME/.claude/agents/scaff"
+expected_second_tgt="$FAKE_HOME/.claude/commands/scaff"
 
 if [ "$first_tgt" = "$expected_first_tgt" ]; then
   echo "PASS: 2a. first line target = $expected_first_tgt"

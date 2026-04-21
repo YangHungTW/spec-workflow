@@ -62,8 +62,8 @@ fi
 
 # ---------------------------------------------------------------------------
 # AC-4: scan the whole repo for unexpected files containing the literal marker
-# Excludes: .git/, .spec-workflow/archive/, this test file itself, and the
-# feature spec dir (.spec-workflow/features/20260419-language-preferences/).
+# Excludes: .git/, .specaffold/archive/, this test file itself, and the
+# feature spec dir (.specaffold/features/20260419-language-preferences/).
 # The rule is the only file expected to carry the literal string; the hook
 # emits it dynamically.
 # ---------------------------------------------------------------------------
@@ -71,7 +71,7 @@ cd "$REPO_ROOT"
 UNEXPECTED=$(grep -rlF 'LANG_CHAT=zh-TW' . 2>/dev/null \
   | grep -v '^\./\.git/' \
   | grep -v '^\./\.worktrees/' \
-  | grep -v '^\./\.spec-workflow/archive/' \
+  | grep -v '^\./\.specaffold/archive/' \
   | grep -v '^\./\.claude/rules/common/language-preferences\.md$' \
   | grep -v '^\./test/t53_' \
   | grep -v '^\./test/t51_rule_file_shape\.sh$' \
@@ -82,8 +82,8 @@ UNEXPECTED=$(grep -rlF 'LANG_CHAT=zh-TW' . 2>/dev/null \
   | grep -v '^\./test/t71_userlang_stop_on_first_invalid\.sh$' \
   | grep -v '^\./test/t72_userlang_missing_doesnt_stop\.sh$' \
   | grep -v '^\./README\.md$' \
-  | grep -v '^\./\.spec-workflow/features/20260419-language-preferences/' \
-  | grep -v '^\./\.spec-workflow/features/20260419-user-lang-config-fallback/' \
+  | grep -v '^\./\.specaffold/features/20260419-language-preferences/' \
+  | grep -v '^\./\.specaffold/features/20260419-user-lang-config-fallback/' \
   || true)
 
 if [ -z "$UNEXPECTED" ]; then

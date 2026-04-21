@@ -5,7 +5,7 @@
 #
 # Unlike t82 (structural grep), this test exercises the actual git-based
 # logic specified in archive.md by constructing a mock git repo in a sandbox,
-# sourcing bin/specflow-tier for get_tier, and running the git commands
+# sourcing bin/scaff-tier for get_tier, and running the git commands
 # directly (same code blocks as archive.md).
 #
 # Coverage (T27 spec):
@@ -27,7 +27,7 @@ set -u -o pipefail
 # ---------------------------------------------------------------------------
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd -P)"
-TIER_LIB="${TIER_LIB:-$REPO_ROOT/bin/specflow-tier}"
+TIER_LIB="${TIER_LIB:-$REPO_ROOT/bin/scaff-tier}"
 
 # ---------------------------------------------------------------------------
 # Sandbox-HOME (sandbox-home-in-tests.md).
@@ -45,7 +45,7 @@ case "$HOME" in
 esac
 
 # ---------------------------------------------------------------------------
-# Guard: specflow-tier library must exist (RED until T2 merges).
+# Guard: scaff-tier library must exist (RED until T2 merges).
 # ---------------------------------------------------------------------------
 if [ ! -f "$TIER_LIB" ]; then
   printf 'SKIP: %s not found — T2 not yet merged; re-run post-wave.\n' \
@@ -68,7 +68,7 @@ fail() { printf 'FAIL: %s\n' "$1" >&2; FAIL=$((FAIL + 1)); }
 #
 # Layout:
 #   $GIT_REPO/
-#     .spec-workflow/features/<slug>/STATUS.md
+#     .specaffold/features/<slug>/STATUS.md
 #
 # On entry:
 #   - main branch exists with one commit
@@ -104,7 +104,7 @@ setup_mock_repo() {
   git -C "$git_repo" checkout -q -b feature-branch
 
   # Build the STATUS.md fixture inside the feature branch commit.
-  local feat_dir="$git_repo/.spec-workflow/features/$slug"
+  local feat_dir="$git_repo/.specaffold/features/$slug"
   mkdir -p "$feat_dir"
 
   if [ "$tier_spec" = "_missing" ]; then
@@ -115,7 +115,7 @@ setup_mock_repo() {
       "$slug" "$tier_spec" > "$feat_dir/STATUS.md"
   fi
 
-  git -C "$git_repo" add .spec-workflow
+  git -C "$git_repo" add .specaffold
   git -C "$git_repo" commit -q -m "add feature $slug"
   # Caller is now on feature-branch, which has NOT been merged into main.
 }
@@ -142,7 +142,7 @@ setup_mock_repo() {
 #
 # Side effect: if accepted with a non-empty reason, appends STATUS Notes line.
 #
-# Note: we load specflow-tier with REPO_ROOT pointing at the mock git repo so
+# Note: we load scaff-tier with REPO_ROOT pointing at the mock git repo so
 # the boundary check inside _tier_resolve_and_check accepts paths under it.
 # ---------------------------------------------------------------------------
 run_archive_check() {
@@ -211,7 +211,7 @@ run_archive_check() {
 REPO1="$SANDBOX/repo1"
 SLUG1="test-standard"
 setup_mock_repo "$REPO1" "$SLUG1" "standard"
-FEAT1="$REPO1/.spec-workflow/features/$SLUG1"
+FEAT1="$REPO1/.specaffold/features/$SLUG1"
 
 OUT1="$SANDBOX/t1.err"
 set +e
@@ -238,7 +238,7 @@ fi
 REPO2="$SANDBOX/repo2"
 SLUG2="test-standard-bypass"
 setup_mock_repo "$REPO2" "$SLUG2" "standard"
-FEAT2="$REPO2/.spec-workflow/features/$SLUG2"
+FEAT2="$REPO2/.specaffold/features/$SLUG2"
 
 STATUS_BEFORE="$(wc -l < "$FEAT2/STATUS.md" | tr -d ' ')"
 
@@ -288,7 +288,7 @@ fi
 REPO3="$SANDBOX/repo3"
 SLUG3="test-no-reason"
 setup_mock_repo "$REPO3" "$SLUG3" "standard"
-FEAT3="$REPO3/.spec-workflow/features/$SLUG3"
+FEAT3="$REPO3/.specaffold/features/$SLUG3"
 
 set +e
 run_archive_check "$REPO3" "$FEAT3" "__empty__" 2>"$SANDBOX/t3.err"
@@ -307,7 +307,7 @@ fi
 REPO4="$SANDBOX/repo4"
 SLUG4="test-tiny"
 setup_mock_repo "$REPO4" "$SLUG4" "tiny"
-FEAT4="$REPO4/.spec-workflow/features/$SLUG4"
+FEAT4="$REPO4/.specaffold/features/$SLUG4"
 
 STATUS4_BEFORE="$(cat "$FEAT4/STATUS.md")"
 
@@ -336,7 +336,7 @@ fi
 REPO5="$SANDBOX/repo5"
 SLUG5="test-missing"
 setup_mock_repo "$REPO5" "$SLUG5" "_missing"
-FEAT5="$REPO5/.spec-workflow/features/$SLUG5"
+FEAT5="$REPO5/.specaffold/features/$SLUG5"
 
 set +e
 run_archive_check "$REPO5" "$FEAT5" "" 2>"$SANDBOX/t5.err"

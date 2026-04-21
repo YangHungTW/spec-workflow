@@ -45,17 +45,17 @@ fi
 
 # ---------------------------------------------------------------------------
 # Fixture: XDG config has zh-TW; tilde fallback has en.
-# No .spec-workflow/config.yml (project candidate absent).
+# No .specaffold/config.yml (project candidate absent).
 # XDG wins over tilde because it appears earlier in the candidate list.
 # ---------------------------------------------------------------------------
 export XDG_CONFIG_HOME="$SANDBOX/xdg"
-mkdir -p "$XDG_CONFIG_HOME/specflow"
-printf 'lang:\n  chat: zh-TW\n' > "$XDG_CONFIG_HOME/specflow/config.yml"
+mkdir -p "$XDG_CONFIG_HOME/scaff"
+printf 'lang:\n  chat: zh-TW\n' > "$XDG_CONFIG_HOME/scaff/config.yml"
 
-mkdir -p "$HOME/.config/specflow"
-printf 'lang:\n  chat: en\n' > "$HOME/.config/specflow/config.yml"
+mkdir -p "$HOME/.config/scaff"
+printf 'lang:\n  chat: en\n' > "$HOME/.config/scaff/config.yml"
 
-# Consumer repo directory — no .spec-workflow/config.yml present (project absent)
+# Consumer repo directory — no .specaffold/config.yml present (project absent)
 CONSUMER="$SANDBOX/repo"
 mkdir -p "$CONSUMER"
 

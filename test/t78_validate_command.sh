@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # test/tN_validate_command.sh
 #
-# Structural tests for .claude/commands/specflow/validate.md (T11).
+# Structural tests for .claude/commands/scaff/validate.md (T11).
 #
 # Verifications (from T11 Verify clause in 05-plan.md):
 #   1. File exists.
 #   2. Frontmatter description: line is present.
 #   3. The command describes parallel dispatch of qa-tester AND qa-analyst.
 #   4. Uses "## Validate verdict" footer naming (PRD R18), NOT "## Reviewer verdict".
-#   5. Calls bin/specflow-aggregate-verdicts with tester analyst axes (D5, R17).
+#   5. Calls bin/scaff-aggregate-verdicts with tester analyst axes (D5, R17).
 #   6. Composes 08-validate.md artefact.
 #   7. STATUS update is conditional on PASS or NITS only (BLOCK leaves box unchecked).
 #   8. All shell pseudocode is bash 3.2 portability-clean (no readlink -f, no realpath,
@@ -25,7 +25,7 @@ set -euo pipefail
 # ---------------------------------------------------------------------------
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd -P)"
-TARGET="$REPO_ROOT/.claude/commands/specflow/validate.md"
+TARGET="$REPO_ROOT/.claude/commands/scaff/validate.md"
 
 # ---------------------------------------------------------------------------
 # Sandbox — HOME isolation (sandbox-home-in-tests.md)
@@ -122,12 +122,12 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# Test 5 — Calls bin/specflow-aggregate-verdicts with tester analyst (D5, R17)
+# Test 5 — Calls bin/scaff-aggregate-verdicts with tester analyst (D5, R17)
 # ---------------------------------------------------------------------------
-if grep -q 'specflow-aggregate-verdicts' "$TARGET" 2>/dev/null; then
-  pass "bin/specflow-aggregate-verdicts referenced"
+if grep -q 'scaff-aggregate-verdicts' "$TARGET" 2>/dev/null; then
+  pass "bin/scaff-aggregate-verdicts referenced"
 else
-  fail "bin/specflow-aggregate-verdicts not referenced in validate.md"
+  fail "bin/scaff-aggregate-verdicts not referenced in validate.md"
 fi
 
 if grep -q 'tester' "$TARGET" 2>/dev/null && grep -q 'analyst' "$TARGET" 2>/dev/null; then

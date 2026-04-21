@@ -5,7 +5,7 @@
 
 set -u -o pipefail
 
-SCRIPT="/Users/yanghungtw/Tools/spec-workflow/bin/claude-symlink"
+SCRIPT="/Users/yanghungtw/Tools/specaffold/bin/claude-symlink"
 PASS=0
 FAIL=0
 

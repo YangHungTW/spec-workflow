@@ -12,7 +12,7 @@
 
 set -u -o pipefail
 
-WORKTREE="/Users/yanghungtw/Tools/spec-workflow/.worktrees/symlink-operation-T10"
+WORKTREE="/Users/yanghungtw/Tools/specaffold/.worktrees/symlink-operation-T10"
 SCRIPT="$WORKTREE/bin/claude-symlink"
 REPO="$WORKTREE"
 PASS=0
@@ -119,7 +119,7 @@ echo "--- install: conflict run ---"
 {
   SBX=$(make_sandbox_home "install_conflict")
   mkdir -p "$SBX/.claude/agents"
-  echo "conflict" > "$SBX/.claude/agents/specflow"
+  echo "conflict" > "$SBX/.claude/agents/scaff"
 
   output=$(HOME="$SBX" "$SCRIPT" install 2>/dev/null)
   exit_code=$?
@@ -178,9 +178,9 @@ echo "--- uninstall: conflict run (skipped:not-ours) ---"
 {
   SBX=$(make_sandbox_home "uninstall_conflict")
 
-  # Place a foreign symlink at agents/specflow
+  # Place a foreign symlink at agents/scaff
   mkdir -p "$SBX/.claude/agents"
-  ln -s /tmp/decoy "$SBX/.claude/agents/specflow"
+  ln -s /tmp/decoy "$SBX/.claude/agents/scaff"
 
   output=$(HOME="$SBX" "$SCRIPT" uninstall 2>/dev/null)
   exit_code=$?
@@ -239,7 +239,7 @@ echo "--- update: conflict run ---"
 {
   SBX=$(make_sandbox_home "update_conflict")
   mkdir -p "$SBX/.claude/agents"
-  echo "conflict" > "$SBX/.claude/agents/specflow"
+  echo "conflict" > "$SBX/.claude/agents/scaff"
 
   output=$(HOME="$SBX" "$SCRIPT" update 2>/dev/null)
   exit_code=$?
@@ -355,7 +355,7 @@ echo "--- dry-run: conflict does not bump exit code ---"
 {
   SBX=$(make_sandbox_home "dryrun_conflict")
   mkdir -p "$SBX/.claude/agents"
-  echo "conflict" > "$SBX/.claude/agents/specflow"
+  echo "conflict" > "$SBX/.claude/agents/scaff"
 
   output=$(HOME="$SBX" "$SCRIPT" install --dry-run 2>/dev/null)
   exit_code=$?

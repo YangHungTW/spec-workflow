@@ -18,7 +18,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-SEED="${SEED:-$REPO_ROOT/bin/specflow-seed}"
+SEED="${SEED:-$REPO_ROOT/bin/scaff-seed}"
 
 # ---------------------------------------------------------------------------
 # Sandbox — HOME isolation mandatory (sandbox-home-in-tests.md)
@@ -80,10 +80,10 @@ git -C "$SRC_B" add -A
 git -C "$SRC_B" commit -q -m "ref-A baseline"
 
 # Mutate architect.md — clean drifted path (no user edit will touch this)
-printf '\n# ref-B architect change\n' >> "$SRC_B/.claude/agents/specflow/architect.md"
+printf '\n# ref-B architect change\n' >> "$SRC_B/.claude/agents/scaff/architect.md"
 
 # Mutate pm.md — conflict path (user will also edit this file)
-printf '\n# ref-B pm change\n' >> "$SRC_B/.claude/agents/specflow/pm.md"
+printf '\n# ref-B pm change\n' >> "$SRC_B/.claude/agents/scaff/pm.md"
 
 git -C "$SRC_B" add -A
 git -C "$SRC_B" commit -q -m "ref-B changes"
@@ -107,10 +107,10 @@ make_consumer "$CONSUMER"
 #   baseline = ref-A content
 # Since actual != baseline AND actual != expected, the state is user-modified.
 # ---------------------------------------------------------------------------
-printf '\n# user local edit\n' >> "$CONSUMER/.claude/agents/specflow/pm.md"
+printf '\n# user local edit\n' >> "$CONSUMER/.claude/agents/scaff/pm.md"
 
 # Preserve the post-edit content so we can assert byte-identity after update
-USER_CONTENT="$(cat "$CONSUMER/.claude/agents/specflow/pm.md")"
+USER_CONTENT="$(cat "$CONSUMER/.claude/agents/scaff/pm.md")"
 
 # ---------------------------------------------------------------------------
 # Step 5 — Run update; expect non-zero exit due to user-modified conflict
@@ -122,28 +122,28 @@ UPDATE_EXIT=$?
 set -e
 
 # R7 AC7.a — output must report skipped:user-modified for pm.md
-if ! grep -q "skipped:user-modified:.*pm\.md\|skipped:user-modified: \.claude/agents/specflow/pm\.md" "$UPDATE_OUT"; then
+if ! grep -q "skipped:user-modified:.*pm\.md\|skipped:user-modified: \.claude/agents/scaff/pm\.md" "$UPDATE_OUT"; then
   echo "FAIL: step 5a: expected 'skipped:user-modified' for pm.md in output; got:" >&2
   cat "$UPDATE_OUT" >&2
   exit 1
 fi
 
 # R7 AC7.a — pm.md must be byte-identical to user's post-edit content
-ACTUAL_CONTENT="$(cat "$CONSUMER/.claude/agents/specflow/pm.md")"
+ACTUAL_CONTENT="$(cat "$CONSUMER/.claude/agents/scaff/pm.md")"
 if [ "$ACTUAL_CONTENT" != "$USER_CONTENT" ]; then
   echo "FAIL: step 5b: pm.md content was modified by update; expected user content preserved" >&2
   exit 1
 fi
 
 # Conflict does not halt the run — architect.md (clean drifted path) must be replaced
-if ! grep -q "replaced:drifted:.*architect\.md\|replaced:drifted: \.claude/agents/specflow/architect\.md" "$UPDATE_OUT"; then
+if ! grep -q "replaced:drifted:.*architect\.md\|replaced:drifted: \.claude/agents/scaff/architect\.md" "$UPDATE_OUT"; then
   echo "FAIL: step 5c: expected 'replaced:drifted' for architect.md in output; got:" >&2
   cat "$UPDATE_OUT" >&2
   exit 1
 fi
 
 # R8 AC8.b — manifest ref must NOT have advanced (still ref-A)
-MANIFEST="$CONSUMER/.claude/specflow.manifest"
+MANIFEST="$CONSUMER/.claude/scaff.manifest"
 if ! grep -q "$REF_A" "$MANIFEST"; then
   echo "FAIL: step 5d: manifest ref should still be REF_A ($REF_A) after conflicted update; got:" >&2
   cat "$MANIFEST" >&2
@@ -162,7 +162,7 @@ fi
 # Write the ref-A baseline content back to pm.md so the classifier now sees
 # actual == baseline → drifted-ours, which the updater may overwrite cleanly.
 # ---------------------------------------------------------------------------
-cp "$REPO_ROOT/.claude/agents/specflow/pm.md" "$CONSUMER/.claude/agents/specflow/pm.md"
+cp "$REPO_ROOT/.claude/agents/scaff/pm.md" "$CONSUMER/.claude/agents/scaff/pm.md"
 
 RERUN_OUT="$SANDBOX/rerun-out.txt"
 set +e
@@ -171,7 +171,7 @@ RERUN_EXIT=$?
 set -e
 
 # After revert, pm.md should now be replaced:drifted (no conflict)
-if ! grep -q "replaced:drifted:.*pm\.md\|replaced:drifted: \.claude/agents/specflow/pm\.md" "$RERUN_OUT"; then
+if ! grep -q "replaced:drifted:.*pm\.md\|replaced:drifted: \.claude/agents/scaff/pm\.md" "$RERUN_OUT"; then
   echo "FAIL: step 6a: expected 'replaced:drifted' for pm.md on rerun; got:" >&2
   cat "$RERUN_OUT" >&2
   exit 1

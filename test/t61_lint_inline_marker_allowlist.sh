@@ -2,24 +2,24 @@
 # test/t61_lint_inline_marker_allowlist.sh
 #
 # Requirements: R5 AC5.c — allowlist surface 2: inline HTML-comment marker
-# Decision: D6 — <!-- specflow-lint: allow-cjk reason="..." --> suppresses
+# Decision: D6 — <!-- scaff-lint: allow-cjk reason="..." --> suppresses
 #           CJK scanning for the entire file that contains the marker line.
 #
 # Case A: fixture contains the inline marker + zh-TW content → exit 0,
 #         stdout has allowlisted:<path>:inline-marker
 # Case B: same fixture without the marker line → exit 1, stdout has cjk-hit:
 #
-# RED pre-T3 (specflow-lint not yet present).
+# RED pre-T3 (scaff-lint not yet present).
 # GREEN post-T3 merge.
 
 set -u -o pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd -P)"
-LINT="${LINT:-$REPO_ROOT/bin/specflow-lint}"
+LINT="${LINT:-$REPO_ROOT/bin/scaff-lint}"
 
 if [ ! -x "$LINT" ]; then
-  echo "FAIL: setup: bin/specflow-lint not found or not executable: $LINT" >&2
+  echo "FAIL: setup: bin/scaff-lint not found or not executable: $LINT" >&2
   exit 1
 fi
 
@@ -75,7 +75,7 @@ mkdir -p "$(dirname "$FIXTURE_ABS")"
 # ===========================================================================
 # Case A — inline marker present + zh-TW content → exit 0, allowlisted line
 # ===========================================================================
-printf '<!-- specflow-lint: allow-cjk reason="fixture for t61 integration test" -->\n\n這是測試夾具的中文內容。\n' \
+printf '<!-- scaff-lint: allow-cjk reason="fixture for t61 integration test" -->\n\n這是測試夾具的中文內容。\n' \
   > "$FIXTURE_ABS"
 git -C "$CONSUMER" add "$FIXTURE_REL"
 

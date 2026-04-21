@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# test/t74_specflow_tier.sh
+# test/t74_scaff_tier.sh
 #
-# Unit tests for bin/specflow-tier (sourceable bash library).
+# Unit tests for bin/scaff-tier (sourceable bash library).
 #
 # Coverage:
 #   1. get_tier — all five output states: tiny, standard, audited, missing,
@@ -25,7 +25,7 @@ set -u -o pipefail
 # ---------------------------------------------------------------------------
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd -P)"
-TIER_LIB="${TIER_LIB:-$REPO_ROOT/bin/specflow-tier}"
+TIER_LIB="${TIER_LIB:-$REPO_ROOT/bin/scaff-tier}"
 
 # ---------------------------------------------------------------------------
 # Sandbox — HOME isolation (sandbox-home-in-tests.md)

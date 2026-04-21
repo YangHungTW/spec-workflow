@@ -15,13 +15,13 @@
 # We also check that grep -m1 (the one allowed external call) IS present.
 #
 # Requirements: perf finding from T2 inline review.
-# Depends on: T2 (bin/specflow-tier exists).
+# Depends on: T2 (bin/scaff-tier exists).
 
 set -u -o pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd -P)"
-TIER_LIB="$REPO_ROOT/bin/specflow-tier"
+TIER_LIB="$REPO_ROOT/bin/scaff-tier"
 
 PASS=0
 FAIL=0
@@ -33,7 +33,7 @@ fail() { echo "FAIL: $1" >&2; FAIL=$((FAIL + 1)); }
 # Sanity
 # ---------------------------------------------------------------------------
 if [ ! -f "$TIER_LIB" ]; then
-  echo "FAIL: bin/specflow-tier not found: $TIER_LIB" >&2
+  echo "FAIL: bin/scaff-tier not found: $TIER_LIB" >&2
   exit 1
 fi
 
@@ -89,9 +89,9 @@ fi
 # Fixtures must live inside REPO_ROOT so the boundary guard does not reject them.
 # ---------------------------------------------------------------------------
 SANDBOX="$(mktemp -d 2>/dev/null || mktemp -d -t t75-tier-perf)"
-trap 'rm -rf "$SANDBOX" "$REPO_ROOT/.spec-workflow/features/_t75_perf_fixture"' EXIT
+trap 'rm -rf "$SANDBOX" "$REPO_ROOT/.specaffold/features/_t75_perf_fixture"' EXIT
 
-FIXTURE_DIR="$REPO_ROOT/.spec-workflow/features/_t75_perf_fixture"
+FIXTURE_DIR="$REPO_ROOT/.specaffold/features/_t75_perf_fixture"
 mkdir -p "$FIXTURE_DIR"
 
 # Test with a value that had CRLF in the original sed-based implementation

@@ -8,7 +8,7 @@
 # flow-monitor/src/styles/ is a subset of the B1 baseline.
 #
 # B1 archive path:
-#   .spec-workflow/archive/20260419-flow-monitor/
+#   .specaffold/archive/20260419-flow-monitor/
 # The B1 archive is docs-only (no CSS files were preserved); the archive
 # contains only *.md and 02-design/mockup.html.  The mockup.html uses
 # un-prefixed tokens (--primary, --page-bg, etc.) — none matching the
@@ -57,7 +57,7 @@ fi
 # ---------------------------------------------------------------------------
 # B1 baseline — inlined because the B1 archive is docs-only.
 #
-# The B1 feature archive (.spec-workflow/archive/20260419-flow-monitor/)
+# The B1 feature archive (.specaffold/archive/20260419-flow-monitor/)
 # contains no CSS source files.  The 02-design/mockup.html uses un-prefixed
 # tokens (--primary, --page-bg, --text-muted, etc.) that do not match the
 # --color-|--space-|--font-|--radius- prefix.  Running the same grep against

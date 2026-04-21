@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # test/t59_lint_cjk_hit.sh
 #
-# Integration test — bin/specflow-lint scan-staged rejects a staged .md file
+# Integration test — bin/scaff-lint scan-staged rejects a staged .md file
 # containing CJK codepoints (U+4E00–U+9FFF main block).
 #
 # Assertions:
@@ -10,7 +10,7 @@
 #      cjk-hit:<file>:<line>:<col>:U+[0-9A-F]+
 #   3. Stderr contains a human-readable summary referencing cjk-hit.
 #
-# Fixture: .spec-workflow/features/fixture/notes.md with zh-TW sentence
+# Fixture: .specaffold/features/fixture/notes.md with zh-TW sentence
 # "這是中文" — codepoints U+9019, U+662F, U+4E2D, U+6587, all in U+4E00–U+9FFF.
 # Path is not under archive/ and not a 00-request.md, so no allowlist applies.
 
@@ -18,7 +18,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd -P)"
-LINT="${LINT:-$REPO_ROOT/bin/specflow-lint}"
+LINT="${LINT:-$REPO_ROOT/bin/scaff-lint}"
 
 # ---------------------------------------------------------------------------
 # Capture real HOME before sandboxing — needed to copy asdf .tool-versions so
@@ -29,7 +29,7 @@ _REAL_HOME="$HOME"
 # ---------------------------------------------------------------------------
 # Sandbox — HOME isolation (sandbox-home-in-tests.md)
 # ---------------------------------------------------------------------------
-SANDBOX="$(mktemp -d 2>/dev/null || mktemp -d -t specflow-t59)"
+SANDBOX="$(mktemp -d 2>/dev/null || mktemp -d -t scaff-t59)"
 trap 'rm -rf "$SANDBOX"' EXIT
 
 export HOME="$SANDBOX/home"
@@ -64,12 +64,12 @@ fi
 
 # Stage the fixture: a .md file with zh-TW content (four CJK codepoints).
 # Codepoints: U+9019(這) U+662F(是) U+4E2D(中) U+6587(文) — all in U+4E00–U+9FFF.
-# Path is under .spec-workflow/features/fixture/ — not archive/, not 00-request.md.
-FIXTURE_DIR="$CONSUMER/.spec-workflow/features/fixture"
+# Path is under .specaffold/features/fixture/ — not archive/, not 00-request.md.
+FIXTURE_DIR="$CONSUMER/.specaffold/features/fixture"
 mkdir -p "$FIXTURE_DIR"
 printf '# Notes\n\n%s\n' '這是中文' > "$FIXTURE_DIR/notes.md"
 
-git -C "$CONSUMER" add ".spec-workflow/features/fixture/notes.md"
+git -C "$CONSUMER" add ".specaffold/features/fixture/notes.md"
 
 # ---------------------------------------------------------------------------
 # Run lint from the consumer repo root (scan-staged uses git diff --cached

@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# test/t7_specflow_install_hook.sh — T7 verify checks for bin/specflow-install-hook
-# Usage: bash test/t7_specflow_install_hook.sh
+# test/t7_scaff_install_hook.sh — T7 verify checks for bin/scaff-install-hook
+# Usage: bash test/t7_scaff_install_hook.sh
 # Exits 0 iff all 7 checks pass; exits non-zero on first failure.
 #
 # Checks:
-#   1. bash -n bin/specflow-install-hook exits 0 (syntax clean)
-#   2. test -x bin/specflow-install-hook (exec bit set)
+#   1. bash -n bin/scaff-install-hook exits 0 (syntax clean)
+#   2. test -x bin/scaff-install-hook (exec bit set)
 #   3. no-args invocation exits 2 with usage
 #   4. sandbox add: creates settings.json with expected hook entry
 #   5. idempotence: running add twice yields exactly one matching entry
@@ -19,7 +19,7 @@ set -u -o pipefail
 # ---------------------------------------------------------------------------
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd -P)"
-SCRIPT="$REPO_ROOT/bin/specflow-install-hook"
+SCRIPT="$REPO_ROOT/bin/scaff-install-hook"
 
 PASS=0
 FAIL=0
@@ -28,11 +28,11 @@ pass() { echo "PASS: $1"; PASS=$((PASS + 1)); }
 fail() { echo "FAIL: $1"; FAIL=$((FAIL + 1)); }
 
 # ---------------------------------------------------------------------------
-# Preflight: sandbox (specflow-install-hook operates on CWD, not HOME;
+# Preflight: sandbox (scaff-install-hook operates on CWD, not HOME;
 # we mktemp -d sandbox dirs per-check so the real settings.json is never
 # touched — no HOME override needed here)
 # ---------------------------------------------------------------------------
-SANDBOX="$(mktemp -d 2>/dev/null || mktemp -d -t specflow-hook-test)"
+SANDBOX="$(mktemp -d 2>/dev/null || mktemp -d -t scaff-hook-test)"
 trap 'rm -rf "$SANDBOX"' EXIT
 
 # ---------------------------------------------------------------------------
