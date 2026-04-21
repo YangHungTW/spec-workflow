@@ -1,0 +1,22 @@
+# .claude/carryover-allowlist.txt
+# =============================================================================
+# Paths allowed to retain legacy "specflow" / "spec-workflow" string references
+# despite the specflow→scaff / spec-workflow→specaffold / .spec-workflow/→
+# .specaffold/ rename. Each line is an fnmatch-style glob pattern consumed by
+# test/t_grep_allowlist.sh (T23). Blank lines and # comments ignored.
+# =============================================================================
+#
+# .git/**                      — binary objects; out of scope for text rename
+# .specaffold/archive/**       — historical archives, byte-identical per AC8
+# .spec-workflow               — the compat symlink itself (content is a link target)
+# .claude/carryover-allowlist.txt  — this file, which names the legacy strings it exempts
+# docs/rename-migration.md     — user-facing doc that maps old→new by necessity
+# .specaffold/features/20260421-rename-to-specaffold/RETROSPECTIVE.md
+#                              — this feature's own retrospective (future-authored)
+
+.git/**
+.specaffold/archive/**
+.spec-workflow
+.claude/carryover-allowlist.txt
+docs/rename-migration.md
+.specaffold/features/20260421-rename-to-specaffold/RETROSPECTIVE.md
