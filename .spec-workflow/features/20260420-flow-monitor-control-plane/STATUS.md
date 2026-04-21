@@ -13,7 +13,7 @@
 - [x] prd           (03-prd.md)                  — PM  [includes `## Exploration` — brainstorm merged per R4]
 - [x] tech          (04-tech.md)                 — Architect
 - [x] plan          (05-plan.md)                 — TPM  [merged: narrative + task checklist per R19]
-- [ ] implement     (05-plan.md tasks checked off) — Developer
+- [x] implement     (05-plan.md tasks checked off) — Developer
 - [ ] validate      (08-validate.md, verdict PASS) — QA-tester + QA-analyst  [merged: verify + gap-check per R4]
 - [ ] archive       (moved to .spec-workflow/archive/)     — TPM
 
@@ -44,3 +44,15 @@
 - 2026-04-21 review result — wave 5a verdict=NITS. T107 clean sweep, T111 triple clean (perf advisory only). T106 style NITS (WHAT-comment). T111 perf NITS (2 advisory: App-root invokeStore subscribe causes whole-subtree re-render; inline onDismiss arrow). T112a + T112b style NITS (should — 26 new key names from tech D9 use snake_case / dot-notation while B1 file convention is camelCase / kebab — TPM follow-up via /specflow:update-tech noted but deferred: renaming now would cascade through already-merged T103/T105/T107/T111 consumers).
 - 2026-04-21 implement wave W5a done — T106, T107, T111, T112a, T112b merged. Five distinct files, no merge conflicts. Vitest suite: 375 passing (+14 from W5a tests), 11 pre-existing failures unchanged. T112a/b plan-drift noted earlier (`[x]` without commits) resolved — real commits now land.
 - RUNTIME HANDOFF (for successor feature): opening STATUS Notes line must read "YYYY-MM-DD orchestrator — B2 control plane exercised on this feature's first live session". 15 runtime ACs deferred; list at .spec-workflow/archive/20260420-flow-monitor-control-plane/03-prd.md §9.
+- 2026-04-21 review dispatched — slug=20260420-flow-monitor-control-plane wave=5b tasks=T114 axes=security,performance,style
+- 2026-04-21 review result — wave 5b verdict=PASS (T114 clean sweep). Nits sweep self-review: 7 ipc.rs line-length fixes; 4 WHAT-comments removed; markdown.footer dead key dropped (en + zh-TW); 6 non-BEM classes in components.css documented as keep-with-justification; navigatedPaths confirmed already absent in production.
+- 2026-04-21 implement wave W5b done — T114 merged (PASS).
+- 2026-04-21 review dispatched — slug=20260420-flow-monitor-control-plane wave=6a tasks=T113,T115,T116,T117,T118,T119,T120,T121 axes=security,performance,style
+- 2026-04-21 review result — wave 6a verdict=BLOCK blocking-tasks=T116. T116 perf must: 52 python3 forks in the 26-key while-read loop; retry required. Other tasks: T113 PASS sec/perf, style advisory (intentional format drift). T115 clean sweep. T117 perf NITS (should — re-read on violation path), style NITS (should — dead B1_BASELINE var). T118 style NITS (should — unused HARDCODED_PATTERN). T119 perf NITS (should — repeated grep in 6-class loop). T120 sec NITS (should — env-var boundary check), perf NITS (should — redundant re-extract), style NITS (should — dead sort_lines function). T121 style NITS (reviewer misdiagnosed filename t101_ vs T121 — plan explicitly decouples task IDs from test-file numbering per §2). No security-must.
+- 2026-04-21 review dispatched — slug=20260420-flow-monitor-control-plane wave=6a retry=1 tasks=T116 axes=security,performance,style
+- 2026-04-21 review result — wave 6a retry 1 verdict=NITS. T116 perf must resolved (batched python3 to 2 forks + awk-based map_get); sec PASS, style PASS, perf NITS advisory-only (map_get still spawns awk per key — rubric-endorsed alternative to python3 at 26 iters; extract_placeholders fixed-call python3).
+- 2026-04-21 implement wave W6a done — T113, T115, T116, T117, T118, T119, T120, T121 merged. Eight tests + STATUS handoff line landed. T94 refined in hotfix commit 7b7f23d (narrowed Assertion B to exclude stage-display/test files and align with T120's scope). T121 runtime handoff grep passed post-merge.
+- 2026-04-21 review dispatched — slug=20260420-flow-monitor-control-plane wave=6b tasks=T122 axes=security,performance,style
+- 2026-04-21 review result — wave 6b verdict=PASS (T122 clean sweep). 9 shell-test registrations appended to smoke.sh; t92/t93 dropped-at-W1 reconciled (9 not 11 per plan).
+- 2026-04-21 implement wave W6b done — T122 merged. Smoke suite: 97/101 pass (all 9 new B2 tests pass; 4 pre-existing unrelated failures: t21, t24, t26, t36).
+- 2026-04-21 orchestrator — implement stage complete. All 7 waves (W0–W6) merged. 30 tasks checked off. Structural coverage: 16 of 31 ACs (per tech §2.3 matrix); 15 runtime ACs deferred to successor feature. Ready for /specflow:validate.

@@ -596,7 +596,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T106, T107, T111, T112a
 - [ ]
 
-## T114 — [ ] B1 nits sweep (R12 absorb)
+## T114 — [x] B1 nits sweep (R12 absorb)
 - **Milestone**: M5
 - **Requirements**: R12
 - **Decisions**: (none)
@@ -615,7 +615,7 @@ Conventions in this section (new merged shape):
 
 ### Wave 6 — Structural tests + runtime handoff + docs bookkeeping (9 tasks)
 
-## T113 — [ ] Runtime handoff pre-commit note
+## T113 — [x] Runtime handoff pre-commit note
 - **Milestone**: M6
 - **Requirements**: PRD §6, §9 handoff clause
 - **Decisions**: D11
@@ -628,7 +628,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T115, T116, T117, T118, T119, T120, T121
 - [ ]
 
-## T115 — [ ] Seam I: `test/t95_argv_no_shell_cat.sh` — no-shell-string-cat structural grep
+## T115 — [x] Seam I: `test/t95_argv_no_shell_cat.sh` — no-shell-string-cat structural grep
 - **Milestone**: M6
 - **Requirements**: R4
 - **Decisions**: D6
@@ -643,7 +643,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T113, T116, T117, T118, T119, T120, T121
 - [ ]
 
-## T116 — [ ] Seam J: `test/t96_i18n_parity_b2_keys.sh` — en + zh-TW parity for 26 new keys
+## T116 — [x] Seam J: `test/t96_i18n_parity_b2_keys.sh` — en + zh-TW parity for 26 new keys
 - **Milestone**: M6
 - **Requirements**: R10
 - **Decisions**: D9
@@ -658,7 +658,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T113, T115, T117, T118, T119, T120, T121
 - [ ]
 
-## T117 — [ ] Seam K: `test/t97_theme_token_reuse.sh` — no new theme tokens
+## T117 — [x] Seam K: `test/t97_theme_token_reuse.sh` — no new theme tokens
 - **Milestone**: M6
 - **Requirements**: R11
 - **Decisions**: D10
@@ -673,7 +673,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T113, T115, T116, T118, T119, T120, T121
 - [ ]
 
-## T118 — [ ] Seam L: `test/t98_stage_label_lookup.sh` — every stage has `action.advance_to.<stage>` i18n key
+## T118 — [x] Seam L: `test/t98_stage_label_lookup.sh` — every stage has `action.advance_to.<stage>` i18n key
 - **Milestone**: M6
 - **Requirements**: R2
 - **Decisions**: D9
@@ -687,7 +687,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T113, T115, T116, T117, T119, T120, T121
 - [ ]
 
-## T119 — [ ] Seam M: `test/t99_b1_nits_cleared.sh` — 5 B1-nits assertions
+## T119 — [x] Seam M: `test/t99_b1_nits_cleared.sh` — 5 B1-nits assertions
 - **Milestone**: M6
 - **Requirements**: R12
 - **Decisions**: (none)
@@ -703,7 +703,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T113, T115, T116, T117, T118, T120, T121
 - [ ]
 
-## T120 — [ ] Seam B full: `test/t100_taxonomy_classification.sh` — 16-command taxonomy + DESTROY-only-in-taxonomy grep
+## T120 — [x] Seam B full: `test/t100_taxonomy_classification.sh` — 16-command taxonomy + DESTROY-only-in-taxonomy grep
 - **Milestone**: M6
 - **Requirements**: R5, R8
 - **Decisions**: D3
@@ -717,7 +717,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T113, T115, T116, T117, T118, T119, T121
 - [ ]
 
-## T121 — [ ] `test/t101_runtime_handoff_note.sh` — verify T113's STATUS note
+## T121 — [x] `test/t101_runtime_handoff_note.sh` — verify T113's STATUS note
 - **Milestone**: M6
 - **Requirements**: PRD §6
 - **Decisions**: D11
@@ -731,7 +731,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T113, T115, T116, T117, T118, T119, T120
 - [ ]
 
-## T122 — [ ] Register 7 new shell tests in `test/smoke.sh`
+## T122 — [x] Register 7 new shell tests in `test/smoke.sh`
 - **Milestone**: M6
 - **Requirements**: (all B2 structural ACs)
 - **Decisions**: (none)
