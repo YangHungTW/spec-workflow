@@ -1,0 +1,243 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`StagePill > theme: dark > renders stage "archive" in dark theme (snapshot) 1`] = `
+<span
+  class="stage-pill"
+  data-stage="archive"
+  role="status"
+  style="background-color: var(--stage-archive-bg); color: var(--stage-archive-fg);"
+>
+  stage.archive
+</span>
+`;
+
+exports[`StagePill > theme: dark > renders stage "brainstorm" in dark theme (snapshot) 1`] = `
+<span
+  class="stage-pill"
+  data-stage="brainstorm"
+  role="status"
+  style="background-color: var(--stage-brainstorm-bg); color: var(--stage-brainstorm-fg);"
+>
+  stage.brainstorm
+</span>
+`;
+
+exports[`StagePill > theme: dark > renders stage "design" in dark theme (snapshot) 1`] = `
+<span
+  class="stage-pill"
+  data-stage="design"
+  role="status"
+  style="background-color: var(--stage-design-bg); color: var(--stage-design-fg);"
+>
+  stage.design
+</span>
+`;
+
+exports[`StagePill > theme: dark > renders stage "gap-check" in dark theme (snapshot) 1`] = `
+<span
+  class="stage-pill"
+  data-stage="gap-check"
+  role="status"
+  style="background-color: var(--stage-gap-check-bg); color: var(--stage-gap-check-fg);"
+>
+  stage.gap-check
+</span>
+`;
+
+exports[`StagePill > theme: dark > renders stage "implement" in dark theme (snapshot) 1`] = `
+<span
+  class="stage-pill"
+  data-stage="implement"
+  role="status"
+  style="background-color: var(--stage-implement-bg); color: var(--stage-implement-fg);"
+>
+  stage.implement
+</span>
+`;
+
+exports[`StagePill > theme: dark > renders stage "plan" in dark theme (snapshot) 1`] = `
+<span
+  class="stage-pill"
+  data-stage="plan"
+  role="status"
+  style="background-color: var(--stage-plan-bg); color: var(--stage-plan-fg);"
+>
+  stage.plan
+</span>
+`;
+
+exports[`StagePill > theme: dark > renders stage "prd" in dark theme (snapshot) 1`] = `
+<span
+  class="stage-pill"
+  data-stage="prd"
+  role="status"
+  style="background-color: var(--stage-prd-bg); color: var(--stage-prd-fg);"
+>
+  stage.prd
+</span>
+`;
+
+exports[`StagePill > theme: dark > renders stage "request" in dark theme (snapshot) 1`] = `
+<span
+  class="stage-pill"
+  data-stage="request"
+  role="status"
+  style="background-color: var(--stage-request-bg); color: var(--stage-request-fg);"
+>
+  stage.request
+</span>
+`;
+
+exports[`StagePill > theme: dark > renders stage "tasks" in dark theme (snapshot) 1`] = `
+<span
+  class="stage-pill"
+  data-stage="tasks"
+  role="status"
+  style="background-color: var(--stage-tasks-bg); color: var(--stage-tasks-fg);"
+>
+  stage.tasks
+</span>
+`;
+
+exports[`StagePill > theme: dark > renders stage "tech" in dark theme (snapshot) 1`] = `
+<span
+  class="stage-pill"
+  data-stage="tech"
+  role="status"
+  style="background-color: var(--stage-tech-bg); color: var(--stage-tech-fg);"
+>
+  stage.tech
+</span>
+`;
+
+exports[`StagePill > theme: dark > renders stage "verify" in dark theme (snapshot) 1`] = `
+<span
+  class="stage-pill"
+  data-stage="verify"
+  role="status"
+  style="background-color: var(--stage-verify-bg); color: var(--stage-verify-fg);"
+>
+  stage.verify
+</span>
+`;
+
+exports[`StagePill > theme: light > renders stage "archive" in light theme (snapshot) 1`] = `
+<span
+  class="stage-pill"
+  data-stage="archive"
+  role="status"
+  style="background-color: var(--stage-archive-bg); color: var(--stage-archive-fg);"
+>
+  stage.archive
+</span>
+`;
+
+exports[`StagePill > theme: light > renders stage "brainstorm" in light theme (snapshot) 1`] = `
+<span
+  class="stage-pill"
+  data-stage="brainstorm"
+  role="status"
+  style="background-color: var(--stage-brainstorm-bg); color: var(--stage-brainstorm-fg);"
+>
+  stage.brainstorm
+</span>
+`;
+
+exports[`StagePill > theme: light > renders stage "design" in light theme (snapshot) 1`] = `
+<span
+  class="stage-pill"
+  data-stage="design"
+  role="status"
+  style="background-color: var(--stage-design-bg); color: var(--stage-design-fg);"
+>
+  stage.design
+</span>
+`;
+
+exports[`StagePill > theme: light > renders stage "gap-check" in light theme (snapshot) 1`] = `
+<span
+  class="stage-pill"
+  data-stage="gap-check"
+  role="status"
+  style="background-color: var(--stage-gap-check-bg); color: var(--stage-gap-check-fg);"
+>
+  stage.gap-check
+</span>
+`;
+
+exports[`StagePill > theme: light > renders stage "implement" in light theme (snapshot) 1`] = `
+<span
+  class="stage-pill"
+  data-stage="implement"
+  role="status"
+  style="background-color: var(--stage-implement-bg); color: var(--stage-implement-fg);"
+>
+  stage.implement
+</span>
+`;
+
+exports[`StagePill > theme: light > renders stage "plan" in light theme (snapshot) 1`] = `
+<span
+  class="stage-pill"
+  data-stage="plan"
+  role="status"
+  style="background-color: var(--stage-plan-bg); color: var(--stage-plan-fg);"
+>
+  stage.plan
+</span>
+`;
+
+exports[`StagePill > theme: light > renders stage "prd" in light theme (snapshot) 1`] = `
+<span
+  class="stage-pill"
+  data-stage="prd"
+  role="status"
+  style="background-color: var(--stage-prd-bg); color: var(--stage-prd-fg);"
+>
+  stage.prd
+</span>
+`;
+
+exports[`StagePill > theme: light > renders stage "request" in light theme (snapshot) 1`] = `
+<span
+  class="stage-pill"
+  data-stage="request"
+  role="status"
+  style="background-color: var(--stage-request-bg); color: var(--stage-request-fg);"
+>
+  stage.request
+</span>
+`;
+
+exports[`StagePill > theme: light > renders stage "tasks" in light theme (snapshot) 1`] = `
+<span
+  class="stage-pill"
+  data-stage="tasks"
+  role="status"
+  style="background-color: var(--stage-tasks-bg); color: var(--stage-tasks-fg);"
+>
+  stage.tasks
+</span>
+`;
+
+exports[`StagePill > theme: light > renders stage "tech" in light theme (snapshot) 1`] = `
+<span
+  class="stage-pill"
+  data-stage="tech"
+  role="status"
+  style="background-color: var(--stage-tech-bg); color: var(--stage-tech-fg);"
+>
+  stage.tech
+</span>
+`;
+
+exports[`StagePill > theme: light > renders stage "verify" in light theme (snapshot) 1`] = `
+<span
+  class="stage-pill"
+  data-stage="verify"
+  role="status"
+  style="background-color: var(--stage-verify-bg); color: var(--stage-verify-fg);"
+>
+  stage.verify
+</span>
+`;

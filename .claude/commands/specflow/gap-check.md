@@ -1,8 +1,13 @@
 ---
-description: QA-analyst compares PRD ↔ tasks ↔ diff. Usage: /specflow:gap-check <slug>
+description: RETIRED — see /specflow:validate. Usage: /specflow:gap-check <slug>
 ---
 
-1. Require all tasks in `06-tasks.md` checked (or user explicit override).
-2. Invoke **specflow-qa-analyst** subagent → writes `07-gaps.md`.
-3. If verdict = BLOCKED, surface blockers. Do NOT advance.
-4. If PASS, check `[x] gap-check`. Next: `/specflow:verify <slug>`.
+This command was retired in feature `20260420-tier-model`.
+Folded into `/specflow:validate`; see PRD R4 mapping.
+
+Action:
+- Run `/specflow:validate <slug>` instead.
+- The artefact `07-gaps.md` is no longer authored; `08-validate.md`
+  holds the merged content per the new schema.
+
+No STATUS mutation occurs. Exits non-zero.

@@ -1,8 +1,13 @@
 ---
-description: QA-tester verifies acceptance criteria. Usage: /specflow:verify <slug>
+description: RETIRED — see /specflow:validate. Usage: /specflow:verify <slug>
 ---
 
-1. Require `07-gaps.md` verdict = PASS.
-2. Invoke **specflow-qa-tester** subagent → writes `08-verify.md`.
-3. If verdict = FAIL, surface failing R-ids. Do NOT advance.
-4. If PASS, check `[x] verify`. Next: `/specflow:archive <slug>`.
+This command was retired in feature `20260420-tier-model`.
+Folded into `/specflow:validate`; see PRD R4 mapping.
+
+Action:
+- Run `/specflow:validate <slug>` instead.
+- The artefact `08-verify.md` is no longer authored; `08-validate.md`
+  holds the merged content per the new schema.
+
+No STATUS mutation occurs. Exits non-zero.

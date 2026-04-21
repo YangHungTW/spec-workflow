@@ -3,7 +3,7 @@ name: checkbox-lost-in-parallel-merge
 role: tpm
 type: pattern
 created: 2026-04-18
-updated: 2026-04-18
+updated: 2026-04-19
 ---
 
 ## Rule
@@ -60,3 +60,27 @@ and T7 (pipefail bundle) checkboxes lost during the merge; fix-up
 commit re-checked them per this rule. Pattern held; prediction
 confirmed at the new wave-width ceiling (9-way still loses ~2
 checkboxes, consistent with 7-way losing 1–2).
+
+Fourth occurrence: feature `20260419-flow-monitor` — W4 (T25-T29,
+5-way) and W5 (T30-T42, 13-way) both lost 5+ checkbox flips during
+sequential merge-after-parallel-dispatch. W5 at 13 parallel is now
+the widest wave observed in this repo; the loss count scales roughly
+linearly with wave width. The fix-up commits this time were painful
+enough (multiple tasks lost per wave) to warrant promoting the
+post-merge audit from a human-remembered discipline to an automated
+step.
+
+**Recommended automation**: add a mechanical post-merge audit step
+to the wave-rollup flow in `bin/specflow-*` or the orchestrator:
+
+1. After the wave merge commit lands, grep `- \[ \] T<n>` in
+   `06-tasks.md` for every Tn in the merged wave.
+2. If any `[ ]` matches appear for merged-wave tasks, flip them in
+   a dedicated commit `fix: check off T<n> ... (lost in merge)`
+   BEFORE the "wave done" marker lands in STATUS.md.
+3. This makes the rollup atomic: either the wave is fully checked
+   off or the audit blocks the marker.
+
+Without the automation, the fourth-occurrence data point confirms
+the pattern is now a predictable tax on every parallel wave ≥5
+wide; manual vigilance is not catching it.

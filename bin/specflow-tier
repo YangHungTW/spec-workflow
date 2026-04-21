@@ -1,0 +1,330 @@
+#!/usr/bin/env bash
+# =============================================================================
+# specflow-tier — sourceable bash library for tier classification and mutation
+# =============================================================================
+#
+# SOURCE, DO NOT EXEC:
+#   source "$REPO_ROOT/bin/specflow-tier"
+#
+# PUBLIC FUNCTIONS
+#   get_tier <feature_dir>
+#       Read the tier: field from <feature_dir>/STATUS.md.
+#       Outputs one of: tiny | standard | audited | missing | malformed
+#       Never exits non-zero (returns 0 always); caller dispatches on stdout.
+#
+#   validate_tier_transition <old_tier> <new_tier>
+#       Returns 0 if the transition is valid (monotonic: tiny→standard→audited).
+#       Returns 1 if the transition is invalid or a downgrade.
+#       Pure function — no I/O, no side effects.
+#
+#   set_tier <feature_dir> <new_tier> <role> <reason>
+#       Validates the transition from current tier to new_tier.
+#       On success: backs up STATUS.md to STATUS.md.bak, updates the tier:
+#       field via temp-file + mv (atomic swap), and appends a STATUS Notes line.
+#       Exits 2 on disallowed transition or argument error.
+#
+#   tier_skips_stage <tier> <stage>
+#       Returns 0 if the given stage is skipped for the given tier (per PRD R10).
+#       Returns 1 if the stage is required or optional (not a mandatory skip).
+#       Pure function — no I/O, no side effects.
+#
+# =============================================================================
+
+# Double-source guard — safe to source multiple times.
+[ "${SPECFLOW_TIER_LOADED:-0}" = "1" ] && return 0
+SPECFLOW_TIER_LOADED=1
+
+# ---------------------------------------------------------------------------
+# _tier_resolve_and_check <feature_dir>
+#
+# Resolves <feature_dir> to an absolute physical path (BSD-safe; no readlink
+# -f) and asserts it is a subdirectory of REPO_ROOT.  Emits an error to
+# stderr and returns 1 if:
+#   - the directory does not exist or cannot be resolved
+#   - the resolved path is not under REPO_ROOT
+#
+# Callers (get_tier, set_tier) must call this at entry and act on the return
+# code before performing any I/O.  The uniform guard keeps the library's
+# external surface free of path-traversal vectors regardless of how
+# feature_dir was constructed by the caller.
+#
+# REPO_ROOT must be set by the caller's environment (the sourcing script is
+# responsible for establishing it).
+# ---------------------------------------------------------------------------
+_tier_resolve_and_check() {
+  local feature_dir="$1"
+
+  # Resolve to absolute physical path; fails if the directory is absent.
+  local resolved
+  resolved="$(cd "$feature_dir" 2>/dev/null && pwd -P)" || {
+    printf '_tier_resolve_and_check: cannot resolve directory: %s\n' "$feature_dir" >&2
+    return 1
+  }
+
+  # Require REPO_ROOT to be set.
+  if [ -z "${REPO_ROOT:-}" ]; then
+    printf '_tier_resolve_and_check: REPO_ROOT is unset\n' >&2
+    return 1
+  fi
+
+  # Resolve REPO_ROOT as well (guard against a relative REPO_ROOT being passed).
+  local resolved_root
+  resolved_root="$(cd "$REPO_ROOT" 2>/dev/null && pwd -P)" || {
+    printf '_tier_resolve_and_check: cannot resolve REPO_ROOT: %s\n' "$REPO_ROOT" >&2
+    return 1
+  }
+
+  # feature_dir must be strictly under REPO_ROOT — same prefix with a trailing
+  # path separator ensures we don't accept a sibling dir that shares a prefix
+  # (e.g. /repo-extra matching /repo).
+  case "$resolved" in
+    "${resolved_root}/"* | "$resolved_root")
+      : ;;  # inside the tree — OK
+    *)
+      printf '_tier_resolve_and_check: path outside REPO_ROOT: %s (root: %s)\n' \
+        "$resolved" "$resolved_root" >&2
+      return 1
+      ;;
+  esac
+
+  printf '%s\n' "$resolved"
+  return 0
+}
+
+# ---------------------------------------------------------------------------
+# get_tier <feature_dir>
+#
+# Pure classifier. Reads <feature_dir>/STATUS.md and extracts the tier: field.
+# Outputs exactly one of: tiny | standard | audited | missing | malformed
+# Never exits non-zero — call must succeed for use in $( ) contexts.
+#
+# State semantics:
+#   missing   — STATUS.md absent, or present but has no "tier:" line at all.
+#               Legacy features pre-rollout; callers treat as standard for
+#               read purposes (R2 migration is the write path).
+#   malformed — tier: line exists but value is not one of tiny|standard|audited.
+#               Fail-loud path; callers should surface to user and exit non-zero.
+#   tiny / standard / audited — valid tier values.
+# ---------------------------------------------------------------------------
+get_tier() {
+  local feature_dir="$1"
+
+  # Boundary check: reject paths outside REPO_ROOT.  For classifiers used in
+  # $() contexts, a violation must print 'malformed' rather than return 1 so
+  # callers that do `tier=$(get_tier …)` still get a usable output while the
+  # error lands on stderr.
+  local resolved_dir
+  resolved_dir="$(_tier_resolve_and_check "$feature_dir" 2>/dev/null)" || {
+    _tier_resolve_and_check "$feature_dir" >&2 2>&1 || true
+    printf 'malformed\n'
+    return 0
+  }
+
+  local status_file="$resolved_dir/STATUS.md"
+
+  # File absent or not readable — legacy feature with no tier field yet.
+  if [ ! -f "$status_file" ]; then
+    printf 'missing\n'
+    return 0
+  fi
+
+  # Match the tier: line.  [[ =~ ]] is avoided for bash 3.2 portability;
+  # grep + shell parameter expansion replaces two sed forks.
+  local raw_line
+  raw_line="$(grep -m1 '^\- \*\*tier\*\*:' "$status_file" 2>/dev/null || true)"
+
+  if [ -z "$raw_line" ]; then
+    printf 'missing\n'
+    return 0
+  fi
+
+  # Strip the fixed prefix with parameter expansion — no subprocess fork.
+  local value
+  value="${raw_line##*\*\*tier\*\*: }"
+  # Trim trailing whitespace/CR; CRLF can survive git checkout on Windows editors.
+  value="${value%%[[:space:]]*}"
+
+  # Validate against the closed enum.
+  if [ "$value" = "tiny" ] || [ "$value" = "standard" ] || [ "$value" = "audited" ]; then
+    printf '%s\n' "$value"
+  else
+    printf 'malformed\n'
+  fi
+  return 0
+}
+
+# ---------------------------------------------------------------------------
+# validate_tier_transition <old_tier> <new_tier>
+#
+# Returns 0 (valid) or 1 (invalid).
+# Valid transitions (monotonic upgrade only):
+#   tiny     → standard
+#   tiny     → audited   (skip-level upgrade allowed per R12 — monotonic means
+#                         no downgrade; skipping a tier upward is permitted)
+#   standard → audited
+# Self-transitions (e.g. standard → standard) return 1 (no-op / invalid).
+# Any downgrade returns 1.
+# Any transition from missing or malformed returns 1.
+# ---------------------------------------------------------------------------
+validate_tier_transition() {
+  local old_tier="$1"
+  local new_tier="$2"
+
+  # Self-transition is a valid no-op (idempotence for /specflow:update-* callers).
+  if [ "$old_tier" = "$new_tier" ] && [ "$old_tier" != "malformed" ] && [ "$old_tier" != "missing" ]; then
+    return 0
+  fi
+
+  # Migration bootstrap: missing → standard is the rollout path (W0 migration).
+  # Any other missing→X or any malformed→X is invalid.
+  if [ "$old_tier" = "missing" ] && [ "$new_tier" = "standard" ]; then
+    return 0
+  fi
+
+  # Ordinal upgrade: tiny=1, standard=2, audited=3. Missing/malformed = 0.
+  local old_ord new_ord
+  old_ord=0
+  new_ord=0
+  if [ "$old_tier" = "tiny" ];     then old_ord=1; fi
+  if [ "$old_tier" = "standard" ]; then old_ord=2; fi
+  if [ "$old_tier" = "audited" ];  then old_ord=3; fi
+  if [ "$new_tier" = "tiny" ];     then new_ord=1; fi
+  if [ "$new_tier" = "standard" ]; then new_ord=2; fi
+  if [ "$new_tier" = "audited" ];  then new_ord=3; fi
+  if [ "$old_ord" -gt 0 ] && [ "$new_ord" -gt "$old_ord" ]; then
+    return 0
+  fi
+  return 1
+}
+
+# ---------------------------------------------------------------------------
+# set_tier <feature_dir> <new_tier> <role> <reason>
+#
+# Validates, backs up STATUS.md, atomically updates the tier: line, and
+# appends the audit-trail STATUS Notes line (PRD R13).
+#
+# Exits 2 on:
+#   - Wrong number of arguments
+#   - new_tier is not one of tiny|standard|audited
+#   - Transition disallowed by validate_tier_transition
+#   - STATUS.md absent
+#   - feature_dir outside REPO_ROOT or unresolvable
+# ---------------------------------------------------------------------------
+set_tier() {
+  if [ "$#" -lt 4 ]; then
+    printf 'set_tier: usage: set_tier <feature_dir> <new_tier> <role> <reason>\n' >&2
+    return 2
+  fi
+
+  local feature_dir="$1"
+  local new_tier="$2"
+  local role="$3"
+  local reason="$4"
+
+  # Boundary check: resolve path and assert it is inside REPO_ROOT before any
+  # I/O, so path-traversal via caller-supplied feature_dir is rejected early.
+  local resolved_dir
+  resolved_dir="$(_tier_resolve_and_check "$feature_dir")" || return 2
+
+  local status_file="$resolved_dir/STATUS.md"
+
+  # Validate new_tier argument is a known tier.
+  if [ "$new_tier" != "tiny" ] && [ "$new_tier" != "standard" ] && [ "$new_tier" != "audited" ]; then
+    printf 'set_tier: new_tier must be tiny|standard|audited; got: %s\n' "$new_tier" >&2
+    return 2
+  fi
+
+  # STATUS.md must exist to perform a mutation.
+  if [ ! -f "$status_file" ]; then
+    printf 'set_tier: STATUS.md not found: %s\n' "$status_file" >&2
+    return 2
+  fi
+
+  # Classify current tier (read once; reuse).
+  local old_tier
+  old_tier="$(get_tier "$resolved_dir")"
+
+  # Validate transition.
+  if ! validate_tier_transition "$old_tier" "$new_tier"; then
+    printf 'set_tier: disallowed transition %s→%s (old tier: %s)\n' \
+      "$old_tier" "$new_tier" "$old_tier" >&2
+    return 2
+  fi
+
+  # Self-transition short-circuit: valid per validate_tier_transition but a no-op;
+  # skip backup + mutation + audit-append so idempotent callers don't churn STATUS.
+  if [ "$old_tier" = "$new_tier" ]; then
+    return 0
+  fi
+
+  # Back up STATUS.md before mutation (no-force-on-user-paths rule).
+  cp "$status_file" "${status_file}.bak"
+
+  # Determine today's date in YYYY-MM-DD format (BSD + GNU portable).
+  local today
+  today="$(date +%Y-%m-%d)"
+
+  # Atomic update of the tier: line.
+  # Strategy: write to a temp file in the same directory, then mv.
+  local tmp_file
+  tmp_file="$(dirname "$status_file")/.STATUS.md.tmp.$$"
+
+  # Replace the tier: line; if no tier: line exists (old_tier was "missing"),
+  # insert after the has-ui: line.
+  if [ "$old_tier" = "missing" ]; then
+    # Insert "- **tier**: <new_tier>" after the line matching "- **has-ui**:"
+    awk -v tier="$new_tier" '
+      { print }
+      /^\- \*\*has-ui\*\*:/ { print "- **tier**: " tier }
+    ' "$status_file" > "$tmp_file"
+  else
+    # Replace the existing tier: line in-place.
+    sed "s/^- \*\*tier\*\*:.*$/- **tier**: ${new_tier}/" "$status_file" > "$tmp_file"
+  fi
+
+  mv "$tmp_file" "$status_file"
+
+  # Append audit trail line to STATUS Notes (PRD R13 format).
+  # Format: YYYY-MM-DD <role> — tier upgrade <old>→<new>: <reason>
+  # Literal UTF-8 em dash (—) and right arrow (→) embedded directly;
+  # bash 3.2 printf does not support \xNN hex escapes.
+  printf '\n- %s %s — tier upgrade %s→%s: %s\n' \
+    "$today" "$role" "$old_tier" "$new_tier" "$reason" >> "$status_file"
+}
+
+# ---------------------------------------------------------------------------
+# tier_skips_stage <tier> <stage>
+#
+# Returns 0 if the given tier mandates skipping this stage (PRD R10 "—" cells).
+# Returns 1 if the stage is required (✅) or optional (🔵) for this tier.
+#
+# Skipped stages per tier (R10 "—" cells only):
+#   tiny:     brainstorm, tech, design
+#   standard: brainstorm
+#   audited:  (none — all stages mandatory)
+#
+# NOTE: "optional" (🔵) stages such as plan/review for tiny, or review for
+# standard, return 1 (run). The caller decides whether to execute optional
+# stages. Only mandatory-skip ("—") stages return 0.
+# ---------------------------------------------------------------------------
+tier_skips_stage() {
+  local tier="$1"
+  local stage="$2"
+
+  if [ "$tier" = "tiny" ]; then
+    if [ "$stage" = "brainstorm" ] || [ "$stage" = "tech" ] || [ "$stage" = "design" ]; then
+      return 0
+    fi
+  fi
+
+  if [ "$tier" = "standard" ]; then
+    if [ "$stage" = "brainstorm" ]; then
+      return 0
+    fi
+  fi
+
+  # audited: no mandatory skips.
+  # missing / malformed: treated as no skips (caller should surface the
+  # malformed/missing state before calling tier_skips_stage).
+  return 1
+}

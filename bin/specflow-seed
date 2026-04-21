@@ -325,6 +325,33 @@ classify_copy_target() {
 }
 
 # ---------------------------------------------------------------------------
+# classify_pre_commit_shim <consumer_root>
+# Pure classifier; emits one of three enum values on stdout:
+#   missing            — .git/hooks/pre-commit does not exist
+#   ok                 — exists AND contains the specflow-lint sentinel
+#   foreign-pre-commit — exists AND does NOT contain the specflow-lint sentinel
+#
+# No mutation; no side effects. Dispatcher arms in cmd_init / cmd_migrate
+# handle all writes.
+# ---------------------------------------------------------------------------
+classify_pre_commit_shim() {
+  local consumer_root="$1"
+  local hook_path="${consumer_root}/.git/hooks/pre-commit"
+
+  if [ ! -e "$hook_path" ] && [ ! -L "$hook_path" ]; then
+    echo "missing"
+    return
+  fi
+
+  if grep -F 'specflow-lint' "$hook_path" >/dev/null 2>&1; then
+    echo "ok"
+    return
+  fi
+
+  echo "foreign-pre-commit"
+}
+
+# ---------------------------------------------------------------------------
 # plan_copy <src_root> <mode>
 # Enumerates managed relpaths from the source tree.
 # mode=init|migrate: includes static subtrees + team-memory skeleton.
@@ -690,6 +717,35 @@ ${relpath}	${expected_sha}"
   done <<EOF
 $classify_results
 EOF
+
+  # ---------------------------------------------------------------------------
+  # Step 8b: Install pre-commit shim (classify-before-mutate; no-force rule).
+  # Runs after the managed-subtree copy loop and before the idempotent manifest
+  # shortcut so the shim outcome is included in the counter values that gate
+  # the early-exit check. cmd_update does NOT install hooks (tech §6 D11).
+  # ---------------------------------------------------------------------------
+  local shim_state
+  shim_state=$(classify_pre_commit_shim "$consumer_root")
+  local shim_dst="${consumer_root}/.git/hooks/pre-commit"
+
+  case "$shim_state" in
+    missing)
+      printf '#!/usr/bin/env bash\n# specflow-lint: pre-commit shim — installed by bin/specflow-seed init/migrate\nexec bin/specflow-lint scan-staged "$@"\n' \
+        | write_atomic "$shim_dst"
+      chmod +x "$shim_dst"
+      echo "created:.git/hooks/pre-commit"
+      _CNT_CREATED=$((_CNT_CREATED + 1))
+      ;;
+    ok)
+      echo "already:.git/hooks/pre-commit"
+      _CNT_ALREADY=$((_CNT_ALREADY + 1))
+      ;;
+    foreign-pre-commit)
+      echo "skipped:foreign-pre-commit:.git/hooks/pre-commit"
+      _CNT_SKIPPED=$((_CNT_SKIPPED + 1))
+      if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
+      ;;
+  esac
 
   # ---------------------------------------------------------------------------
   # Idempotent path: nothing changed AND manifest already exists → skip
@@ -1242,6 +1298,35 @@ ${relpath}	${expected_sha}"
   done <<EOF
 $classify_results
 EOF
+
+  # ---------------------------------------------------------------------------
+  # Step 8b: Install pre-commit shim (classify-before-mutate; no-force rule).
+  # Runs after the managed-subtree copy loop and before any early-exit checks
+  # so the shim outcome feeds into the counters that gate the idempotent shortcut
+  # and the MAX_CODE conflict gate. cmd_update does NOT install hooks (D11).
+  # ---------------------------------------------------------------------------
+  local shim_state
+  shim_state=$(classify_pre_commit_shim "$consumer_root")
+  local shim_dst="${consumer_root}/.git/hooks/pre-commit"
+
+  case "$shim_state" in
+    missing)
+      printf '#!/usr/bin/env bash\n# specflow-lint: pre-commit shim — installed by bin/specflow-seed init/migrate\nexec bin/specflow-lint scan-staged "$@"\n' \
+        | write_atomic "$shim_dst"
+      chmod +x "$shim_dst"
+      echo "created:.git/hooks/pre-commit"
+      _CNT_CREATED=$((_CNT_CREATED + 1))
+      ;;
+    ok)
+      echo "already:.git/hooks/pre-commit"
+      _CNT_ALREADY=$((_CNT_ALREADY + 1))
+      ;;
+    foreign-pre-commit)
+      echo "skipped:foreign-pre-commit:.git/hooks/pre-commit"
+      _CNT_SKIPPED=$((_CNT_SKIPPED + 1))
+      if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
+      ;;
+  esac
 
   # ---------------------------------------------------------------------------
   # Idempotent-exit short-circuit: nothing changed AND manifest already exists

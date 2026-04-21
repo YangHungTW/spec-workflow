@@ -1,0 +1,88 @@
+# STATUS
+
+- **slug**: 20260419-flow-monitor
+- **has-ui**: true
+- **stage**: archive
+- **created**: 2026-04-19
+- **updated**: 2026-04-20
+
+## Stage checklist
+- [x] request       (00-request.md)              — PM
+- [x] brainstorm    (01-brainstorm.md)           — PM
+- [x] design        (02-design/)                 — Designer (skip if has-ui: false)
+- [x] prd           (03-prd.md)                  — PM
+- [x] tech          (04-tech.md)                 — Architect
+- [x] plan          (05-plan.md)                 — TPM
+- [x] tasks         (06-tasks.md)                — TPM
+- [x] implement     (tasks checked off)          — Developer
+- [x] gap-check     (07-gaps.md, verdict PASS)   — QA-analyst
+- [x] verify        (08-verify.md, verdict PASS) — QA-tester
+- [x] archive       (moved to .spec-workflow/archive/)     — TPM
+
+## Notes
+<!-- date + role + what changed -->
+- 2026-04-19 PM — request intaken
+- 2026-04-19 PM — brainstorm written
+- 2026-04-19 Designer — mockups produced
+- 2026-04-19 PM — PRD written
+- 2026-04-19 PM — PRD updated (R15 theming + R9 card-detail refinements)
+- 2026-04-19 Architect — tech doc written
+- 2026-04-19 TPM — implementation plan written
+- 2026-04-19 TPM — tasks broken out (T42 total)
+- 2026-04-19 Developer — T1 scaffold complete (Tauri 2 + React + TS + Vite)
+- 2026-04-19 review result — wave W0 task T2 verdict=BLOCK blocking-tasks=T2(security)
+- 2026-04-19 implement halted — T2 blocked on dompurify/markdown-it/tokio major-only floats. Recovery: retry T2 with tighter pins.
+- 2026-04-19 deviation — Rust pin bumped 1.83→1.88 (Tauri 2.10 transitive time-core requires edition 2024); plan Q-plan-1 needs /specflow:update-plan.
+- 2026-04-19 Developer — T2 retry: pins tightened (dompurify ~3.2, markdown-it ~14.1, tokio 1.44, serde 1.0, serde_json 1.0)
+- 2026-04-19 review result — wave W0 task T2 retry verdict=NITS (5 should: devDep wildcards on testing-library/types/vitest)
+- 2026-04-19 implement wave W0 done — T1, T2 (retry), T3, T4, T5 merged
+- 2026-04-19 TPM — plan updated: Q-plan-1 Rust 1.83 → 1.88.0 (Tauri 2.10 transitive deps require edition 2024)
+- 2026-04-19 Developer — T6 status_parse complete (pure fn + fixtures)
+- 2026-04-19 Developer — T7 repo_discovery complete (closed-enum, single read_dir)
+- 2026-04-19 Developer — T8 store::diff complete (pure fn, O(n))
+- 2026-04-19 Developer — T9 polling engine complete (no subprocess, wall-clock instrumented)
+- 2026-04-19 Developer — T10 settings_io complete (atomic write, .bak, schema_version 1)
+- 2026-04-19 Developer — T11 ipc complete (read-only commands, path-traversal guard, no B2 leakage)
+- 2026-04-19 review result — wave W1 task T11 verdict=BLOCK blocking-tasks=T11(security)
+- 2026-04-19 Developer — T11 retry: canonicalise patch.repos in update_settings (security must)
+- 2026-04-19 review result — wave W1 retry verdict=NITS (advisories only: T6 WHAT-comment, T8 dead let now, T9 metadata+read 2-syscalls, T11 full-struct clobber + guard duplication)
+- 2026-04-19 implement wave W1 done — T6, T7, T8, T9, T10, T11 merged (66 tests pass)
+- 2026-04-19 TPM — added T43 W1 cleanup task (10 items bundled)
+- 2026-04-19 Developer — T14 retry: rename settings.theme.{light,dark} to 2-level keys (style must)
+- 2026-04-19 Developer — T12 React shell + router complete
+- 2026-04-19 Developer — T13 theme system complete (light/dark, ink-green primary, first-paint)
+- 2026-04-19 Developer — T14 i18n complete (en + zh-TW, 39 keys, parity)
+- 2026-04-19 review result — wave W2 task T14 verdict=BLOCK blocking-tasks=T14(style:3-level keys)
+- 2026-04-19 Developer — T14 retry: rename settings.theme.{light,dark} to 2-level keys
+- 2026-04-19 review result — wave W2 task T14 retry verdict=BLOCK (notification.stalled.title/body also 3-level)
+- 2026-04-19 Developer — T14 retry 2: rename notification.stalled.{title,body} to 2-level; consolidate react imports
+- 2026-04-19 Developer — T15 StagePill + IdleBadge complete (38 snapshot variants)
+- 2026-04-19 Developer — T16 MarkdownPane complete (lazy markdown-it + DOMPurify default)
+- 2026-04-19 review result — wave W2 retry 2 verdict=NITS (advisories only; eager locale load, WHAT-comments, DOMPurify test-mock)
+- 2026-04-19 implement wave W2 done — T12, T13, T14 (retry 2), T15, T16 merged (79 frontend tests pass)
+- 2026-04-19 Developer — T18 retry: URL param validation guard + 10 i18n keys
+- 2026-04-19 Developer — T25 tray icon complete (macOS-only, stalled-count badge)
+- 2026-04-19 Developer — T26 Notification Center complete (silent, dedupe from T8 store)
+- 2026-04-19 Developer — T27 Finder + clipboard complete (argv-form, path-traversal guard)
+- 2026-04-19 Developer — T28 window-state plugin + set_always_on_top complete
+- 2026-04-19 Developer — T29 compact panel window + polling footer event subscription complete
+- 2026-04-19 review result — wave W4 verdict=NITS (advisories + 3 should: line-length, btn.compactPanel missing i18n key, notify title/body validation)
+- 2026-04-19 implement wave W4 done — T25, T26, T27, T28, T29 merged (316 tests pass: 89 Rust + 227 frontend)
+- 2026-04-19 Developer — T34 retry: Option A revert html:true back to html:false; defence-in-depth two-barrier model restored; <details>/<summary> test (c) removed (not a B1 AC); JSDoc updated
+- 2026-04-19 Developer — T42 W5 rollup: Test Seam 1–7 coverage + structural-vs-runtime PASS matrix + R-1..R-5 disposition documented
+- 2026-04-19 Developer — W5 rollup — structural PASS: AC3.d, AC6.e, AC9.e, AC9.j, AC11.c, AC13.a, AC13.c, AC14.a, AC14.c, AC15.a, AC15.f. Runtime PASS deferred to first launch per shared/dogfood-paradox-third-occurrence: AC1.a–d, AC2.a–d, AC3.a–c, AC4.a–c, AC5.a–e, AC6.a–d, AC7.a–c, AC8.a, AC10.a–e, AC11.a–b, AC12.a–b, AC13.b.
+- 2026-04-19 Developer — W5 rollup — risk register: R-1 Tauri WKWebView quirks OPEN (runtime deferred); R-2 window-state plugin ACCEPTED; R-3 dogfood paradox EXPECTED; R-4 DOMPurify GFM MITIGATED (T34 positive fixture); R-5 notification permission MITIGATED (T40 indicator).
+- 2026-04-19 Developer — W5 rollup — accepted NITS: W0 T2 devDep wildcards; W1 retry WHAT/dead-code/syscall/dedup advisories; W2 eager locale load; W4 line-length + btn.compactPanel key (fixed post-merge) + notify validation. All should-severity; none block gap-check.
+- 2026-04-19 Developer — W5 re-merge: T30/T31/T35/T36/T41 lost commits rescued by direct-SHA merge (Cargo.lock blocking) — re-merged successfully
+- 2026-04-19 implement wave W5 done — T30-T42 all merged (382 tests pass: 99 Rust + 283 frontend)
+- 2026-04-19 implement complete — 43/43 tasks (T1-T42 + T43 cleanup) all merged; feature branch ready for /specflow:gap-check
+- 2026-04-19 QA-analyst — gap-check PASS-WITH-NITS (0 must, 2 should advisories); 37 ACs queued for runtime verify per dogfood paradox
+- 2026-04-19 QA-tester — verify done: PASS-DEFERRED; 382/382 structural tests pass; 37 ACs runtime-deferred per dogfood-paradox; 0 regressions; DMG absent from build tree
+- 2026-04-19 verify runtime FAIL — user screenshot shows unstyled app (no component CSS; theme.css has tokens only, no selectors applied). R15 + all 7-screen visual design commitments not met. Reverting verify checkbox.
+- 2026-04-19 TPM — added T44 component CSS task (verify FAIL recovery)
+- 2026-04-19 Developer — T44 component CSS merged; unstyled-app regression resolved via theme-token-driven selectors.
+- 2026-04-20 TPM — added T45-T48 post-verify polish (chrome, theme dedup, EmptyState wiring, mockup alignment) + inline runtime fixes (IPC shape alignment, dialog capability grant, dialog deadlock fix, tab content wiring, card navigation, design preview, theme desync).
+- 2026-04-20 Developer — all T44-T48 + inline runtime fixes merged; runtime verify PASS on dogfood launch (flow-monitor observed its own development session).
+- 2026-04-20 TPM — flipped [x] verify; feature ready for /specflow:archive.
+- 2026-04-20 PM — intaken B2 follow-up (20260420-flow-monitor-control-plane) on this branch for continuity.
+- 2026-04-20 TPM — archived to .spec-workflow/archive/20260419-flow-monitor/; retrospective written; 6 memory proposals awaiting user approval.

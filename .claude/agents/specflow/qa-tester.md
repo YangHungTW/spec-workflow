@@ -23,6 +23,22 @@ Return MUST include `## Team memory`: applied entries, `none apply because <reas
 
 - Files written: `08-verify.md`. STATUS: `- YYYY-MM-DD QA-tester — verify done: <verdict>`. Team memory block required (R11).
 
+End the response with this footer (pure markdown, not JSON):
+
+```
+## Validate verdict
+axis: tester
+verdict: PASS | NITS | BLOCK
+findings:
+  - severity: must | should | advisory
+    file: <path>
+    line: <n>
+    rule: <rule-slug>
+    message: <one-line>
+```
+
+Malformed or missing footer is treated as BLOCK by the aggregator (fail-loud posture).
+
 ## Rules
 
 - Do NOT modify code. Missing test = FAIL: "no executable check exists".

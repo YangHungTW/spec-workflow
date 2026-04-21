@@ -829,7 +829,47 @@ for t in t13_settings_json t14_rules_dir_structure t15_rules_schema \
          t46_migrate_dry_run \
          t47_migrate_user_modified \
          t48_seed_rule_compliance \
-         t49_init_skill_bootstrap; do
+         t49_init_skill_bootstrap \
+         t51_rule_file_shape \
+         t52_rule_index_row \
+         t53_marker_rule_coupling \
+         t54_hook_config_absent \
+         t55_hook_config_zh_tw \
+         t56_hook_config_unknown \
+         t57_hook_config_malformed \
+         t58_lint_clean_diff \
+         t59_lint_cjk_hit \
+         t60_lint_request_quote_allowlist \
+         t61_lint_inline_marker_allowlist \
+         t62_lint_archive_ignored \
+         t63_lint_no_jq_no_readlink_f \
+         t64_precommit_shim_wiring \
+         t65_subagent_diff_empty \
+         t66_readme_doc_section \
+         t67_userlang_all_absent \
+         t68_userlang_user_home_only \
+         t69_userlang_project_over_user \
+         t70_userlang_xdg_over_tilde \
+         t71_userlang_stop_on_first_invalid \
+         t72_userlang_missing_doesnt_stop \
+         t73_userlang_structural_grep \
+         t74_specflow_tier t74_tier_path_boundary t74_tier_rollout_migrate \
+         t75_tier_no_sed_forks \
+         t76_aggregate_verdicts \
+         t77_deprecation_stubs \
+         t78_validate_command \
+         t79_validate_verdict_header \
+         t80_request_tier_flag t80_tier_proposal_heuristic \
+         t81_next_tier_dispatch \
+         t82_archive_merge_check \
+         t83_implement_tier_dispatch \
+         t84_tier_dispatch_matrix \
+         t85_archive_merge_check \
+         t86_upgrade_audit \
+         t87_auto_upgrade_triggers \
+         t88_mid_flight_upgrade_nondestructive \
+         t89_inline_review_default \
+         t90_tier_proposal_prompt; do
   echo "--- $t ---"
   if bash "$REPO_ROOT/test/${t}.sh" >/dev/null 2>&1; then
     echo "  PASS"
