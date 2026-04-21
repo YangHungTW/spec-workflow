@@ -18,7 +18,7 @@ pub use crate::status_parse::SessionState;
 // Core types
 // ---------------------------------------------------------------------------
 
-/// Unique identity for one spec-workflow session inside a repo.
+/// Unique identity for one specaffold session inside a repo.
 pub type SessionKey = (PathBuf, String);
 
 /// The full in-memory session map (repo_path × slug → state).
