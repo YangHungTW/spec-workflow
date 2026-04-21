@@ -14,7 +14,7 @@
 - [x] tech          (04-tech.md)                 — Architect
 - [x] plan          (05-plan.md)                 — TPM  [merged: narrative + task checklist per R19]
 - [x] implement     (05-plan.md tasks checked off) — Developer
-- [ ] validate      (08-validate.md, verdict PASS) — QA-tester + QA-analyst  [merged: verify + gap-check per R4]
+- [x] validate      (08-validate.md, verdict NITS) — QA-tester + QA-analyst  [merged: verify + gap-check per R4]
 - [ ] archive       (moved to .spec-workflow/archive/)     — TPM
 
 ## Notes
@@ -56,3 +56,5 @@
 - 2026-04-21 review result — wave 6b verdict=PASS (T122 clean sweep). 9 shell-test registrations appended to smoke.sh; t92/t93 dropped-at-W1 reconciled (9 not 11 per plan).
 - 2026-04-21 implement wave W6b done — T122 merged. Smoke suite: 97/101 pass (all 9 new B2 tests pass; 4 pre-existing unrelated failures: t21, t24, t26, t36).
 - 2026-04-21 orchestrator — implement stage complete. All 7 waves (W0–W6) merged. 30 tasks checked off. Structural coverage: 16 of 31 ACs (per tech §2.3 matrix); 15 runtime ACs deferred to successor feature. Ready for /specflow:validate.
+- 2026-04-21 QA-tester — verify done: PASS. 16 structural ACs verified (all PASS via cargo test --lib 109/109, npm test 375/386, 9 shell tests all green, smoke 97/101). 15 runtime ACs DEFERRED per dogfood paradox ninth occurrence; RUNTIME HANDOFF line confirmed present in STATUS.md.
+- 2026-04-21 validate — slug=20260420-flow-monitor-control-plane verdict=NITS (advisory findings in 08-validate.md). Tester axis PASS (all 16 structural ACs green; 15 runtime ACs correctly deferred). Analyst axis NITS (4 should findings — no must): (1) AC5.b PRD palette command list drifted from post-update-plan taxonomy — PRD + 04-tech.md D3 never mirror-updated after 9a7a45a; (2) AC8.b DESTROY names (update-prd/tasks) drifted from actual (update-req/task) — same drift class; (3) purge_stale_temp_files() in invoke.rs:381 never called — 04-tech.md D1 commitment unmet; (4) 05-plan.md:711 T120 scope text stale. Filed for archive retrospective follow-up: /specflow:update-prd + /specflow:update-tech to reconcile command-name drift; wire purge_stale_temp_files in lib.rs .setup() (B3-era). 08-verify.md renamed to 08-validate.md per validate contract (qa-tester wrote wrong filename + prematurely ticked validate box; orchestrator reconciled). 08-validate.md now contains both tester + analyst axes + consolidated verdict.
