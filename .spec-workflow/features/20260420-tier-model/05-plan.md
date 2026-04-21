@@ -400,7 +400,7 @@ Conventions in this section (new merged shape):
 
 ### Wave 3 — Tier-aware dispatch (8 tasks)
 
-## T18 — `request.md` accepts `--tier` flag + propose-and-confirm
+## T18 — [x] `request.md` accepts `--tier` flag + propose-and-confirm
 - **Milestone**: M3
 - **Requirements**: R5, AC12
 - **Decisions**: D6
@@ -421,7 +421,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T19, T20, T21, T22, T23, T24, T25
 - [ ]
 
-## T19 — `pm.md` extended with tier-proposal heuristic
+## T19 — [x] `pm.md` extended with tier-proposal heuristic
 - **Milestone**: M3
 - **Requirements**: R5, AC12
 - **Decisions**: D6
@@ -436,7 +436,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T18, T20, T21, T22, T23, T24, T25
 - [ ]
 
-## T20 — `next.md` tier-aware stage skip
+## T20 — [x] `next.md` tier-aware stage skip
 - **Milestone**: M3
 - **Requirements**: R8, R10
 - **Decisions**: D1, D2
@@ -452,7 +452,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T18, T19, T21, T22, T23, T24, T25
 - [ ]
 
-## T21 — `implement.md` task-file dispatch + threshold check
+## T21 — [x] `implement.md` task-file dispatch + threshold check
 - **Milestone**: M3
 - **Requirements**: R6, R7, R14, AC9
 - **Decisions**: D7, D9
@@ -487,7 +487,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T18, T19, T20, T22, T23, T24, T25
 - [ ]
 
-## T22 — `tpm.md` extended with merged-plan authoring guidance
+## T22 — [x] `tpm.md` extended with merged-plan authoring guidance
 - **Milestone**: M3
 - **Requirements**: R6
 - **Decisions**: D9
@@ -498,7 +498,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T18, T19, T20, T21, T23, T24, T25
 - [ ]
 
-## T23 — `archive.md` merge-check + `--allow-unmerged REASON`
+## T23 — [x] `archive.md` merge-check + `--allow-unmerged REASON`
 - **Milestone**: M3
 - **Requirements**: R9, AC3
 - **Decisions**: —
@@ -516,7 +516,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T18, T19, T20, T21, T22, T24, T25
 - [ ]
 
-## T24 — `plan.md` guidance edit (new merged form)
+## T24 — [x] `plan.md` guidance edit (new merged form)
 - **Milestone**: M3
 - **Requirements**: R6
 - **Decisions**: D9
@@ -527,7 +527,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T18, T19, T20, T21, T22, T23, T25
 - [ ]
 
-## T25 — Heuristic determinism test for tier proposal
+## T25 — [x] Heuristic determinism test for tier proposal
 - **Milestone**: M3
 - **Requirements**: R5, AC12
 - **Decisions**: D6
