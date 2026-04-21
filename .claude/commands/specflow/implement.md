@@ -13,13 +13,13 @@ Wave-based parallel execution. Default behaviour: run **every remaining wave** e
 1. Locate task file:
    ```bash
    if [ -f "$feature_dir/06-tasks.md" ]; then
-     TASK_FILE="$feature_dir/06-tasks.md"           # legacy / archived feature
+      TASK_FILE="$feature_dir/06-tasks.md"           # legacy / archived feature
    elif [ -f "$feature_dir/05-plan.md" ] && \
         grep -q '^- \[ \]' "$feature_dir/05-plan.md" 2>/dev/null; then
-     TASK_FILE="$feature_dir/05-plan.md"             # new merged shape
+      TASK_FILE="$feature_dir/05-plan.md"             # new merged shape
    else
-     echo "ERROR: neither 06-tasks.md nor task-bearing 05-plan.md found" >&2
-     exit 2
+      echo "ERROR: neither 06-tasks.md nor task-bearing 05-plan.md found" >&2
+      exit 2
    fi
    ```
    Parse the **Tasks** list and **Wave schedule** from `$TASK_FILE`.
@@ -110,9 +110,13 @@ Wave-based parallel execution. Default behaviour: run **every remaining wave** e
      `set_tier` immediately and unconditionally before any other dispatch arm runs:
      ```bash
      if [ -n "$SUGGEST_AUDITED_UPGRADE" ]; then
-       # Derive task id from the suggest-audited-upgrade signal for the audit reason
+       # Derive task id from the suggest-audited-upgrade signal for the audit reason.
+       # Sanitise: strip prefix, restrict to safe chars [A-Za-z0-9._-], bound to 64 chars
+       # (reviewer-supplied external data must be validated at the boundary — security rule 3).
        UPGRADE_TASK="$(printf '%s\n' "$SUGGEST_AUDITED_UPGRADE" \
-         | sed 's/^suggest-audited-upgrade: *//')"
+         | sed 's/^suggest-audited-upgrade: *//' \
+         | tr -cd 'A-Za-z0-9._-' \
+         | cut -c1-64)"
        set_tier "$feature_dir" audited "security-must finding in ${UPGRADE_TASK}"
        # set_tier writes the R13 audit line to STATUS Notes automatically
      fi
@@ -149,10 +153,11 @@ Wave-based parallel execution. Default behaviour: run **every remaining wave** e
    # Resolve BASE once per wave (merge-base of feature branch with main)
    BASE="$(git merge-base HEAD main)"
 
-   # Cache git-diff output once — derive both counts from it (performance rule 3)
-   diff_files_list="$(git diff --name-only "$BASE...HEAD")"
-   diff_files="$(printf '%s\n' "$diff_files_list" | wc -l | tr -d ' ')"
-   diff_lines="$(git diff --shortstat "$BASE...HEAD" | awk '{s+=$4+$6} END {print s+0}')"
+   # Single git diff --shortstat — one fork derives both file count and line count
+   # (performance rule 3: cache expensive operations; no separate --name-only call)
+   read -r diff_files diff_lines <<EOF
+$(git diff --shortstat "$BASE...HEAD" | awk '{files=$1; s+=$4+$6} END {print files+0, s+0}')
+EOF
 
    FEATURE_TIER="$(get_tier "$feature_dir")"   # bin/specflow-tier already sourced above
    if [ "$FEATURE_TIER" = "tiny" ]; then
@@ -162,10 +167,19 @@ Wave-based parallel execution. Default behaviour: run **every remaining wave** e
         [ "$diff_files" -gt "$TIER_DIFF_FILES" ]; then
        printf 'WARNING: tiny-tier feature exceeds threshold after wave %s: %s lines, %s files (limits: %s lines, %s files). TPM should confirm or upgrade tier via set_tier.\n' \
          "$WAVE_N" "$diff_lines" "$diff_files" "$TIER_DIFF_LINES" "$TIER_DIFF_FILES" >&2
-       # STATUS Notes pending line — logged immediately per tech §4.2 audit rule
-       printf '%s implement — auto-upgrade SUGGESTED tiny→standard (diff: %s lines, %s files; threshold %s/%s); awaiting TPM confirmation\n' \
-         "$(date '+%Y-%m-%d')" "$diff_lines" "$diff_files" "$TIER_DIFF_LINES" "$TIER_DIFF_FILES" \
-         >> "$feature_dir/STATUS.md"
+       # STATUS Notes pending line — logged immediately per tech §4.2 audit rule.
+       # Use backup-then-temp-then-mv discipline (no-force-on-user-paths rule):
+       #   cp "$feature_dir/STATUS.md" "$feature_dir/STATUS.md.bak"
+       #   { cat "$feature_dir/STATUS.md"; \
+       #     printf '%s implement — auto-upgrade SUGGESTED ...\n' "$(date '+%Y-%m-%d')"; \
+       #   } > "$feature_dir/STATUS.md.tmp"
+       #   mv "$feature_dir/STATUS.md.tmp" "$feature_dir/STATUS.md"
+       STATUS_NOTE="$(printf '%s implement — auto-upgrade SUGGESTED tiny→standard (diff: %s lines, %s files; threshold %s/%s); awaiting TPM confirmation\n' \
+         "$(date '+%Y-%m-%d')" "$diff_lines" "$diff_files" "$TIER_DIFF_LINES" "$TIER_DIFF_FILES")"
+       cp "$feature_dir/STATUS.md" "$feature_dir/STATUS.md.bak"
+       { cat "$feature_dir/STATUS.md"; printf '%s\n' "$STATUS_NOTE"; } \
+         > "$feature_dir/STATUS.md.tmp"
+       mv "$feature_dir/STATUS.md.tmp" "$feature_dir/STATUS.md"
      fi
    fi
    ```
