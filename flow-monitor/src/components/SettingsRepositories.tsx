@@ -30,7 +30,7 @@ export function SettingsRepositories({
     let hasSpecWorkflow = false;
     try {
       hasSpecWorkflow = await invoke<boolean>("path_exists", {
-        path: `${pickedPath}/.spec-workflow`,
+        path: `${pickedPath}/.specaffold`,
       });
     } catch {
       hasSpecWorkflow = false;
