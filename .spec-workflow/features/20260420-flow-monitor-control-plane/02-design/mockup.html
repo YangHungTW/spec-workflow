@@ -1,0 +1,1569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Flow Monitor B2 — Control Plane Design Mockups</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  /* ============================================================
+     DESIGN TOKENS — inherited from B1 (light mode)
+     ============================================================ */
+  :root {
+    --brand:           #4F46E5;
+    --brand-light:     #EEF2FF;
+    --brand-hover:     #4338CA;
+
+    --stalled:         #EF4444;
+    --stalled-light:   #FEF2F2;
+    --stale:           #F59E0B;
+    --stale-light:     #FFFBEB;
+    --ok:              #10B981;
+    --ok-light:        #ECFDF5;
+    --ui-badge:        #8B5CF6;
+    --ui-badge-light:  #F5F3FF;
+
+    /* Action / control-plane colours */
+    --action-primary:      #1B4332;
+    --action-primary-text: #D4EDE1;
+    --action-danger:       #B91C1C;
+    --action-danger-light: #FEE2E2;
+    --action-warn:         #92400E;
+    --action-warn-light:   #FEF3C7;
+
+    /* Surfaces */
+    --bg:              #F1F5F9;
+    --surface:         #FFFFFF;
+    --surface-2:       #F8FAFC;
+    --sidebar-bg:      #1E293B;
+    --sidebar-border:  #334155;
+    --sidebar-text:    #CBD5E1;
+    --sidebar-muted:   #94A3B8;
+    --sidebar-label:   #64748B;
+    --sidebar-active-bg: #4F46E5;
+    --sidebar-hover:   #334155;
+    --sidebar-count-bg: #475569;
+
+    --border:          #E2E8F0;
+    --border-subtle:   #F1F5F9;
+    --text-primary:    #1E293B;
+    --text-secondary:  #475569;
+    --text-muted:      #94A3B8;
+    --text-faint:      #CBD5E1;
+
+    /* Window chrome */
+    --chrome-bg:       #F8FAFC;
+    --chrome-border:   #E2E8F0;
+    --chrome-title:    #475569;
+
+    /* Nav bar */
+    --nav-bg:          #FFFFFF;
+    --nav-border:      #E2E8F0;
+    --nav-btn-bg:      #FFFFFF;
+    --nav-btn-border:  #E2E8F0;
+    --nav-btn-text:    #475569;
+    --nav-btn-hover-bg: #F8FAFC;
+    --nav-btn-current-bg: #4F46E5;
+    --nav-btn-current-text: #FFFFFF;
+
+    --scroll-thumb:    #CBD5E1;
+    --toast-bg:        #FFFFFF;
+    --toast-text:      #1E293B;
+    --compact-bg:      rgba(15,23,42,0.92);
+    --compact-border:  rgba(255,255,255,0.1);
+    --compact-divider: rgba(255,255,255,0.06);
+  }
+
+  /* ============================================================
+     DARK MODE TOKENS — ink-green primary: #1B4332 (B1 lock)
+     ============================================================ */
+  html.dark {
+    --brand:           #1B4332;
+    --brand-light:     #1A2E24;
+    --brand-hover:     #2D5A3D;
+
+    --stalled:         #C53030;
+    --stalled-light:   #1F1212;
+    --stale:           #D97706;
+    --stale-light:     #1F1A0E;
+    --ok:              #059669;
+    --ok-light:        #0D1F18;
+    --ui-badge:        #7C3AED;
+    --ui-badge-light:  #1A1529;
+
+    --action-primary:      #2D5A3D;
+    --action-primary-text: #A7D4BE;
+    --action-danger:       #9B1C1C;
+    --action-danger-light: #2A1212;
+    --action-warn:         #78350F;
+    --action-warn-light:   #2A2010;
+
+    --bg:              #0F1411;
+    --surface:         #1A211D;
+    --surface-2:       #141C18;
+    --sidebar-bg:      #111A15;
+    --sidebar-border:  #1F2E24;
+    --sidebar-text:    #A7C4B0;
+    --sidebar-muted:   #6B9176;
+    --sidebar-label:   #4D7360;
+    --sidebar-active-bg: #1B4332;
+    --sidebar-hover:   #1F2E24;
+    --sidebar-count-bg: #1F2E24;
+
+    --border:          #1F2E24;
+    --border-subtle:   #161E19;
+    --text-primary:    #E8F0EB;
+    --text-secondary:  #9BBDA9;
+    --text-muted:      #5C7A68;
+    --text-faint:      #3A5245;
+
+    --chrome-bg:       #141C18;
+    --chrome-border:   #1F2E24;
+    --chrome-title:    #7BA590;
+
+    --nav-bg:          #111A15;
+    --nav-border:      #1F2E24;
+    --nav-btn-bg:      #1A211D;
+    --nav-btn-border:  #1F2E24;
+    --nav-btn-text:    #7BA590;
+    --nav-btn-hover-bg: #1F2E24;
+    --nav-btn-current-bg: #1B4332;
+    --nav-btn-current-text: #D4EDE1;
+
+    --scroll-thumb:    #2D4A3A;
+    --toast-bg:        #1A211D;
+    --toast-text:      #E8F0EB;
+
+    --compact-bg:      rgba(10,18,13,0.94);
+    --compact-border:  rgba(107,145,118,0.18);
+    --compact-divider: rgba(107,145,118,0.09);
+  }
+
+  /* ============================================================
+     BASE
+     ============================================================ */
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    transition: background 0.2s, color 0.2s;
+  }
+
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ============================================================
+     STAGE PILLS — inherited from B1
+     ============================================================ */
+  .stage-pill {
+    font-size: 10px; font-weight: 600;
+    letter-spacing: 0.04em; text-transform: uppercase;
+    padding: 2px 8px; border-radius: 9999px;
+  }
+  .stage-brainstorm { background: #DBEAFE; color: #1D4ED8; }
+  .stage-design     { background: #EDE9FE; color: #6D28D9; }
+  .stage-implement  { background: #D1FAE5; color: #065F46; }
+  .stage-prd        { background: #FEF3C7; color: #92400E; }
+  .stage-plan       { background: #FCE7F3; color: #9D174D; }
+  .stage-gap-check  { background: #FEE2E2; color: #991B1B; }
+  .stage-verify     { background: #E0F2FE; color: #0369A1; }
+  .stage-tech       { background: #F0FDF4; color: #14532D; }
+  .stage-request    { background: #F8FAFC; color: #475569; }
+
+  html.dark .stage-brainstorm { background: #1A2C44; color: #93C5FD; }
+  html.dark .stage-design     { background: #251A40; color: #C4B5FD; }
+  html.dark .stage-implement  { background: #0D2218; color: #6EE7B7; }
+  html.dark .stage-prd        { background: #2A2010; color: #FCD34D; }
+  html.dark .stage-plan       { background: #2A1525; color: #F9A8D4; }
+  html.dark .stage-gap-check  { background: #2A1212; color: #FCA5A5; }
+  html.dark .stage-verify     { background: #0D1F2E; color: #7DD3FC; }
+  html.dark .stage-tech       { background: #0D2218; color: #86EFAC; }
+  html.dark .stage-request    { background: #1A211D; color: #9BBDA9; }
+
+  /* ============================================================
+     CARDS — B1 base + B2 stalled state (already has stale/stalled
+     from B1; B2 adds action buttons inside card)
+     ============================================================ */
+  .session-card {
+    background: var(--surface);
+    border-radius: 12px;
+    border: 1.5px solid var(--border);
+    padding: 16px;
+    transition: box-shadow 0.15s, border-color 0.15s, background 0.2s;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  .session-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    border-color: var(--text-faint);
+  }
+  html.dark .session-card:hover { box-shadow: 0 4px 18px rgba(0,0,0,0.4); }
+  .session-card.stalled {
+    border-color: var(--stalled);
+    background: var(--stalled-light);
+  }
+  .session-card.stale {
+    border-color: var(--stale);
+    background: var(--stale-light);
+  }
+
+  /* B2: top accent bar on stalled card (4px, inherited from B1 notes) */
+  .session-card.stalled::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 4px;
+    background: var(--stalled);
+    border-radius: 12px 12px 0 0;
+  }
+
+  /* B2: action-buttons strip at card bottom — only visible on stalled */
+  .card-actions {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    display: flex; gap: 8px;
+  }
+
+  /* ============================================================
+     BADGES
+     ============================================================ */
+  .badge-stalled {
+    background: var(--stalled); color: white;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.05em;
+    padding: 2px 8px; border-radius: 9999px; text-transform: uppercase;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .badge-stale {
+    background: var(--stale); color: white;
+    font-size: 10px; font-weight: 700;
+    padding: 2px 8px; border-radius: 9999px; text-transform: uppercase;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .badge-ok {
+    background: var(--ok-light); color: var(--ok);
+    font-size: 10px; font-weight: 600;
+    padding: 2px 7px; border-radius: 9999px; text-transform: uppercase;
+  }
+  .badge-ui {
+    background: var(--ui-badge-light); color: var(--ui-badge);
+    font-size: 10px; font-weight: 600;
+    padding: 2px 7px; border-radius: 9999px; text-transform: uppercase;
+  }
+
+  /* ============================================================
+     BUTTONS — B2 new
+     ============================================================ */
+  .btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11px; font-weight: 600;
+    padding: 6px 12px; border-radius: 8px;
+    cursor: pointer; border: none; transition: opacity 0.15s, box-shadow 0.15s;
+    white-space: nowrap;
+  }
+  .btn:hover { opacity: 0.88; }
+
+  .btn-primary {
+    background: var(--action-primary);
+    color: var(--action-primary-text);
+  }
+  html.dark .btn-primary {
+    background: var(--action-primary);
+    color: var(--action-primary-text);
+  }
+
+  .btn-secondary {
+    background: var(--surface);
+    color: var(--text-secondary);
+    border: 1.5px solid var(--border);
+  }
+
+  .btn-danger {
+    background: var(--action-danger-light);
+    color: var(--action-danger);
+    border: 1px solid var(--action-danger);
+  }
+  html.dark .btn-danger {
+    background: var(--action-danger-light);
+    color: #FCA5A5;
+    border-color: #7F1D1D;
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+  }
+
+  /* ============================================================
+     SIDEBAR — inherited from B1
+     ============================================================ */
+  .sidebar {
+    width: 220px; min-width: 220px;
+    background: var(--sidebar-bg);
+    color: var(--sidebar-text);
+    height: 100vh;
+    display: flex; flex-direction: column;
+    transition: background 0.2s;
+  }
+  .sidebar-logo { padding: 20px 16px 16px; border-bottom: 1px solid var(--sidebar-border); }
+  .sidebar-section {
+    padding: 12px 8px 4px;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--sidebar-label);
+  }
+  .sidebar-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px; border-radius: 8px; margin: 2px 6px;
+    font-size: 13px; cursor: pointer;
+    color: var(--sidebar-muted);
+    transition: background 0.1s, color 0.1s;
+  }
+  .sidebar-item:hover { background: var(--sidebar-hover); color: var(--sidebar-text); }
+  .sidebar-item.active { background: var(--sidebar-active-bg); color: white; }
+  .sidebar-item .count {
+    margin-left: auto;
+    background: var(--sidebar-count-bg); color: var(--sidebar-text);
+    font-size: 10px; font-weight: 600;
+    padding: 1px 6px; border-radius: 9999px;
+  }
+  .sidebar-item.active .count { background: rgba(255,255,255,0.25); color: white; }
+  .sidebar-item .stalled-count {
+    margin-left: auto;
+    background: var(--stalled); color: white;
+    font-size: 10px; font-weight: 700;
+    padding: 1px 6px; border-radius: 9999px;
+  }
+
+  /* ============================================================
+     TOOLBAR — B1 base + B2 command-launch button
+     ============================================================ */
+  .toolbar {
+    position: sticky; top: 0;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 20px;
+    display: flex; align-items: center; gap: 12px;
+    transition: background 0.2s;
+  }
+  .toolbar-btn {
+    display: flex; align-items: center; gap: 4px;
+    font-size: 11px; color: var(--text-muted);
+    border: 1px solid var(--border);
+    border-radius: 8px; padding: 6px 12px;
+    background: var(--surface); cursor: pointer;
+    transition: background 0.1s;
+  }
+  .toolbar-btn:hover { background: var(--surface-2); }
+
+  /* B2: highlighted "Specflow" command launcher button in toolbar */
+  .toolbar-btn-specflow {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 700;
+    color: var(--action-primary-text);
+    background: var(--action-primary);
+    border: none; border-radius: 8px;
+    padding: 6px 14px; cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  html.dark .toolbar-btn-specflow { color: #A7D4BE; }
+  .toolbar-btn-specflow:hover { opacity: 0.88; }
+  .toolbar-kbd {
+    background: rgba(255,255,255,0.15);
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-size: 10px;
+    font-family: 'SF Mono', 'Fira Mono', monospace;
+  }
+
+  /* ============================================================
+     COMMAND PALETTE
+     ============================================================ */
+  .cmd-palette-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex; align-items: flex-start; justify-content: center;
+    padding-top: 120px;
+    z-index: 1000;
+    backdrop-filter: blur(2px);
+  }
+  .cmd-palette {
+    width: 560px;
+    background: var(--surface);
+    border-radius: 16px;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.22);
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  html.dark .cmd-palette { box-shadow: 0 24px 64px rgba(0,0,0,0.6); }
+  .cmd-palette-search {
+    display: flex; align-items: center; gap: 10px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .cmd-palette-input {
+    flex: 1;
+    background: transparent;
+    border: none; outline: none;
+    font-size: 15px; color: var(--text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  .cmd-palette-input::placeholder { color: var(--text-muted); }
+  .cmd-section-label {
+    padding: 8px 16px 4px;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .cmd-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+  .cmd-item:hover, .cmd-item.selected { background: var(--brand-light); }
+  html.dark .cmd-item:hover, html.dark .cmd-item.selected { background: var(--brand-light); }
+  .cmd-item-icon {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; flex-shrink: 0;
+  }
+  .cmd-icon-advance  { background: #D1FAE5; }
+  html.dark .cmd-icon-advance { background: #0D2218; }
+  .cmd-icon-send     { background: #DBEAFE; }
+  html.dark .cmd-icon-send    { background: #1A2C44; }
+  .cmd-icon-specflow { background: var(--brand-light); }
+  .cmd-icon-danger   { background: #FEE2E2; }
+  html.dark .cmd-icon-danger  { background: #2A1212; }
+  .cmd-item-label {
+    flex: 1;
+    font-size: 13px; color: var(--text-primary); font-weight: 500;
+  }
+  .cmd-item-desc {
+    font-size: 11px; color: var(--text-muted);
+  }
+  .cmd-item-kbd {
+    font-size: 10px;
+    font-family: 'SF Mono', 'Fira Mono', monospace;
+    color: var(--text-muted);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 6px;
+  }
+  .cmd-footer {
+    padding: 10px 16px;
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center; gap: 12px;
+    font-size: 11px; color: var(--text-muted);
+  }
+  .cmd-footer kbd {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-family: 'SF Mono', 'Fira Mono', monospace;
+    font-size: 10px;
+    color: var(--text-secondary);
+  }
+
+  /* ============================================================
+     CONTEXT MENU — card right-click / "..." menu
+     ============================================================ */
+  .context-menu {
+    width: 220px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.14);
+    overflow: hidden;
+    padding: 4px;
+  }
+  html.dark .context-menu { box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
+  .ctx-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 13px; cursor: pointer; color: var(--text-primary);
+    transition: background 0.1s;
+  }
+  .ctx-item:hover { background: var(--surface-2); }
+  .ctx-item.danger { color: var(--stalled); }
+  html.dark .ctx-item.danger { color: #FCA5A5; }
+  .ctx-item.danger:hover { background: var(--stalled-light); }
+  .ctx-separator { height: 1px; background: var(--border); margin: 4px 0; }
+  .ctx-section-label {
+    padding: 4px 12px 2px;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  /* ============================================================
+     CONFIRMATION MODAL
+     ============================================================ */
+  .modal-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 2000;
+    backdrop-filter: blur(2px);
+  }
+  .modal {
+    width: 440px;
+    background: var(--surface);
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  html.dark .modal { box-shadow: 0 20px 60px rgba(0,0,0,0.6); }
+  .modal-header {
+    padding: 20px 24px 16px;
+    display: flex; align-items: flex-start; gap: 14px;
+  }
+  .modal-icon {
+    width: 40px; height: 40px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-size: 18px;
+  }
+  .modal-icon-danger { background: #FEE2E2; }
+  html.dark .modal-icon-danger { background: #2A1212; }
+  .modal-title { font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+  .modal-subtitle { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+  .modal-body { padding: 0 24px 16px; }
+  .modal-detail-box {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 12px;
+    font-family: 'SF Mono', 'Fira Mono', monospace;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+  .modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: flex-end; gap: 10px;
+  }
+
+  /* ============================================================
+     NOTIFICATION BANNER (macOS Notification Center sim)
+     ============================================================ */
+  .notif-banner {
+    width: 340px;
+    background: rgba(255,255,255,0.82);
+    backdrop-filter: blur(20px) saturate(180%);
+    border-radius: 14px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+    overflow: hidden;
+    border: 1px solid rgba(0,0,0,0.06);
+  }
+  .notif-banner-header {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 14px 6px;
+  }
+  .notif-app-icon {
+    width: 28px; height: 28px; border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; flex-shrink: 0;
+  }
+  .notif-app-name { font-size: 11px; font-weight: 700; color: #1C1C1E; letter-spacing: -0.01em; }
+  .notif-time { margin-left: auto; font-size: 11px; color: #8E8E93; }
+  .notif-body { padding: 2px 14px 12px; }
+  .notif-title { font-size: 13px; font-weight: 700; color: #1C1C1E; margin-bottom: 2px; }
+  .notif-message { font-size: 12px; color: #3C3C43; line-height: 1.4; }
+
+  /* ============================================================
+     WINDOW CHROME — inherited from B1
+     ============================================================ */
+  .window-chrome {
+    background: var(--chrome-bg);
+    border-bottom: 1px solid var(--chrome-border);
+    padding: 10px 16px;
+    display: flex; align-items: center; gap: 8px;
+    transition: background 0.2s;
+  }
+  .traffic-light { width: 12px; height: 12px; border-radius: 50%; }
+  .tl-close { background: #FF5F57; }
+  .tl-min   { background: #FFBD2E; }
+  .tl-max   { background: #28CA41; }
+  .window-title {
+    flex: 1; text-align: center;
+    font-size: 13px; font-weight: 600; color: var(--chrome-title);
+  }
+
+  /* ============================================================
+     SCREEN NAV BAR (mockup-only switcher)
+     ============================================================ */
+  .screen-nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    background: var(--nav-bg);
+    border-bottom: 1px solid var(--nav-border);
+    padding: 10px 24px;
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .nav-brand { font-size: 13px; font-weight: 700; color: var(--text-secondary); margin-right: 8px; white-space: nowrap; }
+  .nav-btn {
+    padding: 7px 14px; border-radius: 8px;
+    font-size: 12px; font-weight: 500; cursor: pointer;
+    background: var(--nav-btn-bg);
+    border: 1.5px solid var(--nav-btn-border);
+    color: var(--nav-btn-text);
+    transition: all 0.15s; white-space: nowrap;
+  }
+  .nav-btn:hover { background: var(--nav-btn-hover-bg); color: var(--text-primary); }
+  .nav-btn.current { background: var(--nav-btn-current-bg); border-color: var(--nav-btn-current-bg); color: var(--nav-btn-current-text); }
+  .theme-toggle {
+    margin-left: auto;
+    padding: 6px 12px; border-radius: 8px;
+    font-size: 12px; font-weight: 600; cursor: pointer;
+    background: var(--nav-btn-bg); border: 1.5px solid var(--nav-btn-border);
+    color: var(--text-secondary); transition: all 0.15s;
+    display: flex; align-items: center; gap: 5px; white-space: nowrap; flex-shrink: 0;
+  }
+  .theme-toggle:hover { background: var(--nav-btn-hover-bg); color: var(--text-primary); }
+
+  /* ============================================================
+     SCROLLBAR
+     ============================================================ */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--scroll-thumb); border-radius: 3px; }
+
+  /* ============================================================
+     MAIN CONTENT AREA
+     ============================================================ */
+  .main-content-area { background: var(--surface-2); flex: 1; overflow-y: auto; }
+
+  /* ============================================================
+     ANNOTATION BOXES
+     ============================================================ */
+  .annotation-box {
+    background: var(--surface);
+    border: 1px dashed #FCD34D;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-top: 16px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+  .annotation-box strong { color: var(--text-primary); }
+
+  /* B2 "DECISION DEFERRED" label */
+  .decision-tag {
+    display: inline-block;
+    background: #FEF3C7; color: #92400E;
+    font-size: 9px; font-weight: 700; letter-spacing: 0.06em;
+    text-transform: uppercase; padding: 1px 6px; border-radius: 4px;
+    margin-right: 4px; vertical-align: middle;
+  }
+  html.dark .decision-tag { background: #2A2010; color: #FCD34D; }
+
+  /* Send-message input area */
+  .send-msg-area {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .send-msg-textarea {
+    width: 100%; padding: 12px;
+    background: transparent; border: none; outline: none; resize: none;
+    font-size: 13px; color: var(--text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    line-height: 1.5; min-height: 72px;
+  }
+  .send-msg-textarea::placeholder { color: var(--text-muted); }
+  .send-msg-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 12px;
+    border-top: 1px solid var(--border);
+    font-size: 11px; color: var(--text-muted);
+  }
+
+  /* Compact panel */
+  .compact-panel {
+    width: 320px;
+    background: var(--compact-bg);
+    backdrop-filter: blur(12px);
+    border-radius: 14px;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.35);
+    color: white;
+    overflow: hidden;
+    border: 1px solid var(--compact-border);
+  }
+  .compact-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--compact-divider);
+    font-size: 12px;
+  }
+  .compact-row:last-child { border-bottom: none; }
+  .compact-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .dot-ok      { background: var(--ok); }
+  .dot-stale   { background: var(--stale); }
+  .dot-stalled { background: var(--stalled); animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* "Advance" quick-action inside compact row — B2 addition */
+  .compact-quick-btn {
+    margin-left: auto;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 10px; font-weight: 700;
+    background: var(--stalled); color: white; border: none;
+    cursor: pointer; flex-shrink: 0;
+  }
+
+  /* Tray badge indicator */
+  .tray-icon-mock {
+    position: relative; display: inline-block;
+  }
+  .tray-badge {
+    position: absolute; top: -4px; right: -6px;
+    background: var(--stalled); color: white;
+    font-size: 9px; font-weight: 800;
+    width: 16px; height: 16px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid var(--nav-bg);
+  }
+
+  /* "Invoke method" option tabs in command palette */
+  .method-tab {
+    flex: 1; text-align: center;
+    padding: 6px 0; font-size: 11px; font-weight: 600;
+    cursor: pointer; border-radius: 6px;
+    color: var(--text-muted);
+    transition: background 0.1s;
+  }
+  .method-tab.active { background: var(--action-primary); color: var(--action-primary-text); }
+  html.dark .method-tab.active { color: #A7D4BE; }
+</style>
+</head>
+<body>
+
+<!-- ================================================================
+     MOCKUP-ONLY SCREEN SWITCHER NAV
+     ================================================================ -->
+<nav class="screen-nav">
+  <span class="nav-brand">Flow Monitor B2</span>
+  <button class="nav-btn current" onclick="showScreen('s1')">1 Card Grid + Stalled</button>
+  <button class="nav-btn" onclick="showScreen('s2')">2 Card Detail + Actions</button>
+  <button class="nav-btn" onclick="showScreen('s3')">3 Command Palette</button>
+  <button class="nav-btn" onclick="showScreen('s4')">4 Confirm Modal</button>
+  <button class="nav-btn" onclick="showScreen('s5')">5 Notification Banner</button>
+  <button class="nav-btn" onclick="showScreen('s6')">6 Compact Panel B2</button>
+  <button class="nav-btn" onclick="showScreen('s7')">7 Context Menu</button>
+  <button class="theme-toggle" onclick="toggleTheme()">
+    <span id="theme-icon">☀</span> <span id="theme-label">Light</span>
+  </button>
+</nav>
+
+<!-- ================================================================
+     SCREEN 1 — CARD GRID WITH STALLED STATE
+     Shows B2 addition: stalled card with action-button strip;
+     toolbar gains the "Specflow ⌘K" launcher button.
+     ================================================================ -->
+<div id="s1" class="screen active" style="padding-top:56px;">
+  <div style="display:flex; height:calc(100vh - 56px);">
+
+    <!-- Sidebar (B1 inherited) -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:28px;height:28px;border-radius:8px;background:var(--sidebar-active-bg);display:flex;align-items:center;justify-content:center;font-size:14px;">◈</div>
+          <span style="font-size:14px;font-weight:700;color:var(--sidebar-text);">Flow Monitor</span>
+        </div>
+      </div>
+      <div class="sidebar-section">Projects</div>
+      <div class="sidebar-item active">
+        <span>◼</span> All Projects
+        <span class="count">7</span>
+      </div>
+      <div class="sidebar-item">
+        <span>◻</span> spec-workflow
+        <span class="stalled-count">1</span>
+      </div>
+      <div class="sidebar-item">
+        <span>◻</span> api-service
+        <span class="count">3</span>
+      </div>
+      <div class="sidebar-section">Filter</div>
+      <div class="sidebar-item">
+        <span style="color:var(--stalled);">●</span> Stalled
+        <span class="stalled-count">1</span>
+      </div>
+      <div class="sidebar-item">
+        <span style="color:var(--stale);">●</span> Stale
+        <span class="count">2</span>
+      </div>
+      <div class="sidebar-item">
+        <span style="color:var(--ok);">●</span> Active
+        <span class="count">4</span>
+      </div>
+      <div style="flex:1;"></div>
+      <div style="padding:12px 16px;border-top:1px solid var(--sidebar-border);display:flex;align-items:center;gap:6px;font-size:11px;color:var(--sidebar-muted);">
+        <span style="width:6px;height:6px;border-radius:50%;background:var(--ok);display:inline-block;"></span>
+        Polling · 3s
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <div class="main-content-area">
+      <!-- Toolbar — B2 adds Specflow launcher -->
+      <div class="toolbar">
+        <span style="font-size:13px;font-weight:600;color:var(--text-primary);flex:1;">All Sessions</span>
+        <button class="toolbar-btn">Sort: Last Updated ▾</button>
+        <button class="toolbar-btn">Compact</button>
+        <!-- B2 NEW: Specflow command launcher in toolbar -->
+        <button class="toolbar-btn-specflow">
+          ◈ Specflow
+          <span class="toolbar-kbd">⌘K</span>
+        </button>
+        <div style="display:flex;gap:6px;margin-left:4px;">
+          <span style="font-size:11px;color:var(--text-muted);padding:6px 8px;">EN</span>
+          <span style="font-size:11px;color:var(--text-muted);padding:6px 8px;">中</span>
+        </div>
+      </div>
+
+      <!-- Card grid -->
+      <div style="padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+
+        <!-- STALLED CARD — B2 focus: top accent bar + action buttons -->
+        <div class="session-card stalled">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;">
+            <span style="font-family:'SF Mono','Fira Mono',monospace;font-size:11px;font-weight:600;color:var(--text-primary);">20260420-flow-monitor-control-plane</span>
+            <button style="background:none;border:none;cursor:pointer;color:var(--text-muted);padding:0 0 0 8px;font-size:16px;" title="More actions">···</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+            <span class="stage-pill stage-prd">PRD</span>
+            <span class="badge-stalled">
+              <span style="animation:pulse 1.5s infinite;display:inline-block;width:5px;height:5px;border-radius:50%;background:white;"></span>
+              Stalled · 4h 12m
+            </span>
+            <span class="badge-ui">has-ui</span>
+          </div>
+          <div style="font-size:11px;color:var(--text-secondary);margin-bottom:4px;">spec-workflow</div>
+          <div style="font-size:11px;color:var(--text-muted);background:var(--surface-2);border-radius:6px;padding:6px 8px;margin-top:6px;border:1px solid var(--border);font-style:italic;">
+            Last note: "PM — request intaken (B2 follow-up to 20260419-flow-monitor)"
+          </div>
+          <!-- B2 NEW: action button strip on stalled card -->
+          <div class="card-actions">
+            <button class="btn btn-primary" style="flex:1;">
+              ▶ Advance to Design
+            </button>
+            <button class="btn btn-secondary">
+              ✉ Message
+            </button>
+          </div>
+          <div style="margin-top:8px;font-size:10px;color:var(--text-muted);">
+            <span class="decision-tag">Q1 deferred</span>
+            Action mechanism (session pipe / terminal spawn / clipboard) decided in PRD
+          </div>
+        </div>
+
+        <!-- STALE CARD — inherited B1 state, no action buttons -->
+        <div class="session-card stale">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;">
+            <span style="font-family:'SF Mono','Fira Mono',monospace;font-size:11px;font-weight:600;color:var(--text-primary);">20260418-auth-refresh</span>
+            <button style="background:none;border:none;cursor:pointer;color:var(--text-muted);padding:0 0 0 8px;font-size:16px;">···</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+            <span class="stage-pill stage-implement">Implement</span>
+            <span class="badge-stale">Stale · 1h 48m</span>
+          </div>
+          <div style="font-size:11px;color:var(--text-secondary);">api-service</div>
+        </div>
+
+        <!-- ACTIVE CARD -->
+        <div class="session-card">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;">
+            <span style="font-family:'SF Mono','Fira Mono',monospace;font-size:11px;font-weight:600;color:var(--text-primary);">20260420-perf-cache</span>
+            <button style="background:none;border:none;cursor:pointer;color:var(--text-muted);padding:0 0 0 8px;font-size:16px;">···</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+            <span class="stage-pill stage-tech">Tech</span>
+            <span class="badge-ok">Active</span>
+          </div>
+          <div style="font-size:11px;color:var(--text-secondary);">api-service</div>
+        </div>
+
+        <!-- ACTIVE CARD 2 -->
+        <div class="session-card">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;">
+            <span style="font-family:'SF Mono','Fira Mono',monospace;font-size:11px;font-weight:600;color:var(--text-primary);">20260417-rate-limit</span>
+            <button style="background:none;border:none;cursor:pointer;color:var(--text-muted);padding:0 0 0 8px;font-size:16px;">···</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+            <span class="stage-pill stage-verify">Verify</span>
+            <span class="badge-ok">Active</span>
+          </div>
+          <div style="font-size:11px;color:var(--text-secondary);">api-service</div>
+        </div>
+
+      </div><!-- /card grid -->
+
+      <div class="annotation-box" style="margin:0 20px 20px;">
+        <strong>B2 changes on this screen:</strong><br>
+        1. Stalled card gains top accent bar (4px red, implemented as ::before pseudo-element).<br>
+        2. Stalled card gains action-button strip: "Advance to [next stage]" (primary, computed from current stage + workflow order) and "Message" (secondary, opens inline textarea — see Screen 2).<br>
+        3. Toolbar gains "◈ Specflow ⌘K" button (ink-green fill) launching the command palette (Screen 3).<br>
+        4. "···" overflow button on any card opens context menu (Screen 7) with full specflow command list for that session.<br>
+        <span class="decision-tag">Q1 deferred</span> Button click mechanism (pipe / terminal / clipboard) is behind an abstraction; the UI shape is the same regardless of mechanism.
+      </div>
+    </div><!-- /main content -->
+  </div>
+</div>
+
+
+<!-- ================================================================
+     SCREEN 2 — CARD DETAIL WITH CONTROL-PLANE ACTIONS
+     B2 additions to B1's Card Detail:
+       - Action strip in header (Advance + Message)
+       - "Send Message / Make Choice" inline panel
+       - Audit trail entry in Notes timeline
+     ================================================================ -->
+<div id="s2" class="screen" style="padding-top:56px;">
+  <div style="height:calc(100vh - 56px);display:flex;flex-direction:column;">
+    <!-- Window chrome -->
+    <div class="window-chrome">
+      <div class="traffic-light tl-close"></div>
+      <div class="traffic-light tl-min"></div>
+      <div class="traffic-light tl-max"></div>
+      <div class="window-title">Flow Monitor — Card Detail</div>
+    </div>
+
+    <!-- Breadcrumb bar -->
+    <div style="background:var(--surface);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-muted);">
+      <span style="cursor:pointer;color:var(--brand);">← All Sessions</span>
+      <span>/</span>
+      <span>spec-workflow</span>
+      <span>/</span>
+      <span style="color:var(--text-primary);font-family:'SF Mono','Fira Mono',monospace;font-weight:600;">20260420-flow-monitor-control-plane</span>
+    </div>
+
+    <!-- Detail header strip — B2 adds action buttons on right -->
+    <div style="background:var(--surface);border-bottom:1px solid var(--border);padding:16px 20px;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+            <span style="font-family:'SF Mono','Fira Mono',monospace;font-size:14px;font-weight:700;color:var(--text-primary);">20260420-flow-monitor-control-plane</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+            <span class="stage-pill stage-prd">PRD</span>
+            <span class="badge-stalled">
+              <span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:white;animation:pulse 1.5s infinite;"></span>
+              Stalled · 4h 12m
+            </span>
+            <span class="badge-ui">has-ui</span>
+            <span style="font-size:11px;color:var(--text-muted);">Updated 4h ago</span>
+          </div>
+        </div>
+        <!-- B2 NEW: action buttons in detail header -->
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-ghost">Open in Finder</button>
+          <button class="btn btn-ghost">Copy Path</button>
+          <div style="width:1px;height:24px;background:var(--border);"></div>
+          <button class="btn btn-secondary" onclick="toggleMsgPanel()">✉ Message / Choice</button>
+          <button class="btn btn-primary" id="advance-btn">▶ Advance to Design</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- B2 NEW: "Send Message / Make Choice" inline panel (collapsed by default) -->
+    <div id="msg-panel" style="display:none;background:var(--surface-2);border-bottom:1px solid var(--border);padding:16px 20px;">
+      <div style="max-width:640px;">
+        <div style="font-size:12px;font-weight:600;color:var(--text-primary);margin-bottom:10px;">
+          Send Message or Make Choice
+          <span style="font-size:11px;font-weight:400;color:var(--text-muted);margin-left:8px;">
+            Sends input to the Claude Code session for this feature
+          </span>
+        </div>
+        <div class="send-msg-area">
+          <textarea class="send-msg-textarea" placeholder="Type a message, question, or choice... e.g. 'Proceed with option A' or 'Skip the brainstorm, go straight to PRD'"></textarea>
+          <div class="send-msg-footer">
+            <span>
+              <span class="decision-tag">Q1 deferred</span>
+              Delivery: pipe to session / spawn terminal / clipboard — decided in PRD
+            </span>
+            <button class="btn btn-primary" style="font-size:11px;padding:5px 12px;">Send ↵</button>
+          </div>
+        </div>
+        <!-- Invocation method selector — one affordance per Q1 option -->
+        <div style="margin-top:10px;">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-muted);margin-bottom:6px;">
+            Delivery method <span class="decision-tag">Q1 — PRD decides</span>
+          </div>
+          <div style="display:flex;gap:4px;background:var(--border-subtle);padding:3px;border-radius:8px;max-width:360px;">
+            <div class="method-tab active">(a) Session pipe</div>
+            <div class="method-tab">(b) Terminal spawn</div>
+            <div class="method-tab">(c) Clipboard</div>
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:6px;line-height:1.5;">
+            <strong>(a)</strong> Sends directly to the live Claude Code session stdin. Most real-time; requires OS-specific control channel.<br>
+            <strong>(b)</strong> Spawns a terminal window and issues the slash command. Clear audit trail; less real-time.<br>
+            <strong>(c)</strong> Copies to clipboard; user presses Enter in originating terminal. Lowest-tech; human confirms every write.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Two-pane body — inherited from B1 layout -->
+    <div style="flex:1;display:flex;overflow:hidden;">
+
+      <!-- Left rail: stage checklist + audit trail -->
+      <div style="width:260px;min-width:260px;background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;padding:16px;">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-muted);margin-bottom:10px;">Stage Checklist</div>
+        <!-- stage rows — abbreviated; full list in B1 -->
+        <div style="display:flex;flex-direction:column;gap:2px;margin-bottom:20px;">
+          <div style="display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:6px;">
+            <div style="width:14px;height:14px;border-radius:3px;background:var(--ok);display:flex;align-items:center;justify-content:center;font-size:9px;color:white;flex-shrink:0;">✓</div>
+            <span style="font-size:12px;color:var(--text-secondary);">request</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:6px;background:var(--brand-light);">
+            <div style="width:14px;height:14px;border-radius:3px;background:var(--brand);display:flex;align-items:center;justify-content:center;font-size:9px;color:white;flex-shrink:0;">→</div>
+            <span style="font-size:12px;font-weight:600;color:var(--brand);">design</span>
+            <span style="margin-left:auto;font-size:9px;font-weight:700;color:var(--brand);text-transform:uppercase;">CURRENT</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:6px;opacity:0.5;">
+            <div style="width:14px;height:14px;border-radius:3px;background:var(--border);flex-shrink:0;"></div>
+            <span style="font-size:12px;color:var(--text-muted);font-style:italic;">prd</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:6px;opacity:0.5;">
+            <div style="width:14px;height:14px;border-radius:3px;background:var(--border);flex-shrink:0;"></div>
+            <span style="font-size:12px;color:var(--text-muted);font-style:italic;">tech → plan → implement → validate → archive</span>
+          </div>
+        </div>
+
+        <!-- B2 NEW: Audit trail section in left rail -->
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-muted);margin-bottom:10px;">Control-Plane Audit</div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:11px;">
+          <div style="padding:8px;background:var(--surface-2);border-radius:8px;border:1px solid var(--border);">
+            <div style="font-weight:600;color:var(--text-primary);margin-bottom:2px;">▶ Advance to Design</div>
+            <div style="color:var(--text-muted);">Today 09:14 · via toolbar</div>
+            <div style="color:var(--text-muted);">method: terminal-spawn</div>
+          </div>
+          <div style="padding:8px;background:var(--surface-2);border-radius:8px;border:1px solid var(--border);">
+            <div style="font-weight:600;color:var(--text-primary);margin-bottom:2px;">✉ Message sent</div>
+            <div style="color:var(--text-muted);">Today 08:50 · via card detail</div>
+            <div style="color:var(--text-secondary);font-style:italic;">"Proceed with option A — clipboard paste"</div>
+          </div>
+        </div>
+        <div style="margin-top:8px;font-size:10px;color:var(--text-muted);">
+          <span class="decision-tag">Q4 deferred</span>
+          Audit trail storage (STATUS Notes / log file / Notification Center only) — PRD decides
+        </div>
+      </div>
+
+      <!-- Right pane: tabs + markdown preview — B1 layout unchanged -->
+      <div style="flex:1;overflow-y:auto;padding:20px;">
+        <div style="display:flex;gap:2px;margin-bottom:16px;overflow-x:auto;">
+          <div style="padding:6px 12px;border-radius:8px 8px 0 0;background:var(--brand-light);color:var(--brand);font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--border);white-space:nowrap;">00 request</div>
+          <div style="padding:6px 12px;border-radius:8px 8px 0 0;background:var(--surface-2);color:var(--text-muted);font-size:11px;cursor:pointer;border:1px solid var(--border);white-space:nowrap;font-style:italic;">01 brainstorm</div>
+          <div style="padding:6px 12px;border-radius:8px 8px 0 0;background:var(--surface-2);color:var(--text-muted);font-size:11px;cursor:pointer;border:1px solid var(--border);white-space:nowrap;font-style:italic;">02 design</div>
+          <div style="padding:6px 12px;border-radius:8px 8px 0 0;background:var(--surface-2);color:var(--text-muted);font-size:11px;cursor:pointer;border:1px solid var(--border);white-space:nowrap;font-style:italic;">03 prd</div>
+        </div>
+        <div style="background:var(--surface);border-radius:0 12px 12px 12px;border:1px solid var(--border);padding:20px;font-size:13px;line-height:1.7;color:var(--text-secondary);">
+          <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:12px;"># Request</div>
+          <p><strong>Raw ask</strong>: "然後需要知道那個 session 是不是停下來了…"</p>
+          <p>This is <strong>B2</strong>, the write-side follow-up to <strong>B1 20260419-flow-monitor</strong>.</p>
+          <div style="color:var(--text-muted);font-style:italic;font-size:11px;margin-top:16px;padding-top:12px;border-top:1px solid var(--border);">Read-only preview. Open in Finder to edit.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="annotation-box" style="margin:16px 20px;flex-shrink:0;">
+      <strong>B2 changes on this screen:</strong><br>
+      1. "Advance to [next stage]" button + "Message / Choice" button added to the detail header action strip (right side).<br>
+      2. "Message / Choice" button toggles the inline send-panel (with Q1 delivery-method tabs as parallel affordances for PRD decision).<br>
+      3. Left rail gains a "Control-Plane Audit" section beneath the stage checklist — shows the last N invocations with timestamp, entry point, and method used.<br>
+      4. "Open in Finder" and "Copy Path" (B1 read-only actions) remain in the same strip.<br>
+      <span class="decision-tag">Q4 deferred</span> Audit trail persistence backend (STATUS notes / log file / Notification Center only) is a PRD decision.
+    </div>
+  </div>
+</div>
+
+
+<!-- ================================================================
+     SCREEN 3 — COMMAND PALETTE
+     Triggered by ⌘K or toolbar "Specflow" button.
+     Shows all specflow commands grouped; destructive ones flagged.
+     ================================================================ -->
+<div id="s3" class="screen" style="padding-top:56px;min-height:calc(100vh - 56px);">
+
+  <!-- Background: faint card grid (show context) -->
+  <div style="padding:20px;filter:blur(1px);opacity:0.35;pointer-events:none;display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:700px;margin:0 auto;">
+    <div class="session-card stalled" style="height:80px;"></div>
+    <div class="session-card" style="height:80px;"></div>
+  </div>
+
+  <!-- Palette overlay -->
+  <div class="cmd-palette-backdrop" style="position:absolute;top:56px;padding-top:60px;">
+    <div class="cmd-palette">
+
+      <!-- Search input -->
+      <div class="cmd-palette-search">
+        <span style="color:var(--text-muted);font-size:16px;">⌘</span>
+        <input class="cmd-palette-input" placeholder="Run specflow command or search sessions…" />
+        <span style="background:var(--surface-2);border:1px solid var(--border);border-radius:5px;padding:2px 7px;font-size:10px;color:var(--text-muted);font-family:monospace;">ESC</span>
+      </div>
+
+      <!-- Session context line -->
+      <div style="padding:8px 16px 4px;display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-muted);">
+        <span>Context:</span>
+        <span style="font-family:'SF Mono','Fira Mono',monospace;color:var(--text-secondary);">20260420-flow-monitor-control-plane</span>
+        <span class="stage-pill stage-prd" style="font-size:9px;">PRD</span>
+        <span class="badge-stalled" style="font-size:9px;padding:1px 6px;">Stalled</span>
+      </div>
+
+      <!-- Section: Control actions (context-sensitive) -->
+      <div class="cmd-section-label">Control Actions — Current Session</div>
+
+      <div class="cmd-item selected">
+        <div class="cmd-item-icon cmd-icon-advance">▶</div>
+        <div style="flex:1;">
+          <div class="cmd-item-label">Advance to next stage</div>
+          <div class="cmd-item-desc">Run /specflow:design for 20260420-flow-monitor-control-plane</div>
+        </div>
+        <span class="cmd-item-kbd">↵</span>
+      </div>
+
+      <div class="cmd-item">
+        <div class="cmd-item-icon cmd-icon-send">✉</div>
+        <div style="flex:1;">
+          <div class="cmd-item-label">Send message / Make choice</div>
+          <div class="cmd-item-desc">Send input to the live Claude Code session</div>
+        </div>
+      </div>
+
+      <!-- Section: Specflow commands -->
+      <div class="cmd-section-label">Specflow Commands</div>
+
+      <div class="cmd-item">
+        <div class="cmd-item-icon cmd-icon-specflow" style="font-size:10px;font-weight:700;color:var(--brand);">req</div>
+        <div style="flex:1;">
+          <div class="cmd-item-label">/specflow:request</div>
+          <div class="cmd-item-desc">Start a new feature intake</div>
+        </div>
+      </div>
+
+      <div class="cmd-item">
+        <div class="cmd-item-icon cmd-icon-specflow" style="font-size:10px;font-weight:700;color:var(--brand);">nxt</div>
+        <div style="flex:1;">
+          <div class="cmd-item-label">/specflow:next</div>
+          <div class="cmd-item-desc">Advance current session to next stage</div>
+        </div>
+      </div>
+
+      <div class="cmd-item">
+        <div class="cmd-item-icon cmd-icon-specflow" style="font-size:10px;font-weight:700;color:var(--brand);">gap</div>
+        <div style="flex:1;">
+          <div class="cmd-item-label">/specflow:gap-check</div>
+          <div class="cmd-item-desc">Run gap analysis on current session</div>
+        </div>
+      </div>
+
+      <div class="cmd-item">
+        <div class="cmd-item-icon cmd-icon-specflow" style="font-size:10px;font-weight:700;color:var(--brand);">upd</div>
+        <div style="flex:1;">
+          <div class="cmd-item-label">/specflow:update-plan</div>
+          <div class="cmd-item-desc">Update plan document — write action</div>
+        </div>
+        <span style="font-size:9px;background:#FEF3C7;color:#92400E;padding:1px 5px;border-radius:4px;font-weight:700;flex-shrink:0;">WRITE</span>
+      </div>
+
+      <!-- Destructive commands — flagged with danger indicator -->
+      <div class="cmd-section-label" style="color:var(--stalled);">Destructive Commands — Confirmation Required</div>
+
+      <div class="cmd-item">
+        <div class="cmd-item-icon cmd-icon-danger">🗃</div>
+        <div style="flex:1;">
+          <div class="cmd-item-label" style="color:var(--stalled);">/specflow:archive</div>
+          <div class="cmd-item-desc">Move session to archive/ — irreversible</div>
+        </div>
+        <span style="font-size:9px;background:#FEE2E2;color:#991B1B;padding:1px 5px;border-radius:4px;font-weight:700;flex-shrink:0;">DESTROY</span>
+      </div>
+
+      <!-- Footer -->
+      <div class="cmd-footer">
+        <span><kbd>↑↓</kbd> navigate</span>
+        <span><kbd>↵</kbd> run</span>
+        <span><kbd>⌘↵</kbd> run + confirm</span>
+        <span><kbd>ESC</kbd> close</span>
+        <span style="margin-left:auto;font-size:10px;">
+          <span class="decision-tag">Q2 deferred</span> Command scope (all vs non-destructive only) — PRD decides
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div class="annotation-box" style="margin:0 20px 20px;position:relative;z-index:0;margin-top:460px;">
+    <strong>Command palette design decisions:</strong><br>
+    1. Palette is context-sensitive: it pre-populates the focused session slug from the last-viewed card.<br>
+    2. Commands are grouped: Control Actions (context-sensitive) → Specflow Commands → Destructive Commands.<br>
+    3. Destructive commands (<code>archive</code>, <code>update-*</code>) are visually flagged with a DESTROY / WRITE pill and always trigger the confirmation modal (Screen 4) before executing.<br>
+    4. "Advance to next stage" is the first ranked item when a stalled session is the context — surfacing the most urgent action at the top.<br>
+    <span class="decision-tag">Q1 deferred</span> Execution mechanism per command is behind an abstraction layer; same three delivery options apply.<br>
+    <span class="decision-tag">Q2 deferred</span> Whether all commands appear or only a safe subset in v1 — PRD scope decision.
+  </div>
+</div>
+
+
+<!-- ================================================================
+     SCREEN 4 — CONFIRMATION MODAL (destructive command)
+     Triggered by selecting /specflow:archive or /specflow:update-*
+     from command palette or context menu.
+     ================================================================ -->
+<div id="s4" class="screen" style="padding-top:56px;min-height:calc(100vh - 56px);">
+
+  <!-- Background -->
+  <div style="padding:40px;filter:blur(1px);opacity:0.25;pointer-events:none;">
+    <div style="max-width:700px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="session-card stalled" style="height:100px;"></div>
+      <div class="session-card" style="height:100px;"></div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-backdrop" style="position:absolute;top:56px;">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-icon modal-icon-danger">🗃</div>
+        <div>
+          <div class="modal-title">Archive this session?</div>
+          <div class="modal-subtitle">
+            This will move <code style="font-family:'SF Mono','Fira Mono',monospace;font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:4px;">20260420-flow-monitor-control-plane</code> to the archive directory. The feature files will not be deleted, but the session will no longer appear in the monitor.
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <div class="modal-detail-box">
+          <div style="color:var(--text-muted);margin-bottom:6px;">Command to execute:</div>
+          <div style="color:var(--text-secondary);">/specflow:archive</div>
+          <div style="color:var(--text-muted);margin-top:8px;">Session:</div>
+          <div>20260420-flow-monitor-control-plane</div>
+          <div style="color:var(--text-muted);margin-top:8px;">Target path:</div>
+          <div>.spec-workflow/archive/20260420-flow-monitor-control-plane/</div>
+          <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);color:var(--text-muted);">
+            Delivery: <span style="color:var(--text-secondary);">terminal-spawn (method B)</span>
+            <span class="decision-tag" style="margin-left:6px;">Q1 — final method set in PRD</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary">Cancel</button>
+        <button class="btn btn-danger">Archive Session</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="annotation-box" style="margin:0 20px 20px;position:relative;z-index:0;margin-top:460px;">
+    <strong>Confirmation modal design decisions:</strong><br>
+    1. Fires for all DESTROY-tagged commands: <code>archive</code>, <code>update-prd</code>, <code>update-plan</code>, <code>update-tech</code>, <code>update-tasks</code>. (WRITE-only commands like <code>next</code> do not require confirmation — PRD decides the boundary.)<br>
+    2. The detail box shows the exact command string, session slug, and target path — no ambiguity about what will run.<br>
+    3. "Cancel" is the left/default button; "Archive Session" (danger) is the right. Keyboard: ESC = Cancel, no default-to-confirm on Enter to prevent accidental runs.<br>
+    <span class="decision-tag">Q3 deferred</span> Exact set of commands requiring confirmation, and whether WRITE-tagged commands (non-destructive writes) also require confirmation — PRD decides.
+  </div>
+</div>
+
+
+<!-- ================================================================
+     SCREEN 5 — STALLED NOTIFICATION CENTER BANNER (macOS sim)
+     Simulates the banner that fires once on first stalled transition
+     (silent-fire-once semantics from B1's notify::fire_stalled_notification)
+     ================================================================ -->
+<div id="s5" class="screen" style="padding-top:56px;min-height:calc(100vh - 56px);">
+
+  <!-- macOS desktop sim background -->
+  <div style="min-height:calc(100vh - 56px);background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);padding:40px;display:flex;flex-direction:column;align-items:flex-end;gap:16px;position:relative;">
+
+    <!-- Banner — macOS style, top-right corner -->
+    <div style="margin-top:0;">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.4);margin-bottom:6px;text-align:right;">Notification Center (simulated)</div>
+      <div class="notif-banner">
+        <div class="notif-banner-header">
+          <div class="notif-app-icon" style="background:linear-gradient(135deg,#1B4332,#2D5A3D);">◈</div>
+          <span class="notif-app-name">Flow Monitor</span>
+          <span class="notif-time">now</span>
+        </div>
+        <div class="notif-body">
+          <div class="notif-title">Session Stalled</div>
+          <div class="notif-message">20260420-flow-monitor-control-plane has been idle for 4 hours 12 minutes at the PRD stage.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Second example: zh-TW locale banner -->
+    <div>
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.4);margin-bottom:6px;text-align:right;">zh-TW locale variant</div>
+      <div class="notif-banner">
+        <div class="notif-banner-header">
+          <div class="notif-app-icon" style="background:linear-gradient(135deg,#1B4332,#2D5A3D);">◈</div>
+          <span class="notif-app-name">Flow Monitor</span>
+          <span class="notif-time">剛才</span>
+        </div>
+        <div class="notif-body">
+          <div class="notif-title">工作階段已停滯</div>
+          <div class="notif-message">20260420-flow-monitor-control-plane 已在 PRD 階段閒置 4 小時 12 分鐘。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Compact panel visible in background (typical always-on-top use case) -->
+    <div style="margin-top:20px;align-self:flex-start;">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.4);margin-bottom:6px;">Compact panel (always-on-top, background)</div>
+      <div class="compact-panel" style="width:300px;">
+        <div style="padding:10px 14px 8px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--compact-divider);">
+          <div style="width:20px;height:20px;border-radius:5px;background:var(--brand);display:flex;align-items:center;justify-content:center;font-size:11px;" class="compact-panel-logo">◈</div>
+          <span style="font-size:12px;font-weight:700;color:white;">Flow Monitor</span>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:4px;">
+            <!-- B2: tray badge in compact panel header -->
+            <span style="background:var(--stalled);color:white;font-size:9px;font-weight:800;padding:1px 6px;border-radius:9999px;">1 stalled</span>
+          </div>
+        </div>
+        <div class="compact-row">
+          <div class="compact-dot dot-stalled"></div>
+          <span style="font-family:monospace;font-size:11px;color:#E8F0EB;">flow-monitor-control-plane</span>
+          <span class="stage-pill stage-prd" style="font-size:9px;padding:1px 5px;">PRD</span>
+        </div>
+        <div class="compact-row">
+          <div class="compact-dot dot-stale"></div>
+          <span style="font-family:monospace;font-size:11px;color:#9BBDA9;">auth-refresh</span>
+          <span class="stage-pill stage-implement" style="font-size:9px;padding:1px 5px;">Impl</span>
+        </div>
+        <div class="compact-row">
+          <div class="compact-dot dot-ok"></div>
+          <span style="font-family:monospace;font-size:11px;color:#9BBDA9;">perf-cache</span>
+          <span class="stage-pill stage-tech" style="font-size:9px;padding:1px 5px;">Tech</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="annotation-box" style="margin:16px 20px;">
+    <strong>Notification banner design decisions (inherited from B1, wired in B2):</strong><br>
+    1. Banner fires once per stalled transition — <code>notify::fire_stalled_notification</code> already guards against repeat fires (B1 residual gap being wired in B2).<br>
+    2. Banner body: app name "Flow Monitor", title "[locale] Session Stalled", message includes slug + idle duration + current stage.<br>
+    3. No action buttons in the banner — macOS Notification Center actions are an optional extra; v1 banner is read-only (user clicks the banner to open Flow Monitor).<br>
+    4. zh-TW locale variant shown: title and message are fully translated; slug remains in its original ASCII slug form.<br>
+    5. The compact panel's header shows a "1 stalled" count badge in the stalled session's red colour — visible at a glance without needing to read the card grid.<br>
+    <span class="decision-tag">Q10 (B1 open)</span> Re-fire policy after N more minutes of continued staleness — PRD must decide.
+  </div>
+</div>
+
+
+<!-- ================================================================
+     SCREEN 6 — COMPACT PANEL B2
+     Adds quick-action "Advance" button per stalled row.
+     B1 compact panel was read-only (click = open main).
+     ================================================================ -->
+<div id="s6" class="screen" style="padding-top:56px;min-height:calc(100vh - 56px);">
+  <div style="min-height:calc(100vh - 56px);background:linear-gradient(135deg,#0f1411 0%,#111A15 100%);padding:40px;display:flex;justify-content:center;align-items:flex-start;gap:40px;">
+
+    <!-- B2 compact panel -->
+    <div>
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:rgba(167,196,176,0.5);margin-bottom:8px;">B2 Compact Panel — with quick actions</div>
+      <div class="compact-panel">
+        <!-- Header -->
+        <div style="padding:10px 14px 8px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--compact-divider);">
+          <div style="width:20px;height:20px;border-radius:5px;background:#1B4332;display:flex;align-items:center;justify-content:center;font-size:11px;">◈</div>
+          <span style="font-size:12px;font-weight:700;color:white;">Flow Monitor</span>
+          <span style="margin-left:auto;background:var(--stalled);color:white;font-size:9px;font-weight:800;padding:1px 6px;border-radius:9999px;">1 stalled</span>
+        </div>
+
+        <!-- Stalled row — B2 adds quick "Advance" button -->
+        <div class="compact-row" style="background:rgba(197,48,48,0.08);">
+          <div class="compact-dot dot-stalled"></div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-family:monospace;font-size:10px;color:#E8F0EB;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">flow-monitor-control-plane</div>
+            <div style="font-size:9px;color:rgba(197,48,48,0.9);margin-top:1px;">Stalled 4h 12m</div>
+          </div>
+          <span class="stage-pill stage-prd" style="font-size:9px;padding:1px 5px;flex-shrink:0;">PRD</span>
+          <!-- B2 NEW: quick-action button -->
+          <button class="compact-quick-btn">▶ Next</button>
+        </div>
+
+        <!-- Stale row -->
+        <div class="compact-row">
+          <div class="compact-dot dot-stale"></div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-family:monospace;font-size:10px;color:#9BBDA9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">auth-refresh</div>
+            <div style="font-size:9px;color:rgba(217,119,6,0.8);margin-top:1px;">Stale 1h 48m</div>
+          </div>
+          <span class="stage-pill stage-implement" style="font-size:9px;padding:1px 5px;flex-shrink:0;">Impl</span>
+        </div>
+
+        <!-- Active rows -->
+        <div class="compact-row">
+          <div class="compact-dot dot-ok"></div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-family:monospace;font-size:10px;color:#9BBDA9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">perf-cache</div>
+          </div>
+          <span class="stage-pill stage-tech" style="font-size:9px;padding:1px 5px;flex-shrink:0;">Tech</span>
+        </div>
+
+        <div class="compact-row">
+          <div class="compact-dot dot-ok"></div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-family:monospace;font-size:10px;color:#9BBDA9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">rate-limit</div>
+          </div>
+          <span class="stage-pill stage-verify" style="font-size:9px;padding:1px 5px;flex-shrink:0;">Verify</span>
+        </div>
+
+        <!-- Footer -->
+        <div style="padding:8px 14px;border-top:1px solid var(--compact-divider);display:flex;align-items:center;justify-content:space-between;font-size:10px;color:rgba(107,145,118,0.8);">
+          <span>Open main window</span>
+          <span>Polling ·
+            <span style="color:var(--ok);display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--ok);vertical-align:middle;margin-right:2px;"></span>
+            3s
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- B1 reference (read-only, for comparison) -->
+    <div>
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:rgba(167,196,176,0.3);margin-bottom:8px;">B1 (read-only reference)</div>
+      <div class="compact-panel" style="opacity:0.6;">
+        <div style="padding:10px 14px 8px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--compact-divider);">
+          <div style="width:20px;height:20px;border-radius:5px;background:#1B4332;display:flex;align-items:center;justify-content:center;font-size:11px;">◈</div>
+          <span style="font-size:12px;font-weight:700;color:white;">Flow Monitor</span>
+        </div>
+        <div class="compact-row" style="background:rgba(197,48,48,0.08);">
+          <div class="compact-dot dot-stalled"></div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-family:monospace;font-size:10px;color:#E8F0EB;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">flow-monitor-control-plane</div>
+          </div>
+          <span class="stage-pill stage-prd" style="font-size:9px;padding:1px 5px;flex-shrink:0;">PRD</span>
+        </div>
+        <div class="compact-row">
+          <div class="compact-dot dot-stale"></div>
+          <div style="flex:1;"><div style="font-family:monospace;font-size:10px;color:#9BBDA9;">auth-refresh</div></div>
+          <span class="stage-pill stage-implement" style="font-size:9px;padding:1px 5px;flex-shrink:0;">Impl</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="annotation-box" style="margin:0 20px 20px;">
+    <strong>Compact panel B2 changes:</strong><br>
+    1. Stalled rows gain a "▶ Next" quick-action button (rightmost, stalled-red fill). Clicking opens the confirmation flow (for destructive stage advances) or directly invokes the advance action (for safe stage transitions) — <span class="decision-tag">Q3 deferred</span>.<br>
+    2. Header badge shows "N stalled" count in red. No badge when count is zero.<br>
+    3. Stale rows and active rows remain read-only (click = open main window, navigate to card detail).<br>
+    4. B1 comparison shown at right — non-stalled sessions are unchanged.
+  </div>
+</div>
+
+
+<!-- ================================================================
+     SCREEN 7 — CARD CONTEXT MENU
+     Right-click or "···" on any card opens this menu.
+     Shows full specflow command list scoped to that session.
+     ================================================================ -->
+<div id="s7" class="screen" style="padding-top:56px;min-height:calc(100vh - 56px);">
+  <div style="padding:40px;">
+
+    <!-- Show the context menu on top of a stalled card -->
+    <div style="position:relative;width:380px;">
+      <!-- Stalled card (background) -->
+      <div class="session-card stalled" style="width:380px;">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;">
+          <span style="font-family:'SF Mono','Fira Mono',monospace;font-size:11px;font-weight:600;color:var(--text-primary);">20260420-flow-monitor-control-plane</span>
+          <button style="background:none;border:none;cursor:pointer;color:var(--brand);padding:0 0 0 8px;font-size:16px;font-weight:700;">···</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+          <span class="stage-pill stage-prd">PRD</span>
+          <span class="badge-stalled">Stalled · 4h 12m</span>
+        </div>
+        <div class="card-actions">
+          <button class="btn btn-primary" style="flex:1;">▶ Advance to Design</button>
+          <button class="btn btn-secondary">✉ Message</button>
+        </div>
+      </div>
+
+      <!-- Context menu (appears from "···" button) -->
+      <div class="context-menu" style="position:absolute;top:14px;right:0;z-index:10;">
+        <div class="ctx-item" style="font-weight:600;">
+          <span>▶</span> Advance to Design
+        </div>
+        <div class="ctx-item">
+          <span>✉</span> Send Message / Make Choice
+        </div>
+        <div class="ctx-separator"></div>
+        <div class="ctx-section-label">Specflow Commands</div>
+        <div class="ctx-item">
+          <span style="font-size:11px;font-family:monospace;">nxt</span> /specflow:next
+        </div>
+        <div class="ctx-item">
+          <span style="font-size:11px;font-family:monospace;">prd</span> /specflow:prd
+        </div>
+        <div class="ctx-item">
+          <span style="font-size:11px;font-family:monospace;">gap</span> /specflow:gap-check
+        </div>
+        <div class="ctx-item">
+          <span style="font-size:11px;font-family:monospace;">vfy</span> /specflow:verify
+        </div>
+        <div class="ctx-item">
+          <span style="font-size:11px;font-family:monospace;">upd</span> /specflow:update-plan
+          <span style="margin-left:auto;font-size:9px;background:#FEF3C7;color:#92400E;padding:1px 5px;border-radius:4px;font-weight:700;">WRITE</span>
+        </div>
+        <div class="ctx-separator"></div>
+        <div class="ctx-section-label">Session</div>
+        <div class="ctx-item">
+          <span>📂</span> Open in Finder
+        </div>
+        <div class="ctx-item">
+          <span>⎘</span> Copy path
+        </div>
+        <div class="ctx-separator"></div>
+        <div class="ctx-item danger">
+          <span>🗃</span> Archive session…
+          <span style="margin-left:auto;font-size:9px;background:#FEE2E2;color:#991B1B;padding:1px 5px;border-radius:4px;font-weight:700;">DESTROY</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="annotation-box" style="max-width:480px;margin-top:20px;">
+      <strong>Context menu design decisions:</strong><br>
+      1. First two items are always the primary control actions for the session's current state (Advance + Message when stalled; no advance button when active).<br>
+      2. Specflow commands are shown inline with their command slug — no need to open command palette for common operations.<br>
+      3. Session actions (Open in Finder, Copy Path) are separated by a divider — these are read-only and never trigger confirmation.<br>
+      4. Destructive commands are at the bottom, danger-styled, with the DESTROY pill, and end in "…" to signal a confirmation step follows.<br>
+      <span class="decision-tag">Q2 deferred</span> Full command list vs. curated subset — PRD decides. This mockup shows a representative set.
+    </div>
+  </div>
+</div>
+
+
+<!-- ================================================================
+     JAVASCRIPT — screen switcher + theme toggle
+     ================================================================ -->
+<script>
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('current'));
+    event.target.classList.add('current');
+    window.scrollTo(0,0);
+  }
+
+  function toggleTheme() {
+    const html = document.documentElement;
+    const isDark = html.classList.toggle('dark');
+    document.getElementById('theme-icon').textContent = isDark ? '☾' : '☀';
+    document.getElementById('theme-label').textContent = isDark ? 'Dark' : 'Light';
+  }
+
+  function toggleMsgPanel() {
+    const panel = document.getElementById('msg-panel');
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+  }
+</script>
+</body>
+</html>
