@@ -1,7 +1,7 @@
 import { useTranslation } from "../i18n";
 
 /**
- * The 11 named stages in specflow order.
+ * The 11 named stages in scaff order.
  * Unknown is excluded — it is an error state, not a displayable stage.
  */
 export const STAGE_KEYS = [
@@ -25,7 +25,7 @@ interface StagePillProps {
 }
 
 /**
- * Pure presentational pill showing the current specflow stage.
+ * Pure presentational pill showing the current scaff stage.
  * Label from t("stage.<key>"). Colors from CSS tokens --stage-<key>-bg / --stage-<key>-fg
  * defined in theme.css (T13). No hooks, no useEffect, no IPC calls.
  */

@@ -50,7 +50,7 @@ function formatRelativeTime(ms: number): string {
 }
 
 /**
- * SessionCard — presentational card for one specflow session.
+ * SessionCard — presentational card for one scaff session.
  *
  * Six elements per card (AC7.a):
  *   1. slug
