@@ -43,6 +43,51 @@ AGG="${AGG:-$REPO_ROOT/bin/specflow-aggregate-verdicts}"
 PM_MD="${PM_MD:-$REPO_ROOT/.claude/agents/specflow/pm.md}"
 
 # ---------------------------------------------------------------------------
+# Input validation — canonicalise IMPL / PM_MD / AGG and assert each resolved
+# path is under REPO_ROOT (security: path-traversal on user-supplied env vars).
+# Uses cd+dirname+pwd-P (BSD-safe; no readlink -f).
+# If the parent directory of a path does not yet exist (e.g. pre-wave artefact),
+# we fall back to the raw value; the sub-test itself will SKIP when the file is
+# absent — the boundary check is still enforced on whatever value is presented.
+# ---------------------------------------------------------------------------
+_resolve_file_path() {
+  local p="$1"
+  local dir base resolved_dir
+  dir="$(dirname "$p")"
+  base="$(basename "$p")"
+  if resolved_dir="$(cd "$dir" 2>/dev/null && pwd -P)"; then
+    printf '%s/%s\n' "$resolved_dir" "$base"
+  else
+    # Parent dir absent — return raw value; sub-test will SKIP on [ ! -f ]
+    printf '%s\n' "$p"
+  fi
+}
+
+IMPL="$(_resolve_file_path "$IMPL")"
+if [ "${IMPL#$REPO_ROOT/}" = "$IMPL" ]; then
+  printf 'ERROR: IMPL must be under %s (got: %s)\n' "$REPO_ROOT" "$IMPL" >&2
+  exit 2
+fi
+
+PM_MD="$(_resolve_file_path "$PM_MD")"
+if [ "${PM_MD#$REPO_ROOT/}" = "$PM_MD" ]; then
+  printf 'ERROR: PM_MD must be under %s (got: %s)\n' "$REPO_ROOT" "$PM_MD" >&2
+  exit 2
+fi
+
+AGG="$(_resolve_file_path "$AGG")"
+if [ "${AGG#$REPO_ROOT/}" = "$AGG" ]; then
+  printf 'ERROR: AGG must be under %s (got: %s)\n' "$REPO_ROOT" "$AGG" >&2
+  exit 2
+fi
+# For AGG, also assert it is executable when it exists — an env-var override
+# pointing at a non-executable file would silently fail at invocation time.
+if [ -e "$AGG" ] && [ ! -x "$AGG" ]; then
+  printf 'ERROR: AGG is not executable: %s\n' "$AGG" >&2
+  exit 2
+fi
+
+# ---------------------------------------------------------------------------
 # Sandbox — HOME isolation (sandbox-home-in-tests.md)
 # Fixtures also live inside SANDBOX (which is under REPO_ROOT).
 # ---------------------------------------------------------------------------
