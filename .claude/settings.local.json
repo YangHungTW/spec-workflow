@@ -4,10 +4,7 @@
       "Bash(git diff *)",
       "Bash(cp .claude/scaff.manifest /tmp/forensics-manifest.json)",
       "Bash(git checkout *)",
-      "Bash(rm -f .claude/scaff.manifest .claude/scaff.manifest.bak)",
-      "Bash(sed -i '' 's/^name: reviewer-security$/name: scaff-reviewer-security/' reviewer-security.md)",
-      "Bash(sed -i '' 's/^name: reviewer-performance$/name: scaff-reviewer-performance/' reviewer-performance.md)",
-      "Bash(sed -i '' 's/^name: reviewer-style$/name: scaff-reviewer-style/' reviewer-style.md)"
+      "Bash(rm -f .claude/scaff.manifest .claude/scaff.manifest.bak)"
     ]
   }
 }
