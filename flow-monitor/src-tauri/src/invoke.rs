@@ -1,6 +1,6 @@
 /// Terminal-spawn + clipboard + pipe-Err dispatcher (B2 D1 / D6).
 ///
-/// Delivers a specflow command to the user via one of three modes:
+/// Delivers a scaff command to the user via one of three modes:
 ///   Terminal  — writes a temp `.command` script, opens it in Terminal.app
 ///   Clipboard — writes the command string to the system clipboard
 ///   Pipe      — reserved for B3; always returns Err(NotAvailable)
@@ -237,7 +237,7 @@ pub fn path_matches_capability_regex(s: &str) -> bool {
 //   `use crate::command_taxonomy; command_taxonomy::allow_list_contains(cmd)`
 // ---------------------------------------------------------------------------
 
-/// Returns true if `cmd` is in the hardcoded specflow allow-list.
+/// Returns true if `cmd` is in the hardcoded scaff allow-list.
 ///
 /// This is a defence-in-depth check inside `invoke.rs`; the primary check
 /// lives (or will live) in `ipc.rs` which calls `command_taxonomy::classify`.
@@ -282,13 +282,13 @@ fn shell_single_quote_escape(s: &str) -> String {
 
 /// Build the contents of the `.command` shell script.
 ///
-/// The script `cd`s into the repo and runs `specflow <cmd>`.  The command
+/// The script `cd`s into the repo and runs `scaff <cmd>`.  The command
 /// name and repo path are written into the **script body** — nothing goes
 /// on the `/usr/bin/open` argv (that argv carries only the script path,
 /// satisfying AC4.d's no-shell-string-cat constraint).
 ///
 /// The slug is embedded in a comment for traceability; it is not passed to
-/// the specflow invocation (specflow infers context from the working dir).
+/// the scaff invocation (scaff infers context from the working dir).
 fn build_script_content(cmd: &str, slug: &str, repo: &Path) -> String {
     // Use single-quoted strings to prevent shell-expansion of the repo path
     // and command name.  Single-quote characters inside either value are
@@ -301,7 +301,7 @@ fn build_script_content(cmd: &str, slug: &str, repo: &Path) -> String {
          # flow-monitor terminal spawn — slug: {slug}\n\
          set -euo pipefail\n\
          cd '{repo_escaped}'\n\
-         specflow '{cmd_escaped}'\n"
+         scaff '{cmd_escaped}'\n"
     )
 }
 
@@ -429,7 +429,7 @@ impl<'a> ClipboardWriter for TauriClipboard<'a> {
 // Core dispatch function
 // ---------------------------------------------------------------------------
 
-/// Dispatch a specflow command using the requested delivery method.
+/// Dispatch a scaff command using the requested delivery method.
 ///
 /// # Classify-before-mutate discipline (classify-before-mutate.md)
 /// The caller (ipc.rs `invoke_command`) is responsible for:
@@ -501,13 +501,13 @@ fn dispatch_clipboard(
     repo: &Path,
     clipboard: &dyn ClipboardWriter,
 ) -> Result<InvokeResult, InvokeError> {
-    // Build the command string: `cd '<repo>' && specflow '<cmd>'` — single line
+    // Build the command string: `cd '<repo>' && scaff '<cmd>'` — single line
     // suitable for pasting in a terminal.  Single-quote characters in either
     // value are escaped using the `'\''` idiom (security findings 2 and 4).
     let _ = slug; // slug embedded in comment only; not needed for clipboard text
     let repo_escaped = shell_single_quote_escape(&repo.to_string_lossy());
     let cmd_escaped = shell_single_quote_escape(cmd);
-    let text = format!("cd '{repo_escaped}' && specflow '{cmd_escaped}'");
+    let text = format!("cd '{repo_escaped}' && scaff '{cmd_escaped}'");
     clipboard
         .write_text(&text)
         .map_err(|e| {
@@ -691,7 +691,7 @@ mod tests {
         );
         let text = spy.recorded.lock().unwrap();
         let text = text.as_ref().expect("clipboard must have been written");
-        assert!(text.contains("specflow 'implement'"), "must contain command");
+        assert!(text.contains("scaff 'implement'"), "must contain command");
         assert!(text.contains("/some/repo"), "must contain repo path");
         // No shell metachar $, `, ; outside the single-quoted path
         assert!(!text.contains('`'), "no backtick in clipboard text");
@@ -721,11 +721,11 @@ mod tests {
     // -----------------------------------------------------------------------
 
     #[test]
-    fn script_content_contains_cd_and_specflow() {
+    fn script_content_contains_cd_and_scaff() {
         let content = build_script_content("implement", "my-slug", Path::new("/home/user/project"));
         assert!(content.contains("cd '/home/user/project'"), "must cd to repo");
         // Command is now single-quoted in the generated script.
-        assert!(content.contains("specflow 'implement'"), "must invoke specflow");
+        assert!(content.contains("scaff 'implement'"), "must invoke scaff");
         assert!(content.contains("my-slug"), "must reference slug in comment");
         assert!(content.starts_with("#!/usr/bin/env bash"), "must have shebang");
     }
@@ -768,12 +768,12 @@ mod tests {
         let content = build_script_content("bad'cmd", "slug", Path::new("/tmp/repo"));
         // The unescaped form must not appear.
         assert!(
-            !content.contains("specflow bad'cmd\n"),
+            !content.contains("scaff bad'cmd\n"),
             "unescaped single-quote in cmd is a shell injection vector"
         );
         // The escaped form must be present.
         assert!(
-            content.contains(r"specflow 'bad'\''cmd'"),
+            content.contains(r"scaff 'bad'\''cmd'"),
             "cmd single-quote must use the '\\'' escape idiom; content:\n{content}"
         );
     }
