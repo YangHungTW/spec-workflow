@@ -53,7 +53,7 @@ axis: security
 verdict: BLOCK
 findings:
   - severity: must
-    file: bin/specflow-run
+    file: bin/scaff-run
     line: 42
     rule: injection-attacks
     message: String-built shell command includes variables BASE and BRANCH; use argv-form invocation instead.

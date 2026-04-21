@@ -22,7 +22,7 @@ The `checkbox-lost-in-parallel-merge` memory covers the parallel-merge class. Th
 ## How to apply
 
 1. TPM plan-authoring commits MUST grep themselves before push: `grep -c '^- \[x\]' 05-plan.md` and `grep -c '^## T[0-9]*.*\[x\]' 05-plan.md` both return 0. Any non-zero count is a pre-check bug; fix in the same commit, do not push.
-2. When hand-editing 05-plan.md between plan and implement stages (e.g. to fix a typo or correct a scope line), the editor MUST NOT flip any checkbox. If a flip is needed (e.g. to record a task done out-of-band), the edit must go through `/specflow:update-plan` with an explicit rationale, not a free-form text edit.
+2. When hand-editing 05-plan.md between plan and implement stages (e.g. to fix a typo or correct a scope line), the editor MUST NOT flip any checkbox. If a flip is needed (e.g. to record a task done out-of-band), the edit must go through `/scaff:update-plan` with an explicit rationale, not a free-form text edit.
 3. Orchestrator's per-wave bookkeeping commit is the sole authorised `[x]`-writer. A reviewer-axis check could enforce: "any commit that flips an `[x]` in 05-plan.md must have 'wave W{n}' in its subject line or task-archive context".
 4. When the post-wave audit discovers an `[x]` on a task without a corresponding task-implementation commit, the orchestrator must STOP and investigate before flipping further. In this feature the drift was resolved by the real W5a commits landing and overwriting the spurious state, but that only worked because W5a was about to run; if a drifted `[x]` lands on a task that is not being worked this wave, it would silently propagate to archive.
 

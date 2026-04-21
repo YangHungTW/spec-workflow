@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # test/t26_no_new_command.sh — T21: verify no new slash command files were added
 # by this feature. The baseline count (git ls-tree HEAD) must match the current
-# filesystem count of files in .claude/commands/specflow/.
+# filesystem count of files in .claude/commands/scaff/.
 # Usage: bash test/t26_no_new_command.sh
 # Exits 0 iff the counts match.
 
@@ -12,7 +12,7 @@ set -u
 # ---------------------------------------------------------------------------
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd -P)"
-COMMANDS_DIR="$REPO_ROOT/.claude/commands/specflow"
+COMMANDS_DIR="$REPO_ROOT/.claude/commands/scaff"
 
 # ---------------------------------------------------------------------------
 # Sandbox / HOME isolation (sandbox-home-in-tests discipline)
@@ -38,7 +38,7 @@ pass() { echo "PASS: $1"; PASS=$((PASS + 1)); }
 fail() { echo "FAIL: $1"; FAIL=$((FAIL + 1)); }
 
 # ---------------------------------------------------------------------------
-# Baseline count: number of files tracked in git at .claude/commands/specflow/
+# Baseline count: number of files tracked in git at .claude/commands/scaff/
 # Hard-coded baseline from feature branch (captured at task authoring time).
 # If the directory doesn't exist in git yet, baseline is 0.
 # ---------------------------------------------------------------------------
@@ -48,7 +48,7 @@ BASELINE=19  # 18 from B1 + 1 (review.md) from B2.b
 # Current filesystem count
 # ---------------------------------------------------------------------------
 if [ ! -d "$COMMANDS_DIR" ]; then
-  fail "Check 1: .claude/commands/specflow/ directory does not exist"
+  fail "Check 1: .claude/commands/scaff/ directory does not exist"
   echo ""
   echo "Results: $PASS passed, $FAIL failed"
   exit 1
@@ -65,17 +65,17 @@ done
 # Verify: filesystem count must match baseline
 # ---------------------------------------------------------------------------
 if [ "$FS_COUNT" -eq "$BASELINE" ]; then
-  pass "Check 1: .claude/commands/specflow/ has $FS_COUNT files (matches baseline $BASELINE)"
+  pass "Check 1: .claude/commands/scaff/ has $FS_COUNT files (matches baseline $BASELINE)"
 elif [ "$FS_COUNT" -gt "$BASELINE" ]; then
-  fail "Check 1: .claude/commands/specflow/ has $FS_COUNT files — $((FS_COUNT - BASELINE)) new file(s) added beyond baseline $BASELINE"
+  fail "Check 1: .claude/commands/scaff/ has $FS_COUNT files — $((FS_COUNT - BASELINE)) new file(s) added beyond baseline $BASELINE"
 else
-  fail "Check 1: .claude/commands/specflow/ has $FS_COUNT files — $((BASELINE - FS_COUNT)) file(s) fewer than baseline $BASELINE (unexpected removal)"
+  fail "Check 1: .claude/commands/scaff/ has $FS_COUNT files — $((BASELINE - FS_COUNT)) file(s) fewer than baseline $BASELINE (unexpected removal)"
 fi
 
 # ---------------------------------------------------------------------------
 # Also verify git-tracked count matches baseline (cross-check)
 # ---------------------------------------------------------------------------
-GIT_COUNT="$(cd "$REPO_ROOT" && git ls-tree HEAD -- .claude/commands/specflow/ 2>/dev/null | wc -l | tr -d ' ')"
+GIT_COUNT="$(cd "$REPO_ROOT" && git ls-tree HEAD -- .claude/commands/scaff/ 2>/dev/null | wc -l | tr -d ' ')"
 if [ "$GIT_COUNT" = "$BASELINE" ]; then
   pass "Check 2: git ls-tree count ($GIT_COUNT) matches baseline $BASELINE"
 else

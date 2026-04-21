@@ -3,7 +3,7 @@
 #
 # Static test. Assert that the union of all commits on the feature branch
 # (vs. main merge-base, or vs. HEAD~1 if main is not reachable) shows zero
-# lines changed under .claude/agents/specflow/.
+# lines changed under .claude/agents/scaff/.
 #
 # Requirements: R4 AC4.a — zero agent diff throughout this feature.
 #
@@ -15,7 +15,7 @@
 #   2. git rev-parse HEAD~1      — fallback for detached-HEAD / isolated worktree.
 # If neither parent is meaningful (e.g., initial commit), the awk sum is still
 # bounded by what git diff actually reports; the test will PASS vacuously if
-# no .claude/agents/specflow/ path exists in the diff at all.
+# no .claude/agents/scaff/ path exists in the diff at all.
 #
 # Bash 3.2 portable. No jq, no mapfile, no readlink -f, no [[ =~ ]].
 
@@ -51,18 +51,18 @@ BASE="$(git merge-base HEAD main 2>/dev/null || git rev-parse HEAD~1 2>/dev/null
 }
 
 # ---------------------------------------------------------------------------
-# Count inserted + deleted lines under .claude/agents/specflow/ across the
+# Count inserted + deleted lines under .claude/agents/scaff/ across the
 # full range BASE...HEAD (three-dot: union of commits on this branch).
 # awk defaults the sum to 0 when git diff produces no output (no match).
 # ---------------------------------------------------------------------------
-LINES="$(git diff --numstat "$BASE"...HEAD -- .claude/agents/specflow/ \
+LINES="$(git diff --numstat "$BASE"...HEAD -- .claude/agents/scaff/ \
   | awk '{s+=$1+$2} END {print s+0}')"
 
 if [ "$LINES" != "0" ]; then
-  echo "FAIL: .claude/agents/specflow changed by $LINES lines since $BASE" >&2
+  echo "FAIL: .claude/agents/scaff changed by $LINES lines since $BASE" >&2
   echo "  (R4 AC4.a requires zero agent diff throughout this feature)" >&2
   exit 1
 fi
 
-echo "PASS: zero lines changed under .claude/agents/specflow/ since $BASE"
+echo "PASS: zero lines changed under .claude/agents/scaff/ since $BASE"
 exit 0

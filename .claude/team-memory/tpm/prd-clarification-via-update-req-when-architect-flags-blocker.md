@@ -1,6 +1,6 @@
 ---
 name: Architect blocker on PRD semantic → PM update-req, not architect update-tech
-description: When architect's tech doc flags a PRD AC conflict in blocker questions, the cheap recovery is PM rewording the PRD via /specflow:update-req, not flipping the architect's decision.
+description: When architect's tech doc flags a PRD AC conflict in blocker questions, the cheap recovery is PM rewording the PRD via /scaff:update-req, not flipping the architect's decision.
 type: pattern
 created: 2026-04-19
 updated: 2026-04-19
@@ -10,9 +10,9 @@ updated: 2026-04-19
 
 When architect's `04-tech.md` §5 surfaces a blocker saying "the PRD
 AC conflicts with the implementation semantic I chose", the PM's
-default recovery is to reword the PRD AC via `/specflow:update-req`.
+default recovery is to reword the PRD AC via `/scaff:update-req`.
 Do **not** flip the architect's chosen semantic via
-`/specflow:update-tech` unless there is a concrete user-visible
+`/scaff:update-tech` unless there is a concrete user-visible
 regression at stake.
 
 ## Why
@@ -31,7 +31,7 @@ AC preserves the audit trail.
 1. **Architect flags blocker** — they write a paragraph in `§5
    Blocker questions` naming the specific PRD AC and proposing a
    reworded form.
-2. **PM runs `/specflow:update-req <slug>`** — rewords the AC
+2. **PM runs `/scaff:update-req <slug>`** — rewords the AC
    verbatim from the architect's proposal, appending `[CHANGED
    YYYY-MM-DD]`. Updates the parent requirement body if needed so
    the AC fits coherently.
@@ -58,6 +58,6 @@ Feature `20260419-user-lang-config-fallback`:
 - TPM proceeded to plan; no further iteration. Zero downstream
   rework.
 
-Full artifact trail in `.spec-workflow/archive/20260419-user-lang-
+Full artifact trail in `.specaffold/archive/20260419-user-lang-
 config-fallback/`: STATUS Notes lines for 2026-04-19, 03-prd.md R4
 AC4.a, 04-tech.md §5 blocker.

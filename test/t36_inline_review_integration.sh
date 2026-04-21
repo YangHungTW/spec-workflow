@@ -4,7 +4,7 @@
 # Exits 0 iff all checks pass; 1 on assertion failure; 2 on preflight failure.
 #
 # Validates the structural contract for the inline review flow described in
-# .claude/commands/specflow/implement.md — all assertions are grepping that file.
+# .claude/commands/scaff/implement.md — all assertions are grepping that file.
 # Also stubs a fake reviewer output and parses it with the same awk/grep the
 # aggregator uses, asserting the parser extracts the verdict correctly.
 #
@@ -18,7 +18,7 @@ set -u -o pipefail
 # ---------------------------------------------------------------------------
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-IMPLEMENT_MD="$REPO_ROOT/.claude/commands/specflow/implement.md"
+IMPLEMENT_MD="$REPO_ROOT/.claude/commands/scaff/implement.md"
 
 # ---------------------------------------------------------------------------
 # Sandbox setup (sandbox-HOME discipline per sandbox-home-in-tests.md)

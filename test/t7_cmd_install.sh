@@ -7,14 +7,14 @@
 #             with absolute path starting with the repo root (AC10).
 # Scenario B: Second install → all verbs are "already"; exit 0; filesystem
 #             byte-identical between runs.
-# Scenario C: Pre-placed real file at $HOME/.claude/agents/specflow →
+# Scenario C: Pre-placed real file at $HOME/.claude/agents/scaff →
 #             skipped:real-file for that path; other links still created; exit 1.
 # Scenario D: install --dry-run on clean sandbox → every verb is "would-create";
 #             zero symlinks on disk afterward (AC9 subset).
 
 set -u -o pipefail
 
-WORKTREE="/Users/yanghungtw/Tools/spec-workflow/.worktrees/symlink-operation-T10"
+WORKTREE="/Users/yanghungtw/Tools/specaffold/.worktrees/symlink-operation-T10"
 SCRIPT="$WORKTREE/bin/claude-symlink"
 REPO="$WORKTREE"
 PASS=0
@@ -192,13 +192,13 @@ echo
 # ---------------------------------------------------------------------------
 # SCENARIO C — Real-file conflict
 # ---------------------------------------------------------------------------
-echo "--- Scenario C: Real-file conflict at agents/specflow ---"
+echo "--- Scenario C: Real-file conflict at agents/scaff ---"
 {
   SANDBOX_HOME=$(make_sandbox_home "scenario_c")
   export HOME="$SANDBOX_HOME"
 
-  # Pre-place a real file at the agents/specflow managed target
-  conflict_path="$SANDBOX_HOME/.claude/agents/specflow"
+  # Pre-place a real file at the agents/scaff managed target
+  conflict_path="$SANDBOX_HOME/.claude/agents/scaff"
   mkdir -p "$(dirname "$conflict_path")"
   echo "user content — do not overwrite" > "$conflict_path"
 
@@ -225,12 +225,12 @@ echo "--- Scenario C: Real-file conflict at agents/specflow ---"
   content=$(cat "$conflict_path")
   assert_eq "C: real file content intact" "user content — do not overwrite" "$content"
 
-  # Other links (commands/specflow) must still be created
-  commands_link="$SANDBOX_HOME/.claude/commands/specflow"
+  # Other links (commands/scaff) must still be created
+  commands_link="$SANDBOX_HOME/.claude/commands/scaff"
   if [ -L "$commands_link" ]; then
-    pass "C: other links (commands/specflow) still created despite conflict"
+    pass "C: other links (commands/scaff) still created despite conflict"
   else
-    fail "C: commands/specflow was not created — install should continue past conflicts"
+    fail "C: commands/scaff was not created — install should continue past conflicts"
   fi
 }
 

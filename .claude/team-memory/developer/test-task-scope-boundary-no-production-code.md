@@ -6,7 +6,7 @@ production library, even when the function is small and directly related.
 ### What happened
 
 T25 (scope: write `test/t80_tier_proposal_heuristic.sh`) also added `propose_tier()`
-and `_ask_contains()` to `bin/specflow-tier`. The reviewer correctly blocked this as
+and `_ask_contains()` to `bin/scaff-tier`. The reviewer correctly blocked this as
 scope creep — the production implementation belongs to the task that owns the
 production file, which is a separate future task (per pm.md T19 keyword-scan spec).
 Adding production code in a test task also skips the red→green discipline: the test
@@ -29,7 +29,7 @@ to TPM.
 
 ```bash
 # Revert the library file to the pre-task state:
-git checkout <base-sha> -- bin/specflow-tier
+git checkout <base-sha> -- bin/scaff-tier
 
 # Update the test guard to SKIP gracefully:
 if ! type propose_tier > /dev/null 2>&1; then

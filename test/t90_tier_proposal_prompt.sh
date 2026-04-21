@@ -3,7 +3,7 @@
 #
 # T32 — Tier-proposal prompt text test.
 #
-# Asserts that /specflow:request (structurally via grep against request.md and
+# Asserts that /scaff:request (structurally via grep against request.md and
 # pm.md) produces a PM prompt containing:
 #
 #   A. A proposed tier value token (one of tiny|standard|audited) in the
@@ -38,8 +38,8 @@ set -u -o pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd -P)"
 
-PM_MD="${PM_MD:-$REPO_ROOT/.claude/agents/specflow/pm.md}"
-REQUEST_MD="${REQUEST_MD:-$REPO_ROOT/.claude/commands/specflow/request.md}"
+PM_MD="${PM_MD:-$REPO_ROOT/.claude/agents/scaff/pm.md}"
+REQUEST_MD="${REQUEST_MD:-$REPO_ROOT/.claude/commands/scaff/request.md}"
 
 # ---------------------------------------------------------------------------
 # Sandbox — HOME isolation (sandbox-home-in-tests.md)
@@ -308,7 +308,7 @@ else
     fi
 
     # F2: request.md references pm/pm.md for the heuristic
-    if printf '%s\n' "$REQUEST_CONTENT" | grep -qi 'pm\.md\|specflow-pm\|heuristic\|propose-and-confirm' 2>/dev/null; then
+    if printf '%s\n' "$REQUEST_CONTENT" | grep -qi 'pm\.md\|scaff-pm\|heuristic\|propose-and-confirm' 2>/dev/null; then
       pass "F2: request.md references pm.md heuristic / propose-and-confirm flow"
     else
       fail "F2: request.md does not reference pm.md heuristic — tier proposal should delegate to PM"

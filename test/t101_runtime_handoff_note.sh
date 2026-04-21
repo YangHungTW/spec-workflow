@@ -11,7 +11,7 @@
 #        B2 control plane exercised on this feature's first live session
 #
 #   C. That line contains the substring:
-#        .spec-workflow/archive/20260420-flow-monitor-control-plane/03-prd.md §9
+#        .specaffold/archive/20260420-flow-monitor-control-plane/03-prd.md §9
 #
 # Expected state before T113 merges: all three assertions FAIL with clear
 # diagnostics pointing to the missing line.  That is the intended red state;
@@ -34,7 +34,7 @@ set -u -o pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd -P)"
 
-STATUS_FILE="$REPO_ROOT/.spec-workflow/features/20260420-flow-monitor-control-plane/STATUS.md"
+STATUS_FILE="$REPO_ROOT/.specaffold/features/20260420-flow-monitor-control-plane/STATUS.md"
 
 # ---------------------------------------------------------------------------
 # Preflight — STATUS.md must exist
@@ -100,7 +100,7 @@ fi
 # ---------------------------------------------------------------------------
 printf '\n=== C: PRD §9 reference present ===\n'
 
-PRD_REF=".spec-workflow/archive/20260420-flow-monitor-control-plane/03-prd.md §9"
+PRD_REF=".specaffold/archive/20260420-flow-monitor-control-plane/03-prd.md §9"
 
 if [ -n "$HANDOFF_LINE" ]; then
   _stripped="${HANDOFF_LINE#*$PRD_REF}"

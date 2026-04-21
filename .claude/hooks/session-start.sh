@@ -273,14 +273,14 @@ if [ -z "$digest" ]; then
 fi
 
 # Read lang.chat from an ordered candidate list; first file with the key wins.
-# 1. .spec-workflow/config.yml  (project — wins when present)
-# 2. $XDG_CONFIG_HOME/specflow/config.yml  (only if env var set and non-empty)
-# 3. $HOME/.config/specflow/config.yml  (final tilde fallback)
-CANDIDATES=".spec-workflow/config.yml"
+# 1. .specaffold/config.yml  (project — wins when present)
+# 2. $XDG_CONFIG_HOME/specaffold/config.yml  (only if env var set and non-empty)
+# 3. $HOME/.config/specaffold/config.yml  (final tilde fallback)
+CANDIDATES=".specaffold/config.yml"
 if [ -n "${XDG_CONFIG_HOME:-}" ]; then
-  CANDIDATES="$CANDIDATES $XDG_CONFIG_HOME/specflow/config.yml"
+  CANDIDATES="$CANDIDATES $XDG_CONFIG_HOME/specaffold/config.yml"
 fi
-CANDIDATES="$CANDIDATES $HOME/.config/specflow/config.yml"
+CANDIDATES="$CANDIDATES $HOME/.config/specaffold/config.yml"
 
 cfg_chat=""
 cfg_source=""

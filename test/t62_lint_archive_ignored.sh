@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # test/t62_lint_archive_ignored.sh — archive paths excluded from scan
 # R5 AC5.c; PRD Non-goals (archive excluded); D6 (out-of-scope path)
-# Assert: a zh-TW file staged under .spec-workflow/archive/** produces
+# Assert: a zh-TW file staged under .specaffold/archive/** produces
 # exit 0 and no cjk-hit: line in stdout.
 
 set -u
@@ -11,7 +11,7 @@ set -u
 # ---------------------------------------------------------------------------
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd -P)"
-LINT="$REPO_ROOT/bin/specflow-lint"
+LINT="$REPO_ROOT/bin/scaff-lint"
 
 PASS=0
 FAIL=0
@@ -62,8 +62,8 @@ git config user.name "Test"
 
 # Create and stage a zh-TW file under the archive path.
 # The scanner's is_out_of_scope() check matches paths starting with
-# .spec-workflow/archive/ — this file must be silently skipped.
-ARCHIVE_DIR=".spec-workflow/archive/20260101-example"
+# .specaffold/archive/ — this file must be silently skipped.
+ARCHIVE_DIR=".specaffold/archive/20260101-example"
 mkdir -p "$ARCHIVE_DIR"
 # Write a file containing zh-TW characters (CJK range 0x4E00-0x9FFF)
 printf '這是中文歸檔內容\n' > "$ARCHIVE_DIR/foo.md"
@@ -92,7 +92,7 @@ fi
 # ---------------------------------------------------------------------------
 STDOUT_CONTENT="$(cat "$STDOUT_FILE")"
 case "$STDOUT_CONTENT" in
-  *"cjk-hit:.spec-workflow/archive/"*)
+  *"cjk-hit:.specaffold/archive/"*)
     fail "Check 2: stdout contains cjk-hit: for archive path (must be excluded)"
     ;;
   *)

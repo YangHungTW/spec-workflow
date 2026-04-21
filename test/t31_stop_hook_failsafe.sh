@@ -190,8 +190,8 @@ assert_no_mutation() {
 
   # Seed a feature with a slug that does NOT appear in the branch name
   SLUG_D="20260418-some-other-feature"
-  mkdir -p ".spec-workflow/features/$SLUG_D"
-  cat > ".spec-workflow/features/$SLUG_D/STATUS.md" <<'EOF'
+  mkdir -p ".specaffold/features/$SLUG_D"
+  cat > ".specaffold/features/$SLUG_D/STATUS.md" <<'EOF'
 # Status
 
 ## Notes
@@ -221,7 +221,7 @@ EOF
   AFTER_D="$(status_hash)"
   assert_no_mutation "$BEFORE_D" "$AFTER_D" "Variant D"
 
-  SENTINEL_COUNT=$(find "$WORKDIR/.spec-workflow/features/$SLUG_D" -name ".stop-hook-last-epoch" 2>/dev/null | wc -l | tr -d ' ')
+  SENTINEL_COUNT=$(find "$WORKDIR/.specaffold/features/$SLUG_D" -name ".stop-hook-last-epoch" 2>/dev/null | wc -l | tr -d ' ')
   if [ "$SENTINEL_COUNT" -eq 0 ]; then
     pass "Variant D: no sentinel written"
   else
@@ -244,7 +244,7 @@ EOF
   git checkout -q -b "20260418-fixture-e-branch" 2>/dev/null || git checkout -q -b "20260418-fixture-e-branch"
 
   # Feature dir exists but NO STATUS.md inside it
-  mkdir -p ".spec-workflow/features/$SLUG_E"
+  mkdir -p ".specaffold/features/$SLUG_E"
   git add -A 2>/dev/null
   git commit -q -m "seed-no-status" --allow-empty 2>/dev/null
 
@@ -271,13 +271,13 @@ EOF
   assert_no_mutation "$BEFORE_E" "$AFTER_E" "Variant E"
 
   # No new STATUS.md must have been created
-  if [ ! -f "$WORKDIR/.spec-workflow/features/$SLUG_E/STATUS.md" ]; then
+  if [ ! -f "$WORKDIR/.specaffold/features/$SLUG_E/STATUS.md" ]; then
     pass "Variant E: no STATUS.md created"
   else
     fail "Variant E: STATUS.md was created where none existed"
   fi
 
-  SENTINEL_COUNT=$(find "$WORKDIR/.spec-workflow/features/$SLUG_E" -name ".stop-hook-last-epoch" 2>/dev/null | wc -l | tr -d ' ')
+  SENTINEL_COUNT=$(find "$WORKDIR/.specaffold/features/$SLUG_E" -name ".stop-hook-last-epoch" 2>/dev/null | wc -l | tr -d ' ')
   if [ "$SENTINEL_COUNT" -eq 0 ]; then
     pass "Variant E: no sentinel written"
   else
@@ -299,9 +299,9 @@ EOF
   git config user.name "t"
   git checkout -q -b "20260418-fixture-f-branch" 2>/dev/null || git checkout -q -b "20260418-fixture-f-branch"
 
-  mkdir -p ".spec-workflow/features/$SLUG_F"
+  mkdir -p ".specaffold/features/$SLUG_F"
   # STATUS.md with NO ## Notes heading
-  cat > ".spec-workflow/features/$SLUG_F/STATUS.md" <<'EOF'
+  cat > ".specaffold/features/$SLUG_F/STATUS.md" <<'EOF'
 # Status
 
 ## Tasks
@@ -312,7 +312,7 @@ EOF
   git commit -q -m "seed-no-notes-heading" 2>/dev/null
 
   # Snapshot byte content of STATUS.md before invocation
-  BEFORE_BYTES="$(cat "$WORKDIR/.spec-workflow/features/$SLUG_F/STATUS.md")"
+  BEFORE_BYTES="$(cat "$WORKDIR/.specaffold/features/$SLUG_F/STATUS.md")"
   BEFORE_F="$(status_hash)"
   STDERR_F="$SANDBOX/stderr_F.txt"
   RC_F=0
@@ -330,7 +330,7 @@ EOF
     fail "Variant F: stderr missing Notes-heading warning (got: $(cat "$STDERR_F"))"
   fi
 
-  AFTER_BYTES="$(cat "$WORKDIR/.spec-workflow/features/$SLUG_F/STATUS.md")"
+  AFTER_BYTES="$(cat "$WORKDIR/.specaffold/features/$SLUG_F/STATUS.md")"
   if [ "$BEFORE_BYTES" = "$AFTER_BYTES" ]; then
     pass "Variant F: STATUS.md byte-identical"
   else
@@ -340,7 +340,7 @@ EOF
   AFTER_F="$(status_hash)"
   assert_no_mutation "$BEFORE_F" "$AFTER_F" "Variant F (hash)"
 
-  SENTINEL_COUNT=$(find "$WORKDIR/.spec-workflow/features/$SLUG_F" -name ".stop-hook-last-epoch" 2>/dev/null | wc -l | tr -d ' ')
+  SENTINEL_COUNT=$(find "$WORKDIR/.specaffold/features/$SLUG_F" -name ".stop-hook-last-epoch" 2>/dev/null | wc -l | tr -d ' ')
   if [ "$SENTINEL_COUNT" -eq 0 ]; then
     pass "Variant F: no sentinel written"
   else

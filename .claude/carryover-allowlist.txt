@@ -1,0 +1,32 @@
+# .claude/carryover-allowlist.txt
+# =============================================================================
+# Paths allowed to retain legacy "specflow" / "spec-workflow" string references
+# despite the specflow→scaff / spec-workflow→specaffold / .spec-workflow/→
+# .specaffold/ rename. Each line is an fnmatch-style glob pattern consumed by
+# test/t_grep_allowlist.sh (T23). Blank lines and # comments ignored.
+# =============================================================================
+#
+# .git/**                      — binary objects; out of scope for text rename
+# .specaffold/archive/**       — historical archives, byte-identical per AC8
+# .spec-workflow               — the compat symlink itself (content is a link target)
+# .claude/carryover-allowlist.txt  — this file, which names the legacy strings it exempts
+# docs/rename-migration.md     — user-facing doc that maps old→new by necessity
+# .specaffold/features/20260421-rename-to-specaffold/RETROSPECTIVE.md
+#                              — this feature's own retrospective (future-authored)
+
+.git/**
+.specaffold/archive/**
+.spec-workflow
+.claude/carryover-allowlist.txt
+docs/rename-migration.md
+.specaffold/features/20260421-rename-to-specaffold/RETROSPECTIVE.md
+# test/t_grep_allowlist.sh — the grep script contains specflow/spec-workflow as pattern strings in its own source code
+test/t_grep_allowlist.sh
+# .specaffold/features/20260421-rename-to-specaffold/** — this feature's own PRD/tech/plan/STATUS/request docs reference old names by design
+.specaffold/features/20260421-rename-to-specaffold/**
+# flow-monitor/** — independent co-located Tauri sub-project; rename is out of scope
+flow-monitor/**
+# test/t_T25_ensure_compat_symlink.sh — tests the compat-symlink function; must reference .spec-workflow as the compat link name (R17/AC15)
+test/t_T25_ensure_compat_symlink.sh
+# bin/scaff-seed — contains .spec-workflow as the compat symlink path in classify/ensure_compat_symlink (R17/AC15)
+bin/scaff-seed

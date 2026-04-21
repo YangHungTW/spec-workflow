@@ -3,7 +3,7 @@
 #
 # D10 behavioral guard: verifies that cmd_migrate does NOT tear down shared
 # ~/.claude/ symlinks that belong to the global install (bin/claude-symlink).
-# Regression here would break every other project using spec-workflow globally.
+# Regression here would break every other project using specaffold globally.
 #
 # Requirements covered:
 #   R9  AC9.a  — other projects' ~/.claude/ data unaffected after migrate
@@ -14,15 +14,15 @@
 set -euo pipefail
 
 # ---------------------------------------------------------------------------
-# Locate bin/specflow-seed relative to this script — never hardcode so the
+# Locate bin/scaff-seed relative to this script — never hardcode so the
 # test survives worktree moves and CI checkouts (test-script-path-convention).
 # ---------------------------------------------------------------------------
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-SEED="${SEED:-$REPO_ROOT/bin/specflow-seed}"
+SEED="${SEED:-$REPO_ROOT/bin/scaff-seed}"
 
 if [ ! -x "$SEED" ]; then
-  echo "FAIL: setup: specflow-seed not found or not executable: $SEED" >&2
+  echo "FAIL: setup: scaff-seed not found or not executable: $SEED" >&2
   exit 1
 fi
 
@@ -61,8 +61,8 @@ fi
 # ---------------------------------------------------------------------------
 mkdir -p "$HOME/.claude/agents" "$HOME/.claude/commands" "$HOME/.claude/team-memory"
 
-ln -s "$REPO_ROOT/.claude/agents/specflow"  "$HOME/.claude/agents/specflow"
-ln -s "$REPO_ROOT/.claude/commands/specflow" "$HOME/.claude/commands/specflow"
+ln -s "$REPO_ROOT/.claude/agents/scaff"  "$HOME/.claude/agents/scaff"
+ln -s "$REPO_ROOT/.claude/commands/scaff" "$HOME/.claude/commands/scaff"
 ln -s "$REPO_ROOT/.claude/hooks"             "$HOME/.claude/hooks"
 
 # Link each role directory under team-memory using a while-read loop so
@@ -88,7 +88,7 @@ git -C "$CONSUMER" config user.email "t@example.com"
 git -C "$CONSUMER" config user.name "t"
 
 # Write settings.json with global-install hook paths.
-# The pre-migration shape mirrors what bin/specflow-install-hook would have
+# The pre-migration shape mirrors what bin/scaff-install-hook would have
 # written for a global-install consumer.
 cat > "$CONSUMER/settings.json" <<SETTINGS_EOF
 {
@@ -121,8 +121,8 @@ echo 'unrelated' > "$HOME/.claude/other-project-marker"
 # ---------------------------------------------------------------------------
 MARKER_HASH_BEFORE="$(shasum "$HOME/.claude/other-project-marker" | awk '{print $1}')"
 
-AGENT_TARGET_BEFORE="$(readlink "$HOME/.claude/agents/specflow")"
-COMMANDS_TARGET_BEFORE="$(readlink "$HOME/.claude/commands/specflow")"
+AGENT_TARGET_BEFORE="$(readlink "$HOME/.claude/agents/scaff")"
+COMMANDS_TARGET_BEFORE="$(readlink "$HOME/.claude/commands/scaff")"
 HOOKS_TARGET_BEFORE="$(readlink "$HOME/.claude/hooks")"
 
 # Pick one representative team-memory role as the canary; developer is always present.
@@ -163,17 +163,17 @@ fi
 # global install.  Comparing readlink output proves the symlink pointer
 # itself was never rewritten.
 # ---------------------------------------------------------------------------
-AGENT_TARGET_AFTER="$(readlink "$HOME/.claude/agents/specflow")"
+AGENT_TARGET_AFTER="$(readlink "$HOME/.claude/agents/scaff")"
 if [ "$AGENT_TARGET_BEFORE" != "$AGENT_TARGET_AFTER" ]; then
-  echo "FAIL: AC10.a: agents/specflow symlink was modified by migrate" >&2
+  echo "FAIL: AC10.a: agents/scaff symlink was modified by migrate" >&2
   echo "  before: $AGENT_TARGET_BEFORE" >&2
   echo "  after:  $AGENT_TARGET_AFTER" >&2
   exit 1
 fi
 
-COMMANDS_TARGET_AFTER="$(readlink "$HOME/.claude/commands/specflow")"
+COMMANDS_TARGET_AFTER="$(readlink "$HOME/.claude/commands/scaff")"
 if [ "$COMMANDS_TARGET_BEFORE" != "$COMMANDS_TARGET_AFTER" ]; then
-  echo "FAIL: AC10.a: commands/specflow symlink was modified by migrate" >&2
+  echo "FAIL: AC10.a: commands/scaff symlink was modified by migrate" >&2
   echo "  before: $COMMANDS_TARGET_BEFORE" >&2
   echo "  after:  $COMMANDS_TARGET_AFTER" >&2
   exit 1
@@ -201,9 +201,9 @@ fi
 # After migrate, the consumer must have a local .claude tree wired to its
 # own copy of the hooks (consumer-local), not the global install paths.
 # ---------------------------------------------------------------------------
-MANIFEST="$CONSUMER/.claude/specflow.manifest"
+MANIFEST="$CONSUMER/.claude/scaff.manifest"
 if [ ! -f "$MANIFEST" ]; then
-  echo "FAIL: AC9.b: .claude/specflow.manifest not created by migrate" >&2
+  echo "FAIL: AC9.b: .claude/scaff.manifest not created by migrate" >&2
   exit 1
 fi
 

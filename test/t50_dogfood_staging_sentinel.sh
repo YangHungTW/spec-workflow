@@ -3,12 +3,12 @@
 #
 # ============================================================================
 # SANDBOX-HOME EXCEPTION — documented per T18 in
-# .spec-workflow/features/20260418-per-project-install/06-tasks.md
+# .specaffold/features/20260418-per-project-install/06-tasks.md
 #
 # This test intentionally operates against the REAL $HOME/.claude/ state of
 # the developer's machine rather than a sandboxed copy. The reason: AC10.a
 # (R10) asserts that the live global install is still operational — specifically
-# that ~/.claude/agents/specflow still resolves back into this source repo.
+# that ~/.claude/agents/scaff still resolves back into this source repo.
 # A sandboxed HOME would be empty by construction and could never exercise
 # that live invariant.
 #
@@ -73,8 +73,8 @@ fi
 # The target path is deterministic: REPO_ROOT is the checkout the developer
 # is working in, so the expected symlink target is inside it.
 # ---------------------------------------------------------------------------
-EXPECTED_TARGET="$REPO_ROOT/.claude/agents/specflow"
-ACTUAL_TARGET="$(readlink "$HOME/.claude/agents/specflow" 2>/dev/null || true)"
+EXPECTED_TARGET="$REPO_ROOT/.claude/agents/scaff"
+ACTUAL_TARGET="$(readlink "$HOME/.claude/agents/scaff" 2>/dev/null || true)"
 
 if [ "$ACTUAL_TARGET" != "$EXPECTED_TARGET" ]; then
   echo "FAIL: AC10.a: symlink does not resolve to this repo" >&2

@@ -8,7 +8,7 @@ updated: 2026-04-18
 
 ## Rule
 
-During gap-check, grep every new `.claude/agents/specflow/*.md`
+During gap-check, grep every new `.claude/agents/scaff/*.md`
 agent file's `name:` frontmatter value against every command-file
 dispatch identifier that references it. Any mismatch — prefix drift,
 typo, stale rename — is a silent-BLOCK bug: the agent is
@@ -36,19 +36,19 @@ file by hand.
 ## How to apply
 
 During gap-check, for every new or renamed agent file under
-`.claude/agents/specflow/`:
+`.claude/agents/scaff/`:
 
 1. Extract the `name:` value from YAML frontmatter:
    ```bash
-   grep -E '^name:' .claude/agents/specflow/<file>.md | awk '{print $2}'
+   grep -E '^name:' .claude/agents/scaff/<file>.md | awk '{print $2}'
    ```
-2. Grep every command file under `.claude/commands/specflow/` for
+2. Grep every command file under `.claude/commands/scaff/` for
    any string that looks like a dispatch reference to this agent —
    including variants with and without a common prefix (`reviewer-`,
-   `specflow-`, etc.):
+   `scaff-`, etc.):
    ```bash
    grep -rn "<name-value>\|<bare-name>\|<prefixed-name>" \
-     .claude/commands/specflow/
+     .claude/commands/scaff/
    ```
 3. For each match, read the surrounding context (the Agent tool
    call, the subagent_type= argument, the invocation list). Assert
@@ -65,7 +65,7 @@ During gap-check, for every new or renamed agent file under
 ## Example
 
 Feature `review-capability` (B2.b). D1 gap-check finding:
-- `reviewer-performance.md` frontmatter: `name: specflow-reviewer-performance`
+- `reviewer-performance.md` frontmatter: `name: scaff-reviewer-performance`
 - `implement.md` step 7: `Agent(subagent_type=reviewer-performance)`
 - Result: dispatch fails silently; reviewer gate appears to return
   BLOCK on every wave.

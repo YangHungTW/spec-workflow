@@ -16,7 +16,7 @@
 #        100-line diff across 5 files exceeds SPECFLOW_TIER_DIFF_FILES:-3.
 #        Same structural verification strategy.
 #
-#   C. Security-must trigger — bin/specflow-aggregate-verdicts:
+#   C. Security-must trigger — bin/scaff-aggregate-verdicts:
 #        A verdict dir containing axis:security + severity:must causes the
 #        aggregator to emit a "suggest-audited-upgrade:" line on stdout.
 #
@@ -38,9 +38,9 @@ set -u -o pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd -P)"
 
-IMPL="${IMPL:-$REPO_ROOT/.claude/commands/specflow/implement.md}"
-AGG="${AGG:-$REPO_ROOT/bin/specflow-aggregate-verdicts}"
-PM_MD="${PM_MD:-$REPO_ROOT/.claude/agents/specflow/pm.md}"
+IMPL="${IMPL:-$REPO_ROOT/.claude/commands/scaff/implement.md}"
+AGG="${AGG:-$REPO_ROOT/bin/scaff-aggregate-verdicts}"
+PM_MD="${PM_MD:-$REPO_ROOT/.claude/agents/scaff/pm.md}"
 
 # ---------------------------------------------------------------------------
 # Input validation — canonicalise IMPL / PM_MD / AGG and assert each resolved

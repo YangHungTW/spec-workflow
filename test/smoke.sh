@@ -139,18 +139,18 @@ ac1_clean_install() {
     ac_fail 1 "install exited $exit_code (expected 0). Output: $output"
   fi
 
-  # agents/specflow must be a symlink
-  if [ -L "$H/.claude/agents/specflow" ]; then
-    ac_pass 1 "agents/specflow is a symlink"
+  # agents/scaff must be a symlink
+  if [ -L "$H/.claude/agents/scaff" ]; then
+    ac_pass 1 "agents/scaff is a symlink"
   else
-    ac_fail 1 "agents/specflow is not a symlink"
+    ac_fail 1 "agents/scaff is not a symlink"
   fi
 
-  # commands/specflow must be a symlink
-  if [ -L "$H/.claude/commands/specflow" ]; then
-    ac_pass 1 "commands/specflow is a symlink"
+  # commands/scaff must be a symlink
+  if [ -L "$H/.claude/commands/scaff" ]; then
+    ac_pass 1 "commands/scaff is a symlink"
   else
-    ac_fail 1 "commands/specflow is not a symlink"
+    ac_fail 1 "commands/scaff is not a symlink"
   fi
 
   # every team-memory file in the repo must be linked
@@ -209,7 +209,7 @@ ac2_idempotent_install() {
 
 # ---------------------------------------------------------------------------
 # AC3 — install with real-file conflict
-# Pre-place a real file at agents/specflow; install exits non-zero, leaves file
+# Pre-place a real file at agents/scaff; install exits non-zero, leaves file
 # untouched, reports skipped:real-file, creates other managed links.
 # ---------------------------------------------------------------------------
 ac3_real_file_conflict() {
@@ -219,7 +219,7 @@ ac3_real_file_conflict() {
   local H
   H=$(make_home "ac3")
   mkdir -p "$H/.claude/agents"
-  echo "user content — do not overwrite" > "$H/.claude/agents/specflow"
+  echo "user content — do not overwrite" > "$H/.claude/agents/scaff"
 
   output=$(HOME="$H" "$CS" install 2>&1)
   exit_code=$?
@@ -231,7 +231,7 @@ ac3_real_file_conflict() {
   fi
 
   # Real file must be untouched
-  if [ -f "$H/.claude/agents/specflow" ] && [ ! -L "$H/.claude/agents/specflow" ]; then
+  if [ -f "$H/.claude/agents/scaff" ] && [ ! -L "$H/.claude/agents/scaff" ]; then
     ac_pass 3 "conflicting real file untouched"
   else
     ac_fail 3 "conflicting real file was modified or removed"
@@ -244,11 +244,11 @@ ac3_real_file_conflict() {
     ac_fail 3 "skipped:real-file not found in output"
   fi
 
-  # Other links still created (commands/specflow)
-  if [ -L "$H/.claude/commands/specflow" ]; then
-    ac_pass 3 "commands/specflow still created despite conflict"
+  # Other links still created (commands/scaff)
+  if [ -L "$H/.claude/commands/scaff" ]; then
+    ac_pass 3 "commands/scaff still created despite conflict"
   else
-    ac_fail 3 "commands/specflow not created after conflict scenario"
+    ac_fail 3 "commands/scaff not created after conflict scenario"
   fi
 
   finish_scenario 3
@@ -523,9 +523,9 @@ ac8_update_conflict() {
   local H
   H=$(make_home "ac8")
 
-  # Pre-place a real file at agents/specflow
+  # Pre-place a real file at agents/scaff
   mkdir -p "$H/.claude/agents"
-  echo "user content — do not overwrite" > "$H/.claude/agents/specflow"
+  echo "user content — do not overwrite" > "$H/.claude/agents/scaff"
 
   output=$(HOME="$H" "$CS" update 2>&1)
   exit_code=$?
@@ -543,17 +543,17 @@ ac8_update_conflict() {
   fi
 
   # Real file untouched
-  if [ -f "$H/.claude/agents/specflow" ] && [ ! -L "$H/.claude/agents/specflow" ]; then
+  if [ -f "$H/.claude/agents/scaff" ] && [ ! -L "$H/.claude/agents/scaff" ]; then
     ac_pass 8 "conflicting real file untouched"
   else
     ac_fail 8 "conflicting real file was modified or removed"
   fi
 
   # Other managed links still created
-  if [ -L "$H/.claude/commands/specflow" ]; then
-    ac_pass 8 "commands/specflow created despite conflict at agents/specflow"
+  if [ -L "$H/.claude/commands/scaff" ]; then
+    ac_pass 8 "commands/scaff created despite conflict at agents/scaff"
   else
-    ac_fail 8 "commands/specflow not created — update must continue past conflicts"
+    ac_fail 8 "commands/scaff not created — update must continue past conflicts"
   fi
 
   finish_scenario 8
@@ -719,7 +719,7 @@ ac11_report_exit_consistency() {
   # Conflict run → exit 1 and summary says (exit 1)
   H=$(make_home "ac11_conflict")
   mkdir -p "$H/.claude/agents"
-  echo "conflict" > "$H/.claude/agents/specflow"
+  echo "conflict" > "$H/.claude/agents/scaff"
   output=$(HOME="$H" "$CS" install 2>&1)
   actual_exit=$?
   last_line=$(echo "$output" | tail -1)
@@ -735,7 +735,7 @@ ac11_report_exit_consistency() {
   # Dry-run with would-skip does NOT bump exit code → exit 0
   H=$(make_home "ac11_dryrun")
   mkdir -p "$H/.claude/agents"
-  echo "conflict" > "$H/.claude/agents/specflow"
+  echo "conflict" > "$H/.claude/agents/scaff"
   output=$(HOME="$H" "$CS" install --dry-run 2>&1)
   actual_exit=$?
   last_line=$(echo "$output" | tail -1)
@@ -853,7 +853,7 @@ for t in t13_settings_json t14_rules_dir_structure t15_rules_schema \
          t71_userlang_stop_on_first_invalid \
          t72_userlang_missing_doesnt_stop \
          t73_userlang_structural_grep \
-         t74_specflow_tier t74_tier_path_boundary t74_tier_rollout_migrate \
+         t74_scaff_tier t74_tier_path_boundary t74_tier_rollout_migrate \
          t75_tier_no_sed_forks \
          t76_aggregate_verdicts \
          t77_deprecation_stubs \
@@ -889,6 +889,19 @@ for t in t13_settings_json t14_rules_dir_structure t15_rules_schema \
   fi
   echo
 done
+
+# ---------------------------------------------------------------------------
+# Rename-to-specaffold allowlist check (T24 — wired by T23/T24)
+# ---------------------------------------------------------------------------
+echo "--- t_grep_allowlist ---"
+if bash "$REPO_ROOT/test/t_grep_allowlist.sh" >/dev/null 2>&1; then
+  echo "  PASS"
+  PASS_COUNT=$((PASS_COUNT + 1))
+else
+  echo "  FAIL"
+  FAIL_COUNT=$((FAIL_COUNT + 1))
+fi
+echo
 
 # ---------------------------------------------------------------------------
 # Final summary

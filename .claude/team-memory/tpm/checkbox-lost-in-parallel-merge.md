@@ -38,7 +38,7 @@ flips do not).
 3. Commit the fix-up as `fix: check off T<n> T<m> ... (lost in merge)`
    so the provenance is clear in git log.
 4. Do this once per wave — do not defer to end-of-feature audit, or
-   the downstream `/specflow:implement` / gap-check commands may
+   the downstream `/scaff:implement` / gap-check commands may
    mis-report progress.
 
 ## Example
@@ -71,7 +71,7 @@ post-merge audit from a human-remembered discipline to an automated
 step.
 
 **Recommended automation**: add a mechanical post-merge audit step
-to the wave-rollup flow in `bin/specflow-*` or the orchestrator:
+to the wave-rollup flow in `bin/scaff-*` or the orchestrator:
 
 1. After the wave merge commit lands, grep `- \[ \] T<n>` in
    `06-tasks.md` for every Tn in the merged wave.

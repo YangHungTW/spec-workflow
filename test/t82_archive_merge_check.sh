@@ -5,7 +5,7 @@
 #
 # Verifies that archive.md contains the required structural elements
 # introduced by T23:
-#   1. Sources bin/specflow-tier (tier resolution)
+#   1. Sources bin/scaff-tier (tier resolution)
 #   2. Uses git merge-base --is-ancestor for merge-check
 #   3. Handles --allow-unmerged flag with required REASON argument
 #   4. Appends STATUS Notes line on --allow-unmerged use
@@ -21,7 +21,7 @@ set -u -o pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd -P)"
-ARCHIVE_MD="$REPO_ROOT/.claude/commands/specflow/archive.md"
+ARCHIVE_MD="$REPO_ROOT/.claude/commands/scaff/archive.md"
 
 PASS=0
 FAIL=0
@@ -39,10 +39,10 @@ fi
 ARCHIVE_CONTENT="$(cat "$ARCHIVE_MD")"
 
 # 1. Tier helper is sourced
-if printf '%s\n' "$ARCHIVE_CONTENT" | grep -q 'specflow-tier'; then
-  pass "archive.md sources specflow-tier"
+if printf '%s\n' "$ARCHIVE_CONTENT" | grep -q 'scaff-tier'; then
+  pass "archive.md sources scaff-tier"
 else
-  fail "archive.md does not source specflow-tier"
+  fail "archive.md does not source scaff-tier"
 fi
 
 # 2. git merge-base --is-ancestor present

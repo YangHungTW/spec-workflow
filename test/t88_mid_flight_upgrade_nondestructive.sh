@@ -30,7 +30,7 @@ set -u -o pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd -P)"
 export REPO_ROOT
-TIER_LIB="${TIER_LIB:-$REPO_ROOT/bin/specflow-tier}"
+TIER_LIB="${TIER_LIB:-$REPO_ROOT/bin/scaff-tier}"
 
 # ---------------------------------------------------------------------------
 # Sandbox — HOME isolation (sandbox-home-in-tests.md)

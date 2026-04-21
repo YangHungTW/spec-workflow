@@ -25,7 +25,7 @@ set -u -o pipefail
 # ---------------------------------------------------------------------------
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd -P)"
-IMPL="${IMPL:-$REPO_ROOT/.claude/commands/specflow/implement.md}"
+IMPL="${IMPL:-$REPO_ROOT/.claude/commands/scaff/implement.md}"
 
 # ---------------------------------------------------------------------------
 # Sandbox — HOME isolation (NON-NEGOTIABLE; sandbox-home-in-tests rule)
@@ -137,10 +137,10 @@ check "C1: --skip-inline-review flag appears in implement.md header/description"
 grep -q -- '--inline-review' "$IMPL"
 check "C2: --inline-review flag appears in implement.md header/description" "$?"
 
-# C3: The gate must source specflow-tier (or equivalent) to read FEATURE_TIER —
+# C3: The gate must source scaff-tier (or equivalent) to read FEATURE_TIER —
 #     the tier value must come from the helper, not be hardcoded.
-grep -qE 'source.*specflow-tier|get_tier.*feature_dir|FEATURE_TIER.*get_tier' "$IMPL"
-check "C3: gate sources specflow-tier library and calls get_tier to resolve FEATURE_TIER" "$?"
+grep -qE 'source.*scaff-tier|get_tier.*feature_dir|FEATURE_TIER.*get_tier' "$IMPL"
+check "C3: gate sources scaff-tier library and calls get_tier to resolve FEATURE_TIER" "$?"
 
 # ---------------------------------------------------------------------------
 # Summary

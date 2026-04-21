@@ -12,14 +12,14 @@ When `LANG_CHAT=zh-TW` appears in the SessionStart additional-context payload, w
 
 ## Why
 
-Users who prefer Traditional Chinese for conversational replies should receive responses in that language without needing to repeat the preference each turn; centralising the rule in a common scope ensures every specflow subagent role (PM, Architect, TPM, Developer, QA-analyst, QA-tester, Designer) honours it uniformly without per-agent duplication.
+Users who prefer Traditional Chinese for conversational replies should receive responses in that language without needing to repeat the preference each turn; centralising the rule in a common scope ensures every specaffold subagent role (PM, Architect, TPM, Developer, QA-analyst, QA-tester, Designer) honours it uniformly without per-agent duplication.
 
 ## How to apply
 
-The marker `LANG_CHAT=zh-TW` is injected by the SessionStart hook when `.spec-workflow/config.yml` contains:
+The marker `LANG_CHAT=zh-TW` is injected by the SessionStart hook when `.specaffold/config.yml` contains:
 
 ```yaml
-# .spec-workflow/config.yml
+# .specaffold/config.yml
 lang:
   chat: zh-TW    # or "en" (explicit default)  -- any other value -> warning + default-off
 ```
@@ -29,7 +29,7 @@ When the marker is present, apply **only** the following change: replies shown t
 (a) **Chat replies to the user**  -- in zh-TW when `LANG_CHAT=zh-TW` is active; English when absent or `LANG_CHAT=en`.
 (b) **File content**  -- every file written via any tool (`Write`, `Edit`, `NotebookEdit`, etc.) has English content.
 (c) **Tool-call arguments**  -- all paths, patterns, flags, commit messages, and branch names passed to any tool are English.
-(d) **CLI stdout**  -- output emitted by any `bin/specflow-*` script or hook script is English.
+(d) **CLI stdout**  -- output emitted by any `bin/scaff-*` script or hook script is English.
 (e) **Commit messages**  -- always English.
 (f) **STATUS Notes and team-memory files**  -- STATUS Notes entries and any file under `.claude/team-memory/**` are English.
 
@@ -43,7 +43,7 @@ PM's brainstorm summary shown to the user in chat is zh-TW when `LANG_CHAT=zh-TW
 
 **Negative  -- these always stay English regardless of config:**
 
-1. CLI stdout from a `bin/specflow-*` script:
+1. CLI stdout from a `bin/scaff-*` script:
    ```
    PASS: session-start hook syntax OK
    ```

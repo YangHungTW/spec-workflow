@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # test/t80_request_tier_flag.sh
 #
-# Structural tests for T18: .claude/commands/specflow/request.md
+# Structural tests for T18: .claude/commands/scaff/request.md
 # accepts --tier <tiny|standard|audited> flag and contains the
 # propose-and-confirm prompt (tech §D6, task T18).
 #
@@ -65,7 +65,7 @@ pass() { printf 'PASS: %s\n' "$1"; PASS=$((PASS + 1)); }
 fail() { printf 'FAIL: %s\n' "$1" >&2; FAIL=$((FAIL + 1)); }
 skip() { printf 'SKIP: %s\n' "$1" >&2; SKIP=$((SKIP + 1)); }
 
-REQUEST_MD="$REPO_ROOT/.claude/commands/specflow/request.md"
+REQUEST_MD="$REPO_ROOT/.claude/commands/scaff/request.md"
 
 # ---------------------------------------------------------------------------
 # Guard: file must exist

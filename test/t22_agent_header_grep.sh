@@ -14,7 +14,7 @@ set -u -o pipefail
 # ---------------------------------------------------------------------------
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd -P)"
-AGENTS_DIR="$REPO_ROOT/.claude/agents/specflow"
+AGENTS_DIR="$REPO_ROOT/.claude/agents/scaff"
 
 # ---------------------------------------------------------------------------
 # Sandbox HOME (rule: sandbox-home-in-tests — even read-only scripts carry this)

@@ -5,7 +5,7 @@
 #   - A drifted-ours file (source changed, consumer still at baseline) gets
 #     backed up to <path>.bak and replaced with ref-B content.
 #   - Every other managed file reports "already".
-#   - Manifest specflow_ref advances to the new ref.
+#   - Manifest scaff_ref advances to the new ref.
 #   - Exit code is 0.
 #
 # RED until T7 (cmd_update implementation) is merged; the current stub exits 0
@@ -13,15 +13,15 @@
 set -euo pipefail
 
 # ---------------------------------------------------------------------------
-# Locate bin/specflow-seed relative to this script — never hardcode the path
+# Locate bin/scaff-seed relative to this script — never hardcode the path
 # so the test survives worktree moves and CI checkouts.
 # ---------------------------------------------------------------------------
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-SEED="${SEED:-$REPO_ROOT/bin/specflow-seed}"
+SEED="${SEED:-$REPO_ROOT/bin/scaff-seed}"
 
 if [ ! -x "$SEED" ]; then
-  echo "FAIL: setup: specflow-seed not found or not executable: $SEED" >&2
+  echo "FAIL: setup: scaff-seed not found or not executable: $SEED" >&2
   exit 1
 fi
 
@@ -60,22 +60,22 @@ SRC_B="$SANDBOX/src-at-ref-b"
 mkdir -p "$SRC_B"
 
 cp -R "$REPO_ROOT/.claude" "$SRC_B/.claude"
-mkdir -p "$SRC_B/bin" "$SRC_B/.spec-workflow/features/_template"
+mkdir -p "$SRC_B/bin" "$SRC_B/.specaffold/features/_template"
 
-# Copy production scripts so specflow-seed's structural preflight passes inside
-# the fixture (it checks that bin/specflow-seed and bin/specflow-install-hook
+# Copy production scripts so scaff-seed's structural preflight passes inside
+# the fixture (it checks that bin/scaff-seed and bin/scaff-install-hook
 # exist in the source root).
-cp "$REPO_ROOT/bin/specflow-seed"        "$SRC_B/bin/specflow-seed"
-cp "$REPO_ROOT/bin/specflow-install-hook" "$SRC_B/bin/specflow-install-hook"
+cp "$REPO_ROOT/bin/scaff-seed"        "$SRC_B/bin/scaff-seed"
+cp "$REPO_ROOT/bin/scaff-install-hook" "$SRC_B/bin/scaff-install-hook"
 
 # Copy feature template so the plan() function finds the structural marker.
-if [ -d "$REPO_ROOT/.spec-workflow/features/_template" ]; then
-  cp -R "$REPO_ROOT/.spec-workflow/features/_template/." \
-        "$SRC_B/.spec-workflow/features/_template/"
+if [ -d "$REPO_ROOT/.specaffold/features/_template" ]; then
+  cp -R "$REPO_ROOT/.specaffold/features/_template/." \
+        "$SRC_B/.specaffold/features/_template/"
 fi
 
 # Synthesise ref-B: append a sentinel line to architect.md so sha256 differs.
-CHANGED_RELPATH=".claude/agents/specflow/architect.md"
+CHANGED_RELPATH=".claude/agents/scaff/architect.md"
 echo '# ref-B change' >> "$SRC_B/$CHANGED_RELPATH"
 
 # Commit the fixture so git rev-parse HEAD resolves inside it.
@@ -119,7 +119,7 @@ PRE_CONTENT="$(cat "$CONSUMER/$CHANGED_RELPATH")"
 # Step 4 — Run update from ref-A → ref-B
 #
 # We call update inside a subshell cd'd to the consumer so repo_root() inside
-# specflow-seed resolves the consumer, not this test script's directory.
+# scaff-seed resolves the consumer, not this test script's directory.
 # Capture stdout+stderr together so assertions can inspect both streams.
 # ---------------------------------------------------------------------------
 UPDATE_OUT="$SANDBOX/update.out"
@@ -178,15 +178,15 @@ if [ "$ALREADY_COUNT" -lt 1 ]; then
   exit 1
 fi
 
-# AC8.a — manifest specflow_ref advanced to REF_B
-MANIFEST="$CONSUMER/.claude/specflow.manifest"
+# AC8.a — manifest scaff_ref advanced to REF_B
+MANIFEST="$CONSUMER/.claude/scaff.manifest"
 if [ ! -f "$MANIFEST" ]; then
   echo "FAIL: AC8.a: manifest not found at $MANIFEST" >&2
   exit 1
 fi
-MANIFEST_REF="$(awk -F'"' '/"specflow_ref"/{print $4; exit}' "$MANIFEST")"
+MANIFEST_REF="$(awk -F'"' '/"scaff_ref"/{print $4; exit}' "$MANIFEST")"
 if [ "$MANIFEST_REF" != "$REF_B" ]; then
-  echo "FAIL: AC8.a: manifest specflow_ref='$MANIFEST_REF', expected '$REF_B'" >&2
+  echo "FAIL: AC8.a: manifest scaff_ref='$MANIFEST_REF', expected '$REF_B'" >&2
   exit 1
 fi
 

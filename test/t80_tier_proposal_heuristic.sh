@@ -4,11 +4,11 @@
 # Determinism test for the tier-proposal keyword-scan heuristic.
 #
 # Strategy:
-#   1. Parse .claude/agents/specflow/pm.md for the keyword sets that T19
+#   1. Parse .claude/agents/scaff/pm.md for the keyword sets that T19
 #      embeds (tiny-keywords and audited-keywords sections).  If those sections
 #      are absent (T19 not yet merged), emit SKIP and exit 0 — the test will
 #      be re-run post-wave.
-#   2. If bin/specflow-tier does not expose propose_tier(), emit SKIP and
+#   2. If bin/scaff-tier does not expose propose_tier(), emit SKIP and
 #      exit 0.  T25 adds propose_tier; if T2 is present but T25 itself is
 #      the first commit, both halves land together (red→green in the same
 #      task).
@@ -34,8 +34,8 @@ set -u -o pipefail
 # ---------------------------------------------------------------------------
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd -P)"
-TIER_LIB="${TIER_LIB:-$REPO_ROOT/bin/specflow-tier}"
-PM_MD="${PM_MD:-$REPO_ROOT/.claude/agents/specflow/pm.md}"
+TIER_LIB="${TIER_LIB:-$REPO_ROOT/bin/scaff-tier}"
+PM_MD="${PM_MD:-$REPO_ROOT/.claude/agents/scaff/pm.md}"
 
 # ---------------------------------------------------------------------------
 # Sandbox — HOME isolation (sandbox-home-in-tests.md)
@@ -53,7 +53,7 @@ case "$HOME" in
 esac
 
 # ---------------------------------------------------------------------------
-# Guard: specflow-tier library must exist (T2 dependency)
+# Guard: scaff-tier library must exist (T2 dependency)
 # ---------------------------------------------------------------------------
 if [ ! -f "$TIER_LIB" ]; then
   printf 'SKIP: %s not found — T2 not yet merged; re-run post-wave.\n' \
@@ -88,7 +88,7 @@ if [ -z "$pm_has_tiny" ] || [ -z "$pm_has_audited" ]; then
 fi
 
 # ---------------------------------------------------------------------------
-# Guard: propose_tier() must exist in specflow-tier (future task adds it)
+# Guard: propose_tier() must exist in scaff-tier (future task adds it)
 # ---------------------------------------------------------------------------
 # shellcheck source=/dev/null
 . "$TIER_LIB"

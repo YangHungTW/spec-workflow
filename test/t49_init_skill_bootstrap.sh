@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# test/t49_init_skill_bootstrap.sh — STATIC: verify specflow-init skill footprint
+# test/t49_init_skill_bootstrap.sh — STATIC: verify scaff-init skill footprint
 # R3 AC3.b: exactly two files, correct frontmatter shape, README bootstrap doc.
 # No CLI invoked — no sandbox-HOME required; this is a read-only structural check.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd -P)"
-SKILL="$REPO_ROOT/.claude/skills/specflow-init"
+SKILL="$REPO_ROOT/.claude/skills/scaff-init"
 
 # ---------------------------------------------------------------------------
 # Check 1: SKILL.md present
@@ -28,7 +28,7 @@ fi
 # ---------------------------------------------------------------------------
 # Check 3: SKILL.md frontmatter shape
 # The first line must be '---', subsequent lines within the block must contain
-# 'name: specflow-init' and 'description:', and the block must close with a
+# 'name: scaff-init' and 'description:', and the block must close with a
 # second '---' before the body.  Using awk to avoid [[ =~ ]] regex.
 # ---------------------------------------------------------------------------
 has_open=0
@@ -50,7 +50,7 @@ while IFS= read -r line; do
   # Once we have the open fence look for name/desc and the closing fence
   if [ $has_open -eq 1 ] && [ $has_close -eq 0 ]; then
     case "$line" in
-      "name: specflow-init"*) has_name=1 ;;
+      "name: scaff-init"*) has_name=1 ;;
       "description:"*) has_desc=1 ;;
       "---") has_close=1 ;;
     esac
@@ -60,7 +60,7 @@ while IFS= read -r line; do
 done < "$SKILL/SKILL.md"
 
 if [ $has_name -eq 0 ]; then
-  echo "FAIL: SKILL.md frontmatter missing 'name: specflow-init'" >&2; exit 1
+  echo "FAIL: SKILL.md frontmatter missing 'name: scaff-init'" >&2; exit 1
 fi
 if [ $has_desc -eq 0 ]; then
   echo "FAIL: SKILL.md frontmatter missing 'description:' key" >&2; exit 1
@@ -89,8 +89,8 @@ fi
 # Check 6: README.md documents the cp -R bootstrap command
 # T20 lands in the same wave; this check will be RED until T20 merges.
 # ---------------------------------------------------------------------------
-if ! grep -q 'cp -R.*\.claude/skills/specflow-init.*~/.claude/skills/' "$REPO_ROOT/README.md"; then
-  echo "FAIL: README.md missing cp -R bootstrap line for specflow-init" >&2; exit 1
+if ! grep -q 'cp -R.*\.claude/skills/scaff-init.*~/.claude/skills/' "$REPO_ROOT/README.md"; then
+  echo "FAIL: README.md missing cp -R bootstrap line for scaff-init" >&2; exit 1
 fi
 
 echo PASS

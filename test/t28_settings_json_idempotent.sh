@@ -13,7 +13,7 @@ set -u -o pipefail
 # ---------------------------------------------------------------------------
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd -P)"
-SCRIPT="$REPO_ROOT/bin/specflow-install-hook"
+SCRIPT="$REPO_ROOT/bin/scaff-install-hook"
 
 # ---------------------------------------------------------------------------
 # python3 preflight — skip if unavailable (CI-friendly per T22 spec)

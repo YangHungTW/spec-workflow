@@ -1,0 +1,1611 @@
+#!/usr/bin/env bash
+# =============================================================================
+# scaff-seed — seed per-project .claude/ scaffolding from the source repo
+# =============================================================================
+#
+# USAGE
+#   bin/scaff-seed <subcommand> [options]
+#   bin/scaff-seed --help
+#
+# SUBCOMMANDS
+#   init      Copy the managed .claude/ subtree into a consumer project.
+#             Safe to re-run (idempotent once implemented in Wave 1+).
+#
+#   update    Pull upstream changes from the source repo into the consumer.
+#             Respects the classify-before-mutate contract; skips user-modified
+#             files (no force flag in v1; skip-and-report is the conflict policy).
+#
+#   migrate   Migrate this repo (the source) to consume itself, staging the
+#             copy as a structural-only dry-run first.
+#
+# OPTIONS
+#   --dry-run         Compute the full plan; zero mutations; exit 0 unless
+#                     planning fails.
+#   --from <path>     Explicit path to the source repo root (default: cwd or
+#                     git rev-parse --show-toplevel).
+#   --to <ref>        Consumer project root path (init / update only).
+#   --ref <ref>       Pin copy to a specific git ref from the source repo.
+#   --help, -h        Print this message and exit 0.
+#
+# EXIT CODES
+#   0   All files converged to desired state (or dry-run produced a plan).
+#   1   At least one file was skipped or a mutation failed; tool reports all.
+#   2   Usage error, python3 missing, unresolvable source, or corrupt manifest.
+#
+# CONFLICT HANDLING (skip-and-report; no force flag in v1)
+#   Conflicts are reported and skipped; the user resolves them manually.
+#
+# =============================================================================
+set -u -o pipefail
+
+# ---------------------------------------------------------------------------
+# Globals
+# ---------------------------------------------------------------------------
+DRY_RUN=0
+SRC=""
+TO_REF=""
+AT_REF=""
+
+# MAX_CODE: tracks the highest exit code seen so far.
+# 0 = fully converged; 1 = conflict or mutation failure; 2 = die()
+MAX_CODE=0
+
+# Cached uname for sha256 dispatch — populated once on first call to sha256_of
+_UNAME_S=""
+
+# ---------------------------------------------------------------------------
+# die <msg> — print msg to stderr and exit 2
+# ---------------------------------------------------------------------------
+die() {
+  local msg="$1"
+  echo "scaff-seed: $msg" >&2
+  exit 2
+}
+
+# ---------------------------------------------------------------------------
+# repo_root — resolves the source repo root.
+# Prefers git rev-parse --show-toplevel; falls back to pwd -P.
+# Result stored in REPO_ROOT (cached).
+# ---------------------------------------------------------------------------
+REPO_ROOT=""
+repo_root() {
+  if [ -n "$REPO_ROOT" ]; then
+    printf '%s\n' "$REPO_ROOT"
+    return 0
+  fi
+  local root
+  root=$(git rev-parse --show-toplevel 2>/dev/null) || root=$(pwd -P)
+  REPO_ROOT="$root"
+  printf '%s\n' "$REPO_ROOT"
+}
+
+# ---------------------------------------------------------------------------
+# usage — print the header comment block and exit 0
+# ---------------------------------------------------------------------------
+usage() {
+  sed -n '/^# USAGE/,/^# ===*/p' "$0" | sed 's/^# \{0,1\}//'
+  exit 0
+}
+
+# ---------------------------------------------------------------------------
+# emit_summary — called after the dispatcher loop; reads counters set during
+# dispatch. Exit-code shape matches bin/claude-symlink (R7 AC7.c).
+# ---------------------------------------------------------------------------
+_CNT_CREATED=0
+_CNT_ALREADY=0
+_CNT_REPLACED=0
+_CNT_SKIPPED=0
+
+emit_summary() {
+  echo "summary: created=${_CNT_CREATED} already=${_CNT_ALREADY} replaced=${_CNT_REPLACED} skipped=${_CNT_SKIPPED} (exit ${MAX_CODE})"
+}
+
+# ---------------------------------------------------------------------------
+# sha256_of <path>
+# Dispatch by uname -s: Darwin/*BSD → shasum -a 256; Linux/* → sha256sum.
+# Python 3 hashlib fallback if neither binary is present.
+# Caches uname result in _UNAME_S to avoid repeated forks (performance rule).
+# ---------------------------------------------------------------------------
+sha256_of() {
+  local path="$1"
+  if [ -z "$_UNAME_S" ]; then
+    _UNAME_S="$(uname -s 2>/dev/null)"
+  fi
+  case "$_UNAME_S" in
+    Darwin|FreeBSD|OpenBSD|NetBSD)
+      if command -v shasum >/dev/null 2>&1; then
+        shasum -a 256 "$path" | awk '{print $1}'
+        return
+      fi
+      ;;
+    *)
+      if command -v sha256sum >/dev/null 2>&1; then
+        sha256sum "$path" | awk '{print $1}'
+        return
+      fi
+      ;;
+  esac
+  # Python 3 fallback — allowed on install-time paths (bash-32-portability rule)
+  python3 -c 'import hashlib,sys; print(hashlib.sha256(open(sys.argv[1],"rb").read()).hexdigest())' "$path"
+}
+
+# ---------------------------------------------------------------------------
+# manifest_ref_sniff <path>
+# Bash-only defensive ref reader — no Python 3.
+# Used when callers need only the ref string, not the full file map.
+# Exact awk form from D3 tradeoffs in 04-tech.md.
+# TODO(W2-W4): used by cmd_update as defensive fallback when full manifest
+# parse is overkill (only the ref string is needed for a quick staleness check).
+# ---------------------------------------------------------------------------
+manifest_ref_sniff() {
+  awk -F'"' '/"scaff_ref"/ { print $4; exit }' "$1"
+}
+
+# ---------------------------------------------------------------------------
+# manifest_read <path>
+# Python 3 heredoc. Validates schema v1; emits relpath<TAB>sha256 rows on stdout.
+# Exits 2 with "manifest: corrupt" on stderr for any schema or parse failure.
+# TODO(W3): consumed by cmd_update's classifier baseline lookup — maps each
+# relpath to its baseline sha256 so classify_copy_target can distinguish
+# drifted-ours from user-modified.
+# ---------------------------------------------------------------------------
+manifest_read() {
+  local mpath="$1"
+  python3 - "$mpath" <<'PYEOF'
+import sys, json
+
+path = sys.argv[1]
+try:
+    with open(path, 'r') as f:
+        data = json.load(f)
+except Exception as e:
+    print("manifest: corrupt", file=sys.stderr)
+    sys.exit(2)
+
+if data.get("schema_version") != 1:
+    print("manifest: corrupt", file=sys.stderr)
+    sys.exit(2)
+if not isinstance(data.get("scaff_ref"), str) or not data["scaff_ref"]:
+    print("manifest: corrupt", file=sys.stderr)
+    sys.exit(2)
+if not isinstance(data.get("files"), dict):
+    print("manifest: corrupt", file=sys.stderr)
+    sys.exit(2)
+
+# Boundary validation — reject traversal and absolute relpaths at the first
+# point of entry into the call tree so all downstream consumers can trust inputs.
+for relpath, sha in data["files"].items():
+    if not relpath:
+        print("manifest: corrupt", file=sys.stderr)
+        sys.exit(2)
+    if relpath.startswith("/"):
+        print("manifest: corrupt", file=sys.stderr)
+        sys.exit(2)
+    parts = relpath.replace("\\", "/").split("/")
+    if ".." in parts:
+        print("manifest: corrupt", file=sys.stderr)
+        sys.exit(2)
+    print("{}\t{}".format(relpath, sha))
+PYEOF
+}
+
+# ---------------------------------------------------------------------------
+# manifest_write <path> <ref> <source_remote> <applied_at>
+# Reads relpath<TAB>sha256 rows from stdin; builds D3 schema v1 JSON;
+# writes atomically to <path> via .tmp + os.replace (D11 discipline).
+# Caller must write .bak before invoking this when overwriting an existing
+# manifest (backup discipline applies at cmd_update / cmd_migrate call-sites).
+#
+# Implementation note: bash heredoc (<<'PYEOF') and piped stdin cannot both
+# feed into a single python3 invocation — heredoc wins as the script source.
+# We capture stdin to a temp file before invoking python3 so the TSV data is
+# available independently of the heredoc channel.
+# TODO(W2,W3,W4): called after each successful init/update/migrate run to
+# record the new scaff_ref and file checksums in the consumer's manifest.
+# ---------------------------------------------------------------------------
+manifest_write() {
+  local mpath="$1" ref="$2" source_remote="$3" applied_at="$4"
+  local tsv_tmp
+  tsv_tmp=$(mktemp)
+  cat > "$tsv_tmp"
+  python3 - "$mpath" "$ref" "$source_remote" "$applied_at" "$tsv_tmp" <<'PYEOF'
+import sys, json, os
+
+path          = sys.argv[1]
+ref           = sys.argv[2]
+source_remote = sys.argv[3]
+applied_at    = sys.argv[4]
+tsv_file      = sys.argv[5]
+
+files = {}
+with open(tsv_file, 'r') as fh:
+    for line in fh:
+        line = line.rstrip("\n")
+        if not line:
+            continue
+        parts = line.split("\t", 1)
+        if len(parts) == 2:
+            files[parts[0]] = parts[1]
+
+data = {
+    "schema_version": 1,
+    "scaff_ref": ref,
+    "source_remote": source_remote,
+    "applied_at": applied_at,
+    "files": files,
+}
+
+tmp = path + ".tmp"
+os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+with open(tmp, "w") as f:
+    json.dump(data, f, indent=2, sort_keys=False)
+    f.write("\n")
+os.replace(tmp, path)
+PYEOF
+  local rc=$?
+  rm -f "$tsv_tmp"
+  return $rc
+}
+
+# ---------------------------------------------------------------------------
+# classify_copy_target <consumer_root> <relpath> <expected_sha> <baseline_sha>
+#
+# Pure function; emits exactly one of five enum values on stdout:
+#   missing | ok | drifted-ours | user-modified | real-file-conflict
+#
+# Note on the 5-vs-6 state question: The D4 pseudocode (04-tech.md §3) has
+# exactly 5 return paths. The dispatcher table lists a 6th state "foreign"
+# which is emitted by the copy-phase dispatcher when a path falls outside the
+# managed set — not by this classifier. This function implements the D4
+# pseudocode branch-for-branch; "foreign" is NOT a return value here.
+#
+# <baseline_sha> == "" represents "absent from manifest" (pseudocode's None).
+# No side effects. No mutations.
+# ---------------------------------------------------------------------------
+classify_copy_target() {
+  local consumer_root="$1" relpath="$2" expected_sha="$3" baseline_sha="$4"
+
+  # Defense-in-depth: reject traversal inputs even though manifest_read already
+  # validates at the boundary — belt-and-suspenders guards the classifier if ever
+  # called directly (e.g., from a future probe or unit test with raw inputs).
+  case "$relpath" in
+    ..*|*/..*|*/..|/*)
+      die "classify_copy_target: traversal rejected" ;;
+  esac
+
+  local dst="${consumer_root}/${relpath}"
+
+  # Branch 1: dst does not exist (neither as file nor as symlink)
+  if [ ! -e "$dst" ] && [ ! -L "$dst" ]; then
+    echo "missing"
+    return
+  fi
+
+  # Branch 2: dst is a symlink — we never create symlinks (R1)
+  if [ -L "$dst" ]; then
+    echo "real-file-conflict"
+    return
+  fi
+
+  # Branch 3: dst is a directory — file expected here
+  if [ -d "$dst" ]; then
+    echo "real-file-conflict"
+    return
+  fi
+
+  # Branch 4: dst is not a regular file (fifo, device, etc.)
+  if [ ! -f "$dst" ]; then
+    echo "real-file-conflict"
+    return
+  fi
+
+  # Branch 5: dst is a regular file — compare hashes
+  local actual_sha
+  actual_sha=$(sha256_of "$dst")
+
+  if [ "$actual_sha" = "$expected_sha" ]; then
+    echo "ok"
+    return
+  fi
+
+  # baseline_sha == "" means absent from manifest (pseudocode None branch)
+  if [ -z "$baseline_sha" ]; then
+    # File is new in the new ref but destination already has content —
+    # the user must have created it manually; cannot be ours.
+    echo "user-modified"
+    return
+  fi
+
+  if [ "$actual_sha" = "$baseline_sha" ]; then
+    echo "drifted-ours"
+    return
+  fi
+
+  echo "user-modified"
+}
+
+# ---------------------------------------------------------------------------
+# classify_pre_commit_shim <consumer_root>
+# Pure classifier; emits one of three enum values on stdout:
+#   missing            — .git/hooks/pre-commit does not exist
+#   ok                 — exists AND contains the scaff-lint sentinel
+#   foreign-pre-commit — exists AND does NOT contain the scaff-lint sentinel
+#
+# No mutation; no side effects. Dispatcher arms in cmd_init / cmd_migrate
+# handle all writes.
+# ---------------------------------------------------------------------------
+classify_pre_commit_shim() {
+  local consumer_root="$1"
+  local hook_path="${consumer_root}/.git/hooks/pre-commit"
+
+  if [ ! -e "$hook_path" ] && [ ! -L "$hook_path" ]; then
+    echo "missing"
+    return
+  fi
+
+  if grep -F 'scaff-lint' "$hook_path" >/dev/null 2>&1; then
+    echo "ok"
+    return
+  fi
+
+  echo "foreign-pre-commit"
+}
+
+# ---------------------------------------------------------------------------
+# classify_compat_symlink <repo_root>
+# Pure classifier for the W3 compat-symlink path.
+# Emits one of six enum values on stdout (no side effects, no mutations):
+#   missing         — nothing exists at <repo_root>/.spec-workflow
+#   ok-ours         — symlink pointing to <repo_root>/.specaffold (absolute)
+#   foreign-symlink — symlink pointing elsewhere
+#   real-dir        — actual directory (not a symlink)
+#   real-file       — actual file (not a symlink)
+#   broken-symlink  — symlink whose target does not exist
+# ---------------------------------------------------------------------------
+classify_compat_symlink() {
+  local repo_root="$1"
+  local link_path="${repo_root}/.spec-workflow"
+  local canonical_target="${repo_root}/.specaffold"
+
+  if [ ! -e "$link_path" ] && [ ! -L "$link_path" ]; then
+    echo "missing"
+    return
+  fi
+
+  if [ -L "$link_path" ]; then
+    if [ ! -e "$link_path" ]; then
+      echo "broken-symlink"
+      return
+    fi
+    local dest
+    dest="$(readlink "$link_path")"
+    if [ "$dest" = "$canonical_target" ]; then
+      echo "ok-ours"
+      return
+    fi
+    echo "foreign-symlink"
+    return
+  fi
+
+  if [ -d "$link_path" ]; then
+    echo "real-dir"
+    return
+  fi
+
+  echo "real-file"
+}
+
+# ---------------------------------------------------------------------------
+# ensure_compat_symlink <repo_root>
+# Dispatch table for the compat-symlink; calls classify_compat_symlink once
+# (classify-before-mutate rule), then routes to the appropriate arm.
+# Only the `missing` arm mutates; all others warn-and-skip (no-force rule).
+# Symlink target is always absolute (absolute-symlink-targets rule).
+# ---------------------------------------------------------------------------
+ensure_compat_symlink() {
+  local repo_root="$1"
+  local link_path="${repo_root}/.spec-workflow"
+  local abs_target="${repo_root}/.specaffold"
+
+  local state
+  state=$(classify_compat_symlink "$repo_root")
+
+  case "$state" in
+    missing)
+      ln -s "$abs_target" "$link_path"
+      ;;
+    ok-ours)
+      : # already correct — no-op
+      ;;
+    foreign-symlink)
+      echo "WARN: ensure_compat_symlink: skipping foreign-symlink at ${link_path}" >&2
+      return 1
+      ;;
+    real-dir)
+      echo "WARN: ensure_compat_symlink: skipping real-dir at ${link_path}" >&2
+      return 1
+      ;;
+    real-file)
+      echo "WARN: ensure_compat_symlink: skipping real-file at ${link_path}" >&2
+      return 1
+      ;;
+    broken-symlink)
+      echo "WARN: ensure_compat_symlink: skipping broken-symlink at ${link_path}" >&2
+      return 1
+      ;;
+    *)
+      echo "WARN: ensure_compat_symlink: unknown state '${state}' at ${link_path}" >&2
+      return 1
+      ;;
+  esac
+}
+
+# ---------------------------------------------------------------------------
+# plan_copy <src_root> <mode>
+# Enumerates managed relpaths from the source tree.
+# mode=init|migrate: includes static subtrees + team-memory skeleton.
+# mode=update:       static subtrees only (update never touches team-memory).
+# Emits newline-separated relpaths on stdout.
+# ---------------------------------------------------------------------------
+plan_copy() {
+  local src_root="$1" mode="$2"
+
+  local prefix
+  for prefix in \
+    ".claude/agents/scaff" \
+    ".claude/commands/scaff" \
+    ".claude/hooks" \
+    ".claude/rules" \
+    ".specaffold/features/_template"
+  do
+    if [ -d "${src_root}/${prefix}" ]; then
+      find "${src_root}/${prefix}" -type f | while IFS= read -r fpath; do
+        local rel="${fpath#${src_root}/}"
+        printf '%s\n' "$rel"
+      done
+    fi
+  done
+
+  # Team-memory skeleton — only for init or migrate modes
+  case "$mode" in
+    init|migrate)
+      # Enumerate role dirs (non-shared subdirs of .claude/team-memory)
+      local tm_root="${src_root}/.claude/team-memory"
+      if [ -d "$tm_root" ]; then
+        find "$tm_root" -maxdepth 1 -mindepth 1 -type d | sort | while IFS= read -r role_dir; do
+          local role_name
+          role_name=$(basename "$role_dir")
+          if [ "$role_name" != "shared" ]; then
+            # Synthesized: one index.md per role dir (empty-skeleton per R4)
+            printf '.claude/team-memory/%s/index.md\n' "$role_name"
+          fi
+        done
+        # shared dir always gets both README.md and index.md
+        printf '.claude/team-memory/shared/README.md\n'
+        printf '.claude/team-memory/shared/index.md\n'
+      fi
+      ;;
+  esac
+}
+
+# ---------------------------------------------------------------------------
+# write_atomic <dst>
+# Python 3 heredoc. Reads bytes from stdin; writes to <dst>.tmp; os.replace.
+# Ensures parent directory exists. No partial-write window (D11 discipline).
+#
+# Same stdin/heredoc conflict as manifest_write: capture bytes to temp file
+# first so the piped data and the Python heredoc don't compete for stdin.
+# TODO(W2-W4): called from every D4 dispatcher arm that produces filesystem
+# writes (missing → create, drifted-ours → replace after .bak).
+# ---------------------------------------------------------------------------
+write_atomic() {
+  local dst="$1"
+  local data_tmp
+  data_tmp=$(mktemp)
+  cat > "$data_tmp"
+  python3 - "$dst" "$data_tmp" <<'PYEOF'
+import sys, os
+
+dst      = sys.argv[1]
+src_file = sys.argv[2]
+with open(src_file, "rb") as f:
+    data = f.read()
+tmp = dst + ".tmp"
+os.makedirs(os.path.dirname(os.path.abspath(dst)), exist_ok=True)
+with open(tmp, "wb") as f:
+    f.write(data)
+os.replace(tmp, dst)
+PYEOF
+  local rc=$?
+  rm -f "$data_tmp"
+  return $rc
+}
+
+# ---------------------------------------------------------------------------
+# Flag parser — no GNU getopt (portability)
+# ---------------------------------------------------------------------------
+parse_flags() {
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      --dry-run)
+        DRY_RUN=1
+        shift
+        ;;
+      --from)
+        [ "$#" -ge 2 ] || die "flag --from requires an argument"
+        SRC="$2"
+        shift 2
+        ;;
+      --to)
+        [ "$#" -ge 2 ] || die "flag --to requires an argument"
+        TO_REF="$2"
+        shift 2
+        ;;
+      --ref)
+        [ "$#" -ge 2 ] || die "flag --ref requires an argument"
+        AT_REF="$2"
+        shift 2
+        ;;
+      --help|-h)
+        usage
+        ;;
+      --)
+        shift
+        break
+        ;;
+      -*)
+        die "unknown flag: $1"
+        ;;
+      *)
+        break
+        ;;
+    esac
+  done
+}
+
+# ---------------------------------------------------------------------------
+# Preflight — python3 required for manifest write (D4 tradeoff).
+# Called by each subcommand AFTER flag parsing; NOT called for --help / usage.
+# ---------------------------------------------------------------------------
+preflight() {
+  command -v python3 >/dev/null || die "python3 required"
+}
+
+# ---------------------------------------------------------------------------
+# Subcommand stubs (Wave 0 — no filesystem mutation)
+# ---------------------------------------------------------------------------
+cmd_init() {
+  # ---------------------------------------------------------------------------
+  # Step 1: Resolve source repo root via layered fallback (D7):
+  #   --from > $SPECFLOW_SRC > readlink ~/.claude/agents/scaff → strip suffix
+  # ---------------------------------------------------------------------------
+  local src_root=""
+
+  if [ -n "$SRC" ]; then
+    src_root="$SRC"
+  elif [ -n "${SPECFLOW_SRC:-}" ]; then
+    src_root="$SPECFLOW_SRC"
+  else
+    # Auto-discover: bare readlink (no -f) on the global agents symlink
+    local agent_link="$HOME/.claude/agents/scaff"
+    if [ -L "$agent_link" ]; then
+      local link_target
+      link_target=$(readlink "$agent_link")
+      # Make absolute if relative (symlink target may be relative to link dir)
+      case "$link_target" in
+        /*) ;;
+        *)  link_target="$(dirname "$agent_link")/$link_target" ;;
+      esac
+      # Suffix is a literal constant from the install path, so string
+      # truncation is the right shape here (vs dirname chain).
+      local candidate="${link_target%/.claude/agents/scaff}"
+      if [ "$candidate" != "$link_target" ] \
+         && [ -f "${candidate}/bin/scaff-seed" ] \
+         && [ -d "${candidate}/.claude/agents/scaff" ]; then
+        src_root="$candidate"
+      fi
+    fi
+  fi
+
+  [ -n "$src_root" ] || die "cannot resolve source repo; pass --from <path> or set SPECFLOW_SRC"
+
+  # Resolve to an absolute path using cd (no readlink -f / realpath)
+  src_root=$(cd "$src_root" 2>/dev/null && pwd -P) \
+    || die "source repo path not accessible: $src_root"
+
+  # ---------------------------------------------------------------------------
+  # Step 2: Resolve consumer repo root.
+  # Callers must cd into the consumer repo before invoking cmd_init
+  # (matching t39/t41's shape). repo_root() resolves from CWD via
+  # git rev-parse --show-toplevel; callers must not invoke from the source
+  # repo's own CWD or the init will target the source repo itself.
+  # ---------------------------------------------------------------------------
+  local consumer_root
+  consumer_root=$(repo_root)
+
+  # ---------------------------------------------------------------------------
+  # Step 3: Preflight — verify source has required structural markers (D8)
+  # No filesystem mutation before preflight passes.
+  # ---------------------------------------------------------------------------
+  [ -f "${src_root}/bin/scaff-install-hook" ] \
+    || die "preflight: ${src_root}/bin/scaff-install-hook not found"
+  [ -d "${src_root}/.claude/agents/scaff" ] \
+    || die "preflight: ${src_root}/.claude/agents/scaff not found"
+  [ -d "${src_root}/.claude/commands/scaff" ] \
+    || die "preflight: ${src_root}/.claude/commands/scaff not found"
+  [ -d "${src_root}/.claude/hooks" ] \
+    || die "preflight: ${src_root}/.claude/hooks not found"
+  [ -d "${src_root}/.claude/rules" ] \
+    || die "preflight: ${src_root}/.claude/rules not found"
+  [ -d "${src_root}/.specaffold/features/_template" ] \
+    || die "preflight: ${src_root}/.specaffold/features/_template not found"
+
+  # ---------------------------------------------------------------------------
+  # Step 4: Resolve the ref to record in the manifest
+  # ---------------------------------------------------------------------------
+  local ref="${AT_REF}"
+  if [ -z "$ref" ]; then
+    ref=$(git -C "$src_root" rev-parse HEAD 2>/dev/null) \
+      || die "cannot resolve HEAD in source repo; pass --ref <ref>"
+  fi
+
+  # ---------------------------------------------------------------------------
+  # Step 5: Build the plan (classify-before-mutate: reads first, writes second)
+  # SHA is computed here rather than inside classify_copy_target because
+  # classify_copy_target is a pure classifier (no side-effectful source reads).
+  # plan_lines is a newline-separated list of "relpath<TAB>expected_sha" pairs.
+  # ---------------------------------------------------------------------------
+  local plan_lines=""
+  local relpaths
+  relpaths=$(plan_copy "$src_root" init)
+
+  while IFS= read -r relpath; do
+    [ -n "$relpath" ] || continue
+    local src_file="${src_root}/${relpath}"
+    # Skip skeleton paths where the source file genuinely does not exist
+    # (plan_copy may emit shared/README.md even when the source repo lacks it)
+    if [ ! -f "$src_file" ]; then
+      continue
+    fi
+    local expected_sha
+    expected_sha=$(sha256_of "$src_file")
+    if [ -n "$plan_lines" ]; then
+      plan_lines="${plan_lines}
+${relpath}	${expected_sha}"
+    else
+      plan_lines="${relpath}	${expected_sha}"
+    fi
+  done <<EOF
+$relpaths
+EOF
+
+  # ---------------------------------------------------------------------------
+  # Step 6: Classify each planned relpath (pure; no mutations yet)
+  # Accumulate per-state lists for the dry-run report and the dispatch loop.
+  # baseline_sha is "" for init (no prior manifest baseline).
+  # ---------------------------------------------------------------------------
+  local classify_results=""
+  while IFS='	' read -r relpath expected_sha; do
+    [ -n "$relpath" ] || continue
+    local state
+    state=$(classify_copy_target "$consumer_root" "$relpath" "$expected_sha" "")
+    if [ -n "$classify_results" ]; then
+      classify_results="${classify_results}
+${relpath}	${expected_sha}	${state}"
+    else
+      classify_results="${relpath}	${expected_sha}	${state}"
+    fi
+  done <<EOF
+$plan_lines
+EOF
+
+  # ---------------------------------------------------------------------------
+  # Step 7: --dry-run early-return — emit would-* lines; no writes (R6 AC6.a)
+  # ---------------------------------------------------------------------------
+  if [ "$DRY_RUN" = "1" ]; then
+    while IFS='	' read -r relpath expected_sha state; do
+      [ -n "$relpath" ] || continue
+      case "$state" in
+        missing)            echo "would-create: ${relpath}" ;;
+        ok)                 echo "would-skip:already: ${relpath}" ;;
+        drifted-ours)       echo "would-replace:drifted: ${relpath}" ;;
+        user-modified)      echo "would-skip:user-modified: ${relpath}" ;;
+        real-file-conflict) echo "would-skip:real-file-conflict: ${relpath}" ;;
+        foreign)            echo "would-skip:foreign: ${relpath}" ;;
+        *)                  echo "would-skip:unknown: ${relpath}" ;;
+      esac
+    done <<EOF
+$classify_results
+EOF
+    return 0
+  fi
+
+  # ---------------------------------------------------------------------------
+  # Step 8: Dispatch — mutations live here (classify-before-mutate contract)
+  # manifest_tsv excludes skipped/failed paths — only successfully-written
+  # files enter the recorded baseline.
+  # ---------------------------------------------------------------------------
+  local manifest_tsv=""
+
+  while IFS='	' read -r relpath expected_sha state; do
+    [ -n "$relpath" ] || continue
+    local src_file="${src_root}/${relpath}"
+    local dst_file="${consumer_root}/${relpath}"
+
+    case "$state" in
+      missing)
+        if cat "$src_file" | write_atomic "$dst_file"; then
+          echo "created: ${relpath}"
+          _CNT_CREATED=$((_CNT_CREATED + 1))
+          if [ -n "$manifest_tsv" ]; then
+            manifest_tsv="${manifest_tsv}
+${relpath}	${expected_sha}"
+          else
+            manifest_tsv="${relpath}	${expected_sha}"
+          fi
+        else
+          echo "FAIL: write failed for ${relpath}" >&2
+          _CNT_SKIPPED=$((_CNT_SKIPPED + 1))
+          if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
+        fi
+        ;;
+      ok)
+        echo "already: ${relpath}"
+        _CNT_ALREADY=$((_CNT_ALREADY + 1))
+        if [ -n "$manifest_tsv" ]; then
+          manifest_tsv="${manifest_tsv}
+${relpath}	${expected_sha}"
+        else
+          manifest_tsv="${relpath}	${expected_sha}"
+        fi
+        ;;
+      drifted-ours)
+        # Version the backup name when one already exists — never silently
+        # clobber a previous backup (no-force-on-user-paths.md rule 4).
+        if [ -e "${dst_file}.bak" ]; then
+          cp "$dst_file" "${dst_file}.bak.$(date +%Y%m%dT%H%M%S)"
+        else
+          cp "$dst_file" "${dst_file}.bak"
+        fi
+        if cat "$src_file" | write_atomic "$dst_file"; then
+          echo "replaced:drifted: ${relpath}"
+          _CNT_REPLACED=$((_CNT_REPLACED + 1))
+          if [ -n "$manifest_tsv" ]; then
+            manifest_tsv="${manifest_tsv}
+${relpath}	${expected_sha}"
+          else
+            manifest_tsv="${relpath}	${expected_sha}"
+          fi
+        else
+          echo "FAIL: write failed for ${relpath}" >&2
+          _CNT_SKIPPED=$((_CNT_SKIPPED + 1))
+          if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
+        fi
+        ;;
+      user-modified)
+        echo "skipped:user-modified: ${relpath}"
+        _CNT_SKIPPED=$((_CNT_SKIPPED + 1))
+        if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
+        ;;
+      real-file-conflict)
+        echo "skipped:real-file-conflict: ${relpath}"
+        _CNT_SKIPPED=$((_CNT_SKIPPED + 1))
+        if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
+        ;;
+      foreign)
+        echo "skipped:foreign: ${relpath}"
+        _CNT_SKIPPED=$((_CNT_SKIPPED + 1))
+        if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
+        ;;
+      *)
+        echo "skipped:unknown-state: ${relpath}"
+        _CNT_SKIPPED=$((_CNT_SKIPPED + 1))
+        if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
+        ;;
+    esac
+  done <<EOF
+$classify_results
+EOF
+
+  # ---------------------------------------------------------------------------
+  # Step 8b: Install pre-commit shim (classify-before-mutate; no-force rule).
+  # Runs after the managed-subtree copy loop and before the idempotent manifest
+  # shortcut so the shim outcome is included in the counter values that gate
+  # the early-exit check. cmd_update does NOT install hooks (tech §6 D11).
+  # ---------------------------------------------------------------------------
+  local shim_state
+  shim_state=$(classify_pre_commit_shim "$consumer_root")
+  local shim_dst="${consumer_root}/.git/hooks/pre-commit"
+
+  case "$shim_state" in
+    missing)
+      printf '#!/usr/bin/env bash\n# scaff-lint: pre-commit shim — installed by bin/scaff-seed init/migrate\nexec bin/scaff-lint scan-staged "$@"\n' \
+        | write_atomic "$shim_dst"
+      chmod +x "$shim_dst"
+      echo "created:.git/hooks/pre-commit"
+      _CNT_CREATED=$((_CNT_CREATED + 1))
+      ;;
+    ok)
+      echo "already:.git/hooks/pre-commit"
+      _CNT_ALREADY=$((_CNT_ALREADY + 1))
+      ;;
+    foreign-pre-commit)
+      echo "skipped:foreign-pre-commit:.git/hooks/pre-commit"
+      _CNT_SKIPPED=$((_CNT_SKIPPED + 1))
+      if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
+      ;;
+  esac
+
+  # ---------------------------------------------------------------------------
+  # Idempotent path: nothing changed AND manifest already exists → skip
+  # state-file mutations. Rewriting the manifest with a fresh applied_at
+  # would break AC2.b's byte-identical guarantee. But if the manifest is
+  # missing, this is a first-time init whose payload happened to be byte-
+  # identical (dogfood case: source == consumer) — we still need to author
+  # the manifest.
+  if [ "$MAX_CODE" -eq 0 ] \
+     && [ "$_CNT_CREATED" -eq 0 ] \
+     && [ "$_CNT_REPLACED" -eq 0 ] \
+     && [ "$_CNT_SKIPPED" -eq 0 ] \
+     && [ -f "${consumer_root}/.claude/scaff.manifest" ]; then
+    emit_summary
+    exit 0
+  fi
+
+  # ---------------------------------------------------------------------------
+  # Step 9: Write manifest (D3 schema v1) — only when no skips occurred per R8
+  # source_remote is best-effort; empty string if the source has no remote.
+  # ---------------------------------------------------------------------------
+  local source_remote
+  source_remote=$(git -C "$src_root" config --get remote.origin.url 2>/dev/null || echo "")
+  local applied_at
+  applied_at=$(date -u +%FT%TZ 2>/dev/null || echo "")
+
+  local manifest_path="${consumer_root}/.claude/scaff.manifest"
+
+  # Back up existing manifest before overwriting (no-force-on-user-paths rule).
+  # Version the backup when one already exists to avoid silent data loss.
+  if [ -f "$manifest_path" ]; then
+    if [ -e "${manifest_path}.bak" ]; then
+      cp "$manifest_path" "${manifest_path}.bak.$(date +%Y%m%dT%H%M%S)"
+    else
+      cp "$manifest_path" "${manifest_path}.bak"
+    fi
+  fi
+
+  printf '%s\n' "$manifest_tsv" | manifest_write "$manifest_path" "$ref" "$source_remote" "$applied_at"
+
+  # ---------------------------------------------------------------------------
+  # Step 10: Wire hooks via <src>/bin/scaff-install-hook (D8).
+  # Operate from the consumer root so settings.json is found by cwd.
+  # Consumer-local hook paths (never ~/.claude/hooks/…) per the D8 contract.
+  # ---------------------------------------------------------------------------
+  (
+    cd "$consumer_root"
+    "${src_root}/bin/scaff-install-hook" add SessionStart ".claude/hooks/session-start.sh"
+    "${src_root}/bin/scaff-install-hook" add Stop ".claude/hooks/stop.sh"
+  )
+
+  # Wire backwards-compat symlink .spec-workflow → .specaffold for seeded consumers (R17/AC15)
+  ensure_compat_symlink "$consumer_root"
+
+  emit_summary
+  exit "$MAX_CODE"
+}
+
+cmd_update() {
+  # ---------------------------------------------------------------------------
+  # Step 1: Validate required flag — --to <ref> is mandatory per D6.
+  # No default-HEAD fallback; callers must be explicit.
+  # ---------------------------------------------------------------------------
+  [ -n "$TO_REF" ] || die "--to <ref> required"
+
+  # ---------------------------------------------------------------------------
+  # Step 2: Resolve consumer repo root and require manifest early.
+  # Manifest check precedes source resolution so the error message is
+  # unambiguous even when --from is absent.
+  # ---------------------------------------------------------------------------
+  local consumer_root
+  consumer_root=$(repo_root)
+
+  local manifest_path="${consumer_root}/.claude/scaff.manifest"
+  [ -f "$manifest_path" ] || die "no manifest; run init or migrate first"
+
+  # ---------------------------------------------------------------------------
+  # Step 3: Resolve source repo root via layered fallback (D7):
+  #   --from > $SPECFLOW_SRC > readlink ~/.claude/agents/scaff → strip suffix
+  # ---------------------------------------------------------------------------
+  local src_root=""
+
+  if [ -n "$SRC" ]; then
+    src_root="$SRC"
+  elif [ -n "${SPECFLOW_SRC:-}" ]; then
+    src_root="$SPECFLOW_SRC"
+  else
+    local agent_link="$HOME/.claude/agents/scaff"
+    if [ -L "$agent_link" ]; then
+      local link_target
+      link_target=$(readlink "$agent_link")
+      case "$link_target" in
+        /*) ;;
+        *)  link_target="$(dirname "$agent_link")/$link_target" ;;
+      esac
+      local candidate="${link_target%/.claude/agents/scaff}"
+      if [ "$candidate" != "$link_target" ] \
+         && [ -f "${candidate}/bin/scaff-seed" ] \
+         && [ -d "${candidate}/.claude/agents/scaff" ]; then
+        src_root="$candidate"
+      fi
+    fi
+  fi
+
+  [ -n "$src_root" ] || die "cannot resolve source repo; pass --from <path> or set SPECFLOW_SRC"
+
+  src_root=$(cd "$src_root" 2>/dev/null && pwd -P) \
+    || die "source repo path not accessible: $src_root"
+
+  # ---------------------------------------------------------------------------
+  # Step 5: Read manifest — get previous_ref and per-file baseline SHA map.
+  # manifest_read emits relpath<TAB>sha256 rows; we also sniff the ref string.
+  # ---------------------------------------------------------------------------
+  local previous_ref
+  previous_ref=$(manifest_ref_sniff "$manifest_path")
+
+  local manifest_rows
+  manifest_rows=$(manifest_read "$manifest_path") || exit 2
+
+  # Build a lookup table: for a given relpath, return its baseline sha.
+  # We store rows as newline-delimited "<relpath><TAB><sha>" and grep at
+  # lookup time — O(n) per lookup makes the overall plan O(n²), but n
+  # (number of managed files, ~dozens) is small enough that this is fine.
+  # A hash-map would require bash 4 associative arrays (unavailable on 3.2).
+
+  echo "update: previous-ref ${previous_ref}; target-ref ${TO_REF}"
+
+  # ---------------------------------------------------------------------------
+  # Step 6: Build the plan — update never touches team-memory (R4/R8).
+  # ---------------------------------------------------------------------------
+  local relpaths
+  relpaths=$(plan_copy "$src_root" update)
+
+  # ---------------------------------------------------------------------------
+  # Step 7: For each planned relpath compute expected_sha + baseline_sha,
+  # then classify. Accumulate plan_lines as relpath<TAB>expected<TAB>baseline<TAB>state.
+  # Reads first; writes happen in Step 9.
+  # ---------------------------------------------------------------------------
+  local plan_lines=""
+
+  while IFS= read -r relpath; do
+    [ -n "$relpath" ] || continue
+    local src_file="${src_root}/${relpath}"
+    if [ ! -f "$src_file" ]; then
+      continue
+    fi
+
+    local expected_sha
+    expected_sha=$(sha256_of "$src_file")
+
+    # Baseline sha: grep the manifest rows for this exact relpath.
+    # grep exits non-zero when no match — that means absent from manifest.
+    local baseline_sha
+    baseline_sha=$(printf '%s\n' "$manifest_rows" \
+      | grep -F "	" \
+      | awk -F'	' -v rp="$relpath" '$1 == rp { print $2; exit }')
+
+    local state
+    state=$(classify_copy_target "$consumer_root" "$relpath" "$expected_sha" "$baseline_sha")
+
+    if [ -n "$plan_lines" ]; then
+      plan_lines="${plan_lines}
+${relpath}	${expected_sha}	${baseline_sha}	${state}"
+    else
+      plan_lines="${relpath}	${expected_sha}	${baseline_sha}	${state}"
+    fi
+  done <<EOF
+$relpaths
+EOF
+
+  # ---------------------------------------------------------------------------
+  # Step 8: --dry-run early-return — emit would-* lines; no writes.
+  # ---------------------------------------------------------------------------
+  if [ "$DRY_RUN" = "1" ]; then
+    while IFS='	' read -r relpath expected_sha baseline_sha state; do
+      [ -n "$relpath" ] || continue
+      case "$state" in
+        missing)            echo "would-create: ${relpath}" ;;
+        ok)                 echo "would-skip:already: ${relpath}" ;;
+        drifted-ours)       echo "would-replace:drifted: ${relpath}" ;;
+        user-modified)      echo "would-skip:user-modified: ${relpath}" ;;
+        real-file-conflict) echo "would-skip:real-file-conflict: ${relpath}" ;;
+        foreign)            echo "would-skip:foreign: ${relpath}" ;;
+        *)                  echo "would-skip:unknown: ${relpath}" ;;
+      esac
+    done <<EOF
+$plan_lines
+EOF
+    return 0
+  fi
+
+  # ---------------------------------------------------------------------------
+  # Step 9: Dispatch — mutations live here.
+  # manifest_tsv tracks only successfully-written paths for the new manifest.
+  # ---------------------------------------------------------------------------
+  local manifest_tsv=""
+
+  while IFS='	' read -r relpath expected_sha baseline_sha state; do
+    [ -n "$relpath" ] || continue
+    local src_file="${src_root}/${relpath}"
+    local dst_file="${consumer_root}/${relpath}"
+
+    case "$state" in
+      missing)
+        if cat "$src_file" | write_atomic "$dst_file"; then
+          echo "created: ${relpath}"
+          _CNT_CREATED=$((_CNT_CREATED + 1))
+          if [ -n "$manifest_tsv" ]; then
+            manifest_tsv="${manifest_tsv}
+${relpath}	${expected_sha}"
+          else
+            manifest_tsv="${relpath}	${expected_sha}"
+          fi
+        else
+          echo "FAIL: write failed for ${relpath}" >&2
+          _CNT_SKIPPED=$((_CNT_SKIPPED + 1))
+          if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
+        fi
+        ;;
+      ok)
+        echo "already: ${relpath}"
+        _CNT_ALREADY=$((_CNT_ALREADY + 1))
+        if [ -n "$manifest_tsv" ]; then
+          manifest_tsv="${manifest_tsv}
+${relpath}	${expected_sha}"
+        else
+          manifest_tsv="${relpath}	${expected_sha}"
+        fi
+        ;;
+      drifted-ours)
+        # Backup before replace; version when a .bak already exists.
+        if [ -e "${dst_file}.bak" ]; then
+          cp "$dst_file" "${dst_file}.bak.$(date +%Y%m%dT%H%M%S)"
+        else
+          cp "$dst_file" "${dst_file}.bak"
+        fi
+        if cat "$src_file" | write_atomic "$dst_file"; then
+          echo "replaced:drifted: ${relpath}"
+          _CNT_REPLACED=$((_CNT_REPLACED + 1))
+          if [ -n "$manifest_tsv" ]; then
+            manifest_tsv="${manifest_tsv}
+${relpath}	${expected_sha}"
+          else
+            manifest_tsv="${relpath}	${expected_sha}"
+          fi
+        else
+          echo "FAIL: write failed for ${relpath}" >&2
+          _CNT_SKIPPED=$((_CNT_SKIPPED + 1))
+          if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
+        fi
+        ;;
+      user-modified)
+        echo "skipped:user-modified: ${relpath}"
+        _CNT_SKIPPED=$((_CNT_SKIPPED + 1))
+        if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
+        ;;
+      real-file-conflict)
+        echo "skipped:real-file-conflict: ${relpath}"
+        _CNT_SKIPPED=$((_CNT_SKIPPED + 1))
+        if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
+        ;;
+      foreign)
+        echo "skipped:foreign: ${relpath}"
+        _CNT_SKIPPED=$((_CNT_SKIPPED + 1))
+        if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
+        ;;
+      *)
+        echo "skipped:unknown-state: ${relpath}"
+        _CNT_SKIPPED=$((_CNT_SKIPPED + 1))
+        if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
+        ;;
+    esac
+  done <<EOF
+$plan_lines
+EOF
+
+  # ---------------------------------------------------------------------------
+  # Ref-advance gate (AC8.b): if any skip/failure occurred, do NOT rewrite the
+  # manifest. The stale ref lets a subsequent update --to <ref> re-attempt after
+  # the user resolves conflicts.
+  # ---------------------------------------------------------------------------
+  if [ "$MAX_CODE" -ne 0 ]; then
+    emit_summary
+    exit "$MAX_CODE"
+  fi
+
+  # ---------------------------------------------------------------------------
+  # Idempotent-exit short-circuit (lesson #3): zero mutations AND the manifest
+  # already pins the target ref → skip manifest rewrite to preserve byte-
+  # identity. If the ref differs (consumer happens to hold ref-B content but
+  # manifest still pins ref-A), we must still advance the recorded ref per
+  # R8 AC8.a even though no files changed.
+  # ---------------------------------------------------------------------------
+  if [ "$_CNT_CREATED" -eq 0 ] \
+     && [ "$_CNT_REPLACED" -eq 0 ] \
+     && [ "$previous_ref" = "$TO_REF" ]; then
+    emit_summary
+    exit 0
+  fi
+
+  # ---------------------------------------------------------------------------
+  # Step 10: Rewrite manifest with the new ref and updated SHAs.
+  # Backup the existing manifest before overwriting.
+  # ---------------------------------------------------------------------------
+  local source_remote
+  source_remote=$(git -C "$src_root" config --get remote.origin.url 2>/dev/null || echo "")
+  local applied_at
+  applied_at=$(date -u +%FT%TZ 2>/dev/null || echo "")
+
+  if [ -f "$manifest_path" ]; then
+    if [ -e "${manifest_path}.bak" ]; then
+      cp "$manifest_path" "${manifest_path}.bak.$(date +%Y%m%dT%H%M%S)"
+    else
+      cp "$manifest_path" "${manifest_path}.bak"
+    fi
+  fi
+
+  printf '%s\n' "$manifest_tsv" | manifest_write "$manifest_path" "$TO_REF" "$source_remote" "$applied_at"
+
+  # Wire backwards-compat symlink .spec-workflow → .specaffold for seeded consumers (R17/AC15)
+  ensure_compat_symlink "$consumer_root"
+
+  emit_summary
+  exit "$MAX_CODE"
+}
+
+cmd_migrate() {
+  # ---------------------------------------------------------------------------
+  # Step 1: Resolve source repo root via layered fallback (D7):
+  #   --from > $SPECFLOW_SRC > readlink ~/.claude/agents/scaff → strip suffix
+  # Same resolution logic as cmd_init; no --to overload for migrate.
+  # ---------------------------------------------------------------------------
+  local src_root=""
+
+  if [ -n "$SRC" ]; then
+    src_root="$SRC"
+  elif [ -n "${SPECFLOW_SRC:-}" ]; then
+    src_root="$SPECFLOW_SRC"
+  else
+    # Auto-discover via bare readlink (no -f) on the global agents symlink.
+    # This is a READ-ONLY operation — D10 forbids any write to ~/.claude/.
+    local agent_link="$HOME/.claude/agents/scaff"
+    if [ -L "$agent_link" ]; then
+      local link_target
+      link_target=$(readlink "$agent_link")
+      # Make absolute if relative (symlink target may be relative to link dir)
+      case "$link_target" in
+        /*) ;;
+        *)  link_target="$(dirname "$agent_link")/$link_target" ;;
+      esac
+      # Suffix is a literal constant from the install path, so string
+      # truncation identifies the repo root cleanly.
+      local candidate="${link_target%/.claude/agents/scaff}"
+      if [ "$candidate" != "$link_target" ] \
+         && [ -f "${candidate}/bin/scaff-seed" ] \
+         && [ -d "${candidate}/.claude/agents/scaff" ]; then
+        src_root="$candidate"
+      fi
+    fi
+  fi
+
+  [ -n "$src_root" ] || die "no source repo; pass --from or set SPECFLOW_SRC or ensure ~/.claude/agents/scaff resolves"
+
+  # Resolve to an absolute path using cd (no readlink -f / realpath)
+  src_root=$(cd "$src_root" 2>/dev/null && pwd -P) \
+    || die "source repo path not accessible: $src_root"
+
+  # ---------------------------------------------------------------------------
+  # Step 2: Resolve consumer repo root.
+  # Callers must cd into the consumer repo before invoking cmd_migrate.
+  # repo_root() resolves from CWD via git rev-parse --show-toplevel.
+  # ---------------------------------------------------------------------------
+  local consumer_root
+  consumer_root=$(repo_root)
+
+  # ---------------------------------------------------------------------------
+  # Step 3: Preflight — verify source has required structural markers.
+  # Same checks as cmd_init; no filesystem mutation before preflight passes.
+  # ---------------------------------------------------------------------------
+  [ -f "${src_root}/bin/scaff-install-hook" ] \
+    || die "preflight: ${src_root}/bin/scaff-install-hook not found"
+  [ -d "${src_root}/.claude/agents/scaff" ] \
+    || die "preflight: ${src_root}/.claude/agents/scaff not found"
+  [ -d "${src_root}/.claude/commands/scaff" ] \
+    || die "preflight: ${src_root}/.claude/commands/scaff not found"
+  [ -d "${src_root}/.claude/hooks" ] \
+    || die "preflight: ${src_root}/.claude/hooks not found"
+  [ -d "${src_root}/.claude/rules" ] \
+    || die "preflight: ${src_root}/.claude/rules not found"
+  [ -d "${src_root}/.specaffold/features/_template" ] \
+    || die "preflight: ${src_root}/.specaffold/features/_template not found"
+
+  # ---------------------------------------------------------------------------
+  # Step 4: Resolve the ref to record in the manifest.
+  # Defaults to source-clone HEAD per D6 divergence for migrate.
+  # ---------------------------------------------------------------------------
+  local ref="${AT_REF}"
+  if [ -z "$ref" ]; then
+    ref=$(git -C "$src_root" rev-parse HEAD 2>/dev/null) \
+      || die "cannot resolve HEAD in source repo; pass --ref <ref>"
+  fi
+
+  # ---------------------------------------------------------------------------
+  # Step 5: Build the plan (classify-before-mutate: reads first, writes second).
+  # migrate uses same plan_copy mode as init — includes team-memory skeleton
+  # because the consumer coming from global-install has no team-memory dir yet.
+  # ---------------------------------------------------------------------------
+  local plan_lines=""
+  local relpaths
+  relpaths=$(plan_copy "$src_root" migrate)
+
+  while IFS= read -r relpath; do
+    [ -n "$relpath" ] || continue
+    local src_file="${src_root}/${relpath}"
+    # Skip skeleton paths where the source file does not exist
+    if [ ! -f "$src_file" ]; then
+      continue
+    fi
+    local expected_sha
+    expected_sha=$(sha256_of "$src_file")
+    if [ -n "$plan_lines" ]; then
+      plan_lines="${plan_lines}
+${relpath}	${expected_sha}"
+    else
+      plan_lines="${relpath}	${expected_sha}"
+    fi
+  done <<EOF
+$relpaths
+EOF
+
+  # ---------------------------------------------------------------------------
+  # Step 6: Classify each planned relpath (pure; no mutations yet).
+  # baseline_sha is "" for migrate (same as init — no prior managed baseline;
+  # any existing file that differs from expected counts as user-modified).
+  # ---------------------------------------------------------------------------
+  local classify_results=""
+  while IFS='	' read -r relpath expected_sha; do
+    [ -n "$relpath" ] || continue
+    local state
+    state=$(classify_copy_target "$consumer_root" "$relpath" "$expected_sha" "")
+    if [ -n "$classify_results" ]; then
+      classify_results="${classify_results}
+${relpath}	${expected_sha}	${state}"
+    else
+      classify_results="${relpath}	${expected_sha}	${state}"
+    fi
+  done <<EOF
+$plan_lines
+EOF
+
+  # ---------------------------------------------------------------------------
+  # Step 7: --dry-run early-return — emit would-* lines; no writes.
+  # Filesystem byte-identical before/after on dry-run (AC9.c).
+  # ---------------------------------------------------------------------------
+  if [ "$DRY_RUN" = "1" ]; then
+    while IFS='	' read -r relpath expected_sha state; do
+      [ -n "$relpath" ] || continue
+      case "$state" in
+        missing)            echo "would-create: ${relpath}" ;;
+        ok)                 echo "would-skip:already: ${relpath}" ;;
+        drifted-ours)       echo "would-replace:drifted: ${relpath}" ;;
+        user-modified)      echo "would-skip:user-modified: ${relpath}" ;;
+        real-file-conflict) echo "would-skip:real-file-conflict: ${relpath}" ;;
+        foreign)            echo "would-skip:foreign: ${relpath}" ;;
+        *)                  echo "would-skip:unknown: ${relpath}" ;;
+      esac
+    done <<EOF
+$classify_results
+EOF
+    return 0
+  fi
+
+  # ---------------------------------------------------------------------------
+  # Step 8: Dispatch — mutations live here (classify-before-mutate contract).
+  # manifest_tsv excludes skipped/failed paths — only successfully-written
+  # files enter the recorded baseline.
+  # ---------------------------------------------------------------------------
+  local manifest_tsv=""
+
+  while IFS='	' read -r relpath expected_sha state; do
+    [ -n "$relpath" ] || continue
+    local src_file="${src_root}/${relpath}"
+    local dst_file="${consumer_root}/${relpath}"
+
+    case "$state" in
+      missing)
+        if cat "$src_file" | write_atomic "$dst_file"; then
+          echo "created: ${relpath}"
+          _CNT_CREATED=$((_CNT_CREATED + 1))
+          if [ -n "$manifest_tsv" ]; then
+            manifest_tsv="${manifest_tsv}
+${relpath}	${expected_sha}"
+          else
+            manifest_tsv="${relpath}	${expected_sha}"
+          fi
+        else
+          echo "FAIL: write failed for ${relpath}" >&2
+          _CNT_SKIPPED=$((_CNT_SKIPPED + 1))
+          if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
+        fi
+        ;;
+      ok)
+        echo "already: ${relpath}"
+        _CNT_ALREADY=$((_CNT_ALREADY + 1))
+        if [ -n "$manifest_tsv" ]; then
+          manifest_tsv="${manifest_tsv}
+${relpath}	${expected_sha}"
+        else
+          manifest_tsv="${relpath}	${expected_sha}"
+        fi
+        ;;
+      drifted-ours)
+        # Version the backup name when one already exists — never silently
+        # clobber a previous backup (no-force-on-user-paths.md rule 4).
+        if [ -e "${dst_file}.bak" ]; then
+          cp "$dst_file" "${dst_file}.bak.$(date +%Y%m%dT%H%M%S)"
+        else
+          cp "$dst_file" "${dst_file}.bak"
+        fi
+        if cat "$src_file" | write_atomic "$dst_file"; then
+          echo "replaced:drifted: ${relpath}"
+          _CNT_REPLACED=$((_CNT_REPLACED + 1))
+          if [ -n "$manifest_tsv" ]; then
+            manifest_tsv="${manifest_tsv}
+${relpath}	${expected_sha}"
+          else
+            manifest_tsv="${relpath}	${expected_sha}"
+          fi
+        else
+          echo "FAIL: write failed for ${relpath}" >&2
+          _CNT_SKIPPED=$((_CNT_SKIPPED + 1))
+          if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
+        fi
+        ;;
+      user-modified)
+        echo "skipped:user-modified: ${relpath}"
+        _CNT_SKIPPED=$((_CNT_SKIPPED + 1))
+        if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
+        ;;
+      real-file-conflict)
+        echo "skipped:real-file-conflict: ${relpath}"
+        _CNT_SKIPPED=$((_CNT_SKIPPED + 1))
+        if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
+        ;;
+      foreign)
+        echo "skipped:foreign: ${relpath}"
+        _CNT_SKIPPED=$((_CNT_SKIPPED + 1))
+        if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
+        ;;
+      *)
+        echo "skipped:unknown-state: ${relpath}"
+        _CNT_SKIPPED=$((_CNT_SKIPPED + 1))
+        if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
+        ;;
+    esac
+  done <<EOF
+$classify_results
+EOF
+
+  # ---------------------------------------------------------------------------
+  # Step 8b: Install pre-commit shim (classify-before-mutate; no-force rule).
+  # Runs after the managed-subtree copy loop and before any early-exit checks
+  # so the shim outcome feeds into the counters that gate the idempotent shortcut
+  # and the MAX_CODE conflict gate. cmd_update does NOT install hooks (D11).
+  # ---------------------------------------------------------------------------
+  local shim_state
+  shim_state=$(classify_pre_commit_shim "$consumer_root")
+  local shim_dst="${consumer_root}/.git/hooks/pre-commit"
+
+  case "$shim_state" in
+    missing)
+      printf '#!/usr/bin/env bash\n# scaff-lint: pre-commit shim — installed by bin/scaff-seed init/migrate\nexec bin/scaff-lint scan-staged "$@"\n' \
+        | write_atomic "$shim_dst"
+      chmod +x "$shim_dst"
+      echo "created:.git/hooks/pre-commit"
+      _CNT_CREATED=$((_CNT_CREATED + 1))
+      ;;
+    ok)
+      echo "already:.git/hooks/pre-commit"
+      _CNT_ALREADY=$((_CNT_ALREADY + 1))
+      ;;
+    foreign-pre-commit)
+      echo "skipped:foreign-pre-commit:.git/hooks/pre-commit"
+      _CNT_SKIPPED=$((_CNT_SKIPPED + 1))
+      if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
+      ;;
+  esac
+
+  # ---------------------------------------------------------------------------
+  # Idempotent-exit short-circuit: nothing changed AND manifest already exists
+  # → skip state-file mutations. Rewriting the manifest or rewiring
+  # settings.json on a no-op run would break byte-identity guarantees
+  # (AC9.b / AC9.c). But if the manifest is missing, this is a first-time
+  # migrate whose copy was a no-op (dogfood case: source == consumer) —
+  # manifest authoring and settings.json rewiring still need to fire.
+  if [ "$MAX_CODE" -eq 0 ] \
+     && [ "$_CNT_CREATED" -eq 0 ] \
+     && [ "$_CNT_REPLACED" -eq 0 ] \
+     && [ "$_CNT_SKIPPED" -eq 0 ] \
+     && [ -f "${consumer_root}/.claude/scaff.manifest" ]; then
+    emit_summary
+    exit 0
+  fi
+
+  # ---------------------------------------------------------------------------
+  # Step 9: Write manifest (D3 schema v1) — only when MAX_CODE == 0.
+  # On conflict run (any skipped:user-modified), skip manifest rewrite so the
+  # stale ref lets a subsequent migrate re-attempt after user resolves conflicts.
+  # ---------------------------------------------------------------------------
+  if [ "$MAX_CODE" -ne 0 ]; then
+    emit_summary
+    exit "$MAX_CODE"
+  fi
+
+  local source_remote
+  source_remote=$(git -C "$src_root" config --get remote.origin.url 2>/dev/null || echo "")
+  local applied_at
+  applied_at=$(date -u +%FT%TZ 2>/dev/null || echo "")
+
+  local manifest_path="${consumer_root}/.claude/scaff.manifest"
+
+  # Back up existing manifest before overwriting (versioned backup discipline).
+  if [ -f "$manifest_path" ]; then
+    if [ -e "${manifest_path}.bak" ]; then
+      cp "$manifest_path" "${manifest_path}.bak.$(date +%Y%m%dT%H%M%S)"
+    else
+      cp "$manifest_path" "${manifest_path}.bak"
+    fi
+  fi
+
+  printf '%s\n' "$manifest_tsv" | manifest_write "$manifest_path" "$ref" "$source_remote" "$applied_at"
+
+  # ---------------------------------------------------------------------------
+  # Step 10: Rewire settings.json from global hooks to consumer-local hooks (D8).
+  # Remove old global-install hook entries first (helper is idempotent — no-op
+  # when the entry is absent), then add the consumer-local equivalents.
+  #
+  # D10 abstention: the remove/add arguments below are STRINGS passed to the
+  # scaff-install-hook helper, which manipulates settings.json only. The
+  # helper does NOT touch the actual ~/.claude/hooks/* symlinks on disk.
+  # cmd_migrate MUST NOT perform any rm/mv/ln on paths under $HOME/.claude/.
+  # ---------------------------------------------------------------------------
+  (
+    cd "$consumer_root"
+    "${src_root}/bin/scaff-install-hook" remove SessionStart "~/.claude/hooks/session-start.sh"
+    "${src_root}/bin/scaff-install-hook" remove Stop "~/.claude/hooks/stop.sh"
+    "${src_root}/bin/scaff-install-hook" add SessionStart ".claude/hooks/session-start.sh"
+    "${src_root}/bin/scaff-install-hook" add Stop ".claude/hooks/stop.sh"
+  )
+
+  emit_summary
+  exit "$MAX_CODE"
+}
+
+# ---------------------------------------------------------------------------
+# cmd_probe — hidden __probe subcommand for Wave 1 TDD harness.
+# Not listed in usage(). Exposes library functions for isolated testing.
+#
+# Verbs:
+#   classify <consumer_root> <relpath> <expected_sha> <baseline_sha>
+#   manifest-roundtrip <path>
+#   plan <src_root> <mode>
+# ---------------------------------------------------------------------------
+cmd_probe() {
+  local verb="${1:-}"
+  case "$verb" in
+    classify)
+      [ "$#" -eq 5 ] || die "__probe classify requires 4 arguments: <consumer_root> <relpath> <expected_sha> <baseline_sha>"
+      classify_copy_target "$2" "$3" "$4" "$5"
+      ;;
+    manifest-roundtrip)
+      [ "$#" -eq 2 ] || die "__probe manifest-roundtrip requires 1 argument: <path>"
+      local mpath="$2"
+      local sibling="${mpath%.manifest}.roundtrip.tmp"
+      python3 - "$mpath" "$sibling" <<'PYEOF'
+import sys, json, os
+
+src  = sys.argv[1]
+dst  = sys.argv[2]
+
+with open(src, 'r') as f:
+    data = json.load(f)
+
+if data.get("schema_version") != 1:
+    print("manifest: corrupt", file=sys.stderr)
+    sys.exit(2)
+if not isinstance(data.get("scaff_ref"), str) or not data["scaff_ref"]:
+    print("manifest: corrupt", file=sys.stderr)
+    sys.exit(2)
+if not isinstance(data.get("files"), dict):
+    print("manifest: corrupt", file=sys.stderr)
+    sys.exit(2)
+
+# Boundary validation — same traversal check as manifest_read
+for relpath in data["files"]:
+    if not relpath:
+        print("manifest: corrupt", file=sys.stderr)
+        sys.exit(2)
+    if relpath.startswith("/"):
+        print("manifest: corrupt", file=sys.stderr)
+        sys.exit(2)
+    if ".." in relpath.replace("\\", "/").split("/"):
+        print("manifest: corrupt", file=sys.stderr)
+        sys.exit(2)
+
+# Re-assemble with same field order as manifest_write
+out = {
+    "schema_version": 1,
+    "scaff_ref": data["scaff_ref"],
+    "source_remote": data.get("source_remote", ""),
+    "applied_at": data.get("applied_at", ""),
+    "files": data["files"],
+}
+
+tmp = dst + ".tmp"
+os.makedirs(os.path.dirname(os.path.abspath(dst)), exist_ok=True)
+with open(tmp, "w") as f:
+    json.dump(out, f, indent=2, sort_keys=False)
+    f.write("\n")
+os.replace(tmp, dst)
+PYEOF
+      local py_rc=$?
+      if [ "$py_rc" -ne 0 ]; then
+        rm -f "$sibling"
+        exit "$py_rc"
+      fi
+      if cmp -s "$mpath" "$sibling"; then
+        rm -f "$sibling"
+        exit 0
+      else
+        echo "manifest-roundtrip: byte mismatch" >&2
+        rm -f "$sibling"
+        exit 1
+      fi
+      ;;
+    plan)
+      [ "$#" -eq 3 ] || die "__probe plan requires 2 arguments: <src_root> <mode>"
+      plan_copy "$2" "$3"
+      ;;
+    *)
+      die "__probe: unknown verb '${verb}' (classify|manifest-roundtrip|plan)"
+      ;;
+  esac
+}
+
+# ---------------------------------------------------------------------------
+# Main dispatcher
+# ---------------------------------------------------------------------------
+_cmd="${1:-}"
+
+case "$_cmd" in
+  -h|--help|"")
+    usage
+    ;;
+  init|update|migrate|__probe)
+    shift
+    parse_flags "$@"
+    preflight
+    case "$_cmd" in
+      init)    cmd_init ;;
+      update)  cmd_update ;;
+      migrate) cmd_migrate ;;
+      __probe) cmd_probe "$@" ;;
+    esac
+    ;;
+  --dry-run|--from|--to|--ref)
+    # Flags before subcommand: parse all flags first, then re-dispatch
+    parse_flags "$@"
+    die "subcommand required (init, update, migrate)"
+    ;;
+  *)
+    die "unknown subcommand: $_cmd"
+    ;;
+esac

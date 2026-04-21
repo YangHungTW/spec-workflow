@@ -48,14 +48,14 @@ fi
 #  the stderr assertion — we only want to observe the config parse path)
 # ---------------------------------------------------------------------------
 WORKDIR="$SANDBOX/consumer"
-mkdir -p "$WORKDIR/.spec-workflow"
+mkdir -p "$WORKDIR/.specaffold"
 mkdir -p "$WORKDIR/.claude/rules/common"
 
 # Broken YAML: no colon after lang, no indent hierarchy, garbage line.
 # The awk sniff in the hook is narrow — this produces empty cfg_chat,
 # so the hook takes the silent "" branch. Both the silent branch and
 # the warn branch satisfy AC7.b as long as exit is 0 and no marker is emitted.
-cat > "$WORKDIR/.spec-workflow/config.yml" <<'YAML'
+cat > "$WORKDIR/.specaffold/config.yml" <<'YAML'
 lang
   chat zh-TW
 :::garbage:::

@@ -12,7 +12,7 @@
 #            see commit body for approach rationale).
 #   portability — no readlink -f, realpath, jq, mapfile, or =~  token.
 #   candidate-list structure — XDG_CONFIG_HOME and
-#            .config/specflow/config.yml are both referenced.
+#            .config/scaff/config.yml are both referenced.
 #
 # No sandbox required — this test only reads source files; it does not
 # invoke any CLI that writes under $HOME.
@@ -174,11 +174,11 @@ fi
 # ---------------------------------------------------------------------------
 # Candidate-list structure — tilde fallback path present
 # ---------------------------------------------------------------------------
-tilde_count=$(grep -c '\.config/specflow/config\.yml' "$HOOK" || true)
+tilde_count=$(grep -c '\.config/scaff/config\.yml' "$HOOK" || true)
 if [ "$tilde_count" -ge 1 ] 2>/dev/null; then
-  pass "candidate-list: .config/specflow/config.yml tilde fallback referenced (count=$tilde_count)"
+  pass "candidate-list: .config/scaff/config.yml tilde fallback referenced (count=$tilde_count)"
 else
-  fail "candidate-list: .config/specflow/config.yml not found in $HOOK (count=$tilde_count)"
+  fail "candidate-list: .config/scaff/config.yml not found in $HOOK (count=$tilde_count)"
 fi
 
 # ---------------------------------------------------------------------------

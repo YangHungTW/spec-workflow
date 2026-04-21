@@ -17,7 +17,7 @@ the write actually failed.
 
 ## Why
 
-`specflow-seed` runs under `set -u -o pipefail` **without** `set -e`
+`scaff-seed` runs under `set -u -o pipefail` **without** `set -e`
 (intentional — we want to classify and continue on per-file errors
 rather than abort the whole run). That choice means:
 

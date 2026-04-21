@@ -31,7 +31,7 @@ esac
 # ---------------------------------------------------------------------------
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd -P)"
-IMPL="$REPO_ROOT/.claude/commands/specflow/implement.md"
+IMPL="$REPO_ROOT/.claude/commands/scaff/implement.md"
 
 PASS=0
 FAIL=0

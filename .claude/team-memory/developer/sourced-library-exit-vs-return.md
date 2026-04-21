@@ -12,7 +12,7 @@ In any bash file intended to be sourced (`. lib/foo.sh` or `source lib/foo.sh`),
 
 ## Why
 
-Observed in 20260420-tier-model W0a: `lib/tier-helpers.sh` (T2) used `exit 2` in five sites to signal validation failure. The library was sourced by `bin/specflow-tier` and by test scripts. The test run terminated immediately on the first bad fixture because `exit 2` propagated up through the `source` call and killed the test shell — 60+ downstream assertions silently skipped.
+Observed in 20260420-tier-model W0a: `lib/tier-helpers.sh` (T2) used `exit 2` in five sites to signal validation failure. The library was sourced by `bin/scaff-tier` and by test scripts. The test run terminated immediately on the first bad fixture because `exit 2` propagated up through the `source` call and killed the test shell — 60+ downstream assertions silently skipped.
 
 Fix: replace every `exit` with `return` across the five sites. Tests then ran to completion and surfaced the real bugs.
 
@@ -60,4 +60,4 @@ validate_tier_transition() {
 }
 ```
 
-Cross-reference: the caller `bin/specflow-tier` then propagates the `return 2` to its own exit status via `|| exit $?`, which is the correct pattern for a standalone script wrapping a library.
+Cross-reference: the caller `bin/scaff-tier` then propagates the `return 2` to its own exit status via `|| exit $?`, which is the correct pattern for a standalone script wrapping a library.

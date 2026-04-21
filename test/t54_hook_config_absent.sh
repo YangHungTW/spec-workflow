@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # test/t54_hook_config_absent.sh — hook silent when config missing
 # R1 AC1.a, AC1.c; R7 AC7.c
-# Assert: when .spec-workflow/config.yml is absent, stdout has no LANG_CHAT=,
+# Assert: when .specaffold/config.yml is absent, stdout has no LANG_CHAT=,
 # stderr is empty, and hook exits 0.
 
 set -u
@@ -44,8 +44,8 @@ if [ ! -x "$HOOK" ]; then
 fi
 
 # ---------------------------------------------------------------------------
-# Build a minimal consumer repo — NO .spec-workflow/config.yml
-# The hook reads .spec-workflow/config.yml from cwd; its absence is the
+# Build a minimal consumer repo — NO .specaffold/config.yml
+# The hook reads .specaffold/config.yml from cwd; its absence is the
 # ordinary default-off case (AC7.c, D9) and must produce no warning.
 # ---------------------------------------------------------------------------
 CONSUMER="$SANDBOX/consumer"
@@ -81,7 +81,7 @@ RULE
 
 # ---------------------------------------------------------------------------
 # Invoke hook from consumer cwd; capture stdout and stderr separately.
-# No .spec-workflow/config.yml exists — that is the condition under test.
+# No .specaffold/config.yml exists — that is the condition under test.
 # ---------------------------------------------------------------------------
 STDERR_FILE="$SANDBOX/stderr.txt"
 JSON_OUT=$(cd "$CONSUMER" && "$HOOK" < /dev/null 2>"$STDERR_FILE")

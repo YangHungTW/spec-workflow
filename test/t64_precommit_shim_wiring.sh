@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # test/t64_precommit_shim_wiring.sh
 #
-# Integration test for the pre-commit shim installed by bin/specflow-seed init.
+# Integration test for the pre-commit shim installed by bin/scaff-seed init.
 #
 # Assertions:
 #   A1 — .git/hooks/pre-commit exists AND is executable after init.
-#   A2 — Its content contains the 'specflow-lint' sentinel string.
+#   A2 — Its content contains the 'scaff-lint' sentinel string.
 #   A3 — git commit with staged zh-TW content is rejected (exit non-zero)
 #        because the shim fires lint and lint fires the cjk-hit rejection path.
-#   A4 — Second specflow-seed init reports 'already:.git/hooks/pre-commit'
+#   A4 — Second scaff-seed init reports 'already:.git/hooks/pre-commit'
 #        (idempotency: no second install).
 #   A5 — Pre-existing foreign pre-commit (no sentinel) before init causes
 #        installer to report 'skipped:foreign-pre-commit:.git/hooks/pre-commit'
@@ -20,7 +20,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd -P)"
-SEED="${SEED:-$REPO_ROOT/bin/specflow-seed}"
+SEED="${SEED:-$REPO_ROOT/bin/scaff-seed}"
 
 # ---------------------------------------------------------------------------
 # Sandbox — HOME isolation (sandbox-home-in-tests.md — non-negotiable)
@@ -70,12 +70,12 @@ make_consumer() {
   printf '*.log\n' > "$dir/.gitignore"
   git -C "$dir" add .gitignore
   git -C "$dir" commit -q -m "init"
-  # Provide bin/specflow-lint in the consumer so the pre-commit shim can exec
-  # it (the shim calls 'exec bin/specflow-lint scan-staged' relative to repo
-  # root; specflow-seed does NOT copy bin/ into the consumer).
+  # Provide bin/scaff-lint in the consumer so the pre-commit shim can exec
+  # it (the shim calls 'exec bin/scaff-lint scan-staged' relative to repo
+  # root; scaff-seed does NOT copy bin/ into the consumer).
   mkdir -p "$dir/bin"
-  cp "$REPO_ROOT/bin/specflow-lint" "$dir/bin/specflow-lint"
-  chmod +x "$dir/bin/specflow-lint"
+  cp "$REPO_ROOT/bin/scaff-lint" "$dir/bin/scaff-lint"
+  chmod +x "$dir/bin/scaff-lint"
 }
 
 # ===========================================================================
@@ -95,14 +95,14 @@ HOOK="$CONSUMER/.git/hooks/pre-commit"
 [ -x "$HOOK" ] || fail "A1" ".git/hooks/pre-commit is not executable"
 
 # ---------------------------------------------------------------------------
-# A2 — Content contains 'specflow-lint' sentinel (grep -F, at least 1 match)
+# A2 — Content contains 'scaff-lint' sentinel (grep -F, at least 1 match)
 # ---------------------------------------------------------------------------
-grep -F 'specflow-lint' "$HOOK" >/dev/null 2>&1 \
-  || fail "A2" ".git/hooks/pre-commit does not contain 'specflow-lint' sentinel"
+grep -F 'scaff-lint' "$HOOK" >/dev/null 2>&1 \
+  || fail "A2" ".git/hooks/pre-commit does not contain 'scaff-lint' sentinel"
 
 # ---------------------------------------------------------------------------
 # A3 — git commit with staged zh-TW content is rejected (exit non-zero).
-#      The pre-commit shim fires specflow-lint scan-staged which finds CJK
+#      The pre-commit shim fires scaff-lint scan-staged which finds CJK
 #      characters and exits 1, causing git commit to abort.
 #      Do NOT use --no-verify (R5 AC5.d: bypass must be explicit).
 # ---------------------------------------------------------------------------
@@ -120,7 +120,7 @@ set -e
   || fail "A3" "git commit with zh-TW content was accepted (exit 0) — shim did not fire lint rejection"
 
 # ---------------------------------------------------------------------------
-# A4 — Idempotency: second specflow-seed init reports 'already:.git/hooks/pre-commit'
+# A4 — Idempotency: second scaff-seed init reports 'already:.git/hooks/pre-commit'
 # ---------------------------------------------------------------------------
 SECOND_OUT="$SANDBOX/second_init.out"
 (cd "$CONSUMER" && "$SEED" init --from "$REPO_ROOT" --ref "$SRC_REF") > "$SECOND_OUT" 2>&1 || true
@@ -134,7 +134,7 @@ grep -F 'already:.git/hooks/pre-commit' "$SECOND_OUT" >/dev/null 2>&1 \
 CONSUMER_F="$SANDBOX/consumer-foreign"
 make_consumer "$CONSUMER_F"
 
-# Pre-create a foreign pre-commit hook WITHOUT the specflow-lint sentinel
+# Pre-create a foreign pre-commit hook WITHOUT the scaff-lint sentinel
 mkdir -p "$CONSUMER_F/.git/hooks"
 printf '#!/bin/sh\necho foreign\n' > "$CONSUMER_F/.git/hooks/pre-commit"
 chmod +x "$CONSUMER_F/.git/hooks/pre-commit"

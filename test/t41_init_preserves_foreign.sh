@@ -10,7 +10,7 @@
 #   B — directory sitting where a managed file is expected
 #   C — foreign symlink at a managed path
 #
-# Also: structural AC7.d check — bin/specflow-seed must not contain
+# Also: structural AC7.d check — bin/scaff-seed must not contain
 # --force / -f / rm -rf flags.
 #
 # Will RED until T3 (cmd_init implementation) is merged; the stub exits 0
@@ -19,7 +19,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-SEED="${SEED:-$REPO_ROOT/bin/specflow-seed}"
+SEED="${SEED:-$REPO_ROOT/bin/scaff-seed}"
 
 # ---------------------------------------------------------------------------
 # Sandbox — HOME isolation is mandatory (sandbox-home-in-tests.md)
@@ -74,8 +74,8 @@ CONSUMER_A="$SANDBOX/consumer-a"
 make_consumer "$CONSUMER_A"
 
 # Pre-create the managed path with foreign content
-mkdir -p "$CONSUMER_A/.claude/agents/specflow"
-printf 'not the real architect.md' > "$CONSUMER_A/.claude/agents/specflow/architect.md"
+mkdir -p "$CONSUMER_A/.claude/agents/scaff"
+printf 'not the real architect.md' > "$CONSUMER_A/.claude/agents/scaff/architect.md"
 
 OUTPUT_A="$SANDBOX/out-a.txt"
 set +e
@@ -97,7 +97,7 @@ if ! grep -q "skipped:user-modified" "$OUTPUT_A"; then
 fi
 
 # Content must be byte-for-byte preserved
-CONTENT_A="$(cat "$CONSUMER_A/.claude/agents/specflow/architect.md")"
+CONTENT_A="$(cat "$CONSUMER_A/.claude/agents/scaff/architect.md")"
 if [ "$CONTENT_A" != "not the real architect.md" ]; then
   echo "FAIL: variant A: foreign file content was modified (got: $CONTENT_A)" >&2
   exit 1
@@ -150,8 +150,8 @@ fi
 CONSUMER_C="$SANDBOX/consumer-c"
 make_consumer "$CONSUMER_C"
 
-mkdir -p "$CONSUMER_C/.claude/agents/specflow"
-ln -s /tmp/nowhere "$CONSUMER_C/.claude/agents/specflow/architect.md"
+mkdir -p "$CONSUMER_C/.claude/agents/scaff"
+ln -s /tmp/nowhere "$CONSUMER_C/.claude/agents/scaff/architect.md"
 
 OUTPUT_C="$SANDBOX/out-c.txt"
 set +e
@@ -173,20 +173,20 @@ if ! grep -q "skipped:real-file-conflict" "$OUTPUT_C"; then
 fi
 
 # The symlink must still be present and still be a symlink
-if [ ! -L "$CONSUMER_C/.claude/agents/specflow/architect.md" ]; then
+if [ ! -L "$CONSUMER_C/.claude/agents/scaff/architect.md" ]; then
   echo "FAIL: variant C: symlink at managed path was removed or replaced" >&2
   exit 1
 fi
 
 # ---------------------------------------------------------------------------
-# AC7.d structural check — no force flags in bin/specflow-seed
+# AC7.d structural check — no force flags in bin/scaff-seed
 #
 # The binary must not contain --force, standalone -f, or rm -rf.
 # This catches accidental introduction of destructive-by-default behaviour.
 # ---------------------------------------------------------------------------
 FORCE_HITS="$(grep -En 'rm -rf|--force' "$SEED" || true)"
 if [ -n "$FORCE_HITS" ]; then
-  echo "FAIL: AC7.d: bin/specflow-seed contains force/destructive flags:" >&2
+  echo "FAIL: AC7.d: bin/scaff-seed contains force/destructive flags:" >&2
   printf '%s\n' "$FORCE_HITS" >&2
   exit 1
 fi

@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # test/t63_lint_no_jq_no_readlink_f.sh — static portability-token check
 # for the three files added/edited by this feature:
-#   bin/specflow-lint
+#   bin/scaff-lint
 #   .claude/hooks/session-start.sh
-#   bin/specflow-seed
+#   bin/scaff-seed
 #
 # STATIC test: pure grep, no CLI invocation, no HOME mutation.
 # sandbox-HOME preamble is intentionally omitted — this test neither invokes
@@ -21,9 +21,9 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd -P)"
 
-LINT="$REPO_ROOT/bin/specflow-lint"
+LINT="$REPO_ROOT/bin/scaff-lint"
 SESSION_START="$REPO_ROOT/.claude/hooks/session-start.sh"
-SEED="$REPO_ROOT/bin/specflow-seed"
+SEED="$REPO_ROOT/bin/scaff-seed"
 
 # ---------------------------------------------------------------------------
 # Prohibited-token ERE pattern (verbatim from bash-32-portability.md):
@@ -38,7 +38,7 @@ SEED="$REPO_ROOT/bin/specflow-seed"
 PATTERN='readlink -f|realpath|jq|mapfile|\[\[ .*=~|rm -rf| --force'
 
 # ---------------------------------------------------------------------------
-# False-positive handling for bin/specflow-lint:
+# False-positive handling for bin/scaff-lint:
 #   The file contains a Python heredoc that legitimately uses
 #   `os.path.realpath` — the Python standard library function, NOT the GNU
 #   `realpath` shell command.  We exclude those lines with a post-grep filter

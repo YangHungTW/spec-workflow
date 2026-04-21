@@ -12,14 +12,14 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd -P)"
-SEED="${SEED:-$REPO_ROOT/bin/specflow-seed}"
+SEED="${SEED:-$REPO_ROOT/bin/scaff-seed}"
 
 # ---------------------------------------------------------------------------
 # Sandbox — HOME isolation mandatory (sandbox-home-in-tests.md).
 # Capture real HOME first so asdf .tool-versions can be copied in for python3.
 # ---------------------------------------------------------------------------
 _REAL_HOME="$HOME"
-SANDBOX="$(mktemp -d 2>/dev/null || mktemp -d -t specflow-t47)"
+SANDBOX="$(mktemp -d 2>/dev/null || mktemp -d -t scaff-t47)"
 trap 'rm -rf "$SANDBOX"' EXIT
 
 export HOME="$SANDBOX/home"
@@ -33,7 +33,7 @@ case "$HOME" in
 esac
 
 # asdf compatibility: the shim needs to resolve python3 from the tool-versions
-# file; without this, specflow-install-hook (python3 script) fails inside sandbox.
+# file; without this, scaff-install-hook (python3 script) fails inside sandbox.
 if [ -f "$_REAL_HOME/.tool-versions" ]; then
   cp "$_REAL_HOME/.tool-versions" "$HOME/.tool-versions" 2>/dev/null || true
 fi
@@ -46,13 +46,13 @@ fi
 mkdir -p "$HOME/.claude/agents" "$HOME/.claude/commands" "$HOME/.claude/hooks-parent"
 
 # Absolute symlink targets per absolute-symlink-targets.md
-ln -s "$REPO_ROOT/.claude/agents/specflow"   "$HOME/.claude/agents/specflow"
-ln -s "$REPO_ROOT/.claude/commands/specflow" "$HOME/.claude/commands/specflow"
+ln -s "$REPO_ROOT/.claude/agents/scaff"   "$HOME/.claude/agents/scaff"
+ln -s "$REPO_ROOT/.claude/commands/scaff" "$HOME/.claude/commands/scaff"
 ln -s "$REPO_ROOT/.claude/hooks"             "$HOME/.claude/hooks"
 
 # Capture the symlink target strings BEFORE the migrate run so we can assert
 # they are byte-identical after the conflicted run (D10 abstention on fail path).
-AGENT_LINK_BEFORE="$(readlink "$HOME/.claude/agents/specflow")"
+AGENT_LINK_BEFORE="$(readlink "$HOME/.claude/agents/scaff")"
 
 # ---------------------------------------------------------------------------
 # Step 2 — Build a minimal consumer git repo with pre-migration settings.json
@@ -89,9 +89,9 @@ SETTINGS_HASH_BEFORE="$(shasum "$CONSUMER/settings.json" | awk '{print $1}')"
 # user-modified (actual != source, no baseline recorded yet since init was
 # never run) — exactly the conflict state AC9.d tests.
 # ---------------------------------------------------------------------------
-mkdir -p "$CONSUMER/.claude/agents/specflow"
-printf 'user edit\n' > "$CONSUMER/.claude/agents/specflow/architect.md"
-USER_CONTENT="$(cat "$CONSUMER/.claude/agents/specflow/architect.md")"
+mkdir -p "$CONSUMER/.claude/agents/scaff"
+printf 'user edit\n' > "$CONSUMER/.claude/agents/scaff/architect.md"
+USER_CONTENT="$(cat "$CONSUMER/.claude/agents/scaff/architect.md")"
 
 # ---------------------------------------------------------------------------
 # Step 4 — Run migrate; expect non-zero exit due to user-modified conflict.
@@ -125,7 +125,7 @@ fi
 # Assertion (c.content) — user-modified file content is byte-identical to what
 # the user wrote; migrate must NOT have overwritten it.
 # ---------------------------------------------------------------------------
-ACTUAL_CONTENT="$(cat "$CONSUMER/.claude/agents/specflow/architect.md")"
+ACTUAL_CONTENT="$(cat "$CONSUMER/.claude/agents/scaff/architect.md")"
 if [ "$ACTUAL_CONTENT" != "$USER_CONTENT" ]; then
   echo "FAIL: assertion-c: architect.md content was modified by migrate; user content must be preserved" >&2
   exit 1
@@ -144,15 +144,15 @@ if [ "$SETTINGS_HASH_AFTER" != "$SETTINGS_HASH_BEFORE" ]; then
 fi
 
 # ---------------------------------------------------------------------------
-# Assertion (d) — $HOME/.claude/agents/specflow symlink target UNCHANGED.
+# Assertion (d) — $HOME/.claude/agents/scaff symlink target UNCHANGED.
 # D10 abstention holds even on the failure path: migrate must never touch
 # global symlinks, regardless of whether the run succeeded or conflicted.
 # A changed readlink value would mean another project's global install was
 # disrupted — the catastrophic regression 05-plan.md §3 R2 guards against.
 # ---------------------------------------------------------------------------
-AGENT_LINK_AFTER="$(readlink "$HOME/.claude/agents/specflow")"
+AGENT_LINK_AFTER="$(readlink "$HOME/.claude/agents/scaff")"
 if [ "$AGENT_LINK_AFTER" != "$AGENT_LINK_BEFORE" ]; then
-  echo "FAIL: assertion-d: \$HOME/.claude/agents/specflow symlink was mutated by conflicted migrate; before=$AGENT_LINK_BEFORE after=$AGENT_LINK_AFTER" >&2
+  echo "FAIL: assertion-d: \$HOME/.claude/agents/scaff symlink was mutated by conflicted migrate; before=$AGENT_LINK_BEFORE after=$AGENT_LINK_AFTER" >&2
   exit 1
 fi
 
