@@ -9,15 +9,12 @@
 
 ## Stage checklist
 - [ ] request       (00-request.md)              — PM
-- [ ] brainstorm    (01-brainstorm.md)           — PM
 - [ ] design        (02-design/)                 — Designer (skip if has-ui: false)
 - [ ] prd           (03-prd.md)                  — PM
 - [ ] tech          (04-tech.md)                 — Architect
-- [ ] plan          (05-plan.md)                 — TPM
-- [ ] tasks         (06-tasks.md)                — TPM
-- [ ] implement     (tasks checked off)          — Developer
-- [ ] gap-check     (07-gaps.md, verdict PASS)   — QA-analyst
-- [ ] verify        (08-verify.md, verdict PASS) — QA-tester
+- [ ] plan          (05-plan.md)                 — TPM  [merged: narrative + task checklist]
+- [ ] implement     (05-plan.md tasks checked off) — Developer
+- [ ] validate      (08-validate.md, verdict PASS) — QA-tester + QA-analyst  [merged: verify + gap-check]
 - [ ] archive       (moved to .spec-workflow/archive/)     — TPM
 
 ## Notes
