@@ -227,7 +227,7 @@ Conventions in this section (new merged shape):
 
 ### Wave 0 — Foundation (2 tasks)
 
-## T91 — [x] Add tauri-plugin-shell + tauri-plugin-fs + capability manifest expansion
+## T91 — [ ] Add tauri-plugin-shell + tauri-plugin-fs + capability manifest expansion
 - **Milestone**: M0
 - **Requirements**: R4, R6, R9
 - **Decisions**: D1, D8
@@ -242,7 +242,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T92-cap-test
 - [ ]
 
-## T92-cap-test — [x] Seam G: capability manifest structural test
+## T92-cap-test — [ ] Seam G: capability manifest structural test
 - **Milestone**: M0
 - **Requirements**: R9
 - **Decisions**: D1
@@ -260,7 +260,7 @@ Conventions in this section (new merged shape):
 
 ### Wave 1 — Pure Rust modules (4 tasks)
 
-## T93 — [x] `invoke.rs` — terminal-spawn + clipboard + pipe-Err dispatcher
+## T93 — [ ] `invoke.rs` — terminal-spawn + clipboard + pipe-Err dispatcher
 - **Milestone**: M1
 - **Requirements**: R4, R7
 - **Decisions**: D1, D6, D8
@@ -280,7 +280,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T94, T95, T96
 - [ ]
 
-## T94 — [x] `audit.rs` — TSV append + rotation + gitignore bootstrap + path-traversal guard
+## T94 — [ ] `audit.rs` — TSV append + rotation + gitignore bootstrap + path-traversal guard
 - **Milestone**: M1
 - **Requirements**: R6, R9
 - **Decisions**: D4, D7
@@ -300,7 +300,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T93, T95, T96
 - [ ]
 
-## T95 — [x] `lock.rs` — in-process `Mutex<HashSet>` + 60s watchdog
+## T95 — [ ] `lock.rs` — in-process `Mutex<HashSet>` + 60s watchdog
 - **Milestone**: M1
 - **Requirements**: R7
 - **Decisions**: D2
@@ -317,7 +317,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T93, T94, T96
 - [ ]
 
-## T96 — [x] `command_taxonomy.rs` — hardcoded 16-command list + classifier
+## T96 — [ ] `command_taxonomy.rs` — hardcoded 16-command list + classifier
 - **Milestone**: M1
 - **Requirements**: R5, R8
 - **Decisions**: D3
@@ -337,7 +337,7 @@ Conventions in this section (new merged shape):
 
 ### Wave 2 — Backend wiring (3 tasks)
 
-## T108 — [x] `lib.rs::run_session_polling` — wire store::diff + notify::fire_stalled_notification
+## T108 — [ ] `lib.rs::run_session_polling` — wire store::diff + notify::fire_stalled_notification
 - **Milestone**: M2
 - **Requirements**: R1
 - **Decisions**: D5
@@ -356,7 +356,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T109, T110
 - [ ]
 
-## T109 — [x] `ipc.rs` handlers + `build.rs` TS taxonomy projection
+## T109 — [ ] `ipc.rs` handlers + `build.rs` TS taxonomy projection
 - **Milestone**: M2
 - **Requirements**: R4, R5, R6, R7, R8
 - **Decisions**: D3, D6
@@ -382,7 +382,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T108, T110 (with the "disjoint regions of lib.rs" caveat above — developer coordinates)
 - [ ]
 
-## T110 — [x] `invokeStore.ts` — renderer dispatch wrapper + in-flight set
+## T110 — [ ] `invokeStore.ts` — renderer dispatch wrapper + in-flight set
 - **Milestone**: M2
 - **Requirements**: R2, R3, R4, R5, R7
 - **Decisions**: D6
@@ -400,7 +400,7 @@ Conventions in this section (new merged shape):
 
 ### Wave 3 — Renderer stores + scaffolds (3 tasks)
 
-## T97 — [x] Theme token reuse mapping doc
+## T97 — [ ] Theme token reuse mapping doc
 - **Milestone**: M3
 - **Requirements**: R11
 - **Decisions**: D10
@@ -420,7 +420,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T98, T99
 - [ ]
 
-## T98 — [x] `invokeStore.test.ts` — unit test for renderer dispatch wrapper
+## T98 — [ ] `invokeStore.test.ts` — unit test for renderer dispatch wrapper
 - **Milestone**: M3
 - **Requirements**: R4, R5, R7
 - **Decisions**: D6
@@ -438,7 +438,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T97, T99
 - [ ]
 
-## T99 — [x] Seam B partial: DESTROY unreachability cross-file grep test
+## T99 — [ ] Seam B partial: DESTROY unreachability cross-file grep test
 - **Milestone**: M3
 - **Requirements**: R8
 - **Decisions**: D3
@@ -455,7 +455,7 @@ Conventions in this section (new merged shape):
 
 ### Wave 4 — Renderer components (6 tasks)
 
-## T100 — [x] `ActionStrip.tsx` + component test
+## T100 — [ ] `ActionStrip.tsx` + component test
 - **Milestone**: M4
 - **Requirements**: R2
 - **Decisions**: (none — pure UI)
@@ -467,7 +467,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T101, T102, T103, T104, T105
 - [ ]
 
-## T101 — [x] `CommandPalette.tsx` + component test
+## T101 — [ ] `CommandPalette.tsx` + component test
 - **Milestone**: M4
 - **Requirements**: R5, R8
 - **Decisions**: D3
@@ -479,7 +479,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T100, T102, T103, T104, T105
 - [ ]
 
-## T102 — [x] `SendPanel.tsx` + component test
+## T102 — [ ] `SendPanel.tsx` + component test
 - **Milestone**: M4
 - **Requirements**: R3
 - **Decisions**: D6
@@ -491,7 +491,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T100, T101, T103, T104, T105
 - [ ]
 
-## T103 — [x] `PreflightToast.tsx` + component test
+## T103 — [ ] `PreflightToast.tsx` + component test
 - **Milestone**: M4
 - **Requirements**: R5
 - **Decisions**: D6
@@ -503,7 +503,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T100, T101, T102, T104, T105
 - [ ]
 
-## T104 — [x] `ConfirmModal.tsx` + component test (Seam F)
+## T104 — [ ] `ConfirmModal.tsx` + component test (Seam F)
 - **Milestone**: M4
 - **Requirements**: R8
 - **Decisions**: D6
@@ -515,7 +515,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T100, T101, T102, T103, T105
 - [ ]
 
-## T105 — [x] `AuditPanel.tsx` + component test
+## T105 — [ ] `AuditPanel.tsx` + component test
 - **Milestone**: M4
 - **Requirements**: R6
 - **Decisions**: D7
@@ -529,7 +529,7 @@ Conventions in this section (new merged shape):
 
 ### Wave 5 — Integration + i18n + B1 nits (5 + 1 tasks; 5 parallel then 1 serial)
 
-## T106 — [x] `SessionCard.tsx` — mount ActionStrip on stalled cards (R2 gate)
+## T106 — [ ] `SessionCard.tsx` — mount ActionStrip on stalled cards (R2 gate)
 - **Milestone**: M5
 - **Requirements**: R2
 - **Decisions**: (none)
@@ -540,7 +540,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T107, T111, T112a, T112b
 - [ ]
 
-## T107 — [x] `CardDetailHeader.tsx` — Advance + Message buttons + SendPanel toggle
+## T107 — [ ] `CardDetailHeader.tsx` — Advance + Message buttons + SendPanel toggle
 - **Milestone**: M5
 - **Requirements**: R3
 - **Decisions**: (none)
@@ -551,7 +551,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T106, T111, T112a, T112b
 - [ ]
 
-## T111 — [x] `App.tsx` — mount CommandPalette + PreflightToast overlays + ⌘K keybinding
+## T111 — [ ] `App.tsx` — mount CommandPalette + PreflightToast overlays + ⌘K keybinding
 - **Milestone**: M5
 - **Requirements**: R5
 - **Decisions**: D6
@@ -595,7 +595,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T106, T107, T111, T112a
 - [ ]
 
-## T114 — [x] B1 nits sweep (R12 absorb)
+## T114 — [ ] B1 nits sweep (R12 absorb)
 - **Milestone**: M5
 - **Requirements**: R12
 - **Decisions**: (none)
@@ -614,7 +614,7 @@ Conventions in this section (new merged shape):
 
 ### Wave 6 — Structural tests + runtime handoff + docs bookkeeping (9 tasks)
 
-## T113 — [x] Runtime handoff pre-commit note
+## T113 — [ ] Runtime handoff pre-commit note
 - **Milestone**: M6
 - **Requirements**: PRD §6, §9 handoff clause
 - **Decisions**: D11
@@ -627,7 +627,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T115, T116, T117, T118, T119, T120, T121
 - [ ]
 
-## T115 — [x] Seam I: `test/t95_argv_no_shell_cat.sh` — no-shell-string-cat structural grep
+## T115 — [ ] Seam I: `test/t95_argv_no_shell_cat.sh` — no-shell-string-cat structural grep
 - **Milestone**: M6
 - **Requirements**: R4
 - **Decisions**: D6
@@ -642,7 +642,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T113, T116, T117, T118, T119, T120, T121
 - [ ]
 
-## T116 — [x] Seam J: `test/t96_i18n_parity_b2_keys.sh` — en + zh-TW parity for 26 new keys
+## T116 — [ ] Seam J: `test/t96_i18n_parity_b2_keys.sh` — en + zh-TW parity for 26 new keys
 - **Milestone**: M6
 - **Requirements**: R10
 - **Decisions**: D9
@@ -657,7 +657,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T113, T115, T117, T118, T119, T120, T121
 - [ ]
 
-## T117 — [x] Seam K: `test/t97_theme_token_reuse.sh` — no new theme tokens
+## T117 — [ ] Seam K: `test/t97_theme_token_reuse.sh` — no new theme tokens
 - **Milestone**: M6
 - **Requirements**: R11
 - **Decisions**: D10
@@ -672,7 +672,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T113, T115, T116, T118, T119, T120, T121
 - [ ]
 
-## T118 — [x] Seam L: `test/t98_stage_label_lookup.sh` — every stage has `action.advance_to.<stage>` i18n key
+## T118 — [ ] Seam L: `test/t98_stage_label_lookup.sh` — every stage has `action.advance_to.<stage>` i18n key
 - **Milestone**: M6
 - **Requirements**: R2
 - **Decisions**: D9
@@ -686,7 +686,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T113, T115, T116, T117, T119, T120, T121
 - [ ]
 
-## T119 — [x] Seam M: `test/t99_b1_nits_cleared.sh` — 5 B1-nits assertions
+## T119 — [ ] Seam M: `test/t99_b1_nits_cleared.sh` — 5 B1-nits assertions
 - **Milestone**: M6
 - **Requirements**: R12
 - **Decisions**: (none)
@@ -702,7 +702,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T113, T115, T116, T117, T118, T120, T121
 - [ ]
 
-## T120 — [x] Seam B full: `test/t100_taxonomy_classification.sh` — 16-command taxonomy + DESTROY-only-in-taxonomy grep
+## T120 — [ ] Seam B full: `test/t100_taxonomy_classification.sh` — 16-command taxonomy + DESTROY-only-in-taxonomy grep
 - **Milestone**: M6
 - **Requirements**: R5, R8
 - **Decisions**: D3
@@ -716,7 +716,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T113, T115, T116, T117, T118, T119, T121
 - [ ]
 
-## T121 — [x] `test/t101_runtime_handoff_note.sh` — verify T113's STATUS note
+## T121 — [ ] `test/t101_runtime_handoff_note.sh` — verify T113's STATUS note
 - **Milestone**: M6
 - **Requirements**: PRD §6
 - **Decisions**: D11
@@ -730,7 +730,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T113, T115, T116, T117, T118, T119, T120
 - [ ]
 
-## T122 — [x] Register 7 new shell tests in `test/smoke.sh`
+## T122 — [ ] Register 7 new shell tests in `test/smoke.sh`
 - **Milestone**: M6
 - **Requirements**: (all B2 structural ACs)
 - **Decisions**: (none)
