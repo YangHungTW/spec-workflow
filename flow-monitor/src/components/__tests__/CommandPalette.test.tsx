@@ -23,7 +23,7 @@ vi.mock("../../i18n", () => ({
       const map: Record<string, string> = {
         "palette.title": "Command Palette",
         "palette.group.control": "Control Actions",
-        "palette.group.specflow": "Specflow Commands",
+        "palette.group.scaff": "Scaff Commands",
         "palette.group.destructive": "Destructive",
         "palette.pill.write": "WRITE",
         "palette.search.placeholder": "Search commands...",

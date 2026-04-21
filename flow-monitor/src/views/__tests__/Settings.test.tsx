@@ -409,19 +409,19 @@ describe("Settings — Repositories tab (AC2.a/b/c)", () => {
     });
   });
 
-  it("shows inline error when picked path lacks .spec-workflow/ (AC2.c)", async () => {
+  it("shows inline error when picked path lacks .specaffold/ (AC2.c)", async () => {
     renderSettings({ repositories: [] });
     await act(async () => { await Promise.resolve(); });
 
     fireEvent.click(screen.getByRole("tab", { name: /repositories/i }));
 
-    // Simulate the component receiving a picked path that has no .spec-workflow/
+    // Simulate the component receiving a picked path that has no .specaffold/
     // The component exposes a testable validateRepo function via data-testid
     const addBtn = screen.getByRole("button", { name: /add repo/i });
 
-    // Mock open dialog to return a path without .spec-workflow/
+    // Mock open dialog to return a path without .specaffold/
     mockInvoke.mockImplementation((cmd: string) => {
-      if (cmd === "pick_folder") return Promise.resolve("/Users/alice/not-a-specflow-repo");
+      if (cmd === "pick_folder") return Promise.resolve("/Users/alice/not-a-scaff-repo");
       if (cmd === "path_exists") return Promise.resolve(false);
       return Promise.resolve({});
     });
@@ -431,7 +431,7 @@ describe("Settings — Repositories tab (AC2.a/b/c)", () => {
     await waitFor(() => {
       const alertEl = screen.queryByRole("alert");
       expect(alertEl).toBeTruthy();
-      expect(alertEl?.textContent).toMatch(/not a specflow/i);
+      expect(alertEl?.textContent).toMatch(/not a scaff/i);
     });
   });
 });

@@ -26,7 +26,7 @@ vi.mock("../../i18n", () => ({
 }));
 
 const REPOS: RepoSidebarProps["repos"] = [
-  { id: "r1", name: "spec-workflow", path: "/repos/spec-workflow" },
+  { id: "r1", name: "specaffold", path: "/repos/specaffold" },
   { id: "r2", name: "my-saas-app", path: "/repos/my-saas-app" },
 ];
 
