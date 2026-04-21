@@ -87,7 +87,7 @@ impl std::fmt::Display for Outcome {
 // ---------------------------------------------------------------------------
 
 /// One row in the audit log.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct AuditLine {
     /// RFC 3339 / ISO 8601 timestamp.
     pub ts: String,

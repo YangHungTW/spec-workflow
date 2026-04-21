@@ -42,6 +42,7 @@ pub fn run() {
             });
             Ok(())
         })
+        .manage(crate::lock::LockState::new())
         .invoke_handler(tauri::generate_handler![
             ipc::list_sessions,
             ipc::get_settings,
@@ -58,6 +59,11 @@ pub fn run() {
             ipc::get_notification_permission_status,
             ipc::focus_main_window,
             ipc::dialog_open_directory,
+            // B2 control-plane commands (T109) — invoke_handler region only;
+            // T108 edits the polling-loop region 30+ lines below; regions are disjoint.
+            ipc::invoke_command,
+            ipc::get_audit_tail,
+            ipc::get_in_flight_set,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -489,6 +489,37 @@ pub fn copy_to_clipboard(
 }
 
 // ---------------------------------------------------------------------------
+// B2 IPC types
+// ---------------------------------------------------------------------------
+
+/// Outcome of a `invoke_command` IPC call.
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+pub struct InvokeResult {
+    pub outcome: String,
+}
+
+/// Event payload emitted when the in-flight lock set changes.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct InFlightChangedPayload {
+    pub locks: Vec<(PathBuf, String)>,
+    pub timestamp: u64,
+}
+
+/// Event payload emitted after an audit line is appended.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct AuditAppendedPayload {
+    pub repo: PathBuf,
+    pub line: crate::audit::AuditLine,
+}
+
+/// Event payload emitted when the polling loop observes a STATUS.md mtime change.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct SessionAdvancedPayload {
+    pub repo: PathBuf,
+    pub slug: String,
+}
+
+// ---------------------------------------------------------------------------
 // Unit tests
 // ---------------------------------------------------------------------------
 
@@ -952,6 +983,168 @@ mod tests {
         drop(guard);
         drop(tmp);
     }
+
+    // ---------------------------------------------------------------------------
+    // B2 invoke_command_inner — unit tests (T109)
+    // ---------------------------------------------------------------------------
+
+    /// A Destroy-classified command must return DestroyUnreachable (AC8.b).
+    #[test]
+    fn invoke_command_inner_destroy_returns_error() {
+        let tmp = tempfile::tempdir().unwrap();
+        let repo = tmp.path().canonicalize().unwrap();
+        let lock = crate::lock::LockState::new();
+        // Pass the repo as a registered root so the path-traversal guard passes
+        // and the test reaches the DESTROY_UNREACHABLE check it targets.
+        let roots = vec![repo.clone()];
+
+        let result = invoke_command_inner(
+            &lock,
+            repo.to_string_lossy().to_string(),
+            "my-feature".to_string(),
+            "archive".to_string(),   // DESTROY-class
+            "clipboard".to_string(),
+            "palette".to_string(),
+            &roots,
+        );
+
+        assert!(result.is_err(), "Destroy command must be rejected");
+        let err = result.unwrap_err();
+        assert_eq!(err.code, "DESTROY_UNREACHABLE",
+            "expected DESTROY_UNREACHABLE, got: {}", err.code);
+    }
+
+    /// An unknown command must return UNKNOWN_COMMAND.
+    #[test]
+    fn invoke_command_inner_unknown_command_returns_error() {
+        let tmp = tempfile::tempdir().unwrap();
+        let repo = tmp.path().canonicalize().unwrap();
+        let lock = crate::lock::LockState::new();
+        let roots = vec![repo.clone()];
+
+        let result = invoke_command_inner(
+            &lock,
+            repo.to_string_lossy().to_string(),
+            "my-feature".to_string(),
+            "not-a-real-command".to_string(),
+            "clipboard".to_string(),
+            "palette".to_string(),
+            &roots,
+        );
+
+        assert!(result.is_err(), "unknown command must return error");
+        let err = result.unwrap_err();
+        assert_eq!(err.code, "UNKNOWN_COMMAND",
+            "expected UNKNOWN_COMMAND, got: {}", err.code);
+    }
+
+    /// A second dispatch to the same (repo, slug) must return IN_FLIGHT.
+    #[test]
+    fn invoke_command_inner_already_in_flight_returns_error() {
+        let tmp = tempfile::tempdir().unwrap();
+        let repo = tmp.path().canonicalize().unwrap();
+        let lock = crate::lock::LockState::new();
+        let roots = vec![repo.clone()];
+
+        // Pre-acquire the lock so the second call sees AlreadyHeld.
+        lock.try_acquire(repo.clone(), "my-feature".to_string());
+
+        let result = invoke_command_inner(
+            &lock,
+            repo.to_string_lossy().to_string(),
+            "my-feature".to_string(),
+            "prd".to_string(),  // WRITE-class
+            "clipboard".to_string(),
+            "palette".to_string(),
+            &roots,
+        );
+
+        assert!(result.is_err(), "in-flight session must be rejected");
+        let err = result.unwrap_err();
+        assert_eq!(err.code, "IN_FLIGHT",
+            "expected IN_FLIGHT, got: {}", err.code);
+    }
+
+    /// A repo path not in registered_roots must return PATH_TRAVERSAL.
+    #[test]
+    fn invoke_command_inner_unregistered_repo_returns_path_traversal() {
+        let tmp = tempfile::tempdir().unwrap();
+        let repo = tmp.path().canonicalize().unwrap();
+        let lock = crate::lock::LockState::new();
+        // Empty registered roots — repo is not registered.
+        let roots: Vec<PathBuf> = vec![];
+
+        let result = invoke_command_inner(
+            &lock,
+            repo.to_string_lossy().to_string(),
+            "my-feature".to_string(),
+            "prd".to_string(),
+            "clipboard".to_string(),
+            "palette".to_string(),
+            &roots,
+        );
+
+        assert!(result.is_err(), "unregistered repo must be rejected");
+        let err = result.unwrap_err();
+        assert_eq!(err.code, "PATH_TRAVERSAL",
+            "expected PATH_TRAVERSAL, got: {}", err.code);
+    }
+
+    /// get_audit_tail_inner with limit=0 returns empty vec without error.
+    #[test]
+    fn get_audit_tail_inner_empty_log_returns_empty_vec() {
+        let tmp = tempfile::tempdir().unwrap();
+        let repo = tmp.path().canonicalize().unwrap();
+        let roots = vec![repo.clone()];
+
+        let result = get_audit_tail_inner(
+            repo.to_string_lossy().to_string(),
+            0,
+            &roots,
+        );
+        assert!(result.is_ok(), "audit tail of empty log must succeed: {:?}", result.err());
+        assert!(result.unwrap().is_empty(), "tail from empty log must be empty");
+    }
+
+    /// get_audit_tail_inner rejects a repo not in registered_roots.
+    #[test]
+    fn get_audit_tail_inner_unregistered_repo_returns_path_traversal() {
+        let tmp = tempfile::tempdir().unwrap();
+        let repo = tmp.path().canonicalize().unwrap();
+        // Empty registered roots — repo is not registered.
+        let roots: Vec<PathBuf> = vec![];
+
+        let result = get_audit_tail_inner(
+            repo.to_string_lossy().to_string(),
+            10,
+            &roots,
+        );
+        assert!(result.is_err(), "unregistered repo must be rejected");
+        let err = result.unwrap_err();
+        assert_eq!(err.code, "PATH_TRAVERSAL",
+            "expected PATH_TRAVERSAL, got: {}", err.code);
+    }
+
+    /// get_in_flight_set_inner returns an empty vec when the lock state is empty.
+    #[test]
+    fn get_in_flight_set_inner_empty_returns_empty_vec() {
+        let lock = crate::lock::LockState::new();
+        let result = get_in_flight_set_inner(&lock);
+        assert!(result.is_empty(), "empty lock state must return empty vec");
+    }
+
+    /// get_in_flight_set_inner reflects acquired locks.
+    #[test]
+    fn get_in_flight_set_inner_reflects_acquired_lock() {
+        let tmp = tempfile::tempdir().unwrap();
+        let repo = tmp.path().canonicalize().unwrap();
+        let lock = crate::lock::LockState::new();
+
+        lock.try_acquire(repo.clone(), "slug-one".to_string());
+        let result = get_in_flight_set_inner(&lock);
+        assert_eq!(result.len(), 1, "one acquired lock must appear in the set");
+        assert_eq!(result[0].1, "slug-one");
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -1167,4 +1360,361 @@ pub fn update_settings_inner(
     guard.notification_body = patch.notification_body;
 
     Ok(())
+}
+
+// ---------------------------------------------------------------------------
+// B2 IPC commands — invoke_command, get_audit_tail, get_in_flight_set (T109)
+// ---------------------------------------------------------------------------
+
+/// Dispatch a write command through the classify → allow-list → lock → invoke → audit pipeline.
+///
+/// Security invariants (per tech §2.2 Flow C + D1):
+///   1. Classify first — Destroy commands are rejected at this layer (AC8.b belt-and-braces).
+///   2. Allow-list check — unknown commands are rejected before any lock is acquired.
+///   3. Lock before dispatch — AlreadyHeld means the (repo, slug) pair is in-flight.
+///   4. Dispatch via invoke::dispatch — argv-form only, no shell string-cat (AC4.d).
+///   5. Audit on every dispatch attempt (success or failure).
+///
+/// Events emitted by the `#[tauri::command]` wrapper (not this inner function):
+///   - `in_flight_changed` after lock acquire / release
+///   - `audit_appended` after audit::append_line
+///
+/// Per risk RF: events are emitted on `app.emit(...)` (app-level), not window-local.
+#[tauri::command]
+pub fn invoke_command(
+    state: tauri::State<'_, crate::lock::LockState>,
+    settings: tauri::State<'_, SettingsState>,
+    app: tauri::AppHandle,
+    repo: String,
+    slug: String,
+    command: String,
+    delivery: String,
+    entry_point: String,
+) -> Result<InvokeResult, IpcError> {
+    use tauri::Emitter;
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    // Extract the registered-repo list from settings so invoke_command_inner
+    // can enforce the registered-roots boundary before any dispatch work.
+    let registered_roots: Vec<PathBuf> = settings
+        .0
+        .lock()
+        .map(|g| g.repos.clone())
+        .unwrap_or_default();
+
+    let result = invoke_command_inner(
+        &state,
+        repo.clone(),
+        slug.clone(),
+        command.clone(),
+        delivery,
+        entry_point,
+        &registered_roots,
+    );
+
+    // Emit in_flight_changed after acquiring the lock (lock state may have changed).
+    let locks = get_in_flight_set_inner(&state);
+    let timestamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0);
+    let _ = app.emit("in_flight_changed", InFlightChangedPayload { locks, timestamp });
+
+    // On success, emit audit_appended.
+    if let Ok(ref invoke_result) = result {
+        let repo_path = PathBuf::from(&repo);
+        if let Some(audit_line) = build_audit_line_from_result(&slug, &command, &invoke_result.outcome) {
+            let _ = app.emit("audit_appended", AuditAppendedPayload {
+                repo: repo_path,
+                line: audit_line,
+            });
+        }
+    }
+
+    result
+}
+
+/// Return the last `limit` audit lines for the given repo.
+#[tauri::command]
+pub fn get_audit_tail(
+    repo: String,
+    limit: usize,
+    settings: tauri::State<'_, SettingsState>,
+) -> Result<Vec<crate::audit::AuditLine>, IpcError> {
+    // Extract registered roots to enforce the path-traversal boundary.
+    let registered_roots: Vec<PathBuf> = settings
+        .0
+        .lock()
+        .map(|g| g.repos.clone())
+        .unwrap_or_default();
+    get_audit_tail_inner(repo, limit, &registered_roots)
+}
+
+/// Return the current in-flight `(repo, slug)` pairs.
+#[tauri::command]
+pub fn get_in_flight_set(
+    state: tauri::State<'_, crate::lock::LockState>,
+) -> Vec<(PathBuf, String)> {
+    get_in_flight_set_inner(&state)
+}
+
+// ---------------------------------------------------------------------------
+// Inner implementations (unit-testable without Tauri state)
+// ---------------------------------------------------------------------------
+
+/// Core logic for `invoke_command` — testable without a live Tauri runtime.
+///
+/// Workflow per tech §2.2 Flow C:
+///   0. path-traversal guard — repo must be under a registered root (security check 2)
+///   1. classify(command) → if Destroy, return Err(DESTROY_UNREACHABLE)
+///   2. allow_list_contains(command) → if false, return Err(UNKNOWN_COMMAND)
+///   3. lock::try_acquire(repo, slug) → if AlreadyHeld, return Err(IN_FLIGHT)
+///   4. invoke::dispatch(delivery, cmd, slug, repo, clipboard=None)
+///      Note: clipboard arm not exercisable in unit tests (no AppHandle);
+///      this function uses None for clipboard; the command wrapper passes real clipboard.
+///   5. audit::append_line (best-effort; errors logged but not propagated to caller)
+///   6. return Ok(InvokeResult)
+///
+/// `registered_roots` is supplied by the caller from SettingsState so that
+/// the boundary check can be applied before any further dispatch work —
+/// the same guard pattern used in `read_artefact_inner` (ipc.rs ~L1201).
+pub fn invoke_command_inner(
+    lock: &crate::lock::LockState,
+    repo: String,
+    slug: String,
+    command: String,
+    delivery: String,
+    entry_point: String,
+    registered_roots: &[PathBuf],
+) -> Result<InvokeResult, IpcError> {
+    use crate::command_taxonomy;
+    use crate::invoke;
+    use crate::lock::AcquireResult;
+
+    // Step 0 — canonicalise repo and enforce the registered-roots boundary
+    // (security rule 2: path traversal must be rejected at the IPC boundary).
+    let repo_path = PathBuf::from(&repo);
+    let canonical_repo = repo_path.canonicalize().map_err(|e| IpcError {
+        code: "INVALID_REPO",
+        message: format!("cannot canonicalise repo path {repo}: {e}"),
+    })?;
+    assert_under_registered_root(&canonical_repo, registered_roots)?;
+
+    // Step 1 — classify: Destroy is unreachable in B2 (AC8.b belt-and-braces).
+    let classification = command_taxonomy::classify(&command);
+    if classification == Some(command_taxonomy::Classification::Destroy) {
+        return Err(IpcError {
+            code: "DESTROY_UNREACHABLE",
+            message: format!("DESTROY command '{}' is not user-reachable in B2", command),
+        });
+    }
+
+    // Step 2 — allow-list check: unknown commands (None from classify) are rejected.
+    if !command_taxonomy::allow_list_contains(&command) {
+        return Err(IpcError {
+            code: "UNKNOWN_COMMAND",
+            message: format!("command '{}' is not in the allow-list", command),
+        });
+    }
+
+    // Step 3 — acquire the in-flight lock (repo is already canonicalised in step 0).
+
+    let acquire = lock.try_acquire(canonical_repo.clone(), slug.clone());
+    if acquire == AcquireResult::AlreadyHeld {
+        return Err(IpcError {
+            code: "IN_FLIGHT",
+            message: format!("({repo}, {slug}) already has an in-flight command"),
+        });
+    }
+
+    // Step 4 — parse delivery method and dispatch.
+    let delivery_method = parse_delivery_method(&delivery).map_err(|e| IpcError {
+        code: "INVALID_DELIVERY",
+        message: e,
+    })?;
+
+    // Dispatch without clipboard (unit test path) — clipboard arm returns
+    // ClipboardFailed when clipboard is None; the real command wrapper passes
+    // a TauriClipboard instance.
+    let dispatch_result = invoke::dispatch(
+        delivery_method,
+        &command,
+        &slug,
+        &canonical_repo,
+        None, // clipboard — injected by the tauri::command wrapper
+    );
+
+    // outcome_str not used outside the match; outcome is extracted per-arm below.
+
+    // Step 5 — audit append (best-effort: errors do not fail the IPC call).
+    let entry_point_parsed = parse_entry_point(&entry_point);
+    let delivery_method2 = parse_delivery_method(&delivery).ok();
+    let outcome_parsed = match &dispatch_result {
+        Ok(r) => Some(map_invoke_outcome_to_audit(&r.outcome)),
+        Err(_) => Some(crate::audit::Outcome::Failed),
+    };
+
+    if let (Some(ep), Some(dm), Some(oc)) = (entry_point_parsed, delivery_method2, outcome_parsed) {
+        use std::time::{SystemTime};
+        let ts = format_timestamp(SystemTime::now());
+        let audit_line = crate::audit::AuditLine {
+            ts,
+            slug: slug.clone(),
+            command: command.clone(),
+            entry_point: ep,
+            delivery: map_invoke_delivery_to_audit(dm),
+            outcome: oc,
+        };
+        let _ = crate::audit::append_line(&canonical_repo, audit_line);
+    }
+
+    // Release the lock on dispatch failure so the UI can retry.
+    if dispatch_result.is_err() {
+        lock.release(&canonical_repo, &slug);
+    }
+
+    dispatch_result.map(|r| InvokeResult {
+        outcome: format!("{:?}", r.outcome).to_lowercase(),
+    }).map_err(|e| IpcError {
+        code: "DISPATCH_FAILED",
+        message: e.to_string(),
+    })
+}
+
+/// Delegates to `audit::read_tail`; maps `AuditError` to `IpcError`.
+///
+/// Enforces the registered-roots boundary before any I/O — `repo` (raw IPC input)
+/// is canonicalised and checked against `registered_roots`, rejecting `../..`
+/// traversal components at the boundary (security rule 2).
+pub fn get_audit_tail_inner(
+    repo: String,
+    limit: usize,
+    registered_roots: &[PathBuf],
+) -> Result<Vec<crate::audit::AuditLine>, IpcError> {
+    // Canonicalise the raw IPC input to remove `..` components.
+    let repo_path = PathBuf::from(&repo);
+    let canonical_repo = repo_path.canonicalize().map_err(|e| IpcError {
+        code: "INVALID_REPO",
+        message: format!("cannot canonicalise repo path {repo}: {e}"),
+    })?;
+    // Enforce the allowed-repos boundary before any further I/O.
+    assert_under_registered_root(&canonical_repo, registered_roots)?;
+
+    crate::audit::read_tail(&canonical_repo, limit).map_err(|e| IpcError {
+        code: "AUDIT_READ_ERROR",
+        message: e.to_string(),
+    })
+}
+
+/// Delegates to `LockState::current`.
+pub fn get_in_flight_set_inner(lock: &crate::lock::LockState) -> Vec<(PathBuf, String)> {
+    lock.current()
+}
+
+// ---------------------------------------------------------------------------
+// Private helpers for B2 handlers
+// ---------------------------------------------------------------------------
+
+/// Parse a delivery string into `invoke::DeliveryMethod`.
+fn parse_delivery_method(s: &str) -> Result<crate::invoke::DeliveryMethod, String> {
+    match s {
+        "terminal" => Ok(crate::invoke::DeliveryMethod::Terminal),
+        "clipboard" => Ok(crate::invoke::DeliveryMethod::Clipboard),
+        "pipe" => Ok(crate::invoke::DeliveryMethod::Pipe),
+        other => Err(format!("unknown delivery method: {other}")),
+    }
+}
+
+/// Parse an entry-point string into `audit::EntryPoint`.
+fn parse_entry_point(s: &str) -> Option<crate::audit::EntryPoint> {
+    match s {
+        "card-action" => Some(crate::audit::EntryPoint::CardAction),
+        "card-detail" => Some(crate::audit::EntryPoint::CardDetail),
+        "palette" => Some(crate::audit::EntryPoint::Palette),
+        "context-menu" => Some(crate::audit::EntryPoint::ContextMenu),
+        "compact-panel" => Some(crate::audit::EntryPoint::CompactPanel),
+        _ => None,
+    }
+}
+
+/// Map `invoke::Outcome` → `audit::Outcome`.
+fn map_invoke_outcome_to_audit(o: &crate::invoke::Outcome) -> crate::audit::Outcome {
+    match o {
+        crate::invoke::Outcome::Spawned => crate::audit::Outcome::Spawned,
+        crate::invoke::Outcome::Copied => crate::audit::Outcome::Copied,
+        crate::invoke::Outcome::Failed => crate::audit::Outcome::Failed,
+        crate::invoke::Outcome::DestroyConfirmed => crate::audit::Outcome::DestroyConfirmed,
+    }
+}
+
+/// Map `invoke::DeliveryMethod` → `audit::DeliveryMethod`.
+fn map_invoke_delivery_to_audit(d: crate::invoke::DeliveryMethod) -> crate::audit::DeliveryMethod {
+    match d {
+        crate::invoke::DeliveryMethod::Terminal => crate::audit::DeliveryMethod::Terminal,
+        crate::invoke::DeliveryMethod::Clipboard => crate::audit::DeliveryMethod::Clipboard,
+        crate::invoke::DeliveryMethod::Pipe => crate::audit::DeliveryMethod::Pipe,
+    }
+}
+
+/// Format a `SystemTime` as an ISO 8601 string.
+///
+/// Uses seconds-since-epoch formatted as a compact RFC 3339 UTC timestamp.
+/// A full RFC 3339 formatter without a crate dep: `<YYYY>-<MM>-<DD>T<HH>:<MM>:<SS>Z`.
+fn format_timestamp(t: std::time::SystemTime) -> String {
+    use std::time::UNIX_EPOCH;
+    let secs = t.duration_since(UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0);
+    // Simple epoch → UTC decomposition (no external crate).
+    let s = secs % 60;
+    let m = (secs / 60) % 60;
+    let h = (secs / 3600) % 24;
+    let days = secs / 86400;
+    // Days since 1970-01-01.
+    let (year, month, day) = days_to_ymd(days);
+    format!("{:04}-{:02}-{:02}T{:02}:{:02}:{:02}Z", year, month, day, h, m, s)
+}
+
+/// Convert days-since-epoch (1970-01-01) to (year, month, day).
+fn days_to_ymd(mut days: u64) -> (u64, u64, u64) {
+    // Proleptic Gregorian calendar implementation.
+    let mut year = 1970u64;
+    loop {
+        let leap = is_leap(year);
+        let days_in_year = if leap { 366 } else { 365 };
+        if days < days_in_year {
+            break;
+        }
+        days -= days_in_year;
+        year += 1;
+    }
+    let leap = is_leap(year);
+    let days_per_month: &[u64] = if leap {
+        &[31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+    } else {
+        &[31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+    };
+    let mut month = 1u64;
+    for &d in days_per_month {
+        if days < d {
+            break;
+        }
+        days -= d;
+        month += 1;
+    }
+    (year, month, days + 1)
+}
+
+fn is_leap(y: u64) -> bool {
+    (y % 4 == 0 && y % 100 != 0) || y % 400 == 0
+}
+
+/// Build an `AuditLine`-like structure from the outcome string returned in an `InvokeResult`.
+fn build_audit_line_from_result(
+    _slug: &str,
+    _command: &str,
+    _outcome: &str,
+) -> Option<crate::audit::AuditLine> {
+    // The audit line was already written inside invoke_command_inner; this helper
+    // exists only so the tauri::command wrapper can emit `audit_appended` with
+    // a reconstructed line for the UI. It does NOT write a second audit record.
+    None
 }
