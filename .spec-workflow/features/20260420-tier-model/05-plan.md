@@ -547,7 +547,7 @@ Conventions in this section (new merged shape):
 
 ### Wave 4 — Structural validation tests (8 tasks)
 
-## T26 — Tier-aware dispatch matrix unit test
+## T26 — [x] Tier-aware dispatch matrix unit test
 - **Milestone**: M4
 - **Requirements**: R8, R10, AC2
 - **Decisions**: D2
@@ -562,7 +562,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T27, T28, T29, T30, T31, T32
 - [ ]
 
-## T27 — Archive merge-check test
+## T27 — [x] Archive merge-check test
 - **Milestone**: M4
 - **Requirements**: R9, AC3
 - **Decisions**: —
@@ -579,7 +579,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T26, T28, T29, T30, T31, T32
 - [ ]
 
-## T28 — Upgrade audit log test
+## T28 — [x] Upgrade audit log test
 - **Milestone**: M4
 - **Requirements**: R12, R13, AC4
 - **Decisions**: —
@@ -594,7 +594,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T26, T27, T29, T30, T31, T32
 - [ ]
 
-## T29 — Auto-upgrade trigger tests
+## T29 — [x] Auto-upgrade trigger tests
 - **Milestone**: M4
 - **Requirements**: R14, AC9
 - **Decisions**: D7
@@ -611,7 +611,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T26, T27, T28, T30, T31, T32
 - [ ]
 
-## T30 — Mid-flight upgrade non-destructive test
+## T30 — [x] Mid-flight upgrade non-destructive test
 - **Milestone**: M4
 - **Requirements**: R15, AC10
 - **Decisions**: —
@@ -627,7 +627,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T26, T27, T28, T29, T31, T32
 - [ ]
 
-## T31 — Tiny inline review default test
+## T31 — [x] Tiny inline review default test
 - **Milestone**: M4
 - **Requirements**: R16, AC11
 - **Decisions**: —
@@ -642,7 +642,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T26, T27, T28, T29, T30, T32
 - [ ]
 
-## T32 — Tier-proposal prompt text test
+## T32 — [x] Tier-proposal prompt text test
 - **Milestone**: M4
 - **Requirements**: R5, AC12
 - **Decisions**: D6
@@ -657,7 +657,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T26, T27, T28, T29, T30, T31
 - [ ]
 
-## T33 — Register W4 tests in `test/smoke.sh`
+## T33 — [x] Register W4 tests in `test/smoke.sh`
 - **Milestone**: M4
 - **Requirements**: all ACs above
 - **Decisions**: —
