@@ -233,3 +233,26 @@ partial-install}; test sandboxes only model the first and
 (sometimes) the second. Plan for at least one dogfood-surfaced fix
 per self-shipping feature; don't treat it as a process failure.
 
+
+---
+
+## Ninth occurrence (2026-04-21, `20260420-flow-monitor-control-plane`)
+
+No new failure mode — the pattern held. Nine occurrences confirms the
+structural-only / runtime-deferred split is stable at scale:
+
+- 03-prd.md §9 Acceptance summary tagged every AC `[Verification: structural|runtime|both]`.
+- 05-plan.md §2.3 listed 16 structural ACs covered in this feature's validate, 15 runtime deferred.
+- RUNTIME HANDOFF STATUS line was pre-committed at T113 (W6) before archive — not an afterthought.
+- Validate §Runtime-deferral summary enumerated 15 deferred ACs by number.
+- qa-tester correctly deferred the 15 runtime ACs without attempting to PASS them from build-success alone.
+- T121 / t101_runtime_handoff_note.sh structurally asserts the handoff sentinel line is present.
+
+Sub-pattern promoted to discipline: **pre-commit the RUNTIME HANDOFF line as a TPM-owned task
+in the final wave**, not as an archive-time afterthought. The handoff line reads:
+
+> `RUNTIME HANDOFF (for successor feature): opening STATUS Notes line must read "YYYY-MM-DD orchestrator — B2 control plane exercised on this feature's first live session". 15 runtime ACs deferred; list at .spec-workflow/archive/<slug>/03-prd.md §9.`
+
+If the feature invokes the paradox, the TPM should reference this shared memory
+at plan time (not just the PM at PRD time). The ninth occurrence's 05-plan.md §1.2
+did this explicitly.
