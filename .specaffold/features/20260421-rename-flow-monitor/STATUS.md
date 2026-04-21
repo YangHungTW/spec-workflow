@@ -3,7 +3,7 @@
 - **slug**: 20260421-rename-flow-monitor
 - **has-ui**: true
 - **tier**: audited
-- **stage**: implement
+- **stage**: validate
 - **created**: 2026-04-21
 - **updated**: 2026-04-22
 
@@ -14,7 +14,7 @@
 - [x] tech          (04-tech.md)                 — Architect
 - [x] plan          (05-plan.md)                 — TPM  [merged: narrative + task checklist]
 - [x] implement     (05-plan.md tasks checked off) — Developer
-- [ ] validate      (08-validate.md, verdict PASS) — QA-tester + QA-analyst  [merged: verify + gap-check]
+- [x] validate      (08-validate.md, verdict NITS) — QA-tester + QA-analyst  [merged: verify + gap-check]
 - [ ] archive       (moved to .specaffold/archive/)     — TPM
 
 ## Notes
@@ -38,3 +38,4 @@
 - 2026-04-22 Developer — T15 W2 vitest gate: 11 pre-existing test-env failures (Tauri @tauri-apps/api mocking); rename branch strictly improves baseline (5 fewer failing files vs main: 6 vs 11 files failing); 0 new rename-caused regressions; NITS accepted by user (option 1 per user reply); parked as separate follow-up (test infrastructure, not rename concern)
 - 2026-04-22 Developer — T16 structural gates: T16.1 t_grep_allowlist.sh initially FAIL (plan gap per tpm/plan-gap-surfaces-at-reviewer-or-dry-run-not-at-plan-time); remediated by expanding .claude/carryover-allowlist.txt with 3 narrow carve-outs (flow-monitor/dist/**, .specaffold/features/20260421-rename-flow-monitor/**, .claude/team-memory/**); re-run PASS. T16.2–T16.5 (grep, capability JSON, i18n keys, SettingsRepositories path): PASS on first run.
 - 2026-04-22 implement stage complete — 16/16 tasks checked; wave 1 + wave 2a + wave 2b merged into feature branch
+- 2026-04-22 validate — slug=20260421-rename-flow-monitor verdict=NITS (aggregate of tester NITS + analyst NITS; 0 must, 6 should, 1 advisory; runtime AC10+AC11 deferred to manual desktop-app walkthrough; 4 retrospective signals captured for archive)
