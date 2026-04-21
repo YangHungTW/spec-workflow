@@ -29,7 +29,7 @@
 #   2   Argument error (no axis-set, missing --dir, dir does not exist)
 #
 # ERROR POSTURE
-#   A verdict file with a missing "## Reviewer verdict" header, a missing
+#   A verdict file with a missing "## Reviewer verdict" or "## Validate verdict" header, a missing
 #   "verdict:" key, or a verdict value outside {PASS, NITS, BLOCK} is
 #   treated as BLOCK (fail-loud per tech §4.1).
 #
@@ -115,7 +115,7 @@ fi
 #   AGG_STATE  : PASS | NITS | BLOCK  (max-reduce)
 #   SECURITY_MUST : 0 | 1             (set when axis=security AND severity: must)
 #
-# Malformed footer (no ## Reviewer verdict header, no verdict: line, or
+# Malformed footer (no ## Reviewer verdict / ## Validate verdict header, no verdict: line, or
 # verdict value not in {PASS, NITS, BLOCK}) → treat as BLOCK (fail-loud).
 
 AGG_STATE="PASS"
@@ -134,7 +134,7 @@ for vfile in "$VERDICT_DIR"/*.txt; do
   HAS_SECURITY_MUST=0
 
   while IFS= read -r line; do
-    if [ "$line" = "## Reviewer verdict" ]; then
+    if [ "$line" = "## Reviewer verdict" ] || [ "$line" = "## Validate verdict" ]; then
       IN_VERDICT=1
       FOUND_HEADER=1
       continue

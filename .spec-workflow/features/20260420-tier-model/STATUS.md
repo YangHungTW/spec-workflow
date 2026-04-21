@@ -9,18 +9,16 @@
 
 ## Stage checklist
 - [x] request       (00-request.md)              — PM
-- [x] brainstorm    (01-brainstorm.md)           — PM
 - [x] design        (02-design/)                 — Designer (skip if has-ui: false)
-- [x] prd           (03-prd.md)                  — PM
+- [x] prd           (03-prd.md)                  — PM  [includes `## Exploration` — brainstorm merged per R4]
 - [x] tech          (04-tech.md)                 — Architect
-- [x] plan          (05-plan.md)                 — TPM
-- [x] tasks         (merged into 05-plan.md per PRD R19 — new shape) — TPM
+- [x] plan          (05-plan.md)                 — TPM  [merged: narrative + task checklist per R19]
 - [x] implement     (05-plan.md tasks checked off) — Developer
-- [ ] gap-check     (07-gaps.md, verdict PASS)   — QA-analyst
-- [ ] verify        (08-verify.md, verdict PASS) — QA-tester
+- [ ] validate      (08-validate.md, verdict PASS) — QA-tester + QA-analyst  [merged: verify + gap-check per R4]
 - [ ] archive       (moved to .spec-workflow/archive/)     — TPM
 
 ## Notes
+- 2026-04-20 orchestrator — validate-cycle BLOCK resolution: (1) fixed bin/specflow-aggregate-verdicts line 137 to accept both ## Reviewer verdict and ## Validate verdict headers (was rejecting all validate footers as malformed, forcing BLOCK); (2) migrated this feature's STATUS stage checklist to new-shape (retired brainstorm/tasks/gap-check/verify boxes, added validate box per R19/AC7); (3) removed 06-tasks.md bootstrap symlink (AC7 requires absent); (4) R8/R10 tension accepted as-is per R10 matrix (PRD internal; tiny+review is 🔵 optional, implementation correctly does not force-skip).
 - 2026-04-20 implement ALL WAVES DONE — 35/35 tasks merged across W0-W5. Runtime verification: skills list shows new /specflow:validate, /specflow:request [--tier], /specflow:archive [--allow-unmerged REASON], /specflow:implement [--inline-review], and 4 RETIRED stubs. Test suite: 20 new test files; individual tests all green. smoke.sh integration has 5 pre-existing failures (t21/t24/t26/t36/t65) predating this feature. Accumulated lessons: test-file collision pattern recurring (t74/t76/t80); developer scope creep recurring (test files beyond designated author; T25 library write); STATUS bookkeeping violations recurring. All absorbed as NITS/advisory or resolved via retries.
 - 2026-04-20 implement wave W4 done — T26-T33 merged. W4a (T26-T32, 7 parallel) wave verdict NITS with T28/T29 initial BLOCK on env var TIER_LIB/IMPL/AGG/PM_MD boundary checks — retries added cd+pwd-P canonicalisation with REPO_ROOT prefix asserts. W4b (T33 serial) PASS — registered 20 W0-W4 tests in test/smoke.sh. Pre-existing 5 smoke.sh failures (t21/t24/t26/t36/t65) predate this feature and are NOT introduced by W4.
 - 2026-04-20 implement wave W3 done — T18, T19, T20, T21 (retry#2), T22, T23 (retry), T24, T25 (retry) merged. Wave verdict NITS. Initial BLOCK: T18 BSD grep portability, T21 input validation + commented-out, T23 slug path-traversal, T25 scope creep (production code in bin/specflow-tier). Retries resolved: UPGRADE_TASK sanitisation (tr -cd + cut -c1-64), atomic STATUS writes (backup+temp+mv), slug canonical resolve + REPO_ROOT boundary, REASON newline/CR guard, T25 reverted scope creep (test now SKIPs until propose_tier authored in proper task). Runtime confirmation: skills list shows /request --tier, /archive --allow-unmerged REASON, /implement --inline-review. Tests all green: 13 test scripts, 175+ assertions pass; t80_tier_proposal_heuristic SKIPs gracefully (propose_tier out of scope). Cleanup: 3 collision-prone t80_* filenames renamed (t80→t82 archive, t80→t83 implement; tT20→t81 next). W3 complete.
