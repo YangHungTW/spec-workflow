@@ -148,10 +148,24 @@ TAXONOMY_FILE="$SRC_DIR/generated/command_taxonomy.ts"
 if [ ! -f "$TAXONOMY_FILE" ]; then
   pass "B: src/generated/command_taxonomy.ts absent (cargo build not yet run) — vacuous pass"
 else
-  # Taxonomy exists — grep the full src tree and fail on any hit outside it.
+  # Taxonomy exists — grep dispatch-path source only; exclude:
+  #   - __tests__ dirs: test fixtures legitimately reference stage keys and
+  #     command slugs as props/fixtures; T120 owns the authoritative cross-tree
+  #     isolation check for those.
+  #   - StagePill.tsx: stage-display surface; uses stage names for UI labels,
+  #     not for dispatching commands.
+  #   - sessionStore.ts: stage-priority weighting map; "archive" etc. are
+  #     pipeline stage keys here, not command slugs.
+  #   - CardDetailHeader.tsx: nextStage navigation surface; references stage
+  #     keys, not command slugs.
   # Suppress exit 1 (no matches) with || true.
   SLUG_MATCHES="$(grep -rwE '(archive|update-prd|update-plan|update-tech|update-tasks)' \
-    "$SRC_DIR" --include='*.ts' --include='*.tsx' 2>/dev/null || true)"
+    "$SRC_DIR" --include='*.ts' --include='*.tsx' \
+    --exclude-dir='__tests__' \
+    --exclude='StagePill.tsx' \
+    --exclude='sessionStore.ts' \
+    --exclude='CardDetailHeader.tsx' \
+    2>/dev/null || true)"
 
   if [ -z "$SLUG_MATCHES" ]; then
     pass "B: no command-slug matches found anywhere — taxonomy file exists but is empty or unmatched"
