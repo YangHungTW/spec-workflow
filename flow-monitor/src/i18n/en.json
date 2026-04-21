@@ -89,5 +89,39 @@
   "card.repoGroup": "{repo}",
   "card.collapseRepo": "Collapse {repo}",
   "card.expandRepo": "Expand {repo}",
-  "card.active": "Active"
+  "card.active": "Active",
+
+  "action.advance_to.design": "Advance to Design",
+  "action.advance_to.prd": "Advance to PRD",
+  "action.advance_to.tech": "Advance to Tech",
+  "action.advance_to.plan": "Advance to Plan",
+  "action.advance_to.tasks": "Advance to Tasks",
+  "action.advance_to.implement": "Advance to Implement",
+  "action.advance_to.validate": "Advance to Validate",
+  "action.advance_to.archive": "Advance to Archive",
+  "action.message": "Message / Choice",
+  "action.send_panel.title": "Send Message or Make Choice",
+
+  "audit.panel.title": "Control-Plane Audit",
+  "audit.entry.via": "via",
+
+  "stalled.badge": "Stalled · {duration}",
+
+  "palette.group.control": "Control Actions",
+  "palette.group.specflow": "Specflow Commands",
+  "palette.group.destroy": "Destructive Commands",
+
+  "modal.destroy.title": "Destructive command",
+  "modal.destroy.cancel": "Cancel",
+  "modal.destroy.confirm": "Proceed",
+
+  "pill.write": "WRITE",
+  "pill.destroy": "DESTROY",
+
+  "toast.in_flight": "Action already in flight",
+  "toast.terminal_failed": "Terminal unavailable — copied to clipboard instead",
+  "toast.preflight": "{command} — {slug}",
+
+  "notification.stalled.title": "Session Stalled",
+  "notification.stalled.body": "{slug} · idle {duration}"
 }
