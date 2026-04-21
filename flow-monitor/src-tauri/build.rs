@@ -62,15 +62,27 @@ fn generate_command_taxonomy_ts() {
     });
 
     let out_file = out_dir.join("command_taxonomy.ts");
-    fs::write(&out_file, &ts).unwrap_or_else(|e| {
+    // Write to a temp file then rename so a disk-full or signal interrupt
+    // mid-write cannot leave a corrupt partial file at the final path.
+    let tmp_file = out_dir.join("command_taxonomy.ts.tmp");
+    fs::write(&tmp_file, &ts).unwrap_or_else(|e| {
         panic!(
             "build.rs: cannot write TS projection to {}: {}",
+            tmp_file.display(),
+            e
+        )
+    });
+    fs::rename(&tmp_file, &out_file).unwrap_or_else(|e| {
+        panic!(
+            "build.rs: cannot rename {} → {}: {}",
+            tmp_file.display(),
             out_file.display(),
             e
         )
     });
 
-    // Print to cargo output so developers can confirm generation.
+    // Cargo picks up this warning in verbose builds; used to confirm which
+    // taxonomy version was active without grepping the full build log.
     println!("cargo:warning=Generated {}", out_file.display());
 }
 
@@ -100,7 +112,8 @@ fn parse_const_array(source: &str, name: &str) -> Option<Vec<String>> {
     // Find the `]` that closes the array literal (first `]` after `&[`).
     let array_end = source[array_start..].find(']')? + array_start;
 
-    let array_body = &source[array_start + 2..array_end]; // content between `&[` and `]`
+    // +2 skips the `&[` opener; the `]` closer is excluded by using array_end as the end bound.
+    let array_body = &source[array_start + 2..array_end];
 
     let mut values = Vec::new();
     let mut remaining = array_body;
@@ -126,6 +139,14 @@ fn parse_const_array(source: &str, name: &str) -> Option<Vec<String>> {
 }
 
 /// Render the three arrays as a TypeScript file.
+///
+/// Each array gets a corresponding `Set<string>` constant built at module-load
+/// time.  `classify()` uses `.has()` (O(1)) instead of `Array.includes()` (O(n))
+/// so three sequential linear scans are avoided on every dispatch call.
+///
+/// NOTE: this output couples with `flow-monitor/src/generated/command_taxonomy.ts`
+/// (the placeholder committed by T110).  Any change to the exported shape here
+/// must be reflected in the consumers of that file (e.g. invokeStore.ts).
 fn render_ts(safe: &[String], write: &[String], destroy: &[String]) -> String {
     let safe_ts = ts_array(safe);
     let write_ts = ts_array(write);
@@ -149,10 +170,16 @@ fn render_ts(safe: &[String], write: &[String], destroy: &[String]) -> String {
          \n\
          export type Classification = 'safe' | 'write' | 'destroy';\n\
          \n\
+         // Pre-built Sets allow O(1) membership tests in classify() below.\n\
+         // Constructed once at module load; do not mutate at runtime.\n\
+         export const SAFE_SET: Set<string> = new Set(SAFE);\n\
+         export const WRITE_SET: Set<string> = new Set(WRITE);\n\
+         export const DESTROY_SET: Set<string> = new Set(DESTROY);\n\
+         \n\
          export function classify(cmd: string): Classification | null {{\n\
-         \x20 if ((SAFE as readonly string[]).includes(cmd)) return 'safe';\n\
-         \x20 if ((WRITE as readonly string[]).includes(cmd)) return 'write';\n\
-         \x20 if ((DESTROY as readonly string[]).includes(cmd)) return 'destroy';\n\
+         \x20 if (SAFE_SET.has(cmd)) return 'safe';\n\
+         \x20 if (WRITE_SET.has(cmd)) return 'write';\n\
+         \x20 if (DESTROY_SET.has(cmd)) return 'destroy';\n\
          \x20 return null;\n\
          }}\n"
     )
@@ -219,6 +246,26 @@ pub const DESTROY: &[&str] = &["archive", "update-req", "update-tech"];
         assert!(ts.contains("export const SAFE = [\"a\"] as const;"));
         assert!(ts.contains("export const WRITE = [\"b\"] as const;"));
         assert!(ts.contains("export const DESTROY = [\"c\"] as const;"));
+    }
+
+    /// classify() in the generated TS must use Set.has() (O(1)) not Array.includes() (O(n)).
+    #[test]
+    fn render_ts_classify_uses_set_has_not_array_includes() {
+        let ts = render_ts(&["a".into()], &["b".into()], &["c".into()]);
+        // Set constants must be exported.
+        assert!(ts.contains("export const SAFE_SET: Set<string> = new Set(SAFE);"),
+            "SAFE_SET not found in generated TS");
+        assert!(ts.contains("export const WRITE_SET: Set<string> = new Set(WRITE);"),
+            "WRITE_SET not found in generated TS");
+        assert!(ts.contains("export const DESTROY_SET: Set<string> = new Set(DESTROY);"),
+            "DESTROY_SET not found in generated TS");
+        // classify() must use .has() not .includes().
+        assert!(ts.contains("SAFE_SET.has(cmd)"), "classify must use SAFE_SET.has");
+        assert!(ts.contains("WRITE_SET.has(cmd)"), "classify must use WRITE_SET.has");
+        assert!(ts.contains("DESTROY_SET.has(cmd)"), "classify must use DESTROY_SET.has");
+        // No Array.includes() usage left in classify.
+        assert!(!ts.contains(".includes(cmd)"),
+            "classify must not use Array.includes() — O(n) per call");
     }
 
     #[test]

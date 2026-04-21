@@ -994,6 +994,9 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         let repo = tmp.path().canonicalize().unwrap();
         let lock = crate::lock::LockState::new();
+        // Pass the repo as a registered root so the path-traversal guard passes
+        // and the test reaches the DESTROY_UNREACHABLE check it targets.
+        let roots = vec![repo.clone()];
 
         let result = invoke_command_inner(
             &lock,
@@ -1002,6 +1005,7 @@ mod tests {
             "archive".to_string(),   // DESTROY-class
             "clipboard".to_string(),
             "palette".to_string(),
+            &roots,
         );
 
         assert!(result.is_err(), "Destroy command must be rejected");
@@ -1016,6 +1020,7 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         let repo = tmp.path().canonicalize().unwrap();
         let lock = crate::lock::LockState::new();
+        let roots = vec![repo.clone()];
 
         let result = invoke_command_inner(
             &lock,
@@ -1024,6 +1029,7 @@ mod tests {
             "not-a-real-command".to_string(),
             "clipboard".to_string(),
             "palette".to_string(),
+            &roots,
         );
 
         assert!(result.is_err(), "unknown command must return error");
@@ -1038,6 +1044,7 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         let repo = tmp.path().canonicalize().unwrap();
         let lock = crate::lock::LockState::new();
+        let roots = vec![repo.clone()];
 
         // Pre-acquire the lock so the second call sees AlreadyHeld.
         lock.try_acquire(repo.clone(), "my-feature".to_string());
@@ -1049,6 +1056,7 @@ mod tests {
             "prd".to_string(),  // WRITE-class
             "clipboard".to_string(),
             "palette".to_string(),
+            &roots,
         );
 
         assert!(result.is_err(), "in-flight session must be rejected");
@@ -1057,18 +1065,64 @@ mod tests {
             "expected IN_FLIGHT, got: {}", err.code);
     }
 
+    /// A repo path not in registered_roots must return PATH_TRAVERSAL.
+    #[test]
+    fn invoke_command_inner_unregistered_repo_returns_path_traversal() {
+        let tmp = tempfile::tempdir().unwrap();
+        let repo = tmp.path().canonicalize().unwrap();
+        let lock = crate::lock::LockState::new();
+        // Empty registered roots — repo is not registered.
+        let roots: Vec<PathBuf> = vec![];
+
+        let result = invoke_command_inner(
+            &lock,
+            repo.to_string_lossy().to_string(),
+            "my-feature".to_string(),
+            "prd".to_string(),
+            "clipboard".to_string(),
+            "palette".to_string(),
+            &roots,
+        );
+
+        assert!(result.is_err(), "unregistered repo must be rejected");
+        let err = result.unwrap_err();
+        assert_eq!(err.code, "PATH_TRAVERSAL",
+            "expected PATH_TRAVERSAL, got: {}", err.code);
+    }
+
     /// get_audit_tail_inner with limit=0 returns empty vec without error.
     #[test]
     fn get_audit_tail_inner_empty_log_returns_empty_vec() {
         let tmp = tempfile::tempdir().unwrap();
         let repo = tmp.path().canonicalize().unwrap();
+        let roots = vec![repo.clone()];
 
         let result = get_audit_tail_inner(
             repo.to_string_lossy().to_string(),
             0,
+            &roots,
         );
         assert!(result.is_ok(), "audit tail of empty log must succeed: {:?}", result.err());
         assert!(result.unwrap().is_empty(), "tail from empty log must be empty");
+    }
+
+    /// get_audit_tail_inner rejects a repo not in registered_roots.
+    #[test]
+    fn get_audit_tail_inner_unregistered_repo_returns_path_traversal() {
+        let tmp = tempfile::tempdir().unwrap();
+        let repo = tmp.path().canonicalize().unwrap();
+        // Empty registered roots — repo is not registered.
+        let roots: Vec<PathBuf> = vec![];
+
+        let result = get_audit_tail_inner(
+            repo.to_string_lossy().to_string(),
+            10,
+            &roots,
+        );
+        assert!(result.is_err(), "unregistered repo must be rejected");
+        let err = result.unwrap_err();
+        assert_eq!(err.code, "PATH_TRAVERSAL",
+            "expected PATH_TRAVERSAL, got: {}", err.code);
     }
 
     /// get_in_flight_set_inner returns an empty vec when the lock state is empty.
@@ -1340,7 +1394,23 @@ pub fn invoke_command(
     use tauri::Emitter;
     use std::time::{SystemTime, UNIX_EPOCH};
 
-    let result = invoke_command_inner(&state, repo.clone(), slug.clone(), command.clone(), delivery, entry_point);
+    // Extract the registered-repo list from settings so invoke_command_inner
+    // can enforce the registered-roots boundary before any dispatch work.
+    let registered_roots: Vec<PathBuf> = settings
+        .0
+        .lock()
+        .map(|g| g.repos.clone())
+        .unwrap_or_default();
+
+    let result = invoke_command_inner(
+        &state,
+        repo.clone(),
+        slug.clone(),
+        command.clone(),
+        delivery,
+        entry_point,
+        &registered_roots,
+    );
 
     // Emit in_flight_changed after acquiring the lock (lock state may have changed).
     let locks = get_in_flight_set_inner(&state);
@@ -1361,9 +1431,6 @@ pub fn invoke_command(
         }
     }
 
-    // Snapshot repo list for the path-traversal guard in invoke_command_inner.
-    let _ = settings;
-
     result
 }
 
@@ -1372,8 +1439,15 @@ pub fn invoke_command(
 pub fn get_audit_tail(
     repo: String,
     limit: usize,
+    settings: tauri::State<'_, SettingsState>,
 ) -> Result<Vec<crate::audit::AuditLine>, IpcError> {
-    get_audit_tail_inner(repo, limit)
+    // Extract registered roots to enforce the path-traversal boundary.
+    let registered_roots: Vec<PathBuf> = settings
+        .0
+        .lock()
+        .map(|g| g.repos.clone())
+        .unwrap_or_default();
+    get_audit_tail_inner(repo, limit, &registered_roots)
 }
 
 /// Return the current in-flight `(repo, slug)` pairs.
@@ -1391,6 +1465,7 @@ pub fn get_in_flight_set(
 /// Core logic for `invoke_command` — testable without a live Tauri runtime.
 ///
 /// Workflow per tech §2.2 Flow C:
+///   0. path-traversal guard — repo must be under a registered root (security check 2)
 ///   1. classify(command) → if Destroy, return Err(DESTROY_UNREACHABLE)
 ///   2. allow_list_contains(command) → if false, return Err(UNKNOWN_COMMAND)
 ///   3. lock::try_acquire(repo, slug) → if AlreadyHeld, return Err(IN_FLIGHT)
@@ -1399,6 +1474,10 @@ pub fn get_in_flight_set(
 ///      this function uses None for clipboard; the command wrapper passes real clipboard.
 ///   5. audit::append_line (best-effort; errors logged but not propagated to caller)
 ///   6. return Ok(InvokeResult)
+///
+/// `registered_roots` is supplied by the caller from SettingsState so that
+/// the boundary check can be applied before any further dispatch work —
+/// the same guard pattern used in `read_artefact_inner` (ipc.rs ~L1201).
 pub fn invoke_command_inner(
     lock: &crate::lock::LockState,
     repo: String,
@@ -1406,10 +1485,20 @@ pub fn invoke_command_inner(
     command: String,
     delivery: String,
     entry_point: String,
+    registered_roots: &[PathBuf],
 ) -> Result<InvokeResult, IpcError> {
     use crate::command_taxonomy;
     use crate::invoke;
     use crate::lock::AcquireResult;
+
+    // Step 0 — canonicalise repo and enforce the registered-roots boundary
+    // (security rule 2: path traversal must be rejected at the IPC boundary).
+    let repo_path = PathBuf::from(&repo);
+    let canonical_repo = repo_path.canonicalize().map_err(|e| IpcError {
+        code: "INVALID_REPO",
+        message: format!("cannot canonicalise repo path {repo}: {e}"),
+    })?;
+    assert_under_registered_root(&canonical_repo, registered_roots)?;
 
     // Step 1 — classify: Destroy is unreachable in B2 (AC8.b belt-and-braces).
     let classification = command_taxonomy::classify(&command);
@@ -1428,12 +1517,7 @@ pub fn invoke_command_inner(
         });
     }
 
-    // Step 3 — canonicalise repo path and acquire the in-flight lock.
-    let repo_path = PathBuf::from(&repo);
-    let canonical_repo = repo_path.canonicalize().map_err(|e| IpcError {
-        code: "INVALID_REPO",
-        message: format!("cannot canonicalise repo path {repo}: {e}"),
-    })?;
+    // Step 3 — acquire the in-flight lock (repo is already canonicalised in step 0).
 
     let acquire = lock.try_acquire(canonical_repo.clone(), slug.clone());
     if acquire == AcquireResult::AlreadyHeld {
@@ -1498,9 +1582,25 @@ pub fn invoke_command_inner(
 }
 
 /// Delegates to `audit::read_tail`; maps `AuditError` to `IpcError`.
-pub fn get_audit_tail_inner(repo: String, limit: usize) -> Result<Vec<crate::audit::AuditLine>, IpcError> {
+///
+/// Enforces the registered-roots boundary before any I/O — `repo` (raw IPC input)
+/// is canonicalised and checked against `registered_roots`, rejecting `../..`
+/// traversal components at the boundary (security rule 2).
+pub fn get_audit_tail_inner(
+    repo: String,
+    limit: usize,
+    registered_roots: &[PathBuf],
+) -> Result<Vec<crate::audit::AuditLine>, IpcError> {
+    // Canonicalise the raw IPC input to remove `..` components.
     let repo_path = PathBuf::from(&repo);
-    crate::audit::read_tail(&repo_path, limit).map_err(|e| IpcError {
+    let canonical_repo = repo_path.canonicalize().map_err(|e| IpcError {
+        code: "INVALID_REPO",
+        message: format!("cannot canonicalise repo path {repo}: {e}"),
+    })?;
+    // Enforce the allowed-repos boundary before any further I/O.
+    assert_under_registered_root(&canonical_repo, registered_roots)?;
+
+    crate::audit::read_tail(&canonical_repo, limit).map_err(|e| IpcError {
         code: "AUDIT_READ_ERROR",
         message: e.to_string(),
     })
