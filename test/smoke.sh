@@ -891,6 +891,19 @@ for t in t13_settings_json t14_rules_dir_structure t15_rules_schema \
 done
 
 # ---------------------------------------------------------------------------
+# Rename-to-specaffold allowlist check (T24 — wired by T23/T24)
+# ---------------------------------------------------------------------------
+echo "--- t_grep_allowlist ---"
+if bash "$REPO_ROOT/test/t_grep_allowlist.sh" >/dev/null 2>&1; then
+  echo "  PASS"
+  PASS_COUNT=$((PASS_COUNT + 1))
+else
+  echo "  FAIL"
+  FAIL_COUNT=$((FAIL_COUNT + 1))
+fi
+echo
+
+# ---------------------------------------------------------------------------
 # Final summary
 # ---------------------------------------------------------------------------
 TOTAL=$((PASS_COUNT + FAIL_COUNT))
