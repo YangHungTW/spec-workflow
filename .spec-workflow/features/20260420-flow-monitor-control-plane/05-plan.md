@@ -240,7 +240,7 @@ Conventions in this section (new merged shape):
 - **Verify**: `cd flow-monitor && cargo build --manifest-path src-tauri/Cargo.toml` exits 0. Structural: `grep -q 'tauri-plugin-shell' flow-monitor/src-tauri/Cargo.toml` and `grep -q 'shell:allow-execute' flow-monitor/src-tauri/capabilities/default.json` both exit 0. Full verification of the manifest shape is in T92-cap-test.
 - **Depends on**: —
 - **Parallel-safe-with**: T92-cap-test
-- [ ]
+- [x]
 
 ## T92-cap-test — [x] [ ] Seam G: capability manifest structural test
 - **Milestone**: M0
@@ -256,7 +256,7 @@ Conventions in this section (new merged shape):
 - **Verify**: `bash test/t91_capability_manifest.sh` exits 0 against the T91-committed manifest.
 - **Depends on**: —
 - **Parallel-safe-with**: T91
-- [ ]
+- [x]
 
 ### Wave 1 — Pure Rust modules (4 tasks)
 
@@ -278,7 +278,7 @@ Conventions in this section (new merged shape):
 - **Verify**: `cd flow-monitor/src-tauri && cargo test -p flow-monitor --lib invoke::` exits 0. Cross-reference T115 (Seam I — no `Command::new("sh"` in src-tauri).
 - **Depends on**: T91 (needs `tauri-plugin-shell` in Cargo.toml to compile)
 - **Parallel-safe-with**: T94, T95, T96
-- [ ]
+- [x]
 
 ## T94 — [x] `audit.rs` — TSV append + rotation + gitignore bootstrap + path-traversal guard
 - **Milestone**: M1
@@ -298,7 +298,7 @@ Conventions in this section (new merged shape):
 - **Verify**: `cd flow-monitor/src-tauri && cargo test -p flow-monitor --lib audit::` exits 0. `bash test/t92_audit_gitignore.sh` and `bash test/t93_audit_path_traversal.sh` exit 0. Sandbox-HOME discipline required for both shell tests per `sandbox-home-in-tests.md`.
 - **Depends on**: T91 (needs `tauri-plugin-fs` + capability scope)
 - **Parallel-safe-with**: T93, T95, T96
-- [ ]
+- [x]
 
 ## T95 — [x] `lock.rs` — in-process `Mutex<HashSet>` + 60s watchdog
 - **Milestone**: M1
@@ -315,7 +315,7 @@ Conventions in this section (new merged shape):
 - **Verify**: `cd flow-monitor/src-tauri && cargo test -p flow-monitor --lib lock::` exits 0.
 - **Depends on**: —
 - **Parallel-safe-with**: T93, T94, T96
-- [ ]
+- [x]
 
 ## T96 — [x] `command_taxonomy.rs` — hardcoded 16-command list + classifier
 - **Milestone**: M1
@@ -334,7 +334,7 @@ Conventions in this section (new merged shape):
 - **Verify**: `cd flow-monitor/src-tauri && cargo test -p flow-monitor --lib command_taxonomy::` exits 0. The TS projection is NOT generated in this task — T109's build.rs handles that.
 - **Depends on**: —
 - **Parallel-safe-with**: T93, T94, T95
-- [ ]
+- [x]
 
 ### Wave 2 — Backend wiring (3 tasks)
 
@@ -355,7 +355,7 @@ Conventions in this section (new merged shape):
 - **Verify**: `cd flow-monitor/src-tauri && cargo test -p flow-monitor --lib` exits 0 (exercises the new inline Seam A test plus all B1 tests). Manual review: the diff shape and the `prev_*` local carry correctly across tick iterations.
 - **Depends on**: T91 (plugin registration), T96 (command_taxonomy module — not directly used here but T108's scope is to land lib.rs polling wiring cleanly against the W1 module set)
 - **Parallel-safe-with**: T109, T110
-- [ ]
+- [x]
 
 ## T109 — [x] `ipc.rs` handlers + `build.rs` TS taxonomy projection
 - **Milestone**: M2
@@ -381,7 +381,7 @@ Conventions in this section (new merged shape):
 - **Verify**: `cd flow-monitor/src-tauri && cargo build` exits 0 AND regenerates the TS projection. `cd flow-monitor && npm test` exits 0 (the TS projection is importable). Manual: diff lib.rs to confirm the invoke_handler region edit is disjoint from T108's polling-loop edit.
 - **Depends on**: T93, T94, T95, T96 (needs all four W1 modules to compile).
 - **Parallel-safe-with**: T108, T110 (with the "disjoint regions of lib.rs" caveat above — developer coordinates)
-- [ ]
+- [x]
 
 ## T110 — [x] `invokeStore.ts` — renderer dispatch wrapper + in-flight set
 - **Milestone**: M2
@@ -397,7 +397,7 @@ Conventions in this section (new merged shape):
 - **Verify**: T98 (W3) authors the unit test that exercises this store. Compile check here: `cd flow-monitor && npm run build` exits 0.
 - **Depends on**: T109 (needs the generated TS projection + the IPC handlers).
 - **Parallel-safe-with**: T108, T109 (distinct file)
-- [ ]
+- [x]
 
 ### Wave 3 — Renderer stores + scaffolds (3 tasks)
 
@@ -419,7 +419,7 @@ Conventions in this section (new merged shape):
 - **Verify**: T117 (W6) grep-asserts no net-new `--(color|space|font|radius)-` declarations. This doc is the reviewer's reference during W4.
 - **Depends on**: —
 - **Parallel-safe-with**: T98, T99
-- [ ]
+- [x]
 
 ## T98 — [x] `invokeStore.test.ts` — unit test for renderer dispatch wrapper
 - **Milestone**: M3
@@ -437,7 +437,7 @@ Conventions in this section (new merged shape):
 - **Verify**: `cd flow-monitor && npm test -- invokeStore.test` exits 0.
 - **Depends on**: T110 (needs `invokeStore.ts` source).
 - **Parallel-safe-with**: T97, T99
-- [ ]
+- [x]
 
 ## T99 — [x] Seam B partial: DESTROY unreachability cross-file grep test
 - **Milestone**: M3
@@ -452,7 +452,7 @@ Conventions in this section (new merged shape):
 - **Verify**: `bash test/t94_destroy_unreachable_grep.sh` exits 0 after W4 + W5 commits land. During W3 the test should pass vacuously (ConfirmModal doesn't exist yet) — this is acceptable because W4's T104 will author the first definition, and W5's T107 must NOT import it. **The real binding test moment is in W6 after W5 settles**; scheduling the test authoring in W3 keeps the plan parallel-safe but the test's effective enforcement starts at W4 merge.
 - **Depends on**: —
 - **Parallel-safe-with**: T97, T98
-- [ ]
+- [x]
 
 ### Wave 4 — Renderer components (6 tasks)
 
@@ -466,7 +466,7 @@ Conventions in this section (new merged shape):
 - **Verify**: `cd flow-monitor && npm test -- ActionStrip` exits 0.
 - **Depends on**: T110, T112a (needs invokeStore + en.json i18n keys — but i18n is in W5; for the test, use a jest mock of the i18n module per existing flow-monitor test convention).
 - **Parallel-safe-with**: T101, T102, T103, T104, T105
-- [ ]
+- [x]
 
 ## T101 — [x] `CommandPalette.tsx` + component test
 - **Milestone**: M4
@@ -478,7 +478,7 @@ Conventions in this section (new merged shape):
 - **Verify**: `cd flow-monitor && npm test -- CommandPalette` exits 0.
 - **Depends on**: T109 (needs generated TS projection), T110 (invokeStore).
 - **Parallel-safe-with**: T100, T102, T103, T104, T105
-- [ ]
+- [x]
 
 ## T102 — [x] `SendPanel.tsx` + component test
 - **Milestone**: M4
@@ -490,7 +490,7 @@ Conventions in this section (new merged shape):
 - **Verify**: `cd flow-monitor && npm test -- SendPanel` exits 0.
 - **Depends on**: T110.
 - **Parallel-safe-with**: T100, T101, T103, T104, T105
-- [ ]
+- [x]
 
 ## T103 — [x] `PreflightToast.tsx` + component test
 - **Milestone**: M4
@@ -502,7 +502,7 @@ Conventions in this section (new merged shape):
 - **Verify**: `cd flow-monitor && npm test -- PreflightToast` exits 0.
 - **Depends on**: —
 - **Parallel-safe-with**: T100, T101, T102, T104, T105
-- [ ]
+- [x]
 
 ## T104 — [x] `ConfirmModal.tsx` + component test (Seam F)
 - **Milestone**: M4
@@ -514,7 +514,7 @@ Conventions in this section (new merged shape):
 - **Verify**: `cd flow-monitor && npm test -- ConfirmModal` exits 0.
 - **Depends on**: —
 - **Parallel-safe-with**: T100, T101, T102, T103, T105
-- [ ]
+- [x]
 
 ## T105 — [x] `AuditPanel.tsx` + component test
 - **Milestone**: M4
@@ -526,7 +526,7 @@ Conventions in this section (new merged shape):
 - **Verify**: `cd flow-monitor && npm test -- AuditPanel` exits 0.
 - **Depends on**: T109.
 - **Parallel-safe-with**: T100, T101, T102, T103, T104
-- [ ]
+- [x]
 
 ### Wave 5 — Integration + i18n + B1 nits (5 + 1 tasks; 5 parallel then 1 serial)
 
@@ -539,7 +539,7 @@ Conventions in this section (new merged shape):
 - **Verify**: `cd flow-monitor && npm test -- SessionCard` exits 0 (existing B1 test plus any B2 adjustments). Manual: `session.stalled = false` case renders no ActionStrip.
 - **Depends on**: T100, T110.
 - **Parallel-safe-with**: T107, T111, T112a, T112b
-- [ ]
+- [x]
 
 ## T107 — [x] `CardDetailHeader.tsx` — Advance + Message buttons + SendPanel toggle
 - **Milestone**: M5
@@ -550,7 +550,7 @@ Conventions in this section (new merged shape):
 - **Verify**: `cd flow-monitor && npm test -- CardDetailHeader` exits 0.
 - **Depends on**: T102, T110.
 - **Parallel-safe-with**: T106, T111, T112a, T112b
-- [ ]
+- [x]
 
 ## T111 — [x] `App.tsx` — mount CommandPalette + PreflightToast overlays + ⌘K keybinding
 - **Milestone**: M5
@@ -561,7 +561,7 @@ Conventions in this section (new merged shape):
 - **Verify**: `cd flow-monitor && npm test -- App.test` exits 0. Structural: grep for `'k'` and `metaKey` in App.tsx.
 - **Depends on**: T101, T103, T110.
 - **Parallel-safe-with**: T106, T107, T112a, T112b
-- [ ]
+- [x]
 
 ## T112a — [x] `flow-monitor/src/i18n/en.json` — add 26 B2 keys
 - **Milestone**: M5
@@ -583,7 +583,7 @@ Conventions in this section (new merged shape):
 - **Verify**: T116 (Seam J / W6) + T118 (Seam L / W6) assert parity and stage-label presence.
 - **Depends on**: —
 - **Parallel-safe-with**: T106, T107, T111, T112b
-- [ ]
+- [x]
 
 ## T112b — [x] `flow-monitor/src/i18n/zh-TW.json` — add 26 B2 keys
 - **Milestone**: M5
@@ -594,7 +594,7 @@ Conventions in this section (new merged shape):
 - **Verify**: T116 / T118 (W6).
 - **Depends on**: —
 - **Parallel-safe-with**: T106, T107, T111, T112a
-- [ ]
+- [x]
 
 ## T114 — [x] B1 nits sweep (R12 absorb)
 - **Milestone**: M5
@@ -611,7 +611,7 @@ Conventions in this section (new merged shape):
 - **Verify**: T119 (Seam M / W6) asserts each of the 5 nits is cleared.
 - **Depends on**: T106, T107, T111, T112a, T112b (serial after all of W5a).
 - **Parallel-safe-with**: — (W5b — runs alone, serial after W5a merge)
-- [ ]
+- [x]
 
 ### Wave 6 — Structural tests + runtime handoff + docs bookkeeping (9 tasks)
 
@@ -626,7 +626,7 @@ Conventions in this section (new merged shape):
 - **Verify**: T121 (W6) grep-asserts the handoff line is present in STATUS.md. `grep -q 'RUNTIME HANDOFF' .spec-workflow/features/20260420-flow-monitor-control-plane/STATUS.md` exits 0.
 - **Depends on**: —
 - **Parallel-safe-with**: T115, T116, T117, T118, T119, T120, T121
-- [ ]
+- [x]
 
 ## T115 — [x] Seam I: `test/t95_argv_no_shell_cat.sh` — no-shell-string-cat structural grep
 - **Milestone**: M6
@@ -641,7 +641,7 @@ Conventions in this section (new merged shape):
 - **Verify**: `bash test/t95_argv_no_shell_cat.sh` exits 0.
 - **Depends on**: —
 - **Parallel-safe-with**: T113, T116, T117, T118, T119, T120, T121
-- [ ]
+- [x]
 
 ## T116 — [x] Seam J: `test/t96_i18n_parity_b2_keys.sh` — en + zh-TW parity for 26 new keys
 - **Milestone**: M6
@@ -656,7 +656,7 @@ Conventions in this section (new merged shape):
 - **Verify**: `bash test/t96_i18n_parity_b2_keys.sh` exits 0.
 - **Depends on**: —
 - **Parallel-safe-with**: T113, T115, T117, T118, T119, T120, T121
-- [ ]
+- [x]
 
 ## T117 — [x] Seam K: `test/t97_theme_token_reuse.sh` — no new theme tokens
 - **Milestone**: M6
@@ -671,7 +671,7 @@ Conventions in this section (new merged shape):
 - **Verify**: `bash test/t97_theme_token_reuse.sh` exits 0.
 - **Depends on**: —
 - **Parallel-safe-with**: T113, T115, T116, T118, T119, T120, T121
-- [ ]
+- [x]
 
 ## T118 — [x] Seam L: `test/t98_stage_label_lookup.sh` — every stage has `action.advance_to.<stage>` i18n key
 - **Milestone**: M6
@@ -685,7 +685,7 @@ Conventions in this section (new merged shape):
 - **Verify**: `bash test/t98_stage_label_lookup.sh` exits 0.
 - **Depends on**: —
 - **Parallel-safe-with**: T113, T115, T116, T117, T119, T120, T121
-- [ ]
+- [x]
 
 ## T119 — [x] Seam M: `test/t99_b1_nits_cleared.sh` — 5 B1-nits assertions
 - **Milestone**: M6
@@ -701,7 +701,7 @@ Conventions in this section (new merged shape):
 - **Verify**: `bash test/t99_b1_nits_cleared.sh` exits 0.
 - **Depends on**: T114 (nits sweep must land first — but test authoring can be parallel; the verify step checks T114's committed state).
 - **Parallel-safe-with**: T113, T115, T116, T117, T118, T120, T121
-- [ ]
+- [x]
 
 ## T120 — [x] Seam B full: `test/t100_taxonomy_classification.sh` — 16-command taxonomy + DESTROY-only-in-taxonomy grep
 - **Milestone**: M6
@@ -715,7 +715,7 @@ Conventions in this section (new merged shape):
 - **Verify**: `bash test/t100_taxonomy_classification.sh` exits 0.
 - **Depends on**: —
 - **Parallel-safe-with**: T113, T115, T116, T117, T118, T119, T121
-- [ ]
+- [x]
 
 ## T121 — [x] `test/t101_runtime_handoff_note.sh` — verify T113's STATUS note
 - **Milestone**: M6
@@ -729,7 +729,7 @@ Conventions in this section (new merged shape):
 - **Verify**: `bash test/t101_runtime_handoff_note.sh` exits 0.
 - **Depends on**: T113.
 - **Parallel-safe-with**: T113, T115, T116, T117, T118, T119, T120
-- [ ]
+- [x]
 
 ## T122 — [x] Register 7 new shell tests in `test/smoke.sh`
 - **Milestone**: M6
@@ -741,7 +741,7 @@ Conventions in this section (new merged shape):
 - **Verify**: `bash test/smoke.sh` runs all 11 new registrations and each exits 0 against the post-W5-merge tree.
 - **Depends on**: T113, T115, T116, T117, T118, T119, T120, T121, and the T94 shell tests (t92/t93), the T99 grep test (t94), and the T92-cap-test manifest test (t91).
 - **Parallel-safe-with**: — (W6b — serial after W6a)
-- [ ]
+- [x]
 
 ---
 
