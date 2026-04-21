@@ -202,7 +202,7 @@ Each task below is a new-shape task block per `tpm.appendix` with `Milestone:`, 
 
 ### W2 — React/TS frontend + i18n + README + allow-list + final structural gates
 
-- [ ] **T9. Rewrite i18n bundles `flow-monitor/src/i18n/en.json` + `zh-TW.json` (catalog-owner pattern; includes `palette.group.specflow` → `palette.group.scaff` key rename)**
+- [x] **T9. Rewrite i18n bundles `flow-monitor/src/i18n/en.json` + `zh-TW.json` (catalog-owner pattern; includes `palette.group.specflow` → `palette.group.scaff` key rename)**
   - **Milestone**: W2 i18n owner — one task owns both language bundles and is responsible for EN↔zh-TW parity. Carries PRD D5 key rename.
   - **Requirements**: R7 (every call site updated — consumer updates land in T12), R8 (both files contain `empty.body`, `settings.repoNotSpecflow`, `palette.group.scaff` with values matching design delta §1 and §2 exactly), R9 (valid JSON; no `palette.group.specflow` key present).
   - **Decisions**: tech-D5 (rename the key; clean long-term state); tech-D4 (inline replace for path literals in strings).
@@ -216,7 +216,7 @@ Each task below is a new-shape task block per `tpm.appendix` with `Milestone:`, 
   - **Depends on**: none (no W1 dep — i18n is independent of Rust).
   - **Parallel-safe-with**: T10, T11, T13, T14.
 
-- [ ] **T10. Rewrite TSX doc comments + path literals — 5 component/view files**
+- [x] **T10. Rewrite TSX doc comments + path literals — 5 component/view files**
   - **Milestone**: W2 frontend doc/display sweep.
   - **Requirements**: R5 (TSX doc comments + rendered path literals updated per design delta §3).
   - **Decisions**: tech-D4 (inline replace).
@@ -226,7 +226,7 @@ Each task below is a new-shape task block per `tpm.appendix` with `Milestone:`, 
   - **Depends on**: none.
   - **Parallel-safe-with**: T9, T11, T13, T14.
 
-- [ ] **T11. Rewrite `flow-monitor/src/components/SettingsRepositories.tsx:33` path-check (depends on W1 merged)**
+- [x] **T11. Rewrite `flow-monitor/src/components/SettingsRepositories.tsx:33` path-check (depends on W1 merged)**
   - **Milestone**: W2 frontend correctness fix — PRD D6 merge-order consumer.
   - **Requirements**: R6 (frontend builds `${pickedPath}/.specaffold` for `path_exists` IPC; Rust backend scanner rename must have landed — W1 merged).
   - **Decisions**: tech-D4 (inline replace); PRD D6 (merge-order constraint).
@@ -236,7 +236,7 @@ Each task below is a new-shape task block per `tpm.appendix` with `Milestone:`, 
   - **Depends on**: W1 merged (PRD D6 / tech §4.1 — Rust scanner change at or before this frontend change). In two-wave serial scheduling this is automatic; developer agent confirms by checking that `flow-monitor/src-tauri/src/repo_discovery.rs` no longer contains `spec-workflow` before editing.
   - **Parallel-safe-with**: T9, T10, T13, T14.
 
-- [ ] **T12. Rewrite TSX test files — 5 files; depends on T9 for i18n key rename**
+- [x] **T12. Rewrite TSX test files — 5 files; depends on T9 for i18n key rename**
   - **Milestone**: W2 frontend test sweep; consumer side of the PRD D5 key rename.
   - **Requirements**: R5 (test snapshots / mock strings), R7 (every `t("palette.group.specflow")` call site updated to `t("palette.group.scaff")`).
   - **Decisions**: tech-D4 (inline replace); tech-D5 (key rename consumer).
@@ -246,7 +246,7 @@ Each task below is a new-shape task block per `tpm.appendix` with `Milestone:`, 
   - **Depends on**: T9 (i18n key must exist before its consumer test asserts on it).
   - **Parallel-safe-with**: T10, T11, T13, T14.
 
-- [ ] **T13. Rewrite `flow-monitor/README.md` — prose, path prefixes, and one new upgrade-notes line (R10)**
+- [x] **T13. Rewrite `flow-monitor/README.md` — prose, path prefixes, and one new upgrade-notes line (R10)**
   - **Milestone**: W2 docs sweep; includes the intentional upgrade-notes line preserved by the R10 allow-list carve-out.
   - **Requirements**: R10 (README prose per design delta §4; add one new line under a "Known limitations" or "Upgrade notes" subsection stating that pre-rename audit logs under `.spec-workflow/.flow-monitor/` are preserved on disk but not surfaced in the new UI).
   - **Decisions**: PRD D4 (lazy migration; README is the user-facing acknowledgement); PRD D7 (preserve feature slug `20260419-flow-monitor` as a date-based identifier — do NOT rewrite).
@@ -260,7 +260,7 @@ Each task below is a new-shape task block per `tpm.appendix` with `Milestone:`, 
   - **Depends on**: none.
   - **Parallel-safe-with**: T9, T10, T11, T12.
 
-- [ ] **T14. Carryover allow-list edit — remove `flow-monitor/**`, add `flow-monitor/README.md`**
+- [x] **T14. Carryover allow-list edit — remove `flow-monitor/**`, add `flow-monitor/README.md`**
   - **Milestone**: W2 allow-list narrowing — the change that makes this whole feature necessary per tech §6 "the reason we are here".
   - **Requirements**: R11 (repo-wide grep assertion continues to produce zero unlisted hits; this feature's legitimate carve-out is the R10 upgrade-notes line only, so the allow-list narrows to exactly `flow-monitor/README.md`).
   - **Decisions**: tech §6 "Carry-over allow-list additions" — remove the blanket `flow-monitor/**` entry (lines 27–28 of `.claude/carryover-allowlist.txt` at plan time, per the pre-read); add one narrow entry `flow-monitor/README.md` with a `#` leading comment explaining the R10 upgrade-notes carve-out.
@@ -280,7 +280,7 @@ Each task below is a new-shape task block per `tpm.appendix` with `Milestone:`, 
   - **Depends on**: T13 (the README must already contain only the one legitimate legacy reference before the allow-list narrows to `README.md` only; if T14 lands before T13, T16's grep assertion could fail or pass spuriously).
   - **Parallel-safe-with**: T9, T10, T11, T12.
 
-- [ ] **T15. W2 vitest gate — `npm run test` (or equivalent) green inside `flow-monitor/`**
+- [x] **T15. W2 vitest gate — `npm run test` (or equivalent) green inside `flow-monitor/`**
   - **Milestone**: W2 frontend test gate; AC7 structural verification.
   - **Requirements**: R5, R7, R8 (frontend rewrites + i18n key rename + consumer tests all green).
   - **Decisions**: tech §4.3 testing strategy item 4 (vitest gate).
@@ -290,7 +290,7 @@ Each task below is a new-shape task block per `tpm.appendix` with `Milestone:`, 
   - **Depends on**: T9, T10, T11, T12, T13.
   - **Parallel-safe-with**: T14, T16.
 
-- [ ] **T16. Repo-wide grep-assertion + AC2/AC3 structural gate — final W2 close-out**
+- [x] **T16. Repo-wide grep-assertion + AC2/AC3 structural gate — final W2 close-out**
   - **Milestone**: W2 close-out gate; AC1 + AC2 + AC3 + AC6 + AC8 + AC9 structural verification.
   - **Requirements**: R11 (grep assertion against `.claude/carryover-allowlist.txt` returns zero unlisted hits), PRD AC1 / AC2 / AC3 / AC6 / AC8 / AC9.
   - **Decisions**: tech §4.3 testing strategy items 1, 2, 5, 6 (structural gates).
