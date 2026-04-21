@@ -1,3 +1,4 @@
+pub mod command_taxonomy;
 pub mod ipc;
 pub mod notify;
 pub mod poller;
