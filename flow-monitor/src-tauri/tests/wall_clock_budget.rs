@@ -36,7 +36,7 @@ use tokio::sync::mpsc as tokio_mpsc;
 /// Each session directory is named `session-<n>` and contains a minimal
 /// STATUS.md that satisfies `status_parse::parse`.
 fn make_repo_with_sessions(base: &std::path::Path, session_count: usize) -> PathBuf {
-    let features = base.join(".spec-workflow").join("features");
+    let features = base.join(".specaffold").join("features");
     for i in 0..session_count {
         let slug = format!("session-{i:02}");
         let dir = features.join(&slug);
