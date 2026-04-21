@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# claude-symlink — manage specflow .claude/ symlinks across projects
+# claude-symlink — manage scaff .claude/ symlinks across projects
 # =============================================================================
 #
 # USAGE
@@ -21,8 +21,8 @@
 #
 # MANAGED SET
 #   The tool manages exactly these paths under ~/.claude/:
-#     agents/specflow          — directory symlink → <repo>/.claude/agents/specflow
-#     commands/specflow        — directory symlink → <repo>/.claude/commands/specflow
+#     agents/scaff          — directory symlink → <repo>/.claude/agents/scaff
+#     commands/scaff        — directory symlink → <repo>/.claude/commands/scaff
 #     hooks                    — directory symlink → <repo>/.claude/hooks
 #     team-memory/**       — one file symlink per regular file under
 #                            <repo>/.claude/team-memory/ (walked at run time)
@@ -214,7 +214,7 @@ owned_by_us() {
 
 # ---------------------------------------------------------------------------
 # plan_links — populate global indexed arrays PLAN_SRC and PLAN_TGT (D1)
-# Two fixed directory-level pairs (agents/specflow, commands/specflow) come first,
+# Two fixed directory-level pairs (agents/scaff, commands/scaff) come first,
 # then one entry per file under $REPO/.claude/team-memory/ (walked via find).
 # Does NOT print anything; use __probe plan to dump pairs for debugging.
 # HOME must come from the environment (R2) — never hardcoded.
@@ -223,13 +223,13 @@ plan_links() {
   PLAN_SRC=()
   PLAN_TGT=()
 
-  # Fixed pair 1: agents/specflow
-  PLAN_SRC+=("$REPO/.claude/agents/specflow")
-  PLAN_TGT+=("$HOME/.claude/agents/specflow")
+  # Fixed pair 1: agents/scaff
+  PLAN_SRC+=("$REPO/.claude/agents/scaff")
+  PLAN_TGT+=("$HOME/.claude/agents/scaff")
 
-  # Fixed pair 2: commands/specflow
-  PLAN_SRC+=("$REPO/.claude/commands/specflow")
-  PLAN_TGT+=("$HOME/.claude/commands/specflow")
+  # Fixed pair 2: commands/scaff
+  PLAN_SRC+=("$REPO/.claude/commands/scaff")
+  PLAN_TGT+=("$HOME/.claude/commands/scaff")
 
   # Fixed pair 3: hooks (NEW, feature 20260417-shareable-hooks)
   PLAN_SRC+=("$REPO/.claude/hooks")
@@ -429,8 +429,8 @@ Subcommands:
               prune owned orphans.
 
 Managed set:
-  agents/specflow          → <repo>/.claude/agents/specflow   (directory symlink)
-  commands/specflow        → <repo>/.claude/commands/specflow  (directory symlink)
+  agents/scaff          → <repo>/.claude/agents/scaff   (directory symlink)
+  commands/scaff        → <repo>/.claude/commands/scaff  (directory symlink)
   hooks                    → <repo>/.claude/hooks              (directory symlink)
   team-memory/**       → one file symlink per file under <repo>/.claude/team-memory/
 
@@ -656,11 +656,11 @@ cmd_uninstall() {
   local -a candidate_parents=()
 
   # ------------------------------------------------------------------
-  # Step 1: managed dir-level links (agents/specflow, commands/specflow)
+  # Step 1: managed dir-level links (agents/scaff, commands/scaff)
   # ------------------------------------------------------------------
   local dir_links=()
-  dir_links+=("$HOME/.claude/agents/specflow")
-  dir_links+=("$HOME/.claude/commands/specflow")
+  dir_links+=("$HOME/.claude/agents/scaff")
+  dir_links+=("$HOME/.claude/commands/scaff")
   dir_links+=("$HOME/.claude/hooks")
 
   local dl

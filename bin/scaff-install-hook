@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # =============================================================================
-# specflow-install-hook — safe settings.json installer helper (D12)
+# scaff-install-hook — safe settings.json installer helper (D12)
 # =============================================================================
 #
 # USAGE
-#   bin/specflow-install-hook add    <event> <command>
-#   bin/specflow-install-hook remove <event> <command>
+#   bin/scaff-install-hook add    <event> <command>
+#   bin/scaff-install-hook remove <event> <command>
 #
 # Operates on settings.json in the CURRENT DIRECTORY (caller's cwd).
 # Uses Python 3 read-merge-write: never overwrites unrelated keys.
@@ -29,8 +29,8 @@ command -v python3 >/dev/null 2>&1 || {
 # Usage
 # ---------------------------------------------------------------------------
 usage() {
-  echo "Usage: specflow-install-hook add    <event> <command>" >&2
-  echo "       specflow-install-hook remove <event> <command>" >&2
+  echo "Usage: scaff-install-hook add    <event> <command>" >&2
+  echo "       scaff-install-hook remove <event> <command>" >&2
   exit 2
 }
 

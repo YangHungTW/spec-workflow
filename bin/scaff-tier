@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # =============================================================================
-# specflow-tier — sourceable bash library for tier classification and mutation
+# scaff-tier — sourceable bash library for tier classification and mutation
 # =============================================================================
 #
 # SOURCE, DO NOT EXEC:
-#   source "$REPO_ROOT/bin/specflow-tier"
+#   source "$REPO_ROOT/bin/scaff-tier"
 #
 # PUBLIC FUNCTIONS
 #   get_tier <feature_dir>
@@ -170,7 +170,7 @@ validate_tier_transition() {
   local old_tier="$1"
   local new_tier="$2"
 
-  # Self-transition is a valid no-op (idempotence for /specflow:update-* callers).
+  # Self-transition is a valid no-op (idempotence for /scaff:update-* callers).
   if [ "$old_tier" = "$new_tier" ] && [ "$old_tier" != "malformed" ] && [ "$old_tier" != "missing" ]; then
     return 0
   fi

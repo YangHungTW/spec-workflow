@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # =============================================================================
-# specflow-aggregate-verdicts — parameterised verdict aggregator CLI
+# scaff-aggregate-verdicts — parameterised verdict aggregator CLI
 # =============================================================================
 #
 # USAGE
-#   bin/specflow-aggregate-verdicts <axis> [<axis>...] --dir <verdict-dir>
+#   bin/scaff-aggregate-verdicts <axis> [<axis>...] --dir <verdict-dir>
 #
 # POSITIONAL
 #   <axis>...   One or more axis names (e.g. security performance style).
@@ -58,8 +58,8 @@ for arg in "$@"; do
   fi
   case "$arg" in
     --*)
-      printf 'specflow-aggregate-verdicts: unknown option: %s\n' "$arg" >&2
-      printf 'Usage: specflow-aggregate-verdicts <axis>... --dir <verdict-dir>\n' >&2
+      printf 'scaff-aggregate-verdicts: unknown option: %s\n' "$arg" >&2
+      printf 'Usage: scaff-aggregate-verdicts <axis>... --dir <verdict-dir>\n' >&2
       exit 2
       ;;
     *)
@@ -89,21 +89,21 @@ done
 # AXIS_SET contains a leading space; strip it for the empty check.
 AXIS_SET="${AXIS_SET# }"
 if [ -z "$AXIS_SET" ]; then
-  printf 'specflow-aggregate-verdicts: axis-set is required (at least one axis name)\n' >&2
-  printf 'Usage: specflow-aggregate-verdicts <axis>... --dir <verdict-dir>\n' >&2
+  printf 'scaff-aggregate-verdicts: axis-set is required (at least one axis name)\n' >&2
+  printf 'Usage: scaff-aggregate-verdicts <axis>... --dir <verdict-dir>\n' >&2
   exit 2
 fi
 
 # Validate: --dir flag must have been provided.
 if [ "$FOUND_DIR_FLAG" = "0" ]; then
-  printf 'specflow-aggregate-verdicts: --dir <verdict-dir> is required\n' >&2
-  printf 'Usage: specflow-aggregate-verdicts <axis>... --dir <verdict-dir>\n' >&2
+  printf 'scaff-aggregate-verdicts: --dir <verdict-dir> is required\n' >&2
+  printf 'Usage: scaff-aggregate-verdicts <axis>... --dir <verdict-dir>\n' >&2
   exit 2
 fi
 
 # Validate: verdict directory must exist.
 if [ ! -d "$VERDICT_DIR" ]; then
-  printf 'specflow-aggregate-verdicts: verdict dir does not exist: %s\n' "$VERDICT_DIR" >&2
+  printf 'scaff-aggregate-verdicts: verdict dir does not exist: %s\n' "$VERDICT_DIR" >&2
   exit 2
 fi
 
@@ -160,7 +160,7 @@ for vfile in "$VERDICT_DIR"/*.txt; do
 
   # Malformed check — missing header or missing verdict: key.
   if [ "$FOUND_HEADER" = "0" ] || [ -z "$VERDICT_VALUE" ]; then
-    printf 'specflow-aggregate-verdicts: malformed verdict footer in %s — treating as BLOCK\n' \
+    printf 'scaff-aggregate-verdicts: malformed verdict footer in %s — treating as BLOCK\n' \
       "$vfile" >&2
     AGG_STATE="BLOCK"
     continue
@@ -170,7 +170,7 @@ for vfile in "$VERDICT_DIR"/*.txt; do
   if [ "$VERDICT_VALUE" != "PASS" ] && \
      [ "$VERDICT_VALUE" != "NITS" ] && \
      [ "$VERDICT_VALUE" != "BLOCK" ]; then
-    printf 'specflow-aggregate-verdicts: invalid verdict "%s" in %s — treating as BLOCK\n' \
+    printf 'scaff-aggregate-verdicts: invalid verdict "%s" in %s — treating as BLOCK\n' \
       "$VERDICT_VALUE" "$vfile" >&2
     AGG_STATE="BLOCK"
     continue

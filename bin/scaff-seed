@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # =============================================================================
-# specflow-seed — seed per-project .claude/ scaffolding from the source repo
+# scaff-seed — seed per-project .claude/ scaffolding from the source repo
 # =============================================================================
 #
 # USAGE
-#   bin/specflow-seed <subcommand> [options]
-#   bin/specflow-seed --help
+#   bin/scaff-seed <subcommand> [options]
+#   bin/scaff-seed --help
 #
 # SUBCOMMANDS
 #   init      Copy the managed .claude/ subtree into a consumer project.
@@ -58,7 +58,7 @@ _UNAME_S=""
 # ---------------------------------------------------------------------------
 die() {
   local msg="$1"
-  echo "specflow-seed: $msg" >&2
+  echo "scaff-seed: $msg" >&2
   exit 2
 }
 
@@ -138,7 +138,7 @@ sha256_of() {
 # parse is overkill (only the ref string is needed for a quick staleness check).
 # ---------------------------------------------------------------------------
 manifest_ref_sniff() {
-  awk -F'"' '/"specflow_ref"/ { print $4; exit }' "$1"
+  awk -F'"' '/"scaff_ref"/ { print $4; exit }' "$1"
 }
 
 # ---------------------------------------------------------------------------
@@ -165,7 +165,7 @@ except Exception as e:
 if data.get("schema_version") != 1:
     print("manifest: corrupt", file=sys.stderr)
     sys.exit(2)
-if not isinstance(data.get("specflow_ref"), str) or not data["specflow_ref"]:
+if not isinstance(data.get("scaff_ref"), str) or not data["scaff_ref"]:
     print("manifest: corrupt", file=sys.stderr)
     sys.exit(2)
 if not isinstance(data.get("files"), dict):
@@ -201,7 +201,7 @@ PYEOF
 # We capture stdin to a temp file before invoking python3 so the TSV data is
 # available independently of the heredoc channel.
 # TODO(W2,W3,W4): called after each successful init/update/migrate run to
-# record the new specflow_ref and file checksums in the consumer's manifest.
+# record the new scaff_ref and file checksums in the consumer's manifest.
 # ---------------------------------------------------------------------------
 manifest_write() {
   local mpath="$1" ref="$2" source_remote="$3" applied_at="$4"
@@ -229,7 +229,7 @@ with open(tsv_file, 'r') as fh:
 
 data = {
     "schema_version": 1,
-    "specflow_ref": ref,
+    "scaff_ref": ref,
     "source_remote": source_remote,
     "applied_at": applied_at,
     "files": files,
@@ -328,8 +328,8 @@ classify_copy_target() {
 # classify_pre_commit_shim <consumer_root>
 # Pure classifier; emits one of three enum values on stdout:
 #   missing            — .git/hooks/pre-commit does not exist
-#   ok                 — exists AND contains the specflow-lint sentinel
-#   foreign-pre-commit — exists AND does NOT contain the specflow-lint sentinel
+#   ok                 — exists AND contains the scaff-lint sentinel
+#   foreign-pre-commit — exists AND does NOT contain the scaff-lint sentinel
 #
 # No mutation; no side effects. Dispatcher arms in cmd_init / cmd_migrate
 # handle all writes.
@@ -343,7 +343,7 @@ classify_pre_commit_shim() {
     return
   fi
 
-  if grep -F 'specflow-lint' "$hook_path" >/dev/null 2>&1; then
+  if grep -F 'scaff-lint' "$hook_path" >/dev/null 2>&1; then
     echo "ok"
     return
   fi
@@ -363,11 +363,11 @@ plan_copy() {
 
   local prefix
   for prefix in \
-    ".claude/agents/specflow" \
-    ".claude/commands/specflow" \
+    ".claude/agents/scaff" \
+    ".claude/commands/scaff" \
     ".claude/hooks" \
     ".claude/rules" \
-    ".spec-workflow/features/_template"
+    ".specaffold/features/_template"
   do
     if [ -d "${src_root}/${prefix}" ]; then
       find "${src_root}/${prefix}" -type f | while IFS= read -r fpath; do
@@ -488,7 +488,7 @@ preflight() {
 cmd_init() {
   # ---------------------------------------------------------------------------
   # Step 1: Resolve source repo root via layered fallback (D7):
-  #   --from > $SPECFLOW_SRC > readlink ~/.claude/agents/specflow → strip suffix
+  #   --from > $SPECFLOW_SRC > readlink ~/.claude/agents/scaff → strip suffix
   # ---------------------------------------------------------------------------
   local src_root=""
 
@@ -498,7 +498,7 @@ cmd_init() {
     src_root="$SPECFLOW_SRC"
   else
     # Auto-discover: bare readlink (no -f) on the global agents symlink
-    local agent_link="$HOME/.claude/agents/specflow"
+    local agent_link="$HOME/.claude/agents/scaff"
     if [ -L "$agent_link" ]; then
       local link_target
       link_target=$(readlink "$agent_link")
@@ -509,10 +509,10 @@ cmd_init() {
       esac
       # Suffix is a literal constant from the install path, so string
       # truncation is the right shape here (vs dirname chain).
-      local candidate="${link_target%/.claude/agents/specflow}"
+      local candidate="${link_target%/.claude/agents/scaff}"
       if [ "$candidate" != "$link_target" ] \
-         && [ -f "${candidate}/bin/specflow-seed" ] \
-         && [ -d "${candidate}/.claude/agents/specflow" ]; then
+         && [ -f "${candidate}/bin/scaff-seed" ] \
+         && [ -d "${candidate}/.claude/agents/scaff" ]; then
         src_root="$candidate"
       fi
     fi
@@ -538,18 +538,18 @@ cmd_init() {
   # Step 3: Preflight — verify source has required structural markers (D8)
   # No filesystem mutation before preflight passes.
   # ---------------------------------------------------------------------------
-  [ -f "${src_root}/bin/specflow-install-hook" ] \
-    || die "preflight: ${src_root}/bin/specflow-install-hook not found"
-  [ -d "${src_root}/.claude/agents/specflow" ] \
-    || die "preflight: ${src_root}/.claude/agents/specflow not found"
-  [ -d "${src_root}/.claude/commands/specflow" ] \
-    || die "preflight: ${src_root}/.claude/commands/specflow not found"
+  [ -f "${src_root}/bin/scaff-install-hook" ] \
+    || die "preflight: ${src_root}/bin/scaff-install-hook not found"
+  [ -d "${src_root}/.claude/agents/scaff" ] \
+    || die "preflight: ${src_root}/.claude/agents/scaff not found"
+  [ -d "${src_root}/.claude/commands/scaff" ] \
+    || die "preflight: ${src_root}/.claude/commands/scaff not found"
   [ -d "${src_root}/.claude/hooks" ] \
     || die "preflight: ${src_root}/.claude/hooks not found"
   [ -d "${src_root}/.claude/rules" ] \
     || die "preflight: ${src_root}/.claude/rules not found"
-  [ -d "${src_root}/.spec-workflow/features/_template" ] \
-    || die "preflight: ${src_root}/.spec-workflow/features/_template not found"
+  [ -d "${src_root}/.specaffold/features/_template" ] \
+    || die "preflight: ${src_root}/.specaffold/features/_template not found"
 
   # ---------------------------------------------------------------------------
   # Step 4: Resolve the ref to record in the manifest
@@ -730,7 +730,7 @@ EOF
 
   case "$shim_state" in
     missing)
-      printf '#!/usr/bin/env bash\n# specflow-lint: pre-commit shim — installed by bin/specflow-seed init/migrate\nexec bin/specflow-lint scan-staged "$@"\n' \
+      printf '#!/usr/bin/env bash\n# scaff-lint: pre-commit shim — installed by bin/scaff-seed init/migrate\nexec bin/scaff-lint scan-staged "$@"\n' \
         | write_atomic "$shim_dst"
       chmod +x "$shim_dst"
       echo "created:.git/hooks/pre-commit"
@@ -758,7 +758,7 @@ EOF
      && [ "$_CNT_CREATED" -eq 0 ] \
      && [ "$_CNT_REPLACED" -eq 0 ] \
      && [ "$_CNT_SKIPPED" -eq 0 ] \
-     && [ -f "${consumer_root}/.claude/specflow.manifest" ]; then
+     && [ -f "${consumer_root}/.claude/scaff.manifest" ]; then
     emit_summary
     exit 0
   fi
@@ -772,7 +772,7 @@ EOF
   local applied_at
   applied_at=$(date -u +%FT%TZ 2>/dev/null || echo "")
 
-  local manifest_path="${consumer_root}/.claude/specflow.manifest"
+  local manifest_path="${consumer_root}/.claude/scaff.manifest"
 
   # Back up existing manifest before overwriting (no-force-on-user-paths rule).
   # Version the backup when one already exists to avoid silent data loss.
@@ -787,14 +787,14 @@ EOF
   printf '%s\n' "$manifest_tsv" | manifest_write "$manifest_path" "$ref" "$source_remote" "$applied_at"
 
   # ---------------------------------------------------------------------------
-  # Step 10: Wire hooks via <src>/bin/specflow-install-hook (D8).
+  # Step 10: Wire hooks via <src>/bin/scaff-install-hook (D8).
   # Operate from the consumer root so settings.json is found by cwd.
   # Consumer-local hook paths (never ~/.claude/hooks/…) per the D8 contract.
   # ---------------------------------------------------------------------------
   (
     cd "$consumer_root"
-    "${src_root}/bin/specflow-install-hook" add SessionStart ".claude/hooks/session-start.sh"
-    "${src_root}/bin/specflow-install-hook" add Stop ".claude/hooks/stop.sh"
+    "${src_root}/bin/scaff-install-hook" add SessionStart ".claude/hooks/session-start.sh"
+    "${src_root}/bin/scaff-install-hook" add Stop ".claude/hooks/stop.sh"
   )
 
   emit_summary
@@ -816,12 +816,12 @@ cmd_update() {
   local consumer_root
   consumer_root=$(repo_root)
 
-  local manifest_path="${consumer_root}/.claude/specflow.manifest"
+  local manifest_path="${consumer_root}/.claude/scaff.manifest"
   [ -f "$manifest_path" ] || die "no manifest; run init or migrate first"
 
   # ---------------------------------------------------------------------------
   # Step 3: Resolve source repo root via layered fallback (D7):
-  #   --from > $SPECFLOW_SRC > readlink ~/.claude/agents/specflow → strip suffix
+  #   --from > $SPECFLOW_SRC > readlink ~/.claude/agents/scaff → strip suffix
   # ---------------------------------------------------------------------------
   local src_root=""
 
@@ -830,7 +830,7 @@ cmd_update() {
   elif [ -n "${SPECFLOW_SRC:-}" ]; then
     src_root="$SPECFLOW_SRC"
   else
-    local agent_link="$HOME/.claude/agents/specflow"
+    local agent_link="$HOME/.claude/agents/scaff"
     if [ -L "$agent_link" ]; then
       local link_target
       link_target=$(readlink "$agent_link")
@@ -838,10 +838,10 @@ cmd_update() {
         /*) ;;
         *)  link_target="$(dirname "$agent_link")/$link_target" ;;
       esac
-      local candidate="${link_target%/.claude/agents/specflow}"
+      local candidate="${link_target%/.claude/agents/scaff}"
       if [ "$candidate" != "$link_target" ] \
-         && [ -f "${candidate}/bin/specflow-seed" ] \
-         && [ -d "${candidate}/.claude/agents/specflow" ]; then
+         && [ -f "${candidate}/bin/scaff-seed" ] \
+         && [ -d "${candidate}/.claude/agents/scaff" ]; then
         src_root="$candidate"
       fi
     fi
@@ -1069,7 +1069,7 @@ EOF
 cmd_migrate() {
   # ---------------------------------------------------------------------------
   # Step 1: Resolve source repo root via layered fallback (D7):
-  #   --from > $SPECFLOW_SRC > readlink ~/.claude/agents/specflow → strip suffix
+  #   --from > $SPECFLOW_SRC > readlink ~/.claude/agents/scaff → strip suffix
   # Same resolution logic as cmd_init; no --to overload for migrate.
   # ---------------------------------------------------------------------------
   local src_root=""
@@ -1081,7 +1081,7 @@ cmd_migrate() {
   else
     # Auto-discover via bare readlink (no -f) on the global agents symlink.
     # This is a READ-ONLY operation — D10 forbids any write to ~/.claude/.
-    local agent_link="$HOME/.claude/agents/specflow"
+    local agent_link="$HOME/.claude/agents/scaff"
     if [ -L "$agent_link" ]; then
       local link_target
       link_target=$(readlink "$agent_link")
@@ -1092,16 +1092,16 @@ cmd_migrate() {
       esac
       # Suffix is a literal constant from the install path, so string
       # truncation identifies the repo root cleanly.
-      local candidate="${link_target%/.claude/agents/specflow}"
+      local candidate="${link_target%/.claude/agents/scaff}"
       if [ "$candidate" != "$link_target" ] \
-         && [ -f "${candidate}/bin/specflow-seed" ] \
-         && [ -d "${candidate}/.claude/agents/specflow" ]; then
+         && [ -f "${candidate}/bin/scaff-seed" ] \
+         && [ -d "${candidate}/.claude/agents/scaff" ]; then
         src_root="$candidate"
       fi
     fi
   fi
 
-  [ -n "$src_root" ] || die "no source repo; pass --from or set SPECFLOW_SRC or ensure ~/.claude/agents/specflow resolves"
+  [ -n "$src_root" ] || die "no source repo; pass --from or set SPECFLOW_SRC or ensure ~/.claude/agents/scaff resolves"
 
   # Resolve to an absolute path using cd (no readlink -f / realpath)
   src_root=$(cd "$src_root" 2>/dev/null && pwd -P) \
@@ -1119,18 +1119,18 @@ cmd_migrate() {
   # Step 3: Preflight — verify source has required structural markers.
   # Same checks as cmd_init; no filesystem mutation before preflight passes.
   # ---------------------------------------------------------------------------
-  [ -f "${src_root}/bin/specflow-install-hook" ] \
-    || die "preflight: ${src_root}/bin/specflow-install-hook not found"
-  [ -d "${src_root}/.claude/agents/specflow" ] \
-    || die "preflight: ${src_root}/.claude/agents/specflow not found"
-  [ -d "${src_root}/.claude/commands/specflow" ] \
-    || die "preflight: ${src_root}/.claude/commands/specflow not found"
+  [ -f "${src_root}/bin/scaff-install-hook" ] \
+    || die "preflight: ${src_root}/bin/scaff-install-hook not found"
+  [ -d "${src_root}/.claude/agents/scaff" ] \
+    || die "preflight: ${src_root}/.claude/agents/scaff not found"
+  [ -d "${src_root}/.claude/commands/scaff" ] \
+    || die "preflight: ${src_root}/.claude/commands/scaff not found"
   [ -d "${src_root}/.claude/hooks" ] \
     || die "preflight: ${src_root}/.claude/hooks not found"
   [ -d "${src_root}/.claude/rules" ] \
     || die "preflight: ${src_root}/.claude/rules not found"
-  [ -d "${src_root}/.spec-workflow/features/_template" ] \
-    || die "preflight: ${src_root}/.spec-workflow/features/_template not found"
+  [ -d "${src_root}/.specaffold/features/_template" ] \
+    || die "preflight: ${src_root}/.specaffold/features/_template not found"
 
   # ---------------------------------------------------------------------------
   # Step 4: Resolve the ref to record in the manifest.
@@ -1311,7 +1311,7 @@ EOF
 
   case "$shim_state" in
     missing)
-      printf '#!/usr/bin/env bash\n# specflow-lint: pre-commit shim — installed by bin/specflow-seed init/migrate\nexec bin/specflow-lint scan-staged "$@"\n' \
+      printf '#!/usr/bin/env bash\n# scaff-lint: pre-commit shim — installed by bin/scaff-seed init/migrate\nexec bin/scaff-lint scan-staged "$@"\n' \
         | write_atomic "$shim_dst"
       chmod +x "$shim_dst"
       echo "created:.git/hooks/pre-commit"
@@ -1339,7 +1339,7 @@ EOF
      && [ "$_CNT_CREATED" -eq 0 ] \
      && [ "$_CNT_REPLACED" -eq 0 ] \
      && [ "$_CNT_SKIPPED" -eq 0 ] \
-     && [ -f "${consumer_root}/.claude/specflow.manifest" ]; then
+     && [ -f "${consumer_root}/.claude/scaff.manifest" ]; then
     emit_summary
     exit 0
   fi
@@ -1359,7 +1359,7 @@ EOF
   local applied_at
   applied_at=$(date -u +%FT%TZ 2>/dev/null || echo "")
 
-  local manifest_path="${consumer_root}/.claude/specflow.manifest"
+  local manifest_path="${consumer_root}/.claude/scaff.manifest"
 
   # Back up existing manifest before overwriting (versioned backup discipline).
   if [ -f "$manifest_path" ]; then
@@ -1378,16 +1378,16 @@ EOF
   # when the entry is absent), then add the consumer-local equivalents.
   #
   # D10 abstention: the remove/add arguments below are STRINGS passed to the
-  # specflow-install-hook helper, which manipulates settings.json only. The
+  # scaff-install-hook helper, which manipulates settings.json only. The
   # helper does NOT touch the actual ~/.claude/hooks/* symlinks on disk.
   # cmd_migrate MUST NOT perform any rm/mv/ln on paths under $HOME/.claude/.
   # ---------------------------------------------------------------------------
   (
     cd "$consumer_root"
-    "${src_root}/bin/specflow-install-hook" remove SessionStart "~/.claude/hooks/session-start.sh"
-    "${src_root}/bin/specflow-install-hook" remove Stop "~/.claude/hooks/stop.sh"
-    "${src_root}/bin/specflow-install-hook" add SessionStart ".claude/hooks/session-start.sh"
-    "${src_root}/bin/specflow-install-hook" add Stop ".claude/hooks/stop.sh"
+    "${src_root}/bin/scaff-install-hook" remove SessionStart "~/.claude/hooks/session-start.sh"
+    "${src_root}/bin/scaff-install-hook" remove Stop "~/.claude/hooks/stop.sh"
+    "${src_root}/bin/scaff-install-hook" add SessionStart ".claude/hooks/session-start.sh"
+    "${src_root}/bin/scaff-install-hook" add Stop ".claude/hooks/stop.sh"
   )
 
   emit_summary
@@ -1426,7 +1426,7 @@ with open(src, 'r') as f:
 if data.get("schema_version") != 1:
     print("manifest: corrupt", file=sys.stderr)
     sys.exit(2)
-if not isinstance(data.get("specflow_ref"), str) or not data["specflow_ref"]:
+if not isinstance(data.get("scaff_ref"), str) or not data["scaff_ref"]:
     print("manifest: corrupt", file=sys.stderr)
     sys.exit(2)
 if not isinstance(data.get("files"), dict):
@@ -1448,7 +1448,7 @@ for relpath in data["files"]:
 # Re-assemble with same field order as manifest_write
 out = {
     "schema_version": 1,
-    "specflow_ref": data["specflow_ref"],
+    "scaff_ref": data["scaff_ref"],
     "source_remote": data.get("source_remote", ""),
     "applied_at": data.get("applied_at", ""),
     "files": data["files"],
