@@ -29,7 +29,7 @@ When the marker is present, apply **only** the following change: replies shown t
 (a) **Chat replies to the user**  -- in zh-TW when `LANG_CHAT=zh-TW` is active; English when absent or `LANG_CHAT=en`.
 (b) **File content**  -- every file written via any tool (`Write`, `Edit`, `NotebookEdit`, etc.) has English content.
 (c) **Tool-call arguments**  -- all paths, patterns, flags, commit messages, and branch names passed to any tool are English.
-(d) **CLI stdout**  -- output emitted by any `bin/specaffold-*` script or hook script is English.
+(d) **CLI stdout**  -- output emitted by any `bin/scaff-*` script or hook script is English.
 (e) **Commit messages**  -- always English.
 (f) **STATUS Notes and team-memory files**  -- STATUS Notes entries and any file under `.claude/team-memory/**` are English.
 
@@ -43,7 +43,7 @@ PM's brainstorm summary shown to the user in chat is zh-TW when `LANG_CHAT=zh-TW
 
 **Negative  -- these always stay English regardless of config:**
 
-1. CLI stdout from a `bin/specaffold-*` script:
+1. CLI stdout from a `bin/scaff-*` script:
    ```
    PASS: session-start hook syntax OK
    ```

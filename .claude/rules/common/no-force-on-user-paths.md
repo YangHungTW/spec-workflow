@@ -39,7 +39,7 @@ it behind a single flag that is easy to misuse at scale.
 ## Example
 
 The D12 `settings.json` read-merge-write discipline (implemented in
-`bin/specaffold-install-hook`):
+`bin/scaff-install-hook`):
 
 ```python
 import json, os, shutil
