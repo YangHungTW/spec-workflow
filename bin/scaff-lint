@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # =============================================================================
-# specflow-lint — CJK guardrail scanner
+# scaff-lint — CJK guardrail scanner
 # =============================================================================
 #
 # USAGE
-#   bin/specflow-lint <subcommand> [paths...]
-#   bin/specflow-lint --help
+#   bin/scaff-lint <subcommand> [paths...]
+#   bin/scaff-lint --help
 #
 # SUBCOMMANDS
 #   scan-staged         Scan files staged for commit (reads git diff --cached).
@@ -32,12 +32,12 @@
 #   2   Usage error, python3 missing, or internal error.
 #
 # ALLOWLIST SURFACES
-#   1. Path-based: .spec-workflow/features/**/00-request.md — only the block
+#   1. Path-based: .specaffold/features/**/00-request.md — only the block
 #      bounded by a "**Raw ask**:" prefix line and the following blank line
 #      is permitted to contain CJK. Every other line in that file is scanned.
 #
 #   2. Inline marker: any file containing a line:
-#        <!-- specflow-lint: allow-cjk reason="..." -->
+#        <!-- scaff-lint: allow-cjk reason="..." -->
 #      suppresses CJK scanning for that entire file. The reason is mandatory.
 #
 # =============================================================================
@@ -49,7 +49,7 @@ set -u -o pipefail
 # Python 3 preflight — exit 2 if unavailable
 # ---------------------------------------------------------------------------
 command -v python3 >/dev/null 2>&1 || {
-  echo "specflow-lint: python3 required but not found" >&2
+  echo "scaff-lint: python3 required but not found" >&2
   exit 2
 }
 
@@ -79,7 +79,7 @@ run_scanner() {
   # of untrusted path data occurs here — each path is its own argv element.
   python3 - "$mode" "$@" <<'PYEOF'
 # =============================================================================
-# specflow-lint — Python 3 scanner (embedded heredoc)
+# scaff-lint — Python 3 scanner (embedded heredoc)
 # Pure classifier: no mutation, no filesystem writes.
 # =============================================================================
 import sys
@@ -121,9 +121,9 @@ def is_cjk(cp):
 
 # ---------------------------------------------------------------------------
 # Inline marker allowlist — suppress CJK scanning for the whole file
-# Marker literal: <!-- specflow-lint: allow-cjk reason="..." -->
+# Marker literal: <!-- scaff-lint: allow-cjk reason="..." -->
 # ---------------------------------------------------------------------------
-INLINE_MARKER = '<!-- specflow-lint: allow-cjk reason='
+INLINE_MARKER = '<!-- scaff-lint: allow-cjk reason='
 
 def has_inline_allowlist(lines):
     for line in lines:
@@ -219,7 +219,7 @@ def emit_result(path, verdict, reason, findings):
 # ---------------------------------------------------------------------------
 def is_out_of_scope(path):
     norm = path.replace('\\', '/')
-    for prefix in ('.spec-workflow/archive/', '.git/', 'node_modules/'):
+    for prefix in ('.specaffold/archive/', '.git/', 'node_modules/'):
         if norm.startswith(prefix) or ('/' + prefix) in ('/' + norm):
             return True
     return False
@@ -244,7 +244,7 @@ def scan_one_path(path):
         with open(resolved, 'rb') as fh:
             content_bytes = fh.read()
     except OSError as exc:
-        print('specflow-lint: cannot read ' + path + ': ' + str(exc), file=sys.stderr)
+        print('scaff-lint: cannot read ' + path + ': ' + str(exc), file=sys.stderr)
         return 1
 
     if is_binary(content_bytes):
@@ -269,12 +269,12 @@ def scan_staged():
             stderr=subprocess.PIPE,
         )
     except OSError as exc:
-        print('specflow-lint: git invocation failed: ' + str(exc), file=sys.stderr)
+        print('scaff-lint: git invocation failed: ' + str(exc), file=sys.stderr)
         sys.exit(2)
 
     if diff_proc.returncode != 0:
         msg = diff_proc.stderr.decode('utf-8', errors='replace').strip()
-        print('specflow-lint: git diff failed: ' + msg, file=sys.stderr)
+        print('scaff-lint: git diff failed: ' + msg, file=sys.stderr)
         sys.exit(2)
 
     # -z output: NUL-separated paths; filter empty tokens and out-of-scope paths.
@@ -285,7 +285,7 @@ def scan_staged():
     ok_count = 0
 
     if not paths:
-        print('specflow-lint: 0 path(s) scanned; all clean', file=sys.stderr)
+        print('scaff-lint: 0 path(s) scanned; all clean', file=sys.stderr)
         sys.exit(0)
 
     # One fork: open a git cat-file --batch process that accepts blob-object
@@ -298,7 +298,7 @@ def scan_staged():
             stdout=subprocess.PIPE,
         )
     except OSError as exc:
-        print('specflow-lint: git cat-file failed: ' + str(exc), file=sys.stderr)
+        print('scaff-lint: git cat-file failed: ' + str(exc), file=sys.stderr)
         sys.exit(2)
 
     # Send all requests at once then close stdin so git flushes its output.
@@ -343,11 +343,11 @@ def scan_staged():
     cat.wait()
 
     if hit_count > 0:
-        print('specflow-lint: ' + str(hit_count) + ' cjk-hit finding(s); '
+        print('scaff-lint: ' + str(hit_count) + ' cjk-hit finding(s); '
               + str(ok_count) + ' path(s) clean', file=sys.stderr)
         sys.exit(1)
     else:
-        print('specflow-lint: ' + str(ok_count) + ' path(s) scanned; all clean',
+        print('scaff-lint: ' + str(ok_count) + ' path(s) scanned; all clean',
               file=sys.stderr)
         sys.exit(0)
 
@@ -371,11 +371,11 @@ def scan_paths(paths):
         # Boundary rejection is an internal/usage error — exit 2 regardless of cjk findings.
         sys.exit(2)
     if hit_count > 0:
-        print('specflow-lint: ' + str(hit_count) + ' cjk-hit finding(s); '
+        print('scaff-lint: ' + str(hit_count) + ' cjk-hit finding(s); '
               + str(ok_count) + ' path(s) clean', file=sys.stderr)
         sys.exit(1)
     else:
-        print('specflow-lint: ' + str(ok_count) + ' path(s) scanned; all clean',
+        print('scaff-lint: ' + str(ok_count) + ' path(s) scanned; all clean',
               file=sys.stderr)
         sys.exit(0)
 
@@ -386,7 +386,7 @@ def main():
     args = sys.argv[1:]  # argv[0] is the mode injected by the bash shim
 
     if not args:
-        print('specflow-lint: missing subcommand', file=sys.stderr)
+        print('scaff-lint: missing subcommand', file=sys.stderr)
         sys.exit(2)
 
     mode = args[0]
@@ -396,11 +396,11 @@ def main():
     elif mode == 'paths':
         paths = args[1:]
         if not paths:
-            print('specflow-lint: scan-paths requires at least one path', file=sys.stderr)
+            print('scaff-lint: scan-paths requires at least one path', file=sys.stderr)
             sys.exit(2)
         scan_paths(paths)
     else:
-        print('specflow-lint: unknown mode: ' + mode, file=sys.stderr)
+        print('scaff-lint: unknown mode: ' + mode, file=sys.stderr)
         sys.exit(2)
 
 main()
@@ -421,15 +421,15 @@ case "${1:-}" in
   scan-paths)
     shift
     if [ $# -eq 0 ]; then
-      echo "specflow-lint: scan-paths requires at least one path" >&2
+      echo "scaff-lint: scan-paths requires at least one path" >&2
       exit 2
     fi
     run_scanner "paths" "$@"
     exit $?
     ;;
   *)
-    echo "specflow-lint: unknown subcommand: ${1}" >&2
-    echo "Run 'bin/specflow-lint --help' for usage." >&2
+    echo "scaff-lint: unknown subcommand: ${1}" >&2
+    echo "Run 'bin/scaff-lint --help' for usage." >&2
     exit 2
     ;;
 esac
