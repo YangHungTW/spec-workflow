@@ -35,14 +35,14 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # Build absolute source path
-abs_src="$REPO_ROOT/.claude/agents/specflow"
+abs_src="$REPO_ROOT/.claude/agents/specaffold"
 
 # Create the symlink with an absolute target — never relative
-ln -s "$abs_src" "$HOME/.claude/agents/specflow"
+ln -s "$abs_src" "$HOME/.claude/agents/specaffold"
 
 # Verification
-readlink "$HOME/.claude/agents/specflow"
-# → /Users/alice/tools/spec-workflow/.claude/agents/specflow
+readlink "$HOME/.claude/agents/specaffold"
+# → /Users/alice/tools/specaffold/.claude/agents/specaffold
 ```
 
-If the repo later moves to `/Users/alice/work/spec-workflow/`, the link becomes broken. Running `bin/claude-symlink install` again rebuilds it with the new absolute path — the correct recovery documented in symlink-operation PRD §6 ("Repo moved after install").
+If the repo later moves to `/Users/alice/work/specaffold/`, the link becomes broken. Running `bin/claude-symlink install` again rebuilds it with the new absolute path — the correct recovery documented in symlink-operation PRD §6 ("Repo moved after install").
