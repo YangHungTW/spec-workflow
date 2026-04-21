@@ -1,4 +1,4 @@
-# spec-workflow
+# Specaffold
 
 Role-based spec-driven development workflow for Claude Code. A small virtual team (PM, Designer, Architect, TPM, Developer, QA-analyst, QA-tester) drives every feature through numbered markdown artifacts.
 
@@ -9,40 +9,40 @@ Role-based spec-driven development workflow for Claude Code. A small virtual tea
 Copy the init skill from this repo into your global Claude skills directory:
 
 ```sh
-cp -R .claude/skills/specflow-init ~/.claude/skills/
+cp -R .claude/skills/scaff-init ~/.claude/skills/
 ```
 
-This makes the `/specflow-init` slash-command available in every Claude Code session on this machine.
+This makes the `/scaff-init` slash-command available in every Claude Code session on this machine.
 
 ### 2. Per-consumer initialisation
 
 From inside the **target consumer repo**, run the init skill:
 
 ```
-/specflow-init
+/scaff-init
 ```
 
 For headless or scripted use, invoke the seed binary directly:
 
 ```sh
-<src>/bin/specflow-seed init --from <src> --ref HEAD
+<src>/bin/scaff-seed init --from <src> --ref HEAD
 ```
 
 Replace `<src>` with the absolute path to this repo and `<ref>` with the pinned commit or tag you want to track.
 
 **What `init` does:**
 
-- Seeds `.claude/agents/specflow`, `.claude/commands/specflow`, `.claude/hooks`, `.claude/rules`, and `.claude/team-memory` skeleton into the consumer repo.
-- Seeds `.spec-workflow/features/_template/` as the feature scaffold.
-- Records `specflow.manifest` at the repo root with the pinned source ref and a per-file baseline hash for future `update` comparisons.
+- Seeds `.claude/agents/specaffold`, `.claude/commands/specaffold`, `.claude/hooks`, `.claude/rules`, and `.claude/team-memory` skeleton into the consumer repo.
+- Seeds `.specaffold/features/_template/` as the feature scaffold.
+- Records `specaffold.manifest` at the repo root with the pinned source ref and a per-file baseline hash for future `update` comparisons.
 - Wires consumer-local hook paths into `settings.json` (SessionStart + Stop) using an atomic read-merge-write with `.bak` backup on any pre-existing file.
 
 ### 3. Updating to a newer ref
 
-Re-run `update` whenever you want to adopt a newer specflow version:
+Re-run `update` whenever you want to adopt a newer Specaffold version:
 
 ```sh
-bin/specflow-seed update --to <new-ref>
+bin/scaff-seed update --to <new-ref>
 ```
 
 Behaviour per file:
@@ -57,10 +57,10 @@ Behaviour per file:
 If this consumer repo currently uses the legacy `bin/claude-symlink` approach (symlinks in `~/.claude/`), run:
 
 ```sh
-bin/specflow-seed migrate --from <src> --ref HEAD
+bin/scaff-seed migrate --from <src> --ref HEAD
 ```
 
-`migrate` performs the same seeding as `init` but recognises that `.claude/agents/specflow` and related paths may already be present via symlinks. It does **not** tear down the shared `~/.claude/*` symlinks — those remain intact so other consumers on the same machine continue to work. Once **every** consumer on the machine has migrated, remove the shared symlinks manually:
+`migrate` performs the same seeding as `init` but recognises that `.claude/agents/specaffold` and related paths may already be present via symlinks. It does **not** tear down the shared `~/.claude/*` symlinks — those remain intact so other consumers on the same machine continue to work. Once **every** consumer on the machine has migrated, remove the shared symlinks manually:
 
 ```sh
 bin/claude-symlink uninstall
@@ -68,7 +68,7 @@ bin/claude-symlink uninstall
 
 ### Per-project isolation guarantee
 
-Each consumer repo is pinned to its own ref in its own `specflow.manifest`. Team-memory files are local to the consumer and never travel back to the source repo. Two consumers on the same machine can run different specflow versions concurrently without interference.
+Each consumer repo is pinned to its own ref in its own `specaffold.manifest`. Team-memory files are local to the consumer and never travel back to the source repo. Two consumers on the same machine can run different Specaffold versions concurrently without interference.
 
 ### Recovery
 
@@ -84,7 +84,7 @@ If you need to roll back, restore from the `.bak` files the tool produced.
 
 ## Language preferences
 
-specflow supports an opt-in language preference for chat replies. The setting lives in `.spec-workflow/config.yml` and is user-authored; the file is local-only by default (D1). Users who want the preference shared across contributors can deliberately commit it to the repo.
+Specaffold supports an opt-in language preference for chat replies. The setting lives in `.specaffold/config.yml` and is user-authored; the file is local-only by default (D1). Users who want the preference shared across contributors can deliberately commit it to the repo.
 
 Absence of the file — or of the `lang.chat` key — means default-off: today's English-only behaviour continues unchanged. The setting is strictly opt-in; no config file required.
 
@@ -93,33 +93,33 @@ Absence of the file — or of the `lang.chat` key — means default-off: today's
 Set `lang.chat` to `zh-TW` (or any BCP-47 tag) to enable chat-reply localisation. Any unrecognised value produces a warning and falls back to the default-off behaviour.
 
 ```yaml
-# .spec-workflow/config.yml
+# .specaffold/config.yml
 lang:
   chat: zh-TW    # or "en" (explicit default) — any other value → warning + default-off
 ```
 
-The SessionStart hook reads this file and, when `lang.chat: zh-TW` is set, injects a `LANG_CHAT=zh-TW` marker into the session context so every specflow subagent role honours the preference without per-agent duplication. The full conditional and carve-out rules (file content, CLI stdout, commit messages, and team-memory files always stay English regardless of config value) are documented in `.claude/rules/common/language-preferences.md`.
+The SessionStart hook reads this file and, when `lang.chat: zh-TW` is set, injects a `LANG_CHAT=zh-TW` marker into the session context so every Specaffold subagent role honours the preference without per-agent duplication. The full conditional and carve-out rules (file content, CLI stdout, commit messages, and team-memory files always stay English regardless of config value) are documented in `.claude/rules/common/language-preferences.md`.
 
 ### Precedence
 
 The hook walks these candidates in order and stops at the first file whose `lang.chat` key is present (even if the value is invalid):
 
-1. `.spec-workflow/config.yml` — project-level (repo-local).
-2. `$XDG_CONFIG_HOME/specflow/config.yml` — only when `$XDG_CONFIG_HOME` is set and non-empty.
-3. `~/.config/specflow/config.yml` — user-home fallback.
+1. `.specaffold/config.yml` — project-level (repo-local).
+2. `$XDG_CONFIG_HOME/specaffold/config.yml` — only when `$XDG_CONFIG_HOME` is set and non-empty.
+3. `~/.config/specaffold/config.yml` — user-home fallback.
 
 Invalid values (outside `{zh-TW, en}`) in an earlier candidate produce a single stderr warning naming the path, and the hook falls back to English default for the session. Iteration does **not** cascade past an invalid early candidate to a later one — the invalid file is treated as a deliberate "this is the setting, please fix the typo" signal, not an oversight to route around.
 
-For most users, `~/.config/specflow/config.yml` is the right file to set once and forget; project-level is for team-shared overrides.
+For most users, `~/.config/specaffold/config.yml` is the right file to set once and forget; project-level is for team-shared overrides.
 
 ### Bypass discipline
 
 Two escape hatches are available when the language preference must be suppressed on a specific commit or file:
 
-- **Emergency (commit-level):** `git commit --no-verify` skips all pre-commit hooks, including the specflow linter that enforces the preference. Use sparingly; the bypass is not audited automatically.
+- **Emergency (commit-level):** `git commit --no-verify` skips all pre-commit hooks, including the Specaffold linter that enforces the preference. Use sparingly; the bypass is not audited automatically.
 - **Surgical (per-file):** Add an HTML comment to the file before linting runs:
   ```
-  <!-- specflow-lint: allow-cjk reason="..." -->
+  <!-- scaff-lint: allow-cjk reason="..." -->
   ```
   The linter treats this marker as an exemption for that file only, leaving all other files under normal enforcement.
 
@@ -128,39 +128,39 @@ Two escape hatches are available when the language preference must be suppressed
 ## Flow
 
 ```
-/specflow:request      → PM intake
-/specflow:brainstorm   → PM explores approaches
-/specflow:design       → Designer (only if has-ui: true) — uses pencil/figma MCP if available, else HTML mockup
-/specflow:prd          → PM writes requirements
-/specflow:tech         → Architect picks tech + designs system architecture
-/specflow:plan         → TPM produces implementation plan
-/specflow:tasks        → TPM decomposes into ordered tasks
-/specflow:implement    → Developer runs each wave of tasks in parallel via git worktrees (TDD per task)
-/specflow:gap-check    → QA-analyst: PRD/tech ↔ tasks ↔ diff
-/specflow:verify       → QA-tester: runs acceptance criteria
-/specflow:archive      → TPM closes out
+/scaff:request      → PM intake
+/scaff:brainstorm   → PM explores approaches
+/scaff:design       → Designer (only if has-ui: true) — uses pencil/figma MCP if available, else HTML mockup
+/scaff:prd          → PM writes requirements
+/scaff:tech         → Architect picks tech + designs system architecture
+/scaff:plan         → TPM produces implementation plan
+/scaff:tasks        → TPM decomposes into ordered tasks
+/scaff:implement    → Developer runs each wave of tasks in parallel via git worktrees (TDD per task)
+/scaff:gap-check    → QA-analyst: PRD/tech ↔ tasks ↔ diff
+/scaff:verify       → QA-tester: runs acceptance criteria
+/scaff:archive      → TPM closes out
 ```
 
 Shortcut — advance one stage at a time based on STATUS:
 
 ```
-/specflow:next <slug>
+/scaff:next <slug>
 ```
 
 Revisions:
 
 ```
-/specflow:update-req    /specflow:update-tech    /specflow:update-plan    /specflow:update-task
+/scaff:update-req    /scaff:update-tech    /scaff:update-plan    /scaff:update-task
 ```
 
 Team memory:
 
 ```
-/specflow:remember <role> "<lesson>"   # manual save
-/specflow:promote <role>/<file>        # local → global
+/scaff:remember <role> "<lesson>"   # manual save
+/scaff:promote <role>/<file>        # local → global
 ```
 
-Two-tier memory: `~/.claude/team-memory/<role>/` (global) + `<repo>/.claude/team-memory/<role>/` (local). Agents read both on every invocation. `/specflow:archive` runs a retro that polls each role for lessons. See `.claude/team-memory/README.md` for the full protocol.
+Two-tier memory: `~/.claude/team-memory/<role>/` (global) + `<repo>/.claude/team-memory/<role>/` (local). Agents read both on every invocation. `/scaff:archive` runs a retro that polls each role for lessons. See `.claude/team-memory/README.md` for the full protocol.
 
 ## Layout
 
@@ -170,7 +170,7 @@ Two-tier memory: `~/.claude/team-memory/<role>/` (global) + `<repo>/.claude/team
   commands/ request.md brainstorm.md design.md prd.md tech.md plan.md tasks.md
             implement.md gap-check.md verify.md archive.md
             update-req.md update-tech.md update-plan.md update-task.md
-.spec-workflow/
+.specaffold/
   features/<slug>/
     00-request.md
     01-brainstorm.md
@@ -187,7 +187,7 @@ Two-tier memory: `~/.claude/team-memory/<role>/` (global) + `<repo>/.claude/team
 
 ## Using in another project
 
-Use the `init` flow described in [Install](#install) above. The init skill seeds all necessary `.claude/` content and `.spec-workflow/features/_template/` into the consumer repo with a pinned ref.
+Use the `init` flow described in [Install](#install) above. The init skill seeds all necessary `.claude/` content and `.specaffold/features/_template/` into the consumer repo with a pinned ref.
 
 ---
 
@@ -197,7 +197,7 @@ Use the `init` flow described in [Install](#install) above. The init skill seeds
 
 `bin/claude-symlink` is a zero-dependency bash script that creates, removes, and
 reconciles symlinks from `~/.claude/` back to this repo's `.claude/` tree. It lets
-Claude Code in any other project pick up the specflow agents, commands, and team-memory
+Claude Code in any other project pick up the Specaffold agents, commands, and team-memory
 without copying files.
 
 ### What it does
@@ -206,14 +206,14 @@ The tool manages exactly four kinds of targets under `~/.claude/`:
 
 | Target (under `~/.claude/`) | Source (under `<repo>/.claude/`) |
 |-----------------------------|----------------------------------|
-| `agents/specflow`               | `agents/specflow` (directory symlink) |
-| `commands/specflow`             | `commands/specflow` (directory symlink) |
+| `agents/specaffold`               | `agents/specaffold` (directory symlink) |
+| `commands/specaffold`             | `commands/specaffold` (directory symlink) |
 | `hooks`                         | `hooks` (directory symlink — SessionStart + Stop scripts) |
 | `team-memory/<relpath>`     | one file symlink per regular file under `team-memory/` |
 
 ### Per-project opt-in: wire the hooks
 
-> **Deprecated** — superseded by the per-project `init` / `migrate` flow (see [Install](#install)). The per-consumer `settings.json` wiring is now handled automatically by `specflow-seed init` / `specflow-seed migrate`.
+> **Deprecated** — superseded by the per-project `init` / `migrate` flow (see [Install](#install)). The per-consumer `settings.json` wiring is now handled automatically by `scaff-seed init` / `scaff-seed migrate`.
 
 The `hooks` symlink makes `~/.claude/hooks/session-start.sh` and
 `~/.claude/hooks/stop.sh` resolvable globally, but each consumer project
@@ -224,10 +224,10 @@ still needs to wire them into its own `settings.json`:
 bin/claude-symlink install
 
 # one-time per consumer project, run from the consumer's repo root:
-bin/specflow-install-hook add SessionStart ~/.claude/hooks/session-start.sh
+bin/scaff-install-hook add SessionStart ~/.claude/hooks/session-start.sh
 
 # (optional) enable STATUS auto-sync in the consumer project:
-bin/specflow-install-hook add Stop ~/.claude/hooks/stop.sh
+bin/scaff-install-hook add Stop ~/.claude/hooks/stop.sh
 ```
 
 Rules stay per-project: `session-start.sh` reads `<cwd>/.claude/rules/`, so
@@ -315,7 +315,7 @@ not place hand-crafted symlinks pointing into this repo under `~/.claude/team-me
 
 ## Verb vocabulary
 
-The `specflow-seed` commands (`init`, `update`, `migrate`) emit exactly the following verbs on stdout, one per managed file. No flow emits a verb outside this set; if a future verb is introduced, the table must be updated first (AC12.b).
+The `scaff-seed` commands (`init`, `update`, `migrate`) emit exactly the following verbs on stdout, one per managed file. No flow emits a verb outside this set; if a future verb is introduced, the table must be updated first (AC12.b).
 
 | Verb | Meaning | Remediation |
 |---|---|---|
@@ -345,7 +345,7 @@ Details (schema, severity vocabulary, authoring checklist): see
 
 ## Review capability — multi-axis reviewer team
 
-`/specflow:implement` now includes **inline multi-axis review** between wave
+`/scaff:implement` now includes **inline multi-axis review** between wave
 collection and per-task merge. For every completed task in a wave, three
 reviewer subagents run in parallel (security / performance / style). Each
 loads its own rubric from `.claude/rules/reviewer/<axis>.md`, stays in lane,
@@ -355,8 +355,8 @@ merge; `should` / `advisory` findings are logged to STATUS.
 ```sh
 # one-shot multi-axis review of a feature branch, writes a timestamped report
 bin/claude-symlink install
-/specflow:review <slug>                  # all three axes in parallel
-/specflow:review <slug> --axis security  # single-axis targeted re-review
+/scaff:review <slug>                  # all three axes in parallel
+/scaff:review <slug> --axis security  # single-axis targeted re-review
 ```
 
 Reports land at `<feature-dir>/review-YYYYMMDD-HHMM.md`. The one-shot command
@@ -367,7 +367,7 @@ Rubrics under `.claude/rules/reviewer/` are **agent-triggered**, not
 session-loaded — the SessionStart hook deliberately skips this subdir so
 rubric content only reaches the reviewer agents that invoke them.
 
-**Escape hatch**: `/specflow:implement --skip-inline-review` bypasses the
+**Escape hatch**: `/scaff:implement --skip-inline-review` bypasses the
 inline reviewer dispatch entirely. Uses are logged to STATUS Notes for audit.
 Intended for emergencies and for features (like B2.b itself) that deliver the
 reviewer capability during their own implement waves.
@@ -378,7 +378,7 @@ reviewer capability during their own implement waves.
 
 Every feature carries a **tier** that controls which stages are required,
 which are optional, and which are skipped entirely. The tier is declared at
-`/specflow:request` time and is monotonic — it can only increase, never
+`/scaff:request` time and is monotonic — it can only increase, never
 decrease.
 
 ### Three tiers
@@ -407,7 +407,7 @@ The tier→stage dispatch table (✅ required, 🔵 optional, ⚫ conditional on
 | review | 🔵 | 🔵 | ✅ (all 3 axes mandatory) |
 | archive | ✅ | ✅ (merge-check) | ✅ (merge-check strict) |
 
-`/specflow:next` reads the `tier:` field from `STATUS.md` and skips stages
+`/scaff:next` reads the `tier:` field from `STATUS.md` and skips stages
 that are not required for the feature's tier, writing a STATUS Note for each
 skipped stage.
 
@@ -416,8 +416,8 @@ skipped stage.
 Pass `--tier` to set the tier explicitly:
 
 ```sh
-/specflow:request --tier tiny "fix typo in README"
-/specflow:request --tier audited "rotate OAuth secrets"
+/scaff:request --tier tiny "fix typo in README"
+/scaff:request --tier audited "rotate OAuth secrets"
 ```
 
 When `--tier` is omitted, the PM proposes a tier based on the raw ask and
@@ -433,7 +433,7 @@ exit non-zero with no STATUS mutation.
 
 **Auto-upgrade triggers (R14)**:
 
-- `/specflow:implement` detects diff > 200 lines OR > 3 files → suggests
+- `/scaff:implement` detects diff > 200 lines OR > 3 files → suggests
   `tiny → standard` (TPM decides whether to accept).
 - Any reviewer returns a `must`-severity **security** finding → auto-upgrades
   to `audited` immediately; no confirmation needed.
@@ -453,7 +453,7 @@ No tier change is valid without this note. Common trigger-reason values:
 
 ### Archive merge-check (R9)
 
-`/specflow:archive` refuses to archive a `standard` or `audited` feature
+`/scaff:archive` refuses to archive a `standard` or `audited` feature
 whose current branch is not merged to `main`. The refusal prints the branch
 and main ref, exits non-zero, and leaves the feature unmodified.
 
@@ -464,15 +464,15 @@ and main ref, exits non-zero, and leaves the feature unmodified.
 The reason is appended to STATUS Notes with date and role.
 
 ```sh
-/specflow:archive --allow-unmerged "multi-PR split — PR #42 covers auth changes"
+/scaff:archive --allow-unmerged "multi-PR split — PR #42 covers auth changes"
 ```
 
-### `/specflow:validate` — new validate command
+### `/scaff:validate` — new validate command
 
-`/specflow:validate <slug>` runs `qa-tester` (dynamic axis) and `qa-analyst`
+`/scaff:validate <slug>` runs `qa-tester` (dynamic axis) and `qa-analyst`
 (static axis) **in parallel**, collects their verdict footers, and aggregates
 to a single stage verdict using the same aggregator contract as
-`/specflow:review`. Output artefact: `08-validate.md`.
+`/scaff:review`. Output artefact: `08-validate.md`.
 
 Verdict values: `PASS` / `NITS` / `BLOCK`. Malformed footers parse as BLOCK.
 
@@ -484,22 +484,22 @@ registry:
 
 | Retired command | Successor |
 |---|---|
-| `/specflow:brainstorm` | Folded into `/specflow:prd` `## Exploration` section |
-| `/specflow:tasks` | Folded into `/specflow:plan` (single `05-plan.md`) |
-| `/specflow:verify` | Folded into `/specflow:validate` |
-| `/specflow:gap-check` | Folded into `/specflow:validate` |
+| `/scaff:brainstorm` | Folded into `/scaff:prd` `## Exploration` section |
+| `/scaff:tasks` | Folded into `/scaff:plan` (single `05-plan.md`) |
+| `/scaff:verify` | Folded into `/scaff:validate` |
+| `/scaff:gap-check` | Folded into `/scaff:validate` |
 
 Invoking any retired command will **not** silently run the old-shape stage.
 
-### `bin/specflow-tier` — single tier-reading helper (R11)
+### `bin/scaff-tier` — single tier-reading helper (R11)
 
-`bin/specflow-tier` is the **only** code path that reads the `tier:` field
+`bin/scaff-tier` is the **only** code path that reads the `tier:` field
 from a feature's `STATUS.md`. All scripts, agents, and commands route through
 this helper — there is no second parse site. This is enforced by code-review
 discipline.
 
 ```sh
 # Read the tier for a feature slug
-bin/specflow-tier <slug>
+bin/scaff-tier <slug>
 # → tiny | standard | audited
 ```
