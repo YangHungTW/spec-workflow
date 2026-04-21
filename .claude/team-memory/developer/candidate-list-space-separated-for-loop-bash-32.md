@@ -29,11 +29,11 @@ arrays remain the correct tool.
 
 ```bash
 # Build the list — conditionally append segments
-CANDIDATES=".spec-workflow/config.yml"
+CANDIDATES=".specaffold/config.yml"
 if [ -n "${XDG_CONFIG_HOME:-}" ]; then
-  CANDIDATES="$CANDIDATES $XDG_CONFIG_HOME/specflow/config.yml"
+  CANDIDATES="$CANDIDATES $XDG_CONFIG_HOME/scaff/config.yml"
 fi
-CANDIDATES="$CANDIDATES $HOME/.config/specflow/config.yml"
+CANDIDATES="$CANDIDATES $HOME/.config/scaff/config.yml"
 
 # Iterate — the $CANDIDATES expansion MUST be unquoted
 for cfg_file in $CANDIDATES; do

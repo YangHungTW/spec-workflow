@@ -61,10 +61,10 @@ grep -c '\b<function_name>\b' path/to/file
 - Count == 2+ → at least one caller; not an orphan.
 
 Applied during feature `20260418-per-project-install`: the helper
-`resolve_path` was defined at `bin/specflow-seed:69-93` carried over
+`resolve_path` was defined at `bin/scaff-seed:69-93` carried over
 from the tech-doc pseudocode, but the implementation took a
 simpler relative-path approach and never called it. `grep -c
-'\bresolve_path\b' bin/specflow-seed` returned `1` → orphan
+'\bresolve_path\b' bin/scaff-seed` returned `1` → orphan
 confirmed, removed in gap-fix commit 60237a2.
 
 Repeatable recipe for any gap-check:

@@ -55,7 +55,7 @@ applied to agent outputs instead of filesystem targets.
 - Truly additive outputs (e.g., concatenated reports, summed
   metrics). Those are map operations, not classifier reductions.
 - Decisions where vote-weighting or confidence-scoring matters
-  (rare in the specflow context; cite a specific need before
+  (rare in the scaff context; cite a specific need before
   deviating).
 
 ## Why
@@ -69,7 +69,7 @@ applied to agent outputs instead of filesystem targets.
 
 ## Example
 
-`/specflow:implement` step 7 aggregator in feature `review-capability`
+`/scaff:implement` step 7 aggregator in feature `review-capability`
 (B2.b). Three reviewers × N tasks per wave return `## Reviewer verdict`
 footers. The aggregator:
 

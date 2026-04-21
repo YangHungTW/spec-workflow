@@ -11,8 +11,8 @@ updated: 2026-04-19
 When architect flags a `§5 Blocker question` with a specific
 resolution paragraph (typically: "propose rewording PRD AC<n>.x
 to …"), the PM's default decision is **accept verbatim** via
-`/specflow:update-req`. Flipping the architect's decision via
-`/specflow:update-tech` should require concrete user-visible
+`/scaff:update-req`. Flipping the architect's decision via
+`/scaff:update-tech` should require concrete user-visible
 evidence — usually a regression the architect's semantic would
 introduce that was not considered at the tech stage.
 
@@ -45,11 +45,11 @@ When architect's `04-tech.md §5` contains a blocker:
      matters (often: a user conversation that clarifies intent).
    - The architect explicitly invited flipping as a viable
      option.
-3. **If accepting**: run `/specflow:update-req <slug>`, append
+3. **If accepting**: run `/scaff:update-req <slug>`, append
    `[CHANGED YYYY-MM-DD]` to the reworded AC, update parent
    requirement body for coherence, confirm PRD↔tech alignment
    with a single `STATUS Notes` line.
-4. **If flipping**: run `/specflow:update-tech <slug>`, write
+4. **If flipping**: run `/scaff:update-tech <slug>`, write
    the concrete counter-evidence into the PRD or a new `§7
    Clarifications` section so future readers see the rationale.
 

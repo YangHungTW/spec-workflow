@@ -17,7 +17,7 @@ path, or the location of the script-under-test.
 Hardcoded paths break as soon as the test runs in:
 - Another worktree (`git worktree add`).
 - Another checkout (clone in a different dir).
-- The archive dir after `/specflow:archive` runs.
+- The archive dir after `/scaff:archive` runs.
 - A CI runner with a different checkout layout.
 
 The test then silently passes on the author's machine and fails

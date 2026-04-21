@@ -33,7 +33,7 @@ fn shell_single_quote_escape(s: &str) -> String {
 // Then in the script template:
 let repo_escaped = shell_single_quote_escape(&repo.to_string_lossy());
 let cmd_escaped  = shell_single_quote_escape(cmd);
-format!("cd '{repo_escaped}'\nspecflow '{cmd_escaped}'\n")
+format!("cd '{repo_escaped}'\nscaff '{cmd_escaped}'\n")
 ```
 
 Apply to EVERY value that goes inside a `'…'` shell string, including:

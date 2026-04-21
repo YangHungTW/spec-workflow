@@ -54,7 +54,7 @@ Callers can now pipe freely: `build_data | manifest_write out.json`.
 
 ## Example
 
-`bin/specflow-seed` helpers `manifest_write` and `write_atomic` both
+`bin/scaff-seed` helpers `manifest_write` and `write_atomic` both
 use this pattern. Initial versions used a direct heredoc inside the
 function body and silently dropped piped input when callers did
 `classify_plan | manifest_write …`. The tmp-file capture made the

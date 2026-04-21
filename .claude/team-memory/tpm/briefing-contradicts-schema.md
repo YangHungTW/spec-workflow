@@ -66,7 +66,7 @@ Schema (`.claude/rules/README.md`) actually says:
 > Filename stem matches `name:` in frontmatter.
 
 Two of three developers followed the briefing literally and wrote
-`name: specflow-reviewer-performance` / `name: specflow-reviewer-style`
+`name: scaff-reviewer-performance` / `name: scaff-reviewer-style`
 (prefix drift from copy-pasting from neighbor agent files, not from
 the briefing). Only `name: reviewer-security` happened to match
 filename stem.
