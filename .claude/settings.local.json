@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git diff *)",
+      "Bash(cp .claude/scaff.manifest /tmp/forensics-manifest.json)",
+      "Bash(git checkout *)",
+      "Bash(rm -f .claude/scaff.manifest .claude/scaff.manifest.bak)"
+    ]
+  }
+}
