@@ -530,7 +530,7 @@ Conventions in this section (new merged shape):
 
 ### Wave 5 — Integration + i18n + B1 nits (5 + 1 tasks; 5 parallel then 1 serial)
 
-## T106 — [ ] `SessionCard.tsx` — mount ActionStrip on stalled cards (R2 gate)
+## T106 — [x] `SessionCard.tsx` — mount ActionStrip on stalled cards (R2 gate)
 - **Milestone**: M5
 - **Requirements**: R2
 - **Decisions**: (none)
@@ -541,7 +541,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T107, T111, T112a, T112b
 - [ ]
 
-## T107 — [ ] `CardDetailHeader.tsx` — Advance + Message buttons + SendPanel toggle
+## T107 — [x] `CardDetailHeader.tsx` — Advance + Message buttons + SendPanel toggle
 - **Milestone**: M5
 - **Requirements**: R3
 - **Decisions**: (none)
@@ -552,7 +552,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T106, T111, T112a, T112b
 - [ ]
 
-## T111 — [ ] `App.tsx` — mount CommandPalette + PreflightToast overlays + ⌘K keybinding
+## T111 — [x] `App.tsx` — mount CommandPalette + PreflightToast overlays + ⌘K keybinding
 - **Milestone**: M5
 - **Requirements**: R5
 - **Decisions**: D6
