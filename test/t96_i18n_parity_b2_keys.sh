@@ -50,30 +50,107 @@ if [ ! -f "$ZH_JSON" ]; then
 fi
 
 # ---------------------------------------------------------------------------
-# Load both JSON files once each into variables (no-re-read discipline)
-# (developer/test-script-path-convention.md; reviewer/performance.md R5)
+# Batch-extract all 26 B2 keys from both locales — 2 python3 forks total.
+# (reviewer/performance.md R1/R6 — no shell-out inside the 26-key loop)
+#
+# Each MAP variable holds tab-separated "key\tvalue" lines, one per key.
+# Keys with no string value produce no line (absent from the map).
+# The heredoc feeds the key list via stdin; JSON file is read from argv[1].
+# (developer/bash-heredoc-stdin-conflict.md — heredoc wins over pipe, so
+#  we must NOT also pipe EN_DATA in; reading from file arg avoids the trap.)
 # ---------------------------------------------------------------------------
-EN_DATA="$(python3 -c 'import json, sys; d = json.load(open(sys.argv[1])); print(json.dumps(d))' "$EN_JSON")"
-ZH_DATA="$(python3 -c 'import json, sys; d = json.load(open(sys.argv[1])); print(json.dumps(d))' "$ZH_JSON")"
-
-# ---------------------------------------------------------------------------
-# Helpers: look up a key from a pre-loaded JSON blob (no extra file reads)
-# ---------------------------------------------------------------------------
-
-# json_get <json_blob> <key>
-# Prints the string value for the given flat key, or empty string if missing
-# or not a string.
-json_get() {
-  local blob="$1"
-  local key="$2"
-  printf '%s' "$blob" | python3 -c "
+EN_MAP="$(python3 -c "
 import json, sys
-d = json.loads(sys.stdin.read())
-k = sys.argv[1]
-v = d.get(k)
-if isinstance(v, str):
-    print(v)
-" "$key"
+d = json.load(open(sys.argv[1]))
+for line in sys.stdin:
+    k = line.rstrip('\n')
+    if not k:
+        continue
+    v = d.get(k)
+    if isinstance(v, str):
+        sys.stdout.write(k + '\t' + v + '\n')
+" "$EN_JSON" <<'PYEOF'
+action.advance_to.design
+action.advance_to.prd
+action.advance_to.tech
+action.advance_to.plan
+action.advance_to.tasks
+action.advance_to.implement
+action.advance_to.validate
+action.advance_to.archive
+action.message
+action.send_panel.title
+audit.panel.title
+audit.entry.via
+stalled.badge
+palette.group.control
+palette.group.specflow
+palette.group.destroy
+modal.destroy.title
+modal.destroy.cancel
+modal.destroy.confirm
+pill.write
+pill.destroy
+toast.in_flight
+toast.terminal_failed
+toast.preflight
+notification.stalled.title
+notification.stalled.body
+PYEOF
+)"
+
+ZH_MAP="$(python3 -c "
+import json, sys
+d = json.load(open(sys.argv[1]))
+for line in sys.stdin:
+    k = line.rstrip('\n')
+    if not k:
+        continue
+    v = d.get(k)
+    if isinstance(v, str):
+        sys.stdout.write(k + '\t' + v + '\n')
+" "$ZH_JSON" <<'PYEOF'
+action.advance_to.design
+action.advance_to.prd
+action.advance_to.tech
+action.advance_to.plan
+action.advance_to.tasks
+action.advance_to.implement
+action.advance_to.validate
+action.advance_to.archive
+action.message
+action.send_panel.title
+audit.panel.title
+audit.entry.via
+stalled.badge
+palette.group.control
+palette.group.specflow
+palette.group.destroy
+modal.destroy.title
+modal.destroy.cancel
+modal.destroy.confirm
+pill.write
+pill.destroy
+toast.in_flight
+toast.terminal_failed
+toast.preflight
+notification.stalled.title
+notification.stalled.body
+PYEOF
+)"
+
+# ---------------------------------------------------------------------------
+# Helpers: look up a key from a pre-extracted tab-separated map (no forks)
+# ---------------------------------------------------------------------------
+
+# map_get <map_variable_value> <key>
+# Prints the string value for the given key, or empty string if missing.
+# Uses awk — no subprocess fork beyond the single awk process already running
+# as part of the pipeline evaluation.
+map_get() {
+  local map="$1"
+  local key="$2"
+  printf '%s\n' "$map" | awk -F'\t' -v k="$key" '$1==k{print $2; exit}'
 }
 
 # extract_placeholders <string>
@@ -136,8 +213,8 @@ printf '=== A: key presence and non-empty value ===\n'
 
 while IFS= read -r key; do
   [ -z "$key" ] && continue
-  en_val="$(json_get "$EN_DATA" "$key")"
-  zh_val="$(json_get "$ZH_DATA" "$key")"
+  en_val="$(map_get "$EN_MAP" "$key")"
+  zh_val="$(map_get "$ZH_MAP" "$key")"
 
   if [ -z "$en_val" ]; then
     fail "A [$key]: missing or empty in en.json"
@@ -161,8 +238,8 @@ check_placeholders() {
   local zh_val
   local en_ph
   local zh_ph
-  en_val="$(json_get "$EN_DATA" "$key")"
-  zh_val="$(json_get "$ZH_DATA" "$key")"
+  en_val="$(map_get "$EN_MAP" "$key")"
+  zh_val="$(map_get "$ZH_MAP" "$key")"
   en_ph="$(extract_placeholders "$en_val")"
   zh_ph="$(extract_placeholders "$zh_val")"
   if [ "$en_ph" = "$zh_ph" ]; then
@@ -181,8 +258,8 @@ check_placeholders "notification.stalled.body"
 printf '\n=== C: required placeholder membership ===\n'
 
 # toast.preflight must contain {command} and {slug}
-PREFLIGHT_EN="$(json_get "$EN_DATA" "toast.preflight")"
-PREFLIGHT_ZH="$(json_get "$ZH_DATA" "toast.preflight")"
+PREFLIGHT_EN="$(map_get "$EN_MAP" "toast.preflight")"
+PREFLIGHT_ZH="$(map_get "$ZH_MAP" "toast.preflight")"
 for locale_val in "$PREFLIGHT_EN" "$PREFLIGHT_ZH"; do
   _ph="$(extract_placeholders "$locale_val")"
   _has_command=0
@@ -201,8 +278,8 @@ PHEOF
 done
 
 # stalled.badge must contain {duration}
-BADGE_EN="$(json_get "$EN_DATA" "stalled.badge")"
-BADGE_ZH="$(json_get "$ZH_DATA" "stalled.badge")"
+BADGE_EN="$(map_get "$EN_MAP" "stalled.badge")"
+BADGE_ZH="$(map_get "$ZH_MAP" "stalled.badge")"
 for locale_val in "$BADGE_EN" "$BADGE_ZH"; do
   _ph="$(extract_placeholders "$locale_val")"
   _has_duration=0
@@ -219,8 +296,8 @@ PHEOF
 done
 
 # notification.stalled.body must contain {slug} and {duration}
-STALLED_BODY_EN="$(json_get "$EN_DATA" "notification.stalled.body")"
-STALLED_BODY_ZH="$(json_get "$ZH_DATA" "notification.stalled.body")"
+STALLED_BODY_EN="$(map_get "$EN_MAP" "notification.stalled.body")"
+STALLED_BODY_ZH="$(map_get "$ZH_MAP" "notification.stalled.body")"
 for locale_val in "$STALLED_BODY_EN" "$STALLED_BODY_ZH"; do
   _ph="$(extract_placeholders "$locale_val")"
   _has_slug=0
@@ -244,10 +321,10 @@ done
 # ---------------------------------------------------------------------------
 printf '\n=== D: pill value literals ===\n'
 
-PILL_WRITE_EN="$(json_get "$EN_DATA" "pill.write")"
-PILL_WRITE_ZH="$(json_get "$ZH_DATA" "pill.write")"
-PILL_DESTROY_EN="$(json_get "$EN_DATA" "pill.destroy")"
-PILL_DESTROY_ZH="$(json_get "$ZH_DATA" "pill.destroy")"
+PILL_WRITE_EN="$(map_get "$EN_MAP" "pill.write")"
+PILL_WRITE_ZH="$(map_get "$ZH_MAP" "pill.write")"
+PILL_DESTROY_EN="$(map_get "$EN_MAP" "pill.destroy")"
+PILL_DESTROY_ZH="$(map_get "$ZH_MAP" "pill.destroy")"
 
 if [ "$PILL_WRITE_EN" = "WRITE" ]; then
   pass "D [pill.write en.json]: value is \"WRITE\""
