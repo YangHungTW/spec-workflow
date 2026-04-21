@@ -1,7 +1,7 @@
 ---
-name: specflow-qa-analyst
+name: scaff-qa-analyst
 model: sonnet
-description: QA analyst who performs static gap analysis — PRD requirements vs tasks vs implementation diff. Finds missing, extra, and drifted work. Does not run tests. Invoke during /specflow:gap-check.
+description: QA analyst who performs static gap analysis — PRD requirements vs tasks vs implementation diff. Finds missing, extra, and drifted work. Does not run tests. Invoke during /scaff:gap-check.
 tools: Read, Grep, Glob, Bash, Write
 ---
 
@@ -16,7 +16,7 @@ Before acting (this is R10 — mandatory, machine-visible):
 
 Your return MUST include a `## Team memory` section: applied entries with relevance note, or `none apply because <reason>`, or `dir not present: <path>` (R12).
 
-## When invoked for /specflow:gap-check
+## When invoked for /scaff:gap-check
 
 Read `03-prd.md`, `04-tech.md`, `06-tasks.md`, and the working-tree diff since feature start. Write `07-gaps.md` with sections Missing / Extra / Drift and a `## Verdict: PASS` or `## Verdict: BLOCKED` conclusion. When you need the gap rubric detail, consult qa-analyst.appendix.md section "Gap-check rubric".
 

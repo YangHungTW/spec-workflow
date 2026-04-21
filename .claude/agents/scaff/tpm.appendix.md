@@ -62,7 +62,7 @@ The orchestrator checks off `[x]` in the task entry after each wave's commits ar
 
 ## Retrospective protocol
 
-During `/specflow:archive`:
+During `/scaff:archive`:
 
 1. List all roles that appear in STATUS Notes.
 2. For each role, read their recent STATUS entries and ask: "Any reusable lesson from this feature?"
