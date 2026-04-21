@@ -13,7 +13,7 @@
 - [x] prd           (03-prd.md)                  — PM
 - [x] tech          (04-tech.md)                 — Architect
 - [x] plan          (05-plan.md)                 — TPM  [merged: narrative + task checklist]
-- [ ] implement     (05-plan.md tasks checked off) — Developer
+- [x] implement     (05-plan.md tasks checked off) — Developer
 - [ ] validate      (08-validate.md, verdict PASS) — QA-tester + QA-analyst  [merged: verify + gap-check]
 - [ ] archive       (moved to .spec-workflow/archive/)     — TPM
 
@@ -50,3 +50,5 @@
 - 2026-04-21 implement wave 3 closeout — T21d merged (824d085); `bash test/t_grep_allowlist.sh` exits 0 on main tree; W3 complete (14 tasks); 3/34 tasks remain for W4 (T28, T29, T30, T31)
 - RUNTIME HANDOFF (for successor feature): opening STATUS Notes line must read "YYYY-MM-DD orchestrator — Specaffold rename exercised on this feature's first live session". 1 runtime AC deferred (AC11); see 03-prd.md §9 AC-R14.
 - 2026-04-21 TPM — pre-committed RUNTIME HANDOFF STATUS line per dogfood-paradox ninth-occurrence discipline
+- 2026-04-21 review result — wave 4 verdict=PASS across all 4 tasks (T28 grep-allow-list assertion PASS; T29 STATUS edit clean; T30 AC9/AC10 structural PASS; T31 AC15 symlink verified absolute-target + archive resolves)
+- 2026-04-21 implement wave 4 done — T28, T29, T30, T31 (W4 merged; 4 tasks done; 34/34 tasks complete); implement stage [x]; next /specflow:next → validate stage

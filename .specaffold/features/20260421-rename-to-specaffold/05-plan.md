@@ -389,7 +389,7 @@ Each task below has `**what**`, `**why-AC**` (cites R/AC), `**files**`, `**dep**
 
 ### W4 — Cutover + final assertion + RUNTIME HANDOFF
 
-- [ ] T28. Run grep-allow-list assertion across full tree — must PASS
+- [x] T28. Run grep-allow-list assertion across full tree — must PASS
   - **what**: run `bash test/t_grep_allowlist.sh` against the tree state after W1+W2+W3 merges. All hits must be allow-listed; any unlisted hit is a BLOCK on archive advance. This is the primary AC1 gate. Script was authored in T23 and wired in T24.
   - **why-AC**: AC1 (the primary grep assertion).
   - **files**: none edited; runs `test/t_grep_allowlist.sh`.
@@ -397,7 +397,7 @@ Each task below has `**what**`, `**why-AC**` (cites R/AC), `**files**`, `**dep**
   - **wave**: W4.
   - **acceptance**: `bash test/t_grep_allowlist.sh` exits 0 and prints `PASS: all carryover hits allow-listed`.
 
-- [ ] T29. Pre-commit RUNTIME HANDOFF STATUS line (dogfood-paradox discipline)
+- [x] T29. Pre-commit RUNTIME HANDOFF STATUS line (dogfood-paradox discipline)
   - **what**: append to `STATUS.md` Notes section the exact line specified by `shared/dogfood-paradox-third-occurrence.md` ninth-occurrence paragraph and PRD §6 Dogfood paradox. Verbatim wording:
     ```
     RUNTIME HANDOFF (for successor feature): opening STATUS Notes line must read
@@ -411,7 +411,7 @@ Each task below has `**what**`, `**why-AC**` (cites R/AC), `**files**`, `**dep**
   - **wave**: W4.
   - **acceptance**: `grep -q 'RUNTIME HANDOFF (for successor feature):' .specaffold/features/20260421-rename-to-specaffold/STATUS.md` returns 0; `grep -q 'Specaffold rename exercised on this feature.s first live session' .specaffold/features/20260421-rename-to-specaffold/STATUS.md` returns 0.
 
-- [ ] T30. AC9/AC10 final self-consistency check (structural self-dogfood)
+- [x] T30. AC9/AC10 final self-consistency check (structural self-dogfood)
   - **what**: re-run the T16 check against the post-W3 tree — confirm `.claude/commands/scaff/request.md` references `scaff-pm` and `.claude/agents/scaff/pm.md` frontmatter reads `name: scaff-pm`. This is the structural half of self-dogfood; the runtime half (AC11) defers to the successor feature.
   - **why-AC**: AC9, AC10.
   - **files**: read-only: `.claude/commands/scaff/request.md`, `.claude/agents/scaff/pm.md`.
@@ -419,7 +419,7 @@ Each task below has `**what**`, `**why-AC**` (cites R/AC), `**files**`, `**dep**
   - **wave**: W4.
   - **acceptance**: `grep -q '\bscaff-pm\b' .claude/commands/scaff/request.md && grep -qE '^name: scaff-pm$' .claude/agents/scaff/pm.md` returns 0.
 
-- [ ] T31. AC15 backwards-compat symlink verification
+- [x] T31. AC15 backwards-compat symlink verification
   - **what**: verify the compat symlink `.spec-workflow` exists at repo root, is a symlink (not a regular dir), and its target is an absolute path ending in `/.specaffold`. Also verify representative archived path resolves: `.spec-workflow/archive/20260419-flow-monitor/03-prd.md` must resolve to the same file as `.specaffold/archive/20260419-flow-monitor/03-prd.md` (same-inode check or diff-content check).
   - **why-AC**: R17, AC15.
   - **files**: read-only: `.spec-workflow` (symlink), `.specaffold/archive/20260419-flow-monitor/03-prd.md`.
