@@ -65,7 +65,7 @@ const BASE_PROPS = {
   slug: "my-feature",
   stage: "implement" as const,
   idleState: "none" as const,
-  featurePath: "/Users/alice/projects/my-repo/.spec-workflow/features/my-feature",
+  featurePath: "/Users/alice/projects/my-repo/.specaffold/features/my-feature",
   onBack: vi.fn(),
   invokeStore: makeInvokeStore(),
 };
