@@ -371,3 +371,135 @@ rubric content only reaches the reviewer agents that invoke them.
 inline reviewer dispatch entirely. Uses are logged to STATUS Notes for audit.
 Intended for emergencies and for features (like B2.b itself) that deliver the
 reviewer capability during their own implement waves.
+
+---
+
+## Tier model
+
+Every feature carries a **tier** that controls which stages are required,
+which are optional, and which are skipped entirely. The tier is declared at
+`/specflow:request` time and is monotonic — it can only increase, never
+decrease.
+
+### Three tiers
+
+| Tier | Intent | Typical size |
+|---|---|---|
+| `tiny` | Typo, one-function tweak, copy fix | < 1 day |
+| `standard` | Normal feature or bugfix | 1–5 days |
+| `audited` | Auth, secrets, breaking API, high-risk change | Any size |
+
+### Stage matrix (R10)
+
+The tier→stage dispatch table (✅ required, 🔵 optional, ⚫ conditional on
+`has-ui: true`, — skipped):
+
+| Stage | tiny | standard | audited |
+|---|:---:|:---:|:---:|
+| request | ✅ | ✅ | ✅ |
+| brainstorm | — | — (folded into PRD) | ✅ (PRD `## Exploration` mandatory) |
+| prd | ✅ (1-liner allowed) | ✅ | ✅ |
+| tech | — | ✅ | ✅ |
+| plan | 🔵 | ✅ | ✅ (fine-grained wave split) |
+| design | — | ⚫ | ✅ |
+| implement | ✅ | ✅ | ✅ |
+| validate | ✅ (tester-only default) | ✅ (both axes) | ✅ (both axes) |
+| review | 🔵 | 🔵 | ✅ (all 3 axes mandatory) |
+| archive | ✅ | ✅ (merge-check) | ✅ (merge-check strict) |
+
+`/specflow:next` reads the `tier:` field from `STATUS.md` and skips stages
+that are not required for the feature's tier, writing a STATUS Note for each
+skipped stage.
+
+### Declaring a tier at request time
+
+Pass `--tier` to set the tier explicitly:
+
+```sh
+/specflow:request --tier tiny "fix typo in README"
+/specflow:request --tier audited "rotate OAuth secrets"
+```
+
+When `--tier` is omitted, the PM proposes a tier based on the raw ask and
+presents a **propose-and-confirm** prompt. Silent acceptance (Enter) adopts
+the proposal; type a different tier to override. The PM never defaults
+silently without proposing first.
+
+### Monotonic upgrade rule (R12)
+
+Tier upgrades are **one-way**: `tiny → standard → audited`. Downgrades are
+refused by every command that writes the `tier:` field. Attempts to downgrade
+exit non-zero with no STATUS mutation.
+
+**Auto-upgrade triggers (R14)**:
+
+- `/specflow:implement` detects diff > 200 lines OR > 3 files → suggests
+  `tiny → standard` (TPM decides whether to accept).
+- Any reviewer returns a `must`-severity **security** finding → auto-upgrades
+  to `audited` immediately; no confirmation needed.
+- PRD touches security-sensitive paths (auth, secrets, `settings.json`) → PM
+  suggests `audited` at PRD time.
+
+### Audit trail (R13)
+
+Every tier change appends a STATUS Notes line in this format:
+
+```
+YYYY-MM-DD <role> — tier upgrade <old>→<new>: <trigger-reason>
+```
+
+No tier change is valid without this note. Common trigger-reason values:
+`TPM veto at plan`, `security BLOCK auto-upgrade`, `diff exceeded threshold`.
+
+### Archive merge-check (R9)
+
+`/specflow:archive` refuses to archive a `standard` or `audited` feature
+whose current branch is not merged to `main`. The refusal prints the branch
+and main ref, exits non-zero, and leaves the feature unmodified.
+
+`tiny` tier does not trigger the merge-check.
+
+**Escape hatch**: pass `--allow-unmerged REASON` to bypass the check. A
+`REASON` argument is required — omitting it exits non-zero with a usage error.
+The reason is appended to STATUS Notes with date and role.
+
+```sh
+/specflow:archive --allow-unmerged "multi-PR split — PR #42 covers auth changes"
+```
+
+### `/specflow:validate` — new validate command
+
+`/specflow:validate <slug>` runs `qa-tester` (dynamic axis) and `qa-analyst`
+(static axis) **in parallel**, collects their verdict footers, and aggregates
+to a single stage verdict using the same aggregator contract as
+`/specflow:review`. Output artefact: `08-validate.md`.
+
+Verdict values: `PASS` / `NITS` / `BLOCK`. Malformed footers parse as BLOCK.
+
+### Retired commands (R4)
+
+The following commands are retired as mandatory stages. Each either emits a
+deprecation notice pointing to its successor or is absent from the command
+registry:
+
+| Retired command | Successor |
+|---|---|
+| `/specflow:brainstorm` | Folded into `/specflow:prd` `## Exploration` section |
+| `/specflow:tasks` | Folded into `/specflow:plan` (single `05-plan.md`) |
+| `/specflow:verify` | Folded into `/specflow:validate` |
+| `/specflow:gap-check` | Folded into `/specflow:validate` |
+
+Invoking any retired command will **not** silently run the old-shape stage.
+
+### `bin/specflow-tier` — single tier-reading helper (R11)
+
+`bin/specflow-tier` is the **only** code path that reads the `tier:` field
+from a feature's `STATUS.md`. All scripts, agents, and commands route through
+this helper — there is no second parse site. This is enforced by code-review
+discipline.
+
+```sh
+# Read the tier for a feature slug
+bin/specflow-tier <slug>
+# → tiny | standard | audited
+```
