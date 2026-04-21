@@ -19,15 +19,15 @@ pub enum Classification {
 
 /// Commands that are read-only or advisory — no artefact mutation.
 /// 4 entries.
-pub const SAFE: &[&str] = &["request", "brainstorm", "gap-check", "verify"];
+pub const SAFE: &[&str] = &["next", "review", "remember", "promote"];
 
 /// Commands that create or update artefacts — reversible with git.
 /// 7 entries.
-pub const WRITE: &[&str] = &["design", "prd", "tech", "plan", "tasks", "implement", "next"];
+pub const WRITE: &[&str] = &["request", "prd", "tech", "plan", "implement", "validate", "design"];
 
 /// Commands that delete, overwrite, or restructure committed artefacts.
 /// 5 entries.
-pub const DESTROY: &[&str] = &["archive", "update-prd", "update-plan", "update-tech", "update-tasks"];
+pub const DESTROY: &[&str] = &["archive", "update-req", "update-tech", "update-plan", "update-task"];
 
 /// Classify a command name.  Returns `None` for unrecognised commands.
 pub fn classify(cmd: &str) -> Option<Classification> {
@@ -139,23 +139,32 @@ mod tests {
     #[test]
     fn each_of_16_returns_expected_classification() {
         // SAFE
-        assert_eq!(classify("request"), Some(Classification::Safe));
-        assert_eq!(classify("brainstorm"), Some(Classification::Safe));
-        assert_eq!(classify("gap-check"), Some(Classification::Safe));
-        assert_eq!(classify("verify"), Some(Classification::Safe));
+        assert_eq!(classify("next"), Some(Classification::Safe));
+        assert_eq!(classify("review"), Some(Classification::Safe));
+        assert_eq!(classify("remember"), Some(Classification::Safe));
+        assert_eq!(classify("promote"), Some(Classification::Safe));
         // WRITE
-        assert_eq!(classify("design"), Some(Classification::Write));
+        assert_eq!(classify("request"), Some(Classification::Write));
         assert_eq!(classify("prd"), Some(Classification::Write));
         assert_eq!(classify("tech"), Some(Classification::Write));
         assert_eq!(classify("plan"), Some(Classification::Write));
-        assert_eq!(classify("tasks"), Some(Classification::Write));
         assert_eq!(classify("implement"), Some(Classification::Write));
-        assert_eq!(classify("next"), Some(Classification::Write));
+        assert_eq!(classify("validate"), Some(Classification::Write));
+        assert_eq!(classify("design"), Some(Classification::Write));
         // DESTROY
         assert_eq!(classify("archive"), Some(Classification::Destroy));
-        assert_eq!(classify("update-prd"), Some(Classification::Destroy));
-        assert_eq!(classify("update-plan"), Some(Classification::Destroy));
+        assert_eq!(classify("update-req"), Some(Classification::Destroy));
         assert_eq!(classify("update-tech"), Some(Classification::Destroy));
-        assert_eq!(classify("update-tasks"), Some(Classification::Destroy));
+        assert_eq!(classify("update-plan"), Some(Classification::Destroy));
+        assert_eq!(classify("update-task"), Some(Classification::Destroy));
+    }
+
+    #[test]
+    fn retired_stubs_not_in_taxonomy() {
+        // brainstorm, tasks, verify, gap-check are RETIRED — must not classify
+        assert_eq!(classify("brainstorm"), None);
+        assert_eq!(classify("tasks"), None);
+        assert_eq!(classify("verify"), None);
+        assert_eq!(classify("gap-check"), None);
     }
 }
