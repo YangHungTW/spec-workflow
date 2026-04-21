@@ -1088,6 +1088,10 @@ html.dark {
   border-radius: 10px;
 }
 
+/* keep-with-justification: .settings-section-title is a cross-section utility shared by
+   SettingsGeneral, SettingsNotifications, and SettingsRepositories. BEM rename to
+   .settings-section__title would require coordinating three component files; deferred
+   to a dedicated CSS-refactor task. */
 .settings-section-title {
   font-size: 13px;
   font-weight: 600;
@@ -1101,6 +1105,8 @@ html.dark {
   display: block;
 }
 
+/* keep-with-justification: .settings-radio-label is shared across SettingsGeneral radio
+   groups; BEM rename deferred to dedicated CSS-refactor task. */
 .settings-radio-label {
   display: flex;
   align-items: center;
@@ -1110,6 +1116,8 @@ html.dark {
   cursor: pointer;
 }
 
+/* keep-with-justification: .settings-toggle-label used by SettingsNotifications toggle;
+   BEM rename deferred to dedicated CSS-refactor task. */
 .settings-toggle-label {
   display: flex;
   align-items: center;
@@ -1140,6 +1148,9 @@ html.dark {
 
 /* ── SETTINGS REPOSITORIES ── */
 
+/* keep-with-justification: .btn-add-repo, .repo-list, .repo-item are utility classes
+   shared within SettingsRepositories. BEM rename to .settings-repositories__add-btn etc.
+   deferred to dedicated CSS-refactor task. */
 .btn-add-repo {
   display: inline-flex;
   align-items: center;

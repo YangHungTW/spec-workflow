@@ -256,7 +256,6 @@ pub fn set_compact_panel_open(
     app: tauri::AppHandle,
     settings: tauri::State<'_, SettingsState>,
 ) -> Result<(), IpcError> {
-    // Update the in-memory settings flag.
     {
         let mut guard = settings.0.lock().map_err(|_| IpcError {
             code: "LOCK_POISONED",
@@ -266,7 +265,6 @@ pub fn set_compact_panel_open(
     }
 
     if open {
-        // Create the compact panel WebviewWindow if it does not already exist.
         // Using get_webview_window first avoids a second window if the IPC is
         // called twice (idempotent — only one compact window at a time).
         if app.get_webview_window("compact").is_none() {
@@ -282,7 +280,6 @@ pub fn set_compact_panel_open(
             })?;
         }
     } else {
-        // Close the compact panel window if it is open.
         if let Some(window) = app.get_webview_window("compact") {
             window.close().map_err(|e| IpcError {
                 code: "WINDOW_CLOSE_ERROR",
@@ -354,7 +351,6 @@ pub fn set_always_on_top_inner(
         guard.always_on_top = always_on_top;
     }
 
-    // Apply to the live compact panel window if it exists.
     match window_lookup("compact") {
         Some(win) => win.set_always_on_top(always_on_top).map_err(|e| IpcError {
             code: "WINDOW_OP_FAILED",
@@ -888,12 +884,19 @@ mod tests {
             false,
             &stored,
             move |_label| {
-                Some(Box::new(MockWindow { record: called_with_clone }) as Box<dyn WindowAlwaysOnTop>)
+                Some(
+                    Box::new(MockWindow { record: called_with_clone })
+                        as Box<dyn WindowAlwaysOnTop>,
+                )
             },
         );
 
         assert!(result.is_ok(), "expected Ok when window is present: {:?}", result.err());
-        assert_eq!(called_with.get(), Some(false), "window set_always_on_top must be called with false");
+        assert_eq!(
+            called_with.get(),
+            Some(false),
+            "window set_always_on_top must be called with false",
+        );
         let guard = stored.lock().unwrap();
         assert!(!guard.always_on_top, "always_on_top must be persisted as false");
     }
@@ -1175,7 +1178,10 @@ pub fn open_in_finder_inner(path: String, registered_roots: &[PathBuf]) -> Resul
 }
 
 /// Boundary-check only variant for unit tests (no OS process spawned).
-pub fn open_in_finder_inner_dry(path: String, registered_roots: &[PathBuf]) -> Result<(), IpcError> {
+pub fn open_in_finder_inner_dry(
+    path: String,
+    registered_roots: &[PathBuf],
+) -> Result<(), IpcError> {
     canonicalize_and_assert(&path, registered_roots)?;
     Ok(())
 }
@@ -1197,7 +1203,10 @@ pub fn reveal_in_finder_inner(path: String, registered_roots: &[PathBuf]) -> Res
 }
 
 /// Boundary-check only variant for unit tests (no OS process spawned).
-pub fn reveal_in_finder_inner_dry(path: String, registered_roots: &[PathBuf]) -> Result<(), IpcError> {
+pub fn reveal_in_finder_inner_dry(
+    path: String,
+    registered_roots: &[PathBuf],
+) -> Result<(), IpcError> {
     canonicalize_and_assert(&path, registered_roots)?;
     Ok(())
 }
@@ -1220,7 +1229,10 @@ pub fn copy_to_clipboard_inner(text: String) -> Result<(), IpcError> {
 /// Returns the canonical `PathBuf` on success, or a typed `IpcError` on
 /// failure. All callers (open_in_finder_inner, reveal_in_finder_inner) share
 /// this single boundary-check implementation.
-fn canonicalize_and_assert(raw_path: &str, registered_roots: &[PathBuf]) -> Result<PathBuf, IpcError> {
+fn canonicalize_and_assert(
+    raw_path: &str,
+    registered_roots: &[PathBuf],
+) -> Result<PathBuf, IpcError> {
     let p = PathBuf::from(raw_path);
     let canonical = p.canonicalize().map_err(|e| IpcError {
         code: "INVALID_PATH",
@@ -1366,7 +1378,8 @@ pub fn update_settings_inner(
 // B2 IPC commands — invoke_command, get_audit_tail, get_in_flight_set (T109)
 // ---------------------------------------------------------------------------
 
-/// Dispatch a write command through the classify → allow-list → lock → invoke → audit pipeline.
+/// Dispatch a write command through the classify → allow-list → lock → invoke → audit
+/// pipeline.
 ///
 /// Security invariants (per tech §2.2 Flow C + D1):
 ///   1. Classify first — Destroy commands are rejected at this layer (AC8.b belt-and-braces).
@@ -1420,10 +1433,11 @@ pub fn invoke_command(
         .unwrap_or(0);
     let _ = app.emit("in_flight_changed", InFlightChangedPayload { locks, timestamp });
 
-    // On success, emit audit_appended.
     if let Ok(ref invoke_result) = result {
         let repo_path = PathBuf::from(&repo);
-        if let Some(audit_line) = build_audit_line_from_result(&slug, &command, &invoke_result.outcome) {
+        if let Some(audit_line) =
+            build_audit_line_from_result(&slug, &command, &invoke_result.outcome)
+        {
             let _ = app.emit("audit_appended", AuditAppendedPayload {
                 repo: repo_path,
                 line: audit_line,
