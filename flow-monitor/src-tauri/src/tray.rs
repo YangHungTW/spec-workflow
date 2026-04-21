@@ -152,6 +152,7 @@ mod tests {
             last_activity: SystemTime::now(),
             stage_checklist: vec![],
             notes: vec![],
+            has_ui: false,
             raw_status_path: PathBuf::new(),
         }
     }
