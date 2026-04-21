@@ -153,7 +153,6 @@ mod tests {
             has_ui: false,
             stage_checklist: vec![],
             notes: vec![],
-            has_ui: false,
             raw_status_path: PathBuf::new(),
         }
     }
