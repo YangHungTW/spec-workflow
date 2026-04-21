@@ -456,7 +456,7 @@ Conventions in this section (new merged shape):
 
 ### Wave 4 — Renderer components (6 tasks)
 
-## T100 — [ ] `ActionStrip.tsx` + component test
+## T100 — [x] `ActionStrip.tsx` + component test
 - **Milestone**: M4
 - **Requirements**: R2
 - **Decisions**: (none — pure UI)
@@ -468,7 +468,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T101, T102, T103, T104, T105
 - [ ]
 
-## T101 — [ ] `CommandPalette.tsx` + component test
+## T101 — [x] `CommandPalette.tsx` + component test
 - **Milestone**: M4
 - **Requirements**: R5, R8
 - **Decisions**: D3
@@ -480,7 +480,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T100, T102, T103, T104, T105
 - [ ]
 
-## T102 — [ ] `SendPanel.tsx` + component test
+## T102 — [x] `SendPanel.tsx` + component test
 - **Milestone**: M4
 - **Requirements**: R3
 - **Decisions**: D6
@@ -492,7 +492,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T100, T101, T103, T104, T105
 - [ ]
 
-## T103 — [ ] `PreflightToast.tsx` + component test
+## T103 — [x] `PreflightToast.tsx` + component test
 - **Milestone**: M4
 - **Requirements**: R5
 - **Decisions**: D6
@@ -504,7 +504,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T100, T101, T102, T104, T105
 - [ ]
 
-## T104 — [ ] `ConfirmModal.tsx` + component test (Seam F)
+## T104 — [x] `ConfirmModal.tsx` + component test (Seam F)
 - **Milestone**: M4
 - **Requirements**: R8
 - **Decisions**: D6
@@ -516,7 +516,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T100, T101, T102, T103, T105
 - [ ]
 
-## T105 — [ ] `AuditPanel.tsx` + component test
+## T105 — [x] `AuditPanel.tsx` + component test
 - **Milestone**: M4
 - **Requirements**: R6
 - **Decisions**: D7
