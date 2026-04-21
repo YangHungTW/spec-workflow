@@ -886,6 +886,9 @@ EOF
     "${src_root}/bin/scaff-install-hook" add Stop ".claude/hooks/stop.sh"
   )
 
+  # Wire backwards-compat symlink .spec-workflow → .specaffold for seeded consumers (R17/AC15)
+  ensure_compat_symlink "$consumer_root"
+
   emit_summary
   exit "$MAX_CODE"
 }
@@ -1150,6 +1153,9 @@ EOF
   fi
 
   printf '%s\n' "$manifest_tsv" | manifest_write "$manifest_path" "$TO_REF" "$source_remote" "$applied_at"
+
+  # Wire backwards-compat symlink .spec-workflow → .specaffold for seeded consumers (R17/AC15)
+  ensure_compat_symlink "$consumer_root"
 
   emit_summary
   exit "$MAX_CODE"
