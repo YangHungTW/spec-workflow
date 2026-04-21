@@ -1,5 +1,5 @@
 ---
-description: Multi-axis review of a feature branch diff (security / performance / style); writes a timestamped report; never advances STATUS. Usage: /specflow:review <slug> [--axis security|performance|style]
+description: Multi-axis review of a feature branch diff (security / performance / style); writes a timestamped report; never advances STATUS. Usage: /scaff:review <slug> [--axis security|performance|style]
 ---
 
 Run a one-shot parallel review of a feature branch. Spawns security, performance, and style reviewer subagents (or a single axis via `--axis`), aggregates their verdicts, writes a timestamped report, and exits non-zero if any reviewer returned BLOCK. Never advances the STATUS stage checklist.
@@ -21,8 +21,8 @@ Run a one-shot parallel review of a feature branch. Spawns security, performance
    - `--axis <security|performance|style>` is optional; if supplied, run only that single reviewer.
 
 2. **Resolve feature dir.**
-   - If `.spec-workflow/features/<slug>/` exists, use it as `FEATURE_DIR`.
-   - Else if `.spec-workflow/archive/<slug>/` exists, use that path as `FEATURE_DIR`.
+   - If `.specaffold/features/<slug>/` exists, use it as `FEATURE_DIR`.
+   - Else if `.specaffold/archive/<slug>/` exists, use that path as `FEATURE_DIR`.
    - Else: print `ERROR: no feature dir found for slug '<slug>'` to stderr and exit 2.
 
 3. **Resolve diff basis.**
@@ -52,7 +52,7 @@ Run a one-shot parallel review of a feature branch. Spawns security, performance
    #  before the next line runs; one file per axis dispatched in step 4)
 
    # Invoke extracted aggregator — bash 3.2 portable argv-form invocation.
-   AGG_OUTPUT="$(bin/specflow-aggregate-verdicts security performance style \
+   AGG_OUTPUT="$(bin/scaff-aggregate-verdicts security performance style \
      --dir "$VERDICT_DIR")"
    AGG_VERDICT="$(printf '%s\n' "$AGG_OUTPUT" | head -1)"
    WAVE_STATE="review:${AGG_VERDICT}"
@@ -62,7 +62,7 @@ Run a one-shot parallel review of a feature branch. Spawns security, performance
    For single-axis runs (`--axis <axis>`), pass only the relevant axis name:
 
    ```bash
-   AGG_OUTPUT="$(bin/specflow-aggregate-verdicts "$AXIS" --dir "$VERDICT_DIR")"
+   AGG_OUTPUT="$(bin/scaff-aggregate-verdicts "$AXIS" --dir "$VERDICT_DIR")"
    AGG_VERDICT="$(printf '%s\n' "$AGG_OUTPUT" | head -1)"
    WAVE_STATE="review:${AGG_VERDICT}"
    rm -rf "$VERDICT_DIR"
@@ -136,8 +136,8 @@ Run a one-shot parallel review of a feature branch. Spawns security, performance
 ## Rules
 
 - This command is READ-PLUS-REPORT only. It NEVER advances STATUS. The stage checklist (`implement`, `gap-check`, `verify`) is never touched.
-- It NEVER halts or blocks any in-flight `/specflow:implement` wave. It is an independent, on-demand command.
-- It works identically on in-flight features (under `.spec-workflow/features/`) and archived features (under `.spec-workflow/archive/`).
+- It NEVER halts or blocks any in-flight `/scaff:implement` wave. It is an independent, on-demand command.
+- It works identically on in-flight features (under `.specaffold/features/`) and archived features (under `.specaffold/archive/`).
 - Report files are never clobbered. The three-tier filename fallback (minute → seconds → pid) is the no-force-on-user-paths discipline applied to report files.
 - All shell pseudocode in this command must be bash 3.2 / BSD userland portable: no `readlink -f`, no `realpath`, no `jq`, no `mapfile`, no `[[ =~ ]]` for portability-critical logic.
 - The aggregator is a pure classifier: no mutation inside it. Mutation (report write, STATUS Notes append, exit code) lives strictly in the dispatch arms, not inside the classifier loop.
