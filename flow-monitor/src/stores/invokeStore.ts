@@ -132,6 +132,9 @@ export function useInvokeStore(): InvokeStore {
     // in_flight_changed — Rust emits this when lock state changes (AC7 R7).
     // Replaces the entire inFlight set so all windows stay consistent.
     listen<InFlightChangedPayload>("in_flight_changed", (event) => {
+      // Shape-guard: malformed payload (locks absent or not an array) must not
+      // throw on .map(); silently ignore the event so the UI stays consistent.
+      if (!Array.isArray(event.payload?.locks)) return;
       const nextSet = new Set<string>(
         event.payload.locks.map(([repo, slug]) => inFlightKey(repo, slug)),
       );
@@ -151,6 +154,12 @@ export function useInvokeStore(): InvokeStore {
     // in_flight_changed event covers the same transition, but session_advanced
     // may arrive first from a different code path.
     listen<SessionAdvancedPayload>("session_advanced", (event) => {
+      // Shape-guard: repo/slug must be strings; skip if payload is malformed.
+      if (
+        typeof event.payload?.repo !== "string" ||
+        typeof event.payload?.slug !== "string"
+      )
+        return;
       const key = inFlightKey(event.payload.repo, event.payload.slug);
       setInFlight((prev) => {
         if (!prev.has(key)) return prev;
@@ -176,8 +185,19 @@ export function useInvokeStore(): InvokeStore {
       entry: EntryPoint,
       delivery: Delivery,
     ): Promise<void> => {
-      // (a) Classify the command.
+      // Classification must precede the in-flight guard because the guard
+      // only applies to WRITE/SAFE commands — DESTROY short-circuits to the
+      // confirmation modal and unknown commands must be rejected before any
+      // IPC boundary is crossed (security: unknown commands are not safe to
+      // forward to the Rust backend).
       const commandClass = classify(command);
+      if (commandClass === null) {
+        console.error(
+          "[invokeStore] dispatch rejected — unknown command",
+          command,
+        );
+        return;
+      }
 
       // (b) DESTROY → open ConfirmModal.
       // In B2 this branch is unreachable: no caller emits a DESTROY command.
