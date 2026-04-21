@@ -33,7 +33,7 @@ esac
 # D3. classify_env — pure classifier, stdout only, no side effects
 #
 # Emits EXACTLY ONE of:
-#   not-git | no-specflow | no-match | ambiguous:<list> | ok:<slug>
+#   not-git | no-scaff | no-match | ambiguous:<list> | ok:<slug>
 # ---------------------------------------------------------------------------
 
 classify_env() {
@@ -43,9 +43,9 @@ classify_env() {
     return
   fi
 
-  # specflow features dir check
-  if [ ! -d ".spec-workflow/features" ]; then
-    printf 'no-specflow'
+  # scaff features dir check
+  if [ ! -d ".specaffold/features" ]; then
+    printf 'no-scaff'
     return
   fi
 
@@ -63,7 +63,7 @@ classify_env() {
   local matches=""
   local match_count=0
   local f
-  for f in .spec-workflow/features/*/; do
+  for f in .specaffold/features/*/; do
     [ -d "$f" ] || continue
     local slug
     slug=$(basename "$f")
@@ -92,7 +92,7 @@ state=$(classify_env)
 
 case "$state" in
   not-git)      log_info "not a git worktree"; exit 0 ;;
-  no-specflow)  log_info "no specflow features in cwd"; exit 0 ;;
+  no-scaff)  log_info "no scaff features in cwd"; exit 0 ;;
   no-match)     log_info "branch does not match any feature"; exit 0 ;;
   ambiguous:*)  log_warn "ambiguous: ${state#ambiguous:}"; exit 0 ;;
   ok:*)         slug="${state#ok:}" ;;  # fall through to D4 dedup + D5 append
@@ -184,7 +184,7 @@ append_note() {
 # D4 dedup check before appending
 # ---------------------------------------------------------------------------
 
-feature_dir=".spec-workflow/features/$slug"
+feature_dir=".specaffold/features/$slug"
 status_file="$feature_dir/STATUS.md"
 sentinel_file="$feature_dir/.stop-hook-last-epoch"
 
