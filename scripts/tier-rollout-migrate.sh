@@ -10,7 +10,7 @@
 # Options:
 #   --dry-run        Print what would change without mutating any files; exit 0.
 #   --features-dir   Path to the features root (default: auto-detected from
-#                    repo root as .spec-workflow/features).
+#                    repo root as .specaffold/features).
 #
 # Exit codes:
 #   0  All done (all skipped or all migrated, or dry-run completed).
@@ -18,7 +18,7 @@
 #      migrated content (full pass completes before exiting).
 #
 # Idempotent: STATUS files that already contain a `tier:` field are skipped.
-# Archive directory (.spec-workflow/archive/) is never walked.
+# Archive directory (.specaffold/archive/) is never walked.
 #
 # Backup discipline (no-force-on-user-paths.md):
 #   Before each real write, the original STATUS.md is copied to STATUS.md.bak.
@@ -64,7 +64,7 @@ while [ $# -gt 0 ]; do
 done
 
 # ---------------------------------------------------------------------------
-# Locate the repo root (the directory containing .spec-workflow/) relative to
+# Locate the repo root (the directory containing .specaffold/) relative to
 # this script's own location — works from any cwd and survives worktree moves.
 # Never uses readlink -f (GNU-only); uses cd + pwd -P (BSD-safe).
 # ---------------------------------------------------------------------------
@@ -72,7 +72,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd -P)"
 
 if [ -z "$FEATURES_DIR" ]; then
-  FEATURES_DIR="$REPO_ROOT/.spec-workflow/features"
+  FEATURES_DIR="$REPO_ROOT/.specaffold/features"
 fi
 
 if [ ! -d "$FEATURES_DIR" ]; then
