@@ -2,7 +2,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 /// Closed enum representing the classification of a single directory entry
-/// under `.spec-workflow/features/`. Every possible outcome is named explicitly;
+/// under `.specaffold/features/`. Every possible outcome is named explicitly;
 /// callers dispatch via match with one arm per variant — no fall-through panic.
 #[derive(Debug, PartialEq)]
 pub enum SessionKind {
@@ -22,7 +22,7 @@ pub struct SessionInfo {
     pub status_path: PathBuf,
 }
 
-/// Pure classifier: maps a single `DirEntry` under `.spec-workflow/features/`
+/// Pure classifier: maps a single `DirEntry` under `.specaffold/features/`
 /// to a `SessionKind`. Does NOT read STATUS.md content — that is `status_parse`'s job.
 /// Does NOT recurse into sub-directories.
 pub fn classify_entry(entry: &fs::DirEntry) -> SessionKind {
@@ -57,19 +57,19 @@ pub fn classify_entry(entry: &fs::DirEntry) -> SessionKind {
     SessionKind::Session(name_str.to_string())
 }
 
-/// Performs exactly ONE `read_dir` of `<repo_root>/.spec-workflow/features/`,
+/// Performs exactly ONE `read_dir` of `<repo_root>/.specaffold/features/`,
 /// classifies each entry with `classify_entry`, and returns `Vec<SessionInfo>`
 /// for `Session(_)` matches only.
 ///
 /// Exclusions applied inside this single pass:
 /// - `_template/` (caught by `classify_entry` returning `Template`)
-/// - Anything under `.spec-workflow/archive/` is never in the features/ read_dir,
+/// - Anything under `.specaffold/archive/` is never in the features/ read_dir,
 ///   so no extra check is needed; the archive dir sits alongside features/, not inside it.
 /// - Directories without `STATUS.md` (caught by `classify_entry` returning `NotASession`)
 ///
 /// Per AC13.a: this function does NOT recurse into sub-directories.
 pub fn discover_sessions(repo_root: &Path) -> Vec<SessionInfo> {
-    let features_dir = repo_root.join(".spec-workflow").join("features");
+    let features_dir = repo_root.join(".specaffold").join("features");
 
     let read_dir_iter = match fs::read_dir(&features_dir) {
         Ok(iter) => iter,
