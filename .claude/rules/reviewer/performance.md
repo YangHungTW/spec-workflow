@@ -22,7 +22,7 @@ Performance regressions in hook and loop paths are hard to detect from diff revi
 4. **Prefer `awk`/`sed` over `python3` for simple transforms** (`should`) — spawning a Python interpreter for a one-shot string replace or column extraction is wasteful on hook and loop paths; simple transforms belong in `awk`/`sed`.
 5. **No re-reading the same file** (`should`) — reading the same file multiple times in a single tool invocation is a finding; read once, reuse the variable.
 6. **Minimise fork/exec in hot paths** (`should`) — loops that spawn one or more processes per iteration should be refactored to batch invocation or in-process handling; flag when the loop body is expected to iterate more than a few times.
-7. **Hook latency budget < 200ms** (`must`) — any code added to SessionStart / Stop / other hooks must keep total hook wall-clock under 200ms on a warm cache; a hook that exceeds this budget is a finding. Cross-references B1's R5 SLA (`.spec-workflow/features/prompt-rules-surgery/03-prd.md` R5).
+7. **Hook latency budget < 200ms** (`must`) — any code added to SessionStart / Stop / other hooks must keep total hook wall-clock under 200ms on a warm cache; a hook that exceeds this budget is a finding. Cross-references B1's R5 SLA (`.specaffold/features/prompt-rules-surgery/03-prd.md` R5).
 8. **Avoid eager loads of unused data** (`should`) — loading a large file or dataset when only a few fields are read is a finding; stream or selective-parse where practical.
 
 ## Example
