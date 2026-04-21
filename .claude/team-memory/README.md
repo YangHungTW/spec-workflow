@@ -1,6 +1,6 @@
 # Team memory protocol
 
-Per-role memory for the specflow virtual team. Separate from per-feature artifacts under `.spec-workflow/features/` — those are work products; this is accumulated craft.
+Per-role memory for the scaff virtual team. Separate from per-feature artifacts under `.specaffold/features/` — those are work products; this is accumulated craft.
 
 ## Two-tier layout
 
@@ -68,16 +68,16 @@ Do NOT write:
 **Scope decision** (local vs global):
 - Default to **local**.
 - Propose global only if the lesson is repo-agnostic (e.g., "TDD before green").
-- Use `/specflow:promote <role>/<file>` to move local → global after you've seen it apply in a second repo.
+- Use `/scaff:promote <role>/<file>` to move local → global after you've seen it apply in a second repo.
 
 ## Manual entry
 
-- `/specflow:remember <role> "<lesson>"` — user-driven memory write.
-- `/specflow:promote <role>/<file>` — move local memory to global.
+- `/scaff:remember <role> "<lesson>"` — user-driven memory write.
+- `/scaff:promote <role>/<file>` — move local memory to global.
 
 ## Retrospective
 
-`/specflow:archive` runs a retro: the TPM polls each role that participated in this feature, asking "any memory worth saving from this one?" and writes approved entries.
+`/scaff:archive` runs a retro: the TPM polls each role that participated in this feature, asking "any memory worth saving from this one?" and writes approved entries.
 
 ## Rules vs team-memory
 

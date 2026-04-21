@@ -15,7 +15,7 @@
 - [ ] plan          (05-plan.md)                 — TPM  [merged: narrative + task checklist]
 - [ ] implement     (05-plan.md tasks checked off) — Developer
 - [ ] validate      (08-validate.md, verdict PASS) — QA-tester + QA-analyst  [merged: verify + gap-check]
-- [ ] archive       (moved to .spec-workflow/archive/)     — TPM
+- [ ] archive       (moved to .specaffold/archive/)     — TPM
 
 ## Notes
 <!-- date + role + what changed -->
