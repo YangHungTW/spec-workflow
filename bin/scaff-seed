@@ -352,6 +352,95 @@ classify_pre_commit_shim() {
 }
 
 # ---------------------------------------------------------------------------
+# classify_compat_symlink <repo_root>
+# Pure classifier for the W3 compat-symlink path.
+# Emits one of six enum values on stdout (no side effects, no mutations):
+#   missing         — nothing exists at <repo_root>/.spec-workflow
+#   ok-ours         — symlink pointing to <repo_root>/.specaffold (absolute)
+#   foreign-symlink — symlink pointing elsewhere
+#   real-dir        — actual directory (not a symlink)
+#   real-file       — actual file (not a symlink)
+#   broken-symlink  — symlink whose target does not exist
+# ---------------------------------------------------------------------------
+classify_compat_symlink() {
+  local repo_root="$1"
+  local link_path="${repo_root}/.spec-workflow"
+  local canonical_target="${repo_root}/.specaffold"
+
+  if [ ! -e "$link_path" ] && [ ! -L "$link_path" ]; then
+    echo "missing"
+    return
+  fi
+
+  if [ -L "$link_path" ]; then
+    if [ ! -e "$link_path" ]; then
+      echo "broken-symlink"
+      return
+    fi
+    local dest
+    dest="$(readlink "$link_path")"
+    if [ "$dest" = "$canonical_target" ]; then
+      echo "ok-ours"
+      return
+    fi
+    echo "foreign-symlink"
+    return
+  fi
+
+  if [ -d "$link_path" ]; then
+    echo "real-dir"
+    return
+  fi
+
+  echo "real-file"
+}
+
+# ---------------------------------------------------------------------------
+# ensure_compat_symlink <repo_root>
+# Dispatch table for the compat-symlink; calls classify_compat_symlink once
+# (classify-before-mutate rule), then routes to the appropriate arm.
+# Only the `missing` arm mutates; all others warn-and-skip (no-force rule).
+# Symlink target is always absolute (absolute-symlink-targets rule).
+# ---------------------------------------------------------------------------
+ensure_compat_symlink() {
+  local repo_root="$1"
+  local link_path="${repo_root}/.spec-workflow"
+  local abs_target="${repo_root}/.specaffold"
+
+  local state
+  state=$(classify_compat_symlink "$repo_root")
+
+  case "$state" in
+    missing)
+      ln -s "$abs_target" "$link_path"
+      ;;
+    ok-ours)
+      : # already correct — no-op
+      ;;
+    foreign-symlink)
+      echo "WARN: ensure_compat_symlink: skipping foreign-symlink at ${link_path}" >&2
+      return 1
+      ;;
+    real-dir)
+      echo "WARN: ensure_compat_symlink: skipping real-dir at ${link_path}" >&2
+      return 1
+      ;;
+    real-file)
+      echo "WARN: ensure_compat_symlink: skipping real-file at ${link_path}" >&2
+      return 1
+      ;;
+    broken-symlink)
+      echo "WARN: ensure_compat_symlink: skipping broken-symlink at ${link_path}" >&2
+      return 1
+      ;;
+    *)
+      echo "WARN: ensure_compat_symlink: unknown state '${state}' at ${link_path}" >&2
+      return 1
+      ;;
+  esac
+}
+
+# ---------------------------------------------------------------------------
 # plan_copy <src_root> <mode>
 # Enumerates managed relpaths from the source tree.
 # mode=init|migrate: includes static subtrees + team-memory skeleton.
