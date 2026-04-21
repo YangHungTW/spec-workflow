@@ -227,7 +227,7 @@ Conventions in this section (new merged shape):
 
 ### Wave 0 — Foundation (2 tasks)
 
-## T91 — [ ] Add tauri-plugin-shell + tauri-plugin-fs + capability manifest expansion
+## T91 — [x] [ ] Add tauri-plugin-shell + tauri-plugin-fs + capability manifest expansion
 - **Milestone**: M0
 - **Requirements**: R4, R6, R9
 - **Decisions**: D1, D8
@@ -242,7 +242,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T92-cap-test
 - [ ]
 
-## T92-cap-test — [ ] Seam G: capability manifest structural test
+## T92-cap-test — [x] [ ] Seam G: capability manifest structural test
 - **Milestone**: M0
 - **Requirements**: R9
 - **Decisions**: D1
@@ -323,9 +323,10 @@ Conventions in this section (new merged shape):
 - **Decisions**: D3
 - **Scope**: Author `flow-monitor/src-tauri/src/command_taxonomy.rs`. Exports:
   - `enum Classification { Safe, Write, Destroy }` — closed set.
-  - `const SAFE: &[&str] = &["request", "brainstorm", "gap-check", "verify"];`
-  - `const WRITE: &[&str] = &["design", "prd", "tech", "plan", "tasks", "implement", "next"];`
-  - `const DESTROY: &[&str] = &["archive", "update-prd", "update-plan", "update-tech", "update-tasks"];`
+  - `const SAFE: &[&str] = &["next", "review", "remember", "promote"];`
+  - `const WRITE: &[&str] = &["request", "prd", "tech", "plan", "implement", "validate", "design"];`
+  - `const DESTROY: &[&str] = &["archive", "update-req", "update-tech", "update-plan", "update-task"];`
+  - Note: these reflect the post-tier-model live command set. `brainstorm`, `tasks`, `verify`, `gap-check` are RETIRED stubs — do NOT include them in the taxonomy.
   - `fn classify(cmd: &str) -> Option<Classification>` — pure function, returns `Some(Safe|Write|Destroy)` if cmd is in one of the three arrays, else `None`.
   - `fn allow_list_contains(cmd: &str) -> bool` — returns true if cmd is in SAFE ∪ WRITE ∪ DESTROY.
   - Inline `#[cfg(test)]` tests: Seam B partial — unit test that asserts the 4+7+5 = 16 count; unknown command returns None; each of the 16 returns the expected Classification.
