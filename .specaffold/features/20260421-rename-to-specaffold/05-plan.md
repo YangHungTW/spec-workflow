@@ -126,7 +126,7 @@ Each task below has `**what**`, `**why-AC**` (cites R/AC), `**files**`, `**dep**
 
 ### W1 — Filesystem moves via `git mv` + compat symlink
 
-- [ ] T1. `git mv` slash-command directory `.claude/commands/specflow/` → `.claude/commands/scaff/`
+- [x] T1. `git mv` slash-command directory `.claude/commands/specflow/` → `.claude/commands/scaff/`
   - **what**: move all 20 command files from `specflow/` to `scaff/` via `git mv` (preserves rename ancestry).
   - **why-AC**: R2, AC4.
   - **files**: `.claude/commands/specflow/` (source) → `.claude/commands/scaff/` (target); all 20 child `.md` files follow the dir.
@@ -134,7 +134,7 @@ Each task below has `**what**`, `**why-AC**` (cites R/AC), `**files**`, `**dep**
   - **wave**: W1.
   - **acceptance**: `test -d .claude/commands/scaff && ! test -d .claude/commands/specflow` returns 0; `git diff --stat -M HEAD~1 -- .claude/commands/` shows all entries as renames `(100%)`.
 
-- [ ] T2. `git mv` agent directory `.claude/agents/specflow/` → `.claude/agents/scaff/`
+- [x] T2. `git mv` agent directory `.claude/agents/specflow/` → `.claude/agents/scaff/`
   - **what**: move all 14 agent files (7 roles + 3 reviewers + 4 appendices) from `specflow/` to `scaff/`.
   - **why-AC**: R3, AC5.
   - **files**: `.claude/agents/specflow/` → `.claude/agents/scaff/`.
@@ -142,7 +142,7 @@ Each task below has `**what**`, `**why-AC**` (cites R/AC), `**files**`, `**dep**
   - **wave**: W1.
   - **acceptance**: `test -d .claude/agents/scaff && ! test -d .claude/agents/specflow` returns 0; `git diff --stat -M HEAD~1 -- .claude/agents/` shows all renames `(100%)`.
 
-- [ ] T3. `git mv` each `bin/specflow-*` binary to `bin/scaff-*`
+- [x] T3. `git mv` each `bin/specflow-*` binary to `bin/scaff-*`
   - **what**: rename `bin/specflow-aggregate-verdicts`, `bin/specflow-install-hook`, `bin/specflow-lint`, `bin/specflow-seed`, `bin/specflow-tier` — one `git mv` per file (5 total). `bin/claude-symlink` is NOT renamed (never carried the prefix; per tech §D3).
   - **why-AC**: R7, AC6.
   - **files**: 5 `bin/specflow-*` source paths → 5 `bin/scaff-*` target paths.
@@ -150,7 +150,7 @@ Each task below has `**what**`, `**why-AC**` (cites R/AC), `**files**`, `**dep**
   - **wave**: W1.
   - **acceptance**: `ls bin/ | grep -E '^specflow-' | wc -l` returns 0; `ls bin/scaff-* | wc -l` returns 5.
 
-- [ ] T4. `git mv` skill directory `.claude/skills/specflow-init/` → `.claude/skills/scaff-init/`
+- [x] T4. `git mv` skill directory `.claude/skills/specflow-init/` → `.claude/skills/scaff-init/`
   - **what**: rename the skill dir. Body rewrites inside `SKILL.md` and `init.sh` land in W2 T12.
   - **why-AC**: R4 (skill is under `.claude/` not root docs, but the dir name is user-visible in the skill surface).
   - **files**: `.claude/skills/specflow-init/` → `.claude/skills/scaff-init/`.
@@ -158,7 +158,7 @@ Each task below has `**what**`, `**why-AC**` (cites R/AC), `**files**`, `**dep**
   - **wave**: W1.
   - **acceptance**: `test -d .claude/skills/scaff-init && ! test -d .claude/skills/specflow-init` returns 0.
 
-- [ ] T5. `git mv` manifest file `.claude/specflow.manifest` → `.claude/scaff.manifest`
+- [x] T5. `git mv` manifest file `.claude/specflow.manifest` → `.claude/scaff.manifest`
   - **what**: rename the per-project install manifest. Body contents (which reference old-prefix paths inside) are rewritten in W2 T15 — T5 only moves the filename.
   - **why-AC**: R6 (the manifest filename is in scope), R7.
   - **files**: `.claude/specflow.manifest` → `.claude/scaff.manifest`.
@@ -166,7 +166,7 @@ Each task below has `**what**`, `**why-AC**` (cites R/AC), `**files**`, `**dep**
   - **wave**: W1.
   - **acceptance**: `test -f .claude/scaff.manifest && ! test -f .claude/specflow.manifest` returns 0.
 
-- [ ] T6. `git mv` workflow root directory `.spec-workflow/` → `.specaffold/`
+- [x] T6. `git mv` workflow root directory `.spec-workflow/` → `.specaffold/`
   - **what**: rename the root workflow dir — moves the entire subtree including this active feature's `05-plan.md`, archived features under `archive/`, drafts, and `config.yml`. CRITICAL: zero body edits in this commit (AC8 byte-identity guarantee).
   - **why-AC**: R11, R12, AC8.
   - **files**: `.spec-workflow/` → `.specaffold/` (subtree move).
@@ -174,7 +174,7 @@ Each task below has `**what**`, `**why-AC**` (cites R/AC), `**files**`, `**dep**
   - **wave**: W1.
   - **acceptance**: `test -d .specaffold && ! test -d .spec-workflow` (before T8) returns 0; `git diff --stat -M HEAD~1 -- .specaffold/archive/ | awk '$NF!~/^R[0-9]+/{print}' | wc -l` returns 0 (no non-rename entries in the archive subtree).
 
-- [ ] T7. Update `.claude/settings.local.json` to reference the renamed manifest path
+- [x] T7. Update `.claude/settings.local.json` to reference the renamed manifest path
   - **what**: two keys currently reference `.claude/specflow.manifest` (permission entries). Rewrite these to `.claude/scaff.manifest`. Per `common/no-force-on-user-paths.md`: read → back up → write-temp → atomic rename.
   - **why-AC**: R6 (grep zero-hits requires settings.local.json to carry no old-prefix strings outside the R6 allow-list; this file is NOT in the allow-list).
   - **files**: `.claude/settings.local.json` (edit two string values referencing the manifest path).
@@ -182,7 +182,7 @@ Each task below has `**what**`, `**why-AC**` (cites R/AC), `**files**`, `**dep**
   - **wave**: W1.
   - **acceptance**: `grep -c "specflow.manifest" .claude/settings.local.json` returns 0; `grep -c "scaff.manifest" .claude/settings.local.json` returns 2.
 
-- [ ] T8. Author backwards-compat symlink `.spec-workflow → .specaffold` (absolute target, classify-before-mutate)
+- [x] T8. Author backwards-compat symlink `.spec-workflow → .specaffold` (absolute target, classify-before-mutate)
   - **what**: at repo root, create a symlink `.spec-workflow` pointing at an absolute path `$PWD/.specaffold` (absolute per `common/absolute-symlink-targets.md`). Classify-before-mutate: if target is already a symlink pointing at `.specaffold`, no-op; if target is absent, create; any other state (real dir, real file, foreign symlink, broken symlink), warn and fail loud (no `--force`). This one-shot authoring is redundant with T25/T26 but correct for the one-time merge event; T25/T26 handles the idempotent install-time case going forward.
   - **why-AC**: R17, AC15; closes risk 2 (transient path-resolution gap).
   - **files**: `.spec-workflow` (new symlink at repo root).
