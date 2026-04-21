@@ -150,6 +150,7 @@ mod tests {
             slug: slug.to_string(),
             stage: Stage::Implement,
             last_activity: SystemTime::now(),
+            has_ui: false,
             stage_checklist: vec![],
             notes: vec![],
             raw_status_path: PathBuf::new(),

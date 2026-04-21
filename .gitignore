@@ -8,3 +8,7 @@ settings.json.bak
 .test-t78*/
 .test-t79*/
 .test-t77*/
+# T91: test sandbox dirs (idempotent — covers all .test-tNN.XXXXXX patterns)
+.test-*/
+# T91: generated Tauri schema / code-gen artefacts not committed to source
+src/generated/

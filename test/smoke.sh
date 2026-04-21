@@ -869,7 +869,16 @@ for t in t13_settings_json t14_rules_dir_structure t15_rules_schema \
          t87_auto_upgrade_triggers \
          t88_mid_flight_upgrade_nondestructive \
          t89_inline_review_default \
-         t90_tier_proposal_prompt; do
+         t90_tier_proposal_prompt \
+         t91_capability_manifest \
+         t94_destroy_unreachable_grep \
+         t95_argv_no_shell_cat \
+         t96_i18n_parity_b2_keys \
+         t97_theme_token_reuse \
+         t98_stage_label_lookup \
+         t99_b1_nits_cleared \
+         t100_taxonomy_classification \
+         t101_runtime_handoff_note; do
   echo "--- $t ---"
   if bash "$REPO_ROOT/test/${t}.sh" >/dev/null 2>&1; then
     echo "  PASS"

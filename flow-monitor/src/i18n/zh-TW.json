@@ -78,8 +78,6 @@
   "notification.stalled-title": "工作階段停滯：{slug}",
   "notification.stalled-body": "{stage} · 閒置 {duration} · {repo}",
 
-  "markdown.footer": "唯讀預覽。如需編輯，請在 Finder 中開啟。",
-
   "sort.label": "排序方式",
   "sort.lastUpdatedDesc": "最後更新",
   "sort.stage": "階段",
@@ -89,5 +87,39 @@
   "card.repoGroup": "{repo}",
   "card.collapseRepo": "收合 {repo}",
   "card.expandRepo": "展開 {repo}",
-  "card.active": "進行中"
+  "card.active": "進行中",
+
+  "action.advance_to.design": "進入設計階段",
+  "action.advance_to.prd": "進入 PRD 階段",
+  "action.advance_to.tech": "進入技術階段",
+  "action.advance_to.plan": "進入計畫階段",
+  "action.advance_to.tasks": "進入任務階段",
+  "action.advance_to.implement": "進入實作階段",
+  "action.advance_to.validate": "進入驗證階段",
+  "action.advance_to.archive": "封存工作階段",
+  "action.message": "訊息 / 選擇",
+  "action.send_panel.title": "傳送訊息或作出選擇",
+
+  "audit.panel.title": "控制面稽核",
+  "audit.entry.via": "透過",
+
+  "stalled.badge": "已停滯 · {duration}",
+
+  "palette.group.control": "控制動作",
+  "palette.group.specflow": "Specflow 指令",
+  "palette.group.destroy": "破壞性指令",
+
+  "modal.destroy.title": "破壞性指令",
+  "modal.destroy.cancel": "取消",
+  "modal.destroy.confirm": "繼續",
+
+  "pill.write": "WRITE",
+  "pill.destroy": "DESTROY",
+
+  "toast.in_flight": "動作進行中",
+  "toast.terminal_failed": "無法開啟終端機 — 已複製到剪貼簿",
+  "toast.preflight": "{command} — {slug}",
+
+  "notification.stalled.title": "工作階段已停滯",
+  "notification.stalled.body": "{slug} · 閒置 {duration}"
 }
