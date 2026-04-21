@@ -120,7 +120,7 @@ Each task below is a new-shape task block per `tpm.appendix` with `Milestone:`, 
 
 ### W1 — Rust backend + Rust tests + fixtures + Tauri capability swap
 
-- [ ] **T1. Rewrite `flow-monitor/src-tauri/src/audit.rs` — path literals, doc comments, gitignore append, helper body**
+- [x] **T1. Rewrite `flow-monitor/src-tauri/src/audit.rs` — path literals, doc comments, gitignore append, helper body**
   - **Milestone**: W1 core backend sweep (heaviest single file; 14 line-level edits).
   - **Requirements**: R1, R3 (the `canonicalise_and_check_under` guard still rejects anything outside the new prefix — no semantic change, new prefix string).
   - **Decisions**: tech-D2 (inline replace, no shared constant; `flow_monitor_dir(repo)` helper remains the single `PathBuf` construction site and is the one-line semantic change at line 144).
@@ -130,7 +130,7 @@ Each task below is a new-shape task block per `tpm.appendix` with `Milestone:`, 
   - **Depends on**: none.
   - **Parallel-safe-with**: T2, T3, T4, T5, T6, T7.
 
-- [ ] **T2. Rewrite `flow-monitor/src-tauri/src/poller.rs` + `src/repo_discovery.rs` — path literals, doc comments**
+- [x] **T2. Rewrite `flow-monitor/src-tauri/src/poller.rs` + `src/repo_discovery.rs` — path literals, doc comments**
   - **Milestone**: W1 core backend sweep (two sibling modules; small hit counts).
   - **Requirements**: R1.
   - **Decisions**: tech-D2 (inline replace).
@@ -140,7 +140,7 @@ Each task below is a new-shape task block per `tpm.appendix` with `Milestone:`, 
   - **Depends on**: none.
   - **Parallel-safe-with**: T1, T3, T4, T5, T6, T7.
 
-- [ ] **T3. Rewrite `flow-monitor/src-tauri/src/ipc.rs` + `src/store.rs` + `src/command_taxonomy.rs` — path literals + doc comments**
+- [x] **T3. Rewrite `flow-monitor/src-tauri/src/ipc.rs` + `src/store.rs` + `src/command_taxonomy.rs` — path literals + doc comments**
   - **Milestone**: W1 core backend sweep (three sibling modules with mixed doc/string hits).
   - **Requirements**: R1.
   - **Decisions**: tech-D2 (inline replace).
@@ -150,7 +150,7 @@ Each task below is a new-shape task block per `tpm.appendix` with `Milestone:`, 
   - **Depends on**: none.
   - **Parallel-safe-with**: T1, T2, T4, T5, T6, T7.
 
-- [ ] **T4. Rewrite `flow-monitor/src-tauri/src/invoke.rs` — path literals + shell-script body `specflow <cmd>` → `scaff <cmd>`**
+- [x] **T4. Rewrite `flow-monitor/src-tauri/src/invoke.rs` — path literals + shell-script body `specflow <cmd>` → `scaff <cmd>`**
   - **Milestone**: W1 core backend sweep — correctness-critical. The shell-script body rename is PRD D1 (correctness, not preference: the `specflow` binary does not exist on post-rename systems).
   - **Requirements**: R1, R2 (correctness: emitted shell script invokes `scaff`).
   - **Decisions**: tech-D1 (inline literal change at the one shell-script build site); tech-D2 (inline for path literals).
@@ -160,7 +160,7 @@ Each task below is a new-shape task block per `tpm.appendix` with `Milestone:`, 
   - **Depends on**: none.
   - **Parallel-safe-with**: T1, T2, T3, T5, T6, T7.
 
-- [ ] **T5. Rewrite `flow-monitor/src-tauri/tests/` Rust test sources — path literals, marker const, fn name**
+- [x] **T5. Rewrite `flow-monitor/src-tauri/tests/` Rust test sources — path literals, marker const, fn name**
   - **Milestone**: W1 Rust-test sweep. Includes the two internal identifier renames mandated by PRD R4 / D1 corollary.
   - **Requirements**: R4 (test sources rewritten; `SPEC_WORKFLOW_MARKER` → `SPECAFFOLD_MARKER`; `seam4_no_write_call_references_spec_workflow_path` → `seam4_no_write_call_references_specaffold_path`).
   - **Decisions**: tech-D2 (inline replace).
@@ -170,7 +170,7 @@ Each task below is a new-shape task block per `tpm.appendix` with `Milestone:`, 
   - **Depends on**: none (file-disjoint from T1–T4).
   - **Parallel-safe-with**: T1, T2, T3, T4, T6, T7.
 
-- [ ] **T6. Rewrite Rust test fixtures under `flow-monitor/src-tauri/tests/fixtures/status/`**
+- [x] **T6. Rewrite Rust test fixtures under `flow-monitor/src-tauri/tests/fixtures/status/`**
   - **Milestone**: W1 fixture sweep (5 `.md` files; mechanical one-line-per-file edit).
   - **Requirements**: R4 (fixture paths per design delta; each fixture's line 20 contains `- [ ] archive       (moved to .spec-workflow/archive/)` → `.specaffold/archive/`).
   - **Decisions**: tech-D2 / §1.3 soft preference (no fixture generator — mechanical find-replace).
@@ -180,7 +180,7 @@ Each task below is a new-shape task block per `tpm.appendix` with `Milestone:`, 
   - **Depends on**: none.
   - **Parallel-safe-with**: T1, T2, T3, T4, T5, T7.
 
-- [ ] **T7. Swap Tauri capability allow-list `flow-monitor/src-tauri/capabilities/default.json` (SECURITY-AUDITED)**
+- [x] **T7. Swap Tauri capability allow-list `flow-monitor/src-tauri/capabilities/default.json` (SECURITY-AUDITED)**
   - **Milestone**: W1 security-boundary change; AC12 gate (architect sign-off pre-recorded in `04-tech.md §4.4`).
   - **Requirements**: R3 (allow-list grants access only to `$REPOS/.specaffold/.flow-monitor/audit.log{,.1}` — legacy paths removed outright; no transition-window dual-grant).
   - **Decisions**: tech-D3 (outright swap, no dual-grant).
@@ -190,7 +190,7 @@ Each task below is a new-shape task block per `tpm.appendix` with `Milestone:`, 
   - **Depends on**: none.
   - **Parallel-safe-with**: T1, T2, T3, T4, T5, T6.
 
-- [ ] **T8. W1 cargo-test gate — `cargo test` green inside `flow-monitor/src-tauri/`**
+- [x] **T8. W1 cargo-test gate — `cargo test` green inside `flow-monitor/src-tauri/`**
   - **Milestone**: W1 close-out gate; AC5 structural verification.
   - **Requirements**: R1, R2, R4 (all Rust-side rewrites must leave the test suite green).
   - **Decisions**: tech §4.3 testing strategy item 3 (cargo-test gate per `has-ui: true` audited tier).

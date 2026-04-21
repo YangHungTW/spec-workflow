@@ -1,0 +1,56 @@
+## Reviewer verdict
+axis: security
+verdict: PASS
+findings: []
+
+## Analysis notes
+
+### Check 4 — Injection attacks (primary axis)
+
+`cmd` path:
+- `cmd` is validated against a hardcoded allow-list (`cmd_is_in_allow_list`) in
+  `dispatch()` at line ~462 before any script building occurs; the allow-list
+  contains only known safe command slugs (e.g. "implement", "prd", "plan").
+- `cmd` is then passed through `shell_single_quote_escape` (line 298 / 509),
+  which replaces every `'` with `'\''`, preventing escape from the surrounding
+  single-quote boundary in the generated shell script body and clipboard string.
+- The T4 rename changes only the literal `specflow` → `scaff` in the format
+  string at line 304 and the clipboard format at line 513. The escaping call
+  (`shell_single_quote_escape(cmd)`) is unchanged; `cmd_escaped` is used
+  identically before and after the rename. No new injection surface introduced.
+
+`repo` path:
+- Also passed through `shell_single_quote_escape` before interpolation.
+- Callers are documented to validate `repo` against the registered-repo set
+  before calling `dispatch` (path-traversal guard R9, per doc at line 446).
+- Unchanged by T4.
+
+`slug` in comment line:
+- `slug` is interpolated unescaped as `{slug}` into a bash **comment** line
+  (`# flow-monitor terminal spawn — slug: {slug}`). A slug containing a
+  newline could theoretically inject a new shell line after the comment.
+- This is a pre-existing condition not introduced by T4; the diff does not
+  touch the `{slug}` interpolation or add new validation for it.
+- Flagged below as an advisory finding (pre-existing, not introduced by T4,
+  but surfaced by this review pass).
+
+### Checks 1–3, 5–8
+
+No hardcoded secrets, no path traversal changes, no new untrusted YAML/JSON
+parsing, no secure-defaults regressions, no new atomic-write concerns, and no
+new sentinel-file races introduced by this diff. All changes are mechanical
+identifier renames in format strings, doc comments, and test assertions.
+
+---
+
+findings:
+  - severity: advisory
+    file: flow-monitor/src-tauri/src/invoke.rs
+    line: 301
+    rule: injection-attacks
+    message: >
+      `slug` is interpolated unescaped into a bash comment line via `{slug}`;
+      a slug containing a newline would inject a shell statement below the
+      comment. Pre-existing condition not introduced by T4, but slug should be
+      validated to contain only `[a-zA-Z0-9_-]` characters at the dispatch
+      boundary to close the surface entirely.
