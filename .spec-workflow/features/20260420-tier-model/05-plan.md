@@ -671,7 +671,7 @@ Conventions in this section (new merged shape):
 
 ### Wave 5 — Docs + template stage-checklist (2 tasks)
 
-## T34 — README / docs update
+## T34 — [x] README / docs update
 - **Milestone**: M5
 - **Requirements**: (documentation for R1–R20)
 - **Decisions**: —
@@ -691,7 +691,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T35
 - [ ]
 
-## T35 — Finalise `_template/STATUS.md` stage checklist (new shape)
+## T35 — [x] Finalise `_template/STATUS.md` stage checklist (new shape)
 - **Milestone**: M5
 - **Requirements**: R19
 - **Decisions**: D9, D10
