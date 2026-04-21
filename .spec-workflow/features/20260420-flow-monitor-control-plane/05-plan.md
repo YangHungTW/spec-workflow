@@ -260,7 +260,7 @@ Conventions in this section (new merged shape):
 
 ### Wave 1 — Pure Rust modules (4 tasks)
 
-## T93 — [ ] `invoke.rs` — terminal-spawn + clipboard + pipe-Err dispatcher
+## T93 — [x] `invoke.rs` — terminal-spawn + clipboard + pipe-Err dispatcher
 - **Milestone**: M1
 - **Requirements**: R4, R7
 - **Decisions**: D1, D6, D8
@@ -280,7 +280,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T94, T95, T96
 - [ ]
 
-## T94 — [ ] `audit.rs` — TSV append + rotation + gitignore bootstrap + path-traversal guard
+## T94 — [x] `audit.rs` — TSV append + rotation + gitignore bootstrap + path-traversal guard
 - **Milestone**: M1
 - **Requirements**: R6, R9
 - **Decisions**: D4, D7
@@ -300,7 +300,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T93, T95, T96
 - [ ]
 
-## T95 — [ ] `lock.rs` — in-process `Mutex<HashSet>` + 60s watchdog
+## T95 — [x] `lock.rs` — in-process `Mutex<HashSet>` + 60s watchdog
 - **Milestone**: M1
 - **Requirements**: R7
 - **Decisions**: D2
@@ -317,7 +317,7 @@ Conventions in this section (new merged shape):
 - **Parallel-safe-with**: T93, T94, T96
 - [ ]
 
-## T96 — [ ] `command_taxonomy.rs` — hardcoded 16-command list + classifier
+## T96 — [x] `command_taxonomy.rs` — hardcoded 16-command list + classifier
 - **Milestone**: M1
 - **Requirements**: R5, R8
 - **Decisions**: D3

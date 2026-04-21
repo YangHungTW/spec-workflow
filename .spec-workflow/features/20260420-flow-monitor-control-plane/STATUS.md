@@ -18,6 +18,7 @@
 - [ ] archive       (moved to .spec-workflow/archive/)     — TPM
 
 ## Notes
+- 2026-04-20 implement wave W1 done — T93, T94, T95, T96 merged. Wave verdict NITS after initial BLOCK cycle. BLOCKs resolved: T93 security (shell injection escape, allow-list gate in dispatch, /dev/urandom entropy); T96 style (stale command names → plan §D3 updated via update-plan, developer re-aligned to live 16-command set). T94 NITS absorbed (TSV tab-injection advisory, .1 rotation silent-clobber advisory, scope-creep test files t92/t93 removed at merge). Lib.rs 3-way merge conflicts on pub mod declarations resolved by keeping all 4 additions (audit, invoke, lock, command_taxonomy). tray.rs has_ui field fix merged via --theirs (all 4 branches had identical fix). Cargo build exits 0 post-merge.
 <!-- date + role + what changed -->
 - 2026-04-20 orchestrator — migrated STATUS stage checklist to new-shape post tier-model archive (retired brainstorm/tasks/gap-check/verify boxes; added validate box). Feature retains tier=standard.
 - 2026-04-20 PM — request intaken (B2 follow-up to 20260419-flow-monitor)
