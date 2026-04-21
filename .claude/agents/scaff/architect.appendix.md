@@ -38,7 +38,7 @@ For each decision point (language, framework, DB, queue, auth, observability, th
 - Performance / scale targets (only if PRD requires)
 
 ### 5. Open Questions
-Blocking unknowns that must resolve before `/specflow:plan`. Mark blocker vs note.
+Blocking unknowns that must resolve before `/scaff:plan`. Mark blocker vs note.
 
 ### 6. Non-decisions (deferred)
 Things explicitly NOT decided now, with the trigger that would force the decision later.
