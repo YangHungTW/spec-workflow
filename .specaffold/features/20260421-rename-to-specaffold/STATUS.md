@@ -48,3 +48,5 @@
 - 2026-04-21 review result — T21d verdict=NITS (style: allow-list comment-format inconsistency — new entries have "# path — reason" preamble, existing 20 entries are bare; followup): T28 gate now green
 - 2026-04-21 implement — orchestrator cleanup: removed 5 transient sed-permission entries from .claude/settings.local.json (added by T21d subagent permission grants; one-shot patterns no longer needed)
 - 2026-04-21 implement wave 3 closeout — T21d merged (824d085); `bash test/t_grep_allowlist.sh` exits 0 on main tree; W3 complete (14 tasks); 3/34 tasks remain for W4 (T28, T29, T30, T31)
+- RUNTIME HANDOFF (for successor feature): opening STATUS Notes line must read "YYYY-MM-DD orchestrator — Specaffold rename exercised on this feature's first live session". 1 runtime AC deferred (AC11); see 03-prd.md §9 AC-R14.
+- 2026-04-21 TPM — pre-committed RUNTIME HANDOFF STATUS line per dogfood-paradox ninth-occurrence discipline
