@@ -31,8 +31,8 @@
     {
       "identifier": "fs:allow-write-file",
       "allow": [
-        { "path": "$REPOS/.spec-workflow/.flow-monitor/audit.log" },
-        { "path": "$REPOS/.spec-workflow/.flow-monitor/audit.log.1" }
+        { "path": "$REPOS/.specaffold/.flow-monitor/audit.log" },
+        { "path": "$REPOS/.specaffold/.flow-monitor/audit.log.1" }
       ]
     }
   ]
