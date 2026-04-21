@@ -1,3 +1,4 @@
+pub mod audit;
 pub mod ipc;
 pub mod notify;
 pub mod poller;
