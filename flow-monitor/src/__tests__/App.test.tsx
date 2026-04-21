@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { afterEach, describe, it, expect, vi } from "vitest";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, fireEvent, act } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import App from "../App";
 
@@ -8,6 +8,39 @@ import App from "../App";
 vi.mock("../i18n", () => ({
   useTranslation: () => ({ t: (key: string) => key, locale: "en", setLocale: () => undefined }),
   I18nProvider: ({ children }: { children: ReactNode }) => children,
+}));
+
+// Stub CommandPalette so T111 tests can assert mount/open state without needing
+// the generated command_taxonomy that is not available in the jsdom environment.
+vi.mock("../components/CommandPalette", () => ({
+  CommandPalette: ({ open, onClose }: { open: boolean; onClose: () => void }) =>
+    open ? (
+      <div data-testid="command-palette" role="dialog">
+        <button onClick={onClose}>close</button>
+      </div>
+    ) : null,
+}));
+
+// Stub PreflightToast for the same reason — real implementation imports i18n.
+vi.mock("../components/PreflightToast", () => ({
+  PreflightToast: ({ command, slug, onDismiss }: { command: string; slug: string; onDismiss: () => void }) => (
+    <div data-testid="preflight-toast" role="status" onClick={onDismiss}>
+      {command}/{slug}
+    </div>
+  ),
+}));
+
+// Stub invokeStore — replace with controlled state so tests can drive
+// preflightCommand without triggering real Tauri IPC.
+let _mockPreflightCommand: string | null = null;
+let _mockPreflightSlug: string | null = null;
+vi.mock("../stores/invokeStore", () => ({
+  useInvokeStore: () => ({
+    inFlight: new Set<string>(),
+    preflightCommand: _mockPreflightCommand,
+    preflightSlug: _mockPreflightSlug,
+    dispatch: vi.fn(),
+  }),
 }));
 
 // Stub Tauri event API — MainWindow and PollingFooter call listen() on mount;
@@ -38,7 +71,72 @@ vi.mock("@tauri-apps/api/core", () => ({
   }),
 }));
 
-afterEach(() => cleanup());
+afterEach(() => {
+  cleanup();
+  // Reset mock preflight state between tests.
+  _mockPreflightCommand = null;
+  _mockPreflightSlug = null;
+});
+
+describe("App T111 — CommandPalette + PreflightToast overlays + ⌘K keybinding", () => {
+  it("CommandPalette is not visible by default", () => {
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <App />
+      </MemoryRouter>,
+    );
+    expect(document.querySelector("[data-testid='command-palette']")).toBeNull();
+  });
+
+  it("⌘K opens the CommandPalette", () => {
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <App />
+      </MemoryRouter>,
+    );
+    act(() => {
+      fireEvent.keyDown(document, { key: "k", metaKey: true });
+    });
+    expect(document.querySelector("[data-testid='command-palette']")).toBeTruthy();
+  });
+
+  it("Ctrl+K opens the CommandPalette", () => {
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <App />
+      </MemoryRouter>,
+    );
+    act(() => {
+      fireEvent.keyDown(document, { key: "k", ctrlKey: true });
+    });
+    expect(document.querySelector("[data-testid='command-palette']")).toBeTruthy();
+  });
+
+  it("Esc closes CommandPalette after it was opened", () => {
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <App />
+      </MemoryRouter>,
+    );
+    act(() => {
+      fireEvent.keyDown(document, { key: "k", metaKey: true });
+    });
+    expect(document.querySelector("[data-testid='command-palette']")).toBeTruthy();
+    act(() => {
+      fireEvent.keyDown(document, { key: "Escape" });
+    });
+    expect(document.querySelector("[data-testid='command-palette']")).toBeNull();
+  });
+
+  it("PreflightToast is not visible when preflightCommand is null", () => {
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <App />
+      </MemoryRouter>,
+    );
+    expect(document.querySelector("[data-testid='preflight-toast']")).toBeNull();
+  });
+});
 
 describe("App routing", () => {
   it("/ renders MainWindow layout (T17 full view)", () => {
