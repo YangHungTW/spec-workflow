@@ -1,5 +1,5 @@
 ---
-description: Manually save a team-memory entry. Usage: /specflow:remember <role> "<lesson>" [--scope local|global]
+description: Manually save a team-memory entry. Usage: /scaff:remember <role> "<lesson>" [--scope local|global]
 ---
 
 1. Parse `$ARGUMENTS` for `<role>` (one of: pm, designer, architect, tpm, developer, qa-analyst, qa-tester, shared), `<lesson>` quoted text, and optional `--scope` flag.

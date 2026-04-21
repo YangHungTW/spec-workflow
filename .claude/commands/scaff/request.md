@@ -1,5 +1,5 @@
 ---
-description: PM intakes a new feature. Usage: /specflow:request "<one-line ask>" [--tier <tiny|standard|audited>] [slug]
+description: PM intakes a new feature. Usage: /scaff:request "<one-line ask>" [--tier <tiny|standard|audited>] [slug]
 ---
 
 1. Parse `$ARGUMENTS`. Supported forms:
@@ -17,11 +17,11 @@ description: PM intakes a new feature. Usage: /specflow:request "<one-line ask>"
 2. **Generate slug**:
    - If user did not supply one: derive a 2–5 word kebab-case slug capturing the essence (lowercase, hyphens, alphanumeric only, ≤30 chars body). Examples: "unify-auth-middleware", "dark-mode-toggle", "retry-flaky-upload".
    - Always prepend today's date in `YYYYMMDD` form → final slug = `YYYYMMDD-<body>`.
-   - If `.spec-workflow/features/<slug>/` already exists, append `-<HHMM>` to disambiguate.
+   - If `.specaffold/features/<slug>/` already exists, append `-<HHMM>` to disambiguate.
 
-3. Copy `.spec-workflow/features/_template/` to `.spec-workflow/features/<slug>/`.
+3. Copy `.specaffold/features/_template/` to `.specaffold/features/<slug>/`.
 
-4. Invoke the **specflow-pm** subagent to fill `00-request.md` and set `has-ui` in STATUS. PM will probe for missing context (why-now, success criteria, out-of-scope, has-ui).
+4. Invoke the **scaff-pm** subagent to fill `00-request.md` and set `has-ui` in STATUS. PM will probe for missing context (why-now, success criteria, out-of-scope, has-ui).
 
 4a. **Propose-and-confirm tier** (runs AFTER the has-ui probe from step 4, BEFORE slug is finalised in step 5):
 
@@ -49,4 +49,4 @@ description: PM intakes a new feature. Usage: /specflow:request "<one-line ask>"
 
 5. Update STATUS: stage=request, check `[x] request`, set dates, write the final slug.
 
-6. Report: generated slug, path created, has-ui value, tier chosen, and next command (`/specflow:next <slug>`).
+6. Report: generated slug, path created, has-ui value, tier chosen, and next command (`/scaff:next <slug>`).

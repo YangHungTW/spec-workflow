@@ -1,5 +1,5 @@
 ---
-description: TPM archives a completed feature. Usage: /specflow:archive <slug> [--allow-unmerged REASON]
+description: TPM archives a completed feature. Usage: /scaff:archive <slug> [--allow-unmerged REASON]
 ---
 
 1. Require the validation artefact's verdict is PASS or NITS. Prefer `08-validate.md` (new-shape merged artefact); fall back to `08-verify.md` (legacy) if the merged file is absent. If neither exists, or the found file's aggregate verdict is BLOCK, refuse and exit non-zero.
@@ -11,7 +11,7 @@ description: TPM archives a completed feature. Usage: /specflow:archive <slug> [
      - contains `..` (directory traversal),
      - contains `/` (path separator),
      - starts with `-` (leading dash, misinterpreted as flag).
-   - Resolve `feature_dir` via `cd ... && pwd -P` and assert the resolved path begins with `$REPO_ROOT/.spec-workflow/features/`. If the boundary check fails, print an error and exit non-zero. Never pass an unvalidated slug to filesystem operations.
+   - Resolve `feature_dir` via `cd ... && pwd -P` and assert the resolved path begins with `$REPO_ROOT/.specaffold/features/`. If the boundary check fails, print an error and exit non-zero. Never pass an unvalidated slug to filesystem operations.
    ```bash
    REPO_ROOT="$(git rev-parse --show-toplevel)"
    slug="$1"
@@ -19,11 +19,11 @@ description: TPM archives a completed feature. Usage: /specflow:archive <slug> [
      *..* | */* ) printf 'ERROR: invalid slug — contains .. or /\n' >&2; exit 2 ;;
      -*)          printf 'ERROR: invalid slug — starts with -\n' >&2; exit 2 ;;
    esac
-   feature_dir="$REPO_ROOT/.spec-workflow/features/$slug"
+   feature_dir="$REPO_ROOT/.specaffold/features/$slug"
    canonical_dir="$(cd "$feature_dir" 2>/dev/null && pwd -P)" || {
      printf 'ERROR: feature dir not found: %s\n' "$feature_dir" >&2; exit 2
    }
-   features_root="$REPO_ROOT/.spec-workflow/features"
+   features_root="$REPO_ROOT/.specaffold/features"
    case "$canonical_dir" in
      "$features_root"/*) ;;
      *) printf 'ERROR: feature_dir escapes features root (boundary check failed)\n' >&2; exit 2 ;;
@@ -43,9 +43,9 @@ description: TPM archives a completed feature. Usage: /specflow:archive <slug> [
      esac
      ```
 
-   Resolve the feature's tier by sourcing `bin/specflow-tier` and calling `get_tier`:
+   Resolve the feature's tier by sourcing `bin/scaff-tier` and calling `get_tier`:
    ```bash
-   . "$REPO_ROOT/bin/specflow-tier"
+   . "$REPO_ROOT/bin/scaff-tier"
    tier=$(get_tier "$feature_dir")
    ```
 
@@ -80,11 +80,11 @@ description: TPM archives a completed feature. Usage: /specflow:archive <slug> [
    ```
    where `<date>` is today in `YYYY-MM-DD` format.
 
-3. Invoke **specflow-tpm** subagent for archive mode.
+3. Invoke **scaff-tpm** subagent for archive mode.
 4. **Retrospective** — TPM polls each role that participated (check STATUS for who ran which stage):
    - Ask each: "Anything from this feature worth saving to team memory?"
    - For each proposed lesson: user approves, picks scope (local/global) and type.
-   - Write approved entries via the same protocol as `/specflow:remember`.
+   - Write approved entries via the same protocol as `/scaff:remember`.
    - Skip roles that say "nothing new".
-5. Check `[x] archive`, then `git mv .spec-workflow/features/<slug> .spec-workflow/archive/<slug>` (fall back to `mv` if not a git repo).
+5. Check `[x] archive`, then `git mv .specaffold/features/<slug> .specaffold/archive/<slug>` (fall back to `mv` if not a git repo).
 6. Report final archive path and any memory entries added.

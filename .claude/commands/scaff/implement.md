@@ -1,5 +1,5 @@
 ---
-description: Run all remaining waves in parallel until done or blocked. Usage: /specflow:implement <slug> [--one-wave] [--task T<n>] [--serial] [--skip-inline-review] [--inline-review]
+description: Run all remaining waves in parallel until done or blocked. Usage: /scaff:implement <slug> [--one-wave] [--task T<n>] [--serial] [--skip-inline-review] [--inline-review]
 ---
 
 Wave-based parallel execution. Default behaviour: run **every remaining wave** end-to-end, stopping only on task failure, merge conflict, or user interrupt. TPM's dependency graph is the plan — no reason to pause between healthy waves.
@@ -40,7 +40,7 @@ Wave-based parallel execution. Default behaviour: run **every remaining wave** e
 5. **Spawn parallel developers**:
    - For each task T<n> in the wave:
      - `git worktree add .worktrees/<slug>-T<n> -b <slug>-T<n> <slug>` (note branch name: `<slug>-T<n>`, flat — **not** `<slug>/T<n>`, which collides with the `<slug>` leaf ref)
-     - Invoke **specflow-developer** subagent with parameters `WORKTREE`, `TASK_ID`, `SLUG`.
+     - Invoke **scaff-developer** subagent with parameters `WORKTREE`, `TASK_ID`, `SLUG`.
      - All developer invocations in **one message with multiple Agent tool calls** → concurrent execution.
 6. **Wave collection** (after all developers return):
    - `git checkout <slug>`
@@ -49,7 +49,7 @@ Wave-based parallel execution. Default behaviour: run **every remaining wave** e
 
    **Tier-based default (R16):** Before dispatching reviewers, resolve the feature tier:
    ```bash
-   source "$REPO_ROOT/bin/specflow-tier"
+   source "$REPO_ROOT/bin/scaff-tier"
    FEATURE_TIER="$(get_tier "$feature_dir")"
    ```
    Determine whether inline review runs for this wave:
@@ -76,21 +76,21 @@ Wave-based parallel execution. Default behaviour: run **every remaining wave** e
 
    **7b. Aggregate verdicts** (pure classifier — no mutation here; apply classify-before-mutate rule):
 
-   After all `3 × N_tasks` reviewers return, invoke `bin/specflow-aggregate-verdicts` with the
+   After all `3 × N_tasks` reviewers return, invoke `bin/scaff-aggregate-verdicts` with the
    `security performance style` axis-set and the scratch dir holding the reviewer output files.
    The CLI emits the aggregated verdict (`PASS`, `NITS`, or `BLOCK`) on stdout line 1, and
    optionally `suggest-audited-upgrade: security` on line 2 when a security-axis `must`-severity
    finding is present (tech §4.3). All mutation (merge or halt) lives in step 7c, not here.
 
    ```bash
-   # Invoke the extracted aggregator CLI (bin/specflow-aggregate-verdicts).
+   # Invoke the extracted aggregator CLI (bin/scaff-aggregate-verdicts).
    # Input:  $VERDICT_DIR — scratch dir where each reviewer's raw output was written
    #         as <task>-<axis>.txt before this block runs.
    # Output: $WAVE_STATE        — wave:PASS | wave:NITS | wave:BLOCK (consumed by step 7c)
    #         $SUGGEST_AUDITED_UPGRADE — non-empty when aggregator emits suggest-audited-upgrade
    #         (tech §4.3: step 7c invokes set_tier on this signal; see dispatch block below)
 
-   AGG_OUTPUT="$(bin/specflow-aggregate-verdicts security performance style \
+   AGG_OUTPUT="$(bin/scaff-aggregate-verdicts security performance style \
      --dir "$VERDICT_DIR")"
    AGG_VERDICT="$(printf '%s\n' "$AGG_OUTPUT" | head -1)"
    WAVE_STATE="wave:$AGG_VERDICT"
@@ -127,7 +127,7 @@ Wave-based parallel execution. Default behaviour: run **every remaining wave** e
 
    - **`wave:BLOCK`** — do NOT run the `git merge --no-ff` loop:
      1. Write per-task findings to STATUS Notes: `YYYY-MM-DD review result — wave <N> verdict=BLOCK blocking-tasks=<list>`
-     2. For each blocked task, surface the findings and the recovery command: `/specflow:implement <slug> --task T<n>`
+     2. For each blocked task, surface the findings and the recovery command: `/scaff:implement <slug> --task T<n>`
      3. STOP the implement loop. Do not proceed to step 8 or 9.
      4. Leave the `<slug>-T<n>` branches and worktrees intact so the developer can inspect them.
 
@@ -140,7 +140,7 @@ Wave-based parallel execution. Default behaviour: run **every remaining wave** e
 8. **Merge loop** (runs only when wave state is `wave:NITS` or `wave:PASS`):
    - For each completed task (any order):
      - `git merge --no-ff <slug>-T<n> -m "Merge T<n>: <title>[## Reviewer notes section if NITS]"`
-     - On conflict: STOP the whole loop. Surface conflicting files. TPM's parallel-safety analysis was wrong → recommend `/specflow:update-task`.
+     - On conflict: STOP the whole loop. Surface conflicting files. TPM's parallel-safety analysis was wrong → recommend `/scaff:update-task`.
      - `git worktree remove .worktrees/<slug>-T<n>`
      - `git branch -d <slug>-T<n>`
 9. **Status update** (orchestrator):
@@ -182,7 +182,7 @@ EOF
     - If `--one-wave` → stop. Report current state + preview next wave.
     - If any task failed or merge conflicted → stop. Report failure + recovery command.
     - Else if more waves remain → loop to step 4 for the next wave.
-    - Else all done → check `[x] implement` in STATUS, commit, tell user next is `/specflow:next <slug>`.
+    - Else all done → check `[x] implement` in STATUS, commit, tell user next is `/scaff:next <slug>`.
 
 ## Retry semantics
 
@@ -191,11 +191,11 @@ When a task is blocked by the review step and the developer re-runs it via `--ta
 1. The developer fixes the flagged issue and commits to `<slug>-T<n>`.
 2. Orchestrator re-invokes **all 3 reviewers** on the new commit — not just the reviewer(s) that flagged originally.
 3. The aggregator runs from scratch on the new verdicts. No shortcuts based on prior verdicts (D6: classify the new state fresh).
-4. Max retries = 2 per task. If a task is still blocked after 2 retries, escalate to TPM via `/specflow:update-task`.
+4. Max retries = 2 per task. If a task is still blocked after 2 retries, escalate to TPM via `/scaff:update-task`.
 
 ## Failures
 
-- **One developer fails** → stop the wave loop immediately (other completed tasks in this wave still merged). Report which task failed + how to retry: `/specflow:implement <slug> --task T<n>`.
+- **One developer fails** → stop the wave loop immediately (other completed tasks in this wave still merged). Report which task failed + how to retry: `/scaff:implement <slug> --task T<n>`.
 - **Merge conflict** → stop. Conflicts during a wave = TPM's parallel-safety analysis was wrong. Don't auto-resolve.
 - **Interrupted mid-wave** → clean up any hanging worktrees before exiting.
 - **Reviewer timeout or crash** → treat as BLOCK (fail-loud per D2 error posture). User can retry or invoke `--skip-inline-review`.
