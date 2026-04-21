@@ -1,4 +1,5 @@
 pub mod audit;
+pub mod command_taxonomy;
 pub mod invoke;
 pub mod ipc;
 pub mod lock;
