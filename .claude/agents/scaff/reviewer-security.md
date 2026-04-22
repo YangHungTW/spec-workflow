@@ -1,5 +1,6 @@
 ---
 name: scaff-reviewer-security
+color: red
 model: sonnet
 description: Security reviewer for code diffs — flags security-axis findings only
 tools: Read, Grep, Bash
