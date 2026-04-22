@@ -868,17 +868,43 @@ html.dark {
   font-weight: 600;
 }
 
-/* Missing tab — grey, not-yet-generated; cursor signals non-actionable */
+/* Missing tab — grey, not-yet-generated; cursor signals non-actionable (R21, AC20) */
 .tab-strip__tab--missing {
   color: var(--text-muted);
-  opacity: 0.5;
+  opacity: 0.38;
   cursor: not-allowed;
+  border-bottom-color: transparent;
+  position: relative;
 }
 
 /* Missing tab hover — no color change; reinforce non-actionable */
 .tab-strip__tab--missing:hover {
   color: var(--text-muted);
   background: transparent;
+}
+
+/* Tooltip on missing tabs — appears immediately on hover with no OS delay (R22, AC21) */
+.tab-strip__tab--missing::after {
+  content: "Not yet produced";
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--sidebar-bg);
+  color: var(--sidebar-logo-text);
+  font-size: 10px;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 5px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 20;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.tab-strip__tab--missing:hover::after {
+  display: block;
 }
 
 /* ── STAGE CHECKLIST ── */
