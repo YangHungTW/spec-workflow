@@ -34,3 +34,4 @@
 - 2026-04-22 Developer — T4 done (archive_discovery.rs + classifier + inline tests)
 - 2026-04-22 Developer — T5 done (artefact_presence.rs + guards + inline tests)
 - 2026-04-22 review result — wave 1 phase 1 verdict=NITS (T4 path-trav settings, 2 comment WHAT; T5 canonicalize-after-join advisory, redundant metadata advisory); T4, T5 merged
+- 2026-04-22 Developer — T6 done (archive_discovery_tests.rs + artefact_presence_tests.rs)
