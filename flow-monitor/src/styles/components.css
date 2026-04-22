@@ -1516,8 +1516,10 @@ html.dark {
   color: var(--card-bg);
 }
 
-/* Italic slug text inside archived rows */
-.repo-sidebar__archived-row .repo-sidebar__item-label {
+/* Italic slug text inside archived rows.
+   The component renders the slug with .repo-sidebar__archived-slug, not
+   .repo-sidebar__item-label — this rule targets the actual class used (AC17). */
+.repo-sidebar__archived-row .repo-sidebar__archived-slug {
   font-style: italic;
   font-size: 11px;
 }
