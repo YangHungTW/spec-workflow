@@ -421,7 +421,7 @@ Effective W4 parallelism: T16 ∥ T17; then T18 after T16; T19 after T16+T17+T18
 - **Verify**: `cd flow-monitor/src-tauri && cargo test archive_discovery artefact_presence` passes.
 - **Depends on**: T4, T5
 - **Parallel-safe-with**: T7
-- [ ]
+- [x]
 
 ## T7 — Wire new commands into the Tauri invoke_handler
 - **Milestone**: M2 (W1)
@@ -441,7 +441,7 @@ Effective W4 parallelism: T16 ∥ T17; then T18 after T16; T19 after T16+T17+T18
 - **Verify**: `cd flow-monitor/src-tauri && cargo check && cargo test` — both new commands resolve at build time; all tests pass.
 - **Depends on**: T4, T5
 - **Parallel-safe-with**: T6
-- [ ]
+- [x]
 
 ## T8 — CSS: add `.agent-pill`, `.agent-pill__axis`, sidebar-dot, archive-row styles
 - **Milestone**: M3 (W2)
