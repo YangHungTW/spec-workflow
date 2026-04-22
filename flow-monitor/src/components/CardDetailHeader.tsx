@@ -4,6 +4,8 @@ import { useTranslation } from "../i18n";
 import { StagePill, STAGE_KEYS, type StageKey } from "./StagePill";
 import { IdleBadge, type IdleState } from "./IdleBadge";
 import { SendPanel } from "./SendPanel";
+import { AgentPill } from "./AgentPill";
+import { roleForSession } from "../agentPalette";
 import type { InvokeStore } from "../stores/invokeStore";
 
 /**
@@ -91,9 +93,10 @@ export function CardDetailHeader({
           {repoId}/{slug}
         </h1>
 
-        {/* Stage pill and idle badge */}
+        {/* Stage pill, agent pill, and idle badge */}
         <div className="card-detail-header__badges">
           <StagePill stage={stage} />
+          <AgentPill role={roleForSession({ stage })} />
           {idleState !== "none" && <IdleBadge state={idleState} />}
         </div>
 
