@@ -77,7 +77,9 @@ export function TabStrip({ tabs, activeId, onSelect }: TabStripProps) {
                 tabRefs.current.delete(tab.id);
               }
             }}
-            onClick={() => onSelect(tab.id)}
+            aria-disabled={!tab.exists}
+            tabIndex={tab.exists ? 0 : -1}
+            onClick={() => { if (!tab.exists) return; onSelect(tab.id); }}
           >
             {t(tab.labelKey)}
           </button>

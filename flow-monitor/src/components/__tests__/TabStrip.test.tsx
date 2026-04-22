@@ -211,4 +211,65 @@ describe("TabStrip", () => {
     // flexWrap must not be 'wrap' — no wrapping allowed per AC9.g
     expect(style.flexWrap).not.toBe("wrap");
   });
+
+  // AC22 — click guard: missing tab does NOT call onSelect
+  it("clicking a missing tab does NOT call onSelect (AC22)", () => {
+    const onSelect = vi.fn();
+    render(
+      <TabStrip tabs={MIXED_TABS} activeId="00-request" onSelect={onSelect} />,
+    );
+    // 01-brainstorm has exists: false in MIXED_TABS
+    fireEvent.click(screen.getByRole("tab", { name: "01 brainstorm" }));
+    expect(onSelect).not.toHaveBeenCalled();
+  });
+
+  // Regression guard: enabled tab click still fires onSelect
+  it("clicking an enabled tab still fires onSelect (regression guard)", () => {
+    const onSelect = vi.fn();
+    render(
+      <TabStrip tabs={MIXED_TABS} activeId="00-request" onSelect={onSelect} />,
+    );
+    // 02-design has exists: true in MIXED_TABS
+    fireEvent.click(screen.getByRole("tab", { name: "02 design" }));
+    expect(onSelect).toHaveBeenCalledTimes(1);
+    expect(onSelect).toHaveBeenCalledWith("02-design");
+  });
+
+  // aria-disabled mirrors exists
+  it("aria-disabled is true when exists=false", () => {
+    const onSelect = vi.fn();
+    render(
+      <TabStrip tabs={MIXED_TABS} activeId="00-request" onSelect={onSelect} />,
+    );
+    const missingTab = screen.getByRole("tab", { name: "01 brainstorm" });
+    expect(missingTab.getAttribute("aria-disabled")).toBe("true");
+  });
+
+  it("aria-disabled is false when exists=true", () => {
+    const onSelect = vi.fn();
+    render(
+      <TabStrip tabs={MIXED_TABS} activeId="00-request" onSelect={onSelect} />,
+    );
+    const existingTab = screen.getByRole("tab", { name: "00 request" });
+    expect(existingTab.getAttribute("aria-disabled")).toBe("false");
+  });
+
+  // tabIndex mirrors exists
+  it("tabIndex is -1 when exists=false", () => {
+    const onSelect = vi.fn();
+    render(
+      <TabStrip tabs={MIXED_TABS} activeId="00-request" onSelect={onSelect} />,
+    );
+    const missingTab = screen.getByRole("tab", { name: "01 brainstorm" });
+    expect(missingTab.tabIndex).toBe(-1);
+  });
+
+  it("tabIndex is 0 when exists=true", () => {
+    const onSelect = vi.fn();
+    render(
+      <TabStrip tabs={MIXED_TABS} activeId="00-request" onSelect={onSelect} />,
+    );
+    const existingTab = screen.getByRole("tab", { name: "00 request" });
+    expect(existingTab.tabIndex).toBe(0);
+  });
 });
