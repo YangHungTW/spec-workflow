@@ -96,7 +96,22 @@ function CardDetail({ isArchived = false }: CardDetailProps) {
       slug: validSlug,
       archived: isArchived,
     })
-      .then((presence) => setFilesPresent(presence.files_present))
+      .then((presence) => {
+        // Runtime shape guard: reject malformed IPC responses before storing state.
+        // TypeScript types are compile-time only; the backend may return null,
+        // omit files_present, or return a non-object — any of these would cause
+        // a TypeError when indexing filesPresent[tab.file] at render time.
+        if (
+          !presence ||
+          typeof presence.files_present !== "object" ||
+          presence.files_present === null
+        ) {
+          console.warn("list_feature_artefacts returned malformed response", presence);
+          setFilesPresent({});
+          return;
+        }
+        setFilesPresent(presence.files_present);
+      })
       .catch((e) => {
         console.warn("list_feature_artefacts failed; falling back to exists:false for all tabs", e);
         setFilesPresent({});

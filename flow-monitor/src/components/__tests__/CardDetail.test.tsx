@@ -558,3 +558,146 @@ describe("CardDetail — T18 tab exists from list_feature_artefacts (AC23)", () 
     expect(brainstormTab.getAttribute("aria-selected")).toBe("false");
   });
 });
+
+// ── T18 retry 1: IPC shape guard on list_feature_artefacts response ───────────
+
+describe("CardDetail — malformed list_feature_artefacts response (security guard)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    window.HTMLElement.prototype.scrollIntoView = vi.fn();
+  });
+
+  it("IPC returns null → all tabs fall back to --missing, no crash, console.warn fired", async () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    mockInvoke.mockImplementation((cmd: string) => {
+      if (cmd === "get_settings") {
+        return Promise.resolve({ repos: ["/Users/alice/projects/my-repo"] });
+      }
+      if (cmd === "list_feature_artefacts") {
+        // Backend returns null instead of an ArtefactPresence object
+        return Promise.resolve(null);
+      }
+      if (cmd === "read_artefact") {
+        return Promise.resolve("# stub");
+      }
+      return Promise.resolve(undefined);
+    });
+
+    renderCardDetail();
+    await new Promise((r) => setTimeout(r, 50));
+
+    // All tabs should be missing (files_present falls back to {})
+    const allTabLabels = [
+      "00 request",
+      "01 brainstorm",
+      "02 design",
+      "03 prd",
+      "04 tech",
+      "05 plan",
+      "06 tasks",
+      "07 gaps",
+      "08 verify",
+    ];
+    for (const label of allTabLabels) {
+      const tab = screen.getByRole("tab", { name: label });
+      expect(tab.classList.contains("tab-strip__tab--missing")).toBe(true);
+    }
+
+    // console.warn must have been fired with the malformed payload
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining("list_feature_artefacts returned malformed response"),
+      null,
+    );
+
+    warnSpy.mockRestore();
+  });
+
+  it("IPC returns { files_present: null } → all tabs fall back to --missing, no crash, console.warn fired", async () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    mockInvoke.mockImplementation((cmd: string) => {
+      if (cmd === "get_settings") {
+        return Promise.resolve({ repos: ["/Users/alice/projects/my-repo"] });
+      }
+      if (cmd === "list_feature_artefacts") {
+        // Backend returns files_present: null
+        return Promise.resolve({ files_present: null });
+      }
+      if (cmd === "read_artefact") {
+        return Promise.resolve("# stub");
+      }
+      return Promise.resolve(undefined);
+    });
+
+    renderCardDetail();
+    await new Promise((r) => setTimeout(r, 50));
+
+    const allTabLabels = [
+      "00 request",
+      "01 brainstorm",
+      "02 design",
+      "03 prd",
+      "04 tech",
+      "05 plan",
+      "06 tasks",
+      "07 gaps",
+      "08 verify",
+    ];
+    for (const label of allTabLabels) {
+      const tab = screen.getByRole("tab", { name: label });
+      expect(tab.classList.contains("tab-strip__tab--missing")).toBe(true);
+    }
+
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining("list_feature_artefacts returned malformed response"),
+      { files_present: null },
+    );
+
+    warnSpy.mockRestore();
+  });
+
+  it("IPC returns {} (missing files_present field) → all tabs fall back to --missing, no crash, console.warn fired", async () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    mockInvoke.mockImplementation((cmd: string) => {
+      if (cmd === "get_settings") {
+        return Promise.resolve({ repos: ["/Users/alice/projects/my-repo"] });
+      }
+      if (cmd === "list_feature_artefacts") {
+        // Backend returns an object but files_present field is absent
+        return Promise.resolve({});
+      }
+      if (cmd === "read_artefact") {
+        return Promise.resolve("# stub");
+      }
+      return Promise.resolve(undefined);
+    });
+
+    renderCardDetail();
+    await new Promise((r) => setTimeout(r, 50));
+
+    const allTabLabels = [
+      "00 request",
+      "01 brainstorm",
+      "02 design",
+      "03 prd",
+      "04 tech",
+      "05 plan",
+      "06 tasks",
+      "07 gaps",
+      "08 verify",
+    ];
+    for (const label of allTabLabels) {
+      const tab = screen.getByRole("tab", { name: label });
+      expect(tab.classList.contains("tab-strip__tab--missing")).toBe(true);
+    }
+
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining("list_feature_artefacts returned malformed response"),
+      {},
+    );
+
+    warnSpy.mockRestore();
+  });
+});
