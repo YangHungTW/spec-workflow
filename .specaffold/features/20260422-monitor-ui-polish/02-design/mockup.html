@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>flow-monitor UI Polish Mockup — 20260422-monitor-ui-polish</title>
+<style>
+/* ── Palette from existing theme.css — tokens reproduced inline ── */
+:root {
+  --primary: #4F46E5;
+  --page-bg: #F1F5F9;
+  --card-bg: #FFFFFF;
+  --surface-secondary: #F8FAFC;
+  --sidebar-bg: #1E293B;
+  --sidebar-active: #4F46E5;
+  --sidebar-border: #334155;
+  --sidebar-text-muted: #94A3B8;
+  --nav-bg: #FFFFFF;
+  --text-primary: #1E293B;
+  --text-muted: #94A3B8;
+  --card-border: #E2E8F0;
+  --stalled-red: #EF4444;
+  --stale-amber: #F59E0B;
+  --ok: #10B981;
+  --ok-light: #ECFDF5;
+  --ui-badge: #8B5CF6;
+  --ui-badge-light: #F5F3FF;
+  --sidebar-section-label: #64748B;
+  --sidebar-count-bg: #475569;
+  --sidebar-count-text: #FFFFFF;
+  --brand: #4F46E5;
+
+  /* Stage pill tokens */
+  --pill-brainstorm-bg: #EFF6FF; --pill-brainstorm-text: #1D4ED8;
+  --pill-design-bg: #F5F3FF;     --pill-design-text: #7C3AED;
+  --pill-prd-bg: #FFFBEB;        --pill-prd-text: #B45309;
+  --pill-tech-bg: #F0FDF4;       --pill-tech-text: #15803D;
+  --pill-plan-bg: #FFF0F6;       --pill-plan-text: #BE185D;
+  --pill-implement-bg: #F0FDF4;  --pill-implement-text: #166534;
+  --pill-gap-check-bg: #FEF2F2;  --pill-gap-check-text: #B91C1C;
+  --pill-verify-bg: #EFF6FF;     --pill-verify-text: #1E40AF;
+
+  /* ── AGENT ROLE COLORS — tied to Claude Code color: frontmatter (8 predefined names) ──
+     Source of truth: the color: NAME in each .claude/agents/scaff/*.md file.
+     CSS hex below = monitor rendering of each name. Sidebar dot is the same
+     hex used in both pill and sidebar (saturated enough on dark bg #1E293B).
+     Color name → role mapping:
+       purple → pm          cyan → architect    yellow → tpm
+       green  → developer   pink → designer     orange → qa-analyst
+       blue   → qa-tester   red  → all 3 reviewers (sub-badge distinguishes axis) */
+
+  /* purple → pm */
+  --agent-pm-bg: #F5F3FF;           --agent-pm-fg: #5B21B6;
+  --agent-pm-dot: #7C3AED;
+
+  /* cyan → architect */
+  --agent-architect-bg: #CFFAFE;    --agent-architect-fg: #155E75;
+  --agent-architect-dot: #0891B2;
+
+  /* yellow → tpm */
+  --agent-tpm-bg: #FEF9C3;          --agent-tpm-fg: #713F12;
+  --agent-tpm-dot: #CA8A04;
+
+  /* green → developer */
+  --agent-developer-bg: #DCFCE7;    --agent-developer-fg: #14532D;
+  --agent-developer-dot: #16A34A;
+
+  /* orange → qa-analyst */
+  --agent-qa-analyst-bg: #FFF7ED;   --agent-qa-analyst-fg: #7C2D12;
+  --agent-qa-analyst-dot: #EA580C;
+
+  /* blue → qa-tester */
+  --agent-qa-tester-bg: #DBEAFE;    --agent-qa-tester-fg: #1E3A8A;
+  --agent-qa-tester-dot: #2563EB;
+
+  /* pink → designer */
+  --agent-designer-bg: #FCE7F3;     --agent-designer-fg: #9D174D;
+  --agent-designer-dot: #DB2777;
+
+  /* red → all reviewers (security, performance, style share hue; axis sub-badge differentiates) */
+  --agent-reviewer-sec-bg: #FEE2E2; --agent-reviewer-sec-fg: #991B1B;
+  --agent-reviewer-sec-dot: #DC2626;
+
+  --agent-reviewer-perf-bg: #FEE2E2; --agent-reviewer-perf-fg: #991B1B;
+  --agent-reviewer-perf-dot: #DC2626;
+
+  --agent-reviewer-style-bg: #FEE2E2; --agent-reviewer-style-fg: #991B1B;
+  --agent-reviewer-style-dot: #DC2626;
+
+  /* Sidebar dot — same value as pill dot (saturated on dark bg) */
+  --agent-pm-sidebar-dot: #7C3AED;
+  --agent-architect-sidebar-dot: #0891B2;
+  --agent-tpm-sidebar-dot: #CA8A04;
+  --agent-developer-sidebar-dot: #16A34A;
+  --agent-qa-analyst-sidebar-dot: #EA580C;
+  --agent-qa-tester-sidebar-dot: #2563EB;
+  --agent-designer-sidebar-dot: #DB2777;
+  --agent-reviewer-sec-sidebar-dot: #DC2626;
+  --agent-reviewer-perf-sidebar-dot: #DC2626;
+  --agent-reviewer-style-sidebar-dot: #DC2626;
+
+  /* Archive visual */
+  --archived-badge-bg: #E2E8F0;
+  --archived-badge-fg: #475569;
+  --archived-muted: #94A3B8;
+  --archived-section-bg: rgba(241,245,249,0.5);
+}
+
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+  background: #CBD5E1;
+  color: var(--text-primary);
+  min-height: 100vh;
+  padding: 24px 20px 48px;
+}
+
+/* ── Layout helpers ── */
+.screen-row {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-bottom: 32px;
+  align-items: flex-start;
+}
+.screen-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #475569;
+  margin-bottom: 8px;
+}
+.screen-desc {
+  font-size: 11px;
+  color: #64748B;
+  margin-bottom: 14px;
+  max-width: 640px;
+  line-height: 1.6;
+}
+.section-divider {
+  border: none;
+  border-top: 2px solid #CBD5E1;
+  margin: 36px 0 24px;
+}
+h2.section-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #334155;
+  margin-bottom: 6px;
+}
+.annotation {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  background: #FEF9C3;
+  color: #854D0E;
+  border: 1px solid #FDE047;
+  border-radius: 4px;
+  padding: 1px 6px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+.label-new { background: #D1FAE5; color: #065F46; border-color: #6EE7B7; }
+.label-changed { background: #DBEAFE; color: #1E40AF; border-color: #93C5FD; }
+
+/* ── App chrome shell ── */
+.app-shell {
+  display: flex;
+  height: 540px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(15,23,42,0.22);
+  background: var(--page-bg);
+  min-width: 760px;
+  max-width: 980px;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+  width: 200px;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--sidebar-border);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.sidebar__logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 12px 10px;
+}
+.sidebar__logo-icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  background: var(--brand);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 12px;
+  color: white;
+  font-weight: 700;
+}
+.sidebar__logo-text {
+  font-size: 12px;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+.sidebar__section-label {
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--sidebar-section-label);
+  padding: 10px 14px 4px;
+}
+.sidebar__list { list-style: none; display: flex; flex-direction: column; gap: 2px; padding: 0 0 4px; }
+.sidebar__item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  margin: 0 6px;
+  border-radius: 7px;
+  font-size: 12px;
+  color: var(--sidebar-text-muted);
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+}
+.sidebar__item:hover { background: var(--sidebar-border); color: #fff; }
+.sidebar__item--active { background: var(--sidebar-active); color: #fff; font-weight: 500; }
+.sidebar__item-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sidebar__badge {
+  font-size: 9px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 9999px;
+  background: var(--sidebar-count-bg);
+  color: var(--sidebar-count-text);
+  flex-shrink: 0;
+}
+.sidebar__badge--archived {
+  background: #475569;
+  color: #CBD5E1;
+}
+/* Role dot on sidebar items */
+.sidebar__role-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+/* Archive toggle item */
+.sidebar__item--archive-toggle {
+  color: var(--archived-muted);
+  border: none;
+  font-style: normal;
+  opacity: 0.85;
+  margin-top: 4px;
+}
+.sidebar__item--archive-toggle:hover { opacity: 1; }
+.sidebar__chevron { font-size: 8px; color: var(--sidebar-section-label); }
+/* "Archived" section label with count */
+.sidebar__archive-section {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px 4px;
+  cursor: pointer;
+}
+.sidebar__archive-label {
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--archived-muted);
+  flex: 1;
+}
+.sidebar__archive-chevron { font-size: 9px; color: var(--archived-muted); }
+.sidebar__item--archived { opacity: 0.65; }
+.sidebar__item--archived:hover { opacity: 0.9; }
+
+.sidebar__bottom {
+  margin-top: auto;
+  border-top: 1px solid var(--sidebar-border);
+  padding: 6px 0 4px;
+}
+.sidebar__bottom-item { font-size: 11px; opacity: 0.7; }
+.sidebar__filter-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Main content ── */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--surface-secondary);
+}
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px;
+  background: var(--card-bg);
+  border-bottom: 1px solid var(--card-border);
+  flex-shrink: 0;
+}
+.toolbar__title { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+.toolbar__sub { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+.toolbar__right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.sort-select {
+  font-size: 11px;
+  padding: 4px 7px;
+  border-radius: 5px;
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  color: var(--text-primary);
+}
+.card-grid {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  align-content: start;
+}
+
+/* ── Session card ── */
+.session-card {
+  background: var(--card-bg);
+  border: 1.5px solid var(--card-border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.session-card__repo-row { display: flex; align-items: center; gap: 5px; }
+.session-card__repo-name { font-size: 10px; font-family: monospace; color: var(--text-muted); }
+.ui-badge {
+  font-size: 8px;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 9999px;
+  background: var(--ui-badge-light);
+  color: var(--ui-badge);
+  letter-spacing: 0.04em;
+}
+.session-card__slug-row { display: flex; align-items: center; gap: 7px; }
+.session-card__slug {
+  font-size: 12px;
+  font-weight: 600;
+  font-family: monospace;
+  color: var(--text-primary);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.session-card__meta { display: flex; align-items: center; justify-content: space-between; }
+.session-card__time { font-size: 10px; color: var(--text-muted); }
+.session-card__note { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
+.active-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 9999px;
+  background: var(--ok-light);
+  color: var(--ok);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* ── Stage pill (existing shape, no change) ── */
+.stage-pill {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+/* PROPOSED: agent role pill — same shape as stage-pill ── */
+.agent-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.agent-pill__dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+/* Axis sub-badge for reviewer pills (shown after the role label) */
+.agent-pill__axis {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 0px 4px;
+  border-radius: 3px;
+  background: rgba(0,0,0,0.12);
+  color: inherit;
+  text-transform: uppercase;
+}
+
+/* Agent color mappings */
+.agent-pm           { background: var(--agent-pm-bg);            color: var(--agent-pm-fg); }
+.agent-pm .agent-pill__dot           { background: var(--agent-pm-dot); }
+
+.agent-architect    { background: var(--agent-architect-bg);     color: var(--agent-architect-fg); }
+.agent-architect .agent-pill__dot    { background: var(--agent-architect-dot); }
+
+.agent-tpm          { background: var(--agent-tpm-bg);           color: var(--agent-tpm-fg); }
+.agent-tpm .agent-pill__dot          { background: var(--agent-tpm-dot); }
+
+.agent-developer    { background: var(--agent-developer-bg);     color: var(--agent-developer-fg); }
+.agent-developer .agent-pill__dot    { background: var(--agent-developer-dot); }
+
+.agent-qa-analyst   { background: var(--agent-qa-analyst-bg);   color: var(--agent-qa-analyst-fg); }
+.agent-qa-analyst .agent-pill__dot   { background: var(--agent-qa-analyst-dot); }
+
+.agent-qa-tester    { background: var(--agent-qa-tester-bg);    color: var(--agent-qa-tester-fg); }
+.agent-qa-tester .agent-pill__dot    { background: var(--agent-qa-tester-dot); }
+
+.agent-designer     { background: var(--agent-designer-bg);     color: var(--agent-designer-fg); }
+.agent-designer .agent-pill__dot     { background: var(--agent-designer-dot); }
+
+.agent-reviewer-sec  { background: var(--agent-reviewer-sec-bg);  color: var(--agent-reviewer-sec-fg); }
+.agent-reviewer-sec .agent-pill__dot  { background: var(--agent-reviewer-sec-dot); }
+
+.agent-reviewer-perf { background: var(--agent-reviewer-perf-bg); color: var(--agent-reviewer-perf-fg); }
+.agent-reviewer-perf .agent-pill__dot { background: var(--agent-reviewer-perf-dot); }
+
+.agent-reviewer-style { background: var(--agent-reviewer-style-bg); color: var(--agent-reviewer-style-fg); }
+.agent-reviewer-style .agent-pill__dot { background: var(--agent-reviewer-style-dot); }
+
+/* ── Card detail layout ── */
+.card-detail-shell {
+  display: flex;
+  height: 540px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(15,23,42,0.22);
+  background: var(--page-bg);
+  min-width: 760px;
+  max-width: 980px;
+}
+.card-detail-left {
+  width: 190px;
+  min-width: 190px;
+  display: flex;
+  flex-direction: column;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--sidebar-border);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.card-detail-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--page-bg);
+}
+.card-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  background: var(--card-bg);
+  border-bottom: 1px solid var(--card-border);
+  flex-shrink: 0;
+}
+.card-detail-header__back { font-size: 14px; color: var(--text-muted); cursor: pointer; padding: 3px 7px; border-radius: 5px; }
+.card-detail-header__title { font-size: 13px; font-weight: 600; color: var(--text-primary); flex: 1; font-family: monospace; }
+.card-detail-body { display: flex; flex: 1; overflow: hidden; }
+.card-detail-rail {
+  width: 180px;
+  min-width: 160px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 14px 10px;
+  background: var(--surface-secondary);
+  border-right: 1px solid var(--card-border);
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+.card-detail-right { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--card-bg); }
+
+/* Stage checklist */
+.stage-checklist { list-style: none; display: flex; flex-direction: column; gap: 3px; }
+.stage-checklist__item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-muted); padding: 2px 0; }
+.stage-checklist__item--complete .stage-checklist__marker { color: var(--primary); }
+.stage-checklist__item--current { color: var(--primary); font-weight: 700; }
+.stage-checklist__item--future { opacity: 0.6; }
+.stage-checklist__marker { font-size: 9px; width: 12px; text-align: center; flex-shrink: 0; }
+
+/* Notes timeline */
+.notes-timeline { list-style: none; display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+.notes-timeline__label { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); margin-bottom: 4px; }
+.notes-timeline__entry {
+  font-size: 10px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  padding-left: 7px;
+  border-left: 2px solid var(--card-border);
+}
+.notes-timeline__date { font-weight: 600; color: var(--text-muted); }
+.notes-timeline__role { font-weight: 600; color: var(--text-primary); }
+
+/* ── Tab strip ── */
+.tab-strip {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  background: var(--card-bg);
+  border-bottom: 1px solid var(--card-border);
+  flex-shrink: 0;
+  scrollbar-width: none;
+}
+.tab-strip::-webkit-scrollbar { display: none; }
+.tab { flex-shrink: 0; padding: 7px 12px; font-size: 11px; font-weight: 500; color: var(--text-muted); background: transparent; border: none; border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap; }
+.tab:hover { color: var(--text-primary); background: var(--surface-secondary); }
+.tab--active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
+
+/* CHANGED: disabled tab state */
+.tab--disabled {
+  color: var(--text-muted);
+  opacity: 0.38;
+  cursor: not-allowed;
+  border-bottom-color: transparent;
+  position: relative;
+}
+.tab--disabled:hover {
+  color: var(--text-muted);
+  background: transparent;
+}
+/* Tooltip on disabled tabs */
+.tab--disabled::after {
+  content: attr(data-tooltip);
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1E293B;
+  color: #F8FAFC;
+  font-size: 10px;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 5px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 20;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+}
+.tab--disabled:hover::after { display: block; }
+
+.tab-content { flex: 1; overflow-y: auto; padding: 14px; }
+
+/* ── Pill demo grid for palette section ── */
+.pill-demo-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0;
+}
+.palette-table {
+  border-collapse: collapse;
+  font-size: 11px;
+  margin: 10px 0;
+  width: 100%;
+  max-width: 640px;
+}
+.palette-table th, .palette-table td {
+  border: 1px solid var(--card-border);
+  padding: 5px 10px;
+  text-align: left;
+}
+.palette-table th { background: var(--surface-secondary); font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; }
+.swatch { display: inline-block; width: 12px; height: 12px; border-radius: 50%; vertical-align: middle; margin-right: 4px; border: 1px solid rgba(0,0,0,0.1); }
+
+/* ── Before/after comparison boxes ── */
+.compare-box {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--card-bg);
+  border: 1.5px solid var(--card-border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  min-width: 220px;
+}
+.compare-box__label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 4px; }
+.compare-box--before .compare-box__label { color: var(--text-muted); }
+.compare-box--after .compare-box__label { color: var(--ok); }
+
+/* ── Archive badge ── */
+.arch-badge {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  background: var(--archived-badge-bg);
+  color: var(--archived-badge-fg);
+  letter-spacing: 0.03em;
+  flex-shrink: 0;
+}
+
+/* ── Section heading row ── */
+.heading-row { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; flex-wrap: wrap; }
+
+/* ── Notes timeline in card (with agent color) ── */
+.notes-timeline__role--colored { font-weight: 700; }
+/* These classes reference the CSS vars, so they auto-update with the palette */
+.role-pm           { color: var(--agent-pm-dot); }
+.role-architect    { color: var(--agent-architect-dot); }
+.role-tpm          { color: var(--agent-tpm-dot); }
+.role-developer    { color: var(--agent-developer-dot); }
+.role-qa-analyst   { color: var(--agent-qa-analyst-dot); }
+.role-qa-tester    { color: var(--agent-qa-tester-dot); }
+.role-designer     { color: var(--agent-designer-dot); }
+.role-reviewer-sec { color: var(--agent-reviewer-sec-dot); }
+.role-reviewer-perf{ color: var(--agent-reviewer-perf-dot); }
+.role-reviewer-style{color: var(--agent-reviewer-style-dot); }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SECTION 1 — ITEM 1: AGENT COLOR PALETTE
+     ═══════════════════════════════════════════════════════════════════ -->
+<div class="heading-row">
+  <h2 class="section-title">Item 1 — Agent / Role Color Palette</h2>
+  <span class="annotation label-new">NEW</span>
+  <span class="annotation label-changed">Updated: option B — Claude Code color names</span>
+</div>
+<p class="screen-desc">
+  Palette is locked to the 8 predefined color names supported by Claude Code's
+  <code>color:</code> subagent frontmatter field:
+  <strong>red, blue, green, yellow, purple, orange, pink, cyan</strong>.
+  The same name lives in each scaff agent's frontmatter and in the monitor's palette map,
+  so CLI transcript colors and monitor pill colors are always in sync.
+  10 agents share 8 colors: all 3 reviewer axes share <code>red</code>;
+  the monitor adds an axis sub-badge (<code>sec</code> / <code>perf</code> / <code>style</code>)
+  to distinguish them.
+</p>
+
+<!-- Pill demo — all 10 roles, showing shared reviewer hue + sub-badge -->
+<div class="screen-label">All 10 role pills — light theme (reviewers share red hue; sub-badge distinguishes axis)</div>
+<div class="pill-demo-grid">
+  <span class="agent-pill agent-pm"><span class="agent-pill__dot"></span>PM</span>
+  <span class="agent-pill agent-architect"><span class="agent-pill__dot"></span>Architect</span>
+  <span class="agent-pill agent-tpm"><span class="agent-pill__dot"></span>TPM</span>
+  <span class="agent-pill agent-developer"><span class="agent-pill__dot"></span>Developer</span>
+  <span class="agent-pill agent-qa-analyst"><span class="agent-pill__dot"></span>QA-analyst</span>
+  <span class="agent-pill agent-qa-tester"><span class="agent-pill__dot"></span>QA-tester</span>
+  <span class="agent-pill agent-designer"><span class="agent-pill__dot"></span>Designer</span>
+  <span class="agent-pill agent-reviewer-sec"><span class="agent-pill__dot"></span>Reviewer <span class="agent-pill__axis">sec</span></span>
+  <span class="agent-pill agent-reviewer-perf"><span class="agent-pill__dot"></span>Reviewer <span class="agent-pill__axis">perf</span></span>
+  <span class="agent-pill agent-reviewer-style"><span class="agent-pill__dot"></span>Reviewer <span class="agent-pill__axis">style</span></span>
+</div>
+<p style="font-size:10px; color:#64748B; margin:6px 0 0 2px; font-style:italic;">
+  Palette source: Claude Code <code>color:</code> frontmatter (8 predefined colors).
+  Reviewers share a hue; monitor adds an axis sub-badge.
+</p>
+
+<!-- Palette table — option B layout with Claude Code color name column -->
+<div class="screen-label" style="margin-top:16px;">Palette reference — Claude Code color names as source of truth</div>
+<table class="palette-table">
+  <thead>
+    <tr>
+      <th>Role</th>
+      <th>CC color name</th>
+      <th>Monitor bg</th>
+      <th>Monitor fg / dot</th>
+      <th>Axis sub-badge</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>PM</strong></td>
+      <td><code>purple</code></td>
+      <td><span class="swatch" style="background:#F5F3FF;"></span>#F5F3FF</td>
+      <td><span class="swatch" style="background:#7C3AED;"></span>#7C3AED</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><strong>Architect</strong></td>
+      <td><code>cyan</code></td>
+      <td><span class="swatch" style="background:#CFFAFE;"></span>#CFFAFE</td>
+      <td><span class="swatch" style="background:#0891B2;"></span>#0891B2</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><strong>TPM</strong></td>
+      <td><code>yellow</code></td>
+      <td><span class="swatch" style="background:#FEF9C3;"></span>#FEF9C3</td>
+      <td><span class="swatch" style="background:#CA8A04;"></span>#CA8A04</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><strong>Developer</strong></td>
+      <td><code>green</code></td>
+      <td><span class="swatch" style="background:#DCFCE7;"></span>#DCFCE7</td>
+      <td><span class="swatch" style="background:#16A34A;"></span>#16A34A</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><strong>QA-analyst</strong></td>
+      <td><code>orange</code></td>
+      <td><span class="swatch" style="background:#FFF7ED;"></span>#FFF7ED</td>
+      <td><span class="swatch" style="background:#EA580C;"></span>#EA580C</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><strong>QA-tester</strong></td>
+      <td><code>blue</code></td>
+      <td><span class="swatch" style="background:#DBEAFE;"></span>#DBEAFE</td>
+      <td><span class="swatch" style="background:#2563EB;"></span>#2563EB</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><strong>Designer</strong></td>
+      <td><code>pink</code></td>
+      <td><span class="swatch" style="background:#FCE7F3;"></span>#FCE7F3</td>
+      <td><span class="swatch" style="background:#DB2777;"></span>#DB2777</td>
+      <td>—</td>
+    </tr>
+    <tr style="border-top:2px solid #E2E8F0;">
+      <td><strong>Reviewer (security)</strong></td>
+      <td><code>red</code></td>
+      <td><span class="swatch" style="background:#FEE2E2;"></span>#FEE2E2</td>
+      <td><span class="swatch" style="background:#DC2626;"></span>#DC2626</td>
+      <td><code>sec</code></td>
+    </tr>
+    <tr>
+      <td><strong>Reviewer (performance)</strong></td>
+      <td><code>red</code></td>
+      <td><span class="swatch" style="background:#FEE2E2;"></span>#FEE2E2</td>
+      <td><span class="swatch" style="background:#DC2626;"></span>#DC2626</td>
+      <td><code>perf</code></td>
+    </tr>
+    <tr>
+      <td><strong>Reviewer (style)</strong></td>
+      <td><code>red</code></td>
+      <td><span class="swatch" style="background:#FEE2E2;"></span>#FEE2E2</td>
+      <td><span class="swatch" style="background:#DC2626;"></span>#DC2626</td>
+      <td><code>style</code></td>
+    </tr>
+  </tbody>
+</table>
+<p style="font-size:10px; color:#64748B; margin:4px 0 0 2px;">
+  "CC color name" = value used in <code>color:</code> frontmatter of each <code>.claude/agents/scaff/*.md</code> file.
+  The monitor palette map translates these names to the CSS hex values shown above.
+</p>
+
+<!-- Where agent pills appear in context: Notes timeline in CardDetail -->
+<div class="screen-label" style="margin-top:18px;">Context: agent color in the Notes timeline (CardDetail left rail)</div>
+<div style="max-width:380px; background:var(--surface-secondary); border:1.5px solid var(--card-border); border-radius:8px; padding:12px 14px;">
+  <div class="notes-timeline__label">Status notes</div>
+  <ol class="notes-timeline">
+    <li class="notes-timeline__entry">
+      <time class="notes-timeline__date">2026-04-22</time>
+      <span class="notes-timeline__role notes-timeline__role--colored role-developer">Developer</span>
+      — wave 2 complete; tests passing
+    </li>
+    <li class="notes-timeline__entry">
+      <time class="notes-timeline__date">2026-04-21</time>
+      <span class="notes-timeline__role notes-timeline__role--colored role-reviewer-sec">Reviewer (security)</span>
+      — PASS, no injection surface found
+    </li>
+    <li class="notes-timeline__entry">
+      <time class="notes-timeline__date">2026-04-20</time>
+      <span class="notes-timeline__role notes-timeline__role--colored role-qa-analyst">QA-analyst</span>
+      — gap check: 3 ACs unverified
+    </li>
+    <li class="notes-timeline__entry">
+      <time class="notes-timeline__date">2026-04-19</time>
+      <span class="notes-timeline__role notes-timeline__role--colored role-architect">Architect</span>
+      — tech spec drafted, pending review
+    </li>
+    <li class="notes-timeline__entry">
+      <time class="notes-timeline__date">2026-04-18</time>
+      <span class="notes-timeline__role notes-timeline__role--colored role-pm">PM</span>
+      — brainstorm complete, PRD in progress
+    </li>
+  </ol>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SECTION 2 — ITEM 2: ARCHIVED FEATURES IN SIDEBAR
+     ═══════════════════════════════════════════════════════════════════ -->
+<hr class="section-divider" />
+<div class="heading-row">
+  <h2 class="section-title">Item 2 — Archived Features in the Sidebar</h2>
+  <span class="annotation label-new">NEW</span>
+</div>
+<p class="screen-desc">
+  <strong>Recommended option:</strong> A collapsible "Archived" section in the sidebar,
+  below the active feature list. It is collapsed by default (low visual noise);
+  expanding it reveals archived slugs that are visually muted and carry an "archived" badge.
+  Archived entries are read-only (click opens CardDetail in read-only mode — no write actions).
+</p>
+<p class="screen-desc" style="margin-top:4px;">
+  <strong>Alternative option (not recommended):</strong> An "Archived" filter toggle in the
+  Filter section. Deferred to notes.md rationale.
+</p>
+
+<div class="screen-row">
+  <!-- State A: Archive section collapsed (default) -->
+  <div>
+    <div class="screen-label">A — Archive section collapsed (default state)</div>
+    <div style="width:200px; background:var(--sidebar-bg); border-radius:10px; overflow:hidden; box-shadow:0 4px 16px rgba(15,23,42,0.3);">
+      <div class="sidebar__logo">
+        <div class="sidebar__logo-icon">F</div>
+        <span class="sidebar__logo-text">Flow Monitor</span>
+      </div>
+      <div class="sidebar__section-label">Projects</div>
+      <ul class="sidebar__list">
+        <li class="sidebar__item sidebar__item--active">
+          <span class="sidebar__role-dot" style="background: var(--agent-developer-sidebar-dot);"></span>
+          <span class="sidebar__item-label">20260422-monitor-polish</span>
+          <span class="sidebar__badge">impl</span>
+        </li>
+        <li class="sidebar__item">
+          <span class="sidebar__role-dot" style="background: var(--agent-pm-sidebar-dot);"></span>
+          <span class="sidebar__item-label">20260415-auth-flow</span>
+          <span class="sidebar__badge">prd</span>
+        </li>
+        <li class="sidebar__item">
+          <span class="sidebar__role-dot" style="background: var(--agent-architect-sidebar-dot);"></span>
+          <span class="sidebar__item-label">20260408-export-csv</span>
+          <span class="sidebar__badge">tech</span>
+        </li>
+      </ul>
+      <!-- Archived section — collapsed -->
+      <div class="sidebar__archive-section">
+        <span class="sidebar__archive-label">Archived</span>
+        <span class="sidebar__badge sidebar__badge--archived">3</span>
+        <span class="sidebar__archive-chevron">▶</span>
+      </div>
+      <!-- nothing rendered below when collapsed -->
+      <div class="sidebar__section-label sidebar__section-label--spaced" style="margin-top:4px;">Filter</div>
+      <ul class="sidebar__list">
+        <li class="sidebar__item">
+          <span class="sidebar__filter-dot" style="background:var(--stalled-red);"></span>
+          Stalled only
+        </li>
+        <li class="sidebar__item">
+          <span class="sidebar__filter-dot" style="background:var(--ui-badge);"></span>
+          Has UI
+        </li>
+        <li class="sidebar__item">
+          <span class="sidebar__filter-dot" style="background:var(--archived-muted);"></span>
+          Show archived
+        </li>
+      </ul>
+      <div class="sidebar__bottom">
+        <div class="sidebar__item sidebar__bottom-item">⚙ Settings</div>
+        <div class="sidebar__item sidebar__bottom-item" style="opacity:0.5;">☾ Dark theme</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- State B: Archive section expanded -->
+  <div>
+    <div class="screen-label">B — Archive section expanded</div>
+    <div style="width:200px; background:var(--sidebar-bg); border-radius:10px; overflow:hidden; box-shadow:0 4px 16px rgba(15,23,42,0.3);">
+      <div class="sidebar__logo">
+        <div class="sidebar__logo-icon">F</div>
+        <span class="sidebar__logo-text">Flow Monitor</span>
+      </div>
+      <div class="sidebar__section-label">Projects</div>
+      <ul class="sidebar__list">
+        <li class="sidebar__item sidebar__item--active">
+          <span class="sidebar__role-dot" style="background: var(--agent-developer-sidebar-dot);"></span>
+          <span class="sidebar__item-label">20260422-monitor-polish</span>
+          <span class="sidebar__badge">impl</span>
+        </li>
+        <li class="sidebar__item">
+          <span class="sidebar__role-dot" style="background: var(--agent-pm-sidebar-dot);"></span>
+          <span class="sidebar__item-label">20260415-auth-flow</span>
+          <span class="sidebar__badge">prd</span>
+        </li>
+      </ul>
+      <!-- Archived section — expanded -->
+      <div class="sidebar__archive-section">
+        <span class="sidebar__archive-label">Archived</span>
+        <span class="sidebar__badge sidebar__badge--archived">3</span>
+        <span class="sidebar__archive-chevron">▼</span>
+      </div>
+      <ul class="sidebar__list" style="opacity:0.65;">
+        <li class="sidebar__item sidebar__item--archived">
+          <span class="sidebar__item-label" style="font-style:italic; font-size:11px;">20260310-dark-mode</span>
+          <span class="arch-badge">arch</span>
+        </li>
+        <li class="sidebar__item sidebar__item--archived">
+          <span class="sidebar__item-label" style="font-style:italic; font-size:11px;">20260228-csv-export</span>
+          <span class="arch-badge">arch</span>
+        </li>
+        <li class="sidebar__item sidebar__item--archived">
+          <span class="sidebar__item-label" style="font-style:italic; font-size:11px;">20260115-onboarding</span>
+          <span class="arch-badge">arch</span>
+        </li>
+      </ul>
+      <div class="sidebar__section-label sidebar__section-label--spaced">Filter</div>
+      <ul class="sidebar__list">
+        <li class="sidebar__item">
+          <span class="sidebar__filter-dot" style="background:var(--stalled-red);"></span>
+          Stalled only
+        </li>
+        <li class="sidebar__item">
+          <span class="sidebar__filter-dot" style="background:var(--ui-badge);"></span>
+          Has UI
+        </li>
+      </ul>
+      <div class="sidebar__bottom">
+        <div class="sidebar__item sidebar__bottom-item">⚙ Settings</div>
+        <div class="sidebar__item sidebar__bottom-item" style="opacity:0.5;">☾ Dark theme</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- State C: Archived feature selected — CardDetail header shows archived state -->
+  <div>
+    <div class="screen-label">C — Archived feature in CardDetail header</div>
+    <div style="background:var(--card-bg); border-radius:10px; overflow:hidden; box-shadow:0 4px 16px rgba(15,23,42,0.18); max-width:460px;">
+      <div class="card-detail-header">
+        <span class="card-detail-header__back">←</span>
+        <span class="card-detail-header__title">20260310-dark-mode</span>
+        <span class="arch-badge" style="font-size:10px; padding:2px 9px;">ARCHIVED</span>
+        <span style="font-size:10px; color:var(--text-muted); padding:4px 8px; border-radius:5px; border:1px solid var(--card-border);">Read only</span>
+      </div>
+      <div style="padding:14px; font-size:11px; color:var(--text-muted); background:var(--archived-section-bg); border-bottom:1px solid var(--card-border);">
+        This feature is archived. All artefacts are read-only. No actions available.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SECTION 3 — ITEM 3: DISABLED TABS FOR MISSING ARTEFACTS
+     ═══════════════════════════════════════════════════════════════════ -->
+<hr class="section-divider" />
+<div class="heading-row">
+  <h2 class="section-title">Item 3 — Stage Tabs Disabled When Artefact Missing</h2>
+  <span class="annotation label-changed">CHANGED</span>
+</div>
+<p class="screen-desc">
+  The TabStrip already has a <code>.tab-strip__tab--missing</code> CSS class with
+  <code>opacity:0.5; cursor:not-allowed</code> and a tooltip via <code>title</code>.
+  This item refines that treatment: the disabled opacity is lowered to 0.38 (more
+  obviously non-interactive), and the tooltip is now rendered as a CSS ::after tooltip
+  so it is visible on hover without relying on the OS native title attribute popup
+  (which has a delay and inconsistent appearance across platforms).
+</p>
+
+<div class="screen-row">
+  <!-- Before -->
+  <div>
+    <div class="screen-label">Before — current state (all tabs clickable, no file check)</div>
+    <div style="background:var(--card-bg); border-radius:10px; overflow:hidden; box-shadow:0 4px 16px rgba(15,23,42,0.18); max-width:600px;">
+      <div style="display:flex; align-items:center; gap:8px; padding:8px 12px; border-bottom:1px solid var(--card-border);">
+        <span style="font-size:13px; color:var(--text-muted);">←</span>
+        <span style="font-size:12px; font-weight:600; font-family:monospace;">20260422-monitor-polish</span>
+        <span class="stage-pill" style="background:var(--pill-prd-bg); color:var(--pill-prd-text);">prd</span>
+      </div>
+      <div class="tab-strip">
+        <button class="tab tab--active">Request</button>
+        <button class="tab">Brainstorm</button>
+        <button class="tab">Design</button>
+        <button class="tab">PRD</button>
+        <button class="tab">Tech</button>
+        <button class="tab">Plan</button>
+        <button class="tab">Tasks</button>
+        <button class="tab">Gaps</button>
+        <button class="tab">Verify</button>
+      </div>
+      <div class="tab-content" style="font-size:11px; color:var(--text-muted);">
+        All tabs are enabled regardless of whether the file exists. Clicking "Tech" when
+        04-tech.md hasn't been created yet shows a blank or error state — confusing.
+      </div>
+    </div>
+  </div>
+
+  <!-- After -->
+  <div>
+    <div class="screen-label">After — tabs beyond current stage are disabled <span class="annotation label-changed" style="margin-left:0;">CHANGED</span></div>
+    <div style="background:var(--card-bg); border-radius:10px; overflow:hidden; box-shadow:0 4px 16px rgba(15,23,42,0.18); max-width:600px;">
+      <div style="display:flex; align-items:center; gap:8px; padding:8px 12px; border-bottom:1px solid var(--card-border);">
+        <span style="font-size:13px; color:var(--text-muted);">←</span>
+        <span style="font-size:12px; font-weight:600; font-family:monospace;">20260422-monitor-polish</span>
+        <span class="stage-pill" style="background:var(--pill-prd-bg); color:var(--pill-prd-text);">prd</span>
+      </div>
+      <div class="tab-strip">
+        <button class="tab">Request</button>
+        <button class="tab">Brainstorm</button>
+        <button class="tab">Design</button>
+        <button class="tab tab--active">PRD</button>
+        <!-- tabs beyond prd are disabled because files don't exist yet -->
+        <button class="tab tab--disabled" data-tooltip="Not yet produced">Tech</button>
+        <button class="tab tab--disabled" data-tooltip="Not yet produced">Plan</button>
+        <button class="tab tab--disabled" data-tooltip="Not yet produced">Tasks</button>
+        <button class="tab tab--disabled" data-tooltip="Not yet produced">Gaps</button>
+        <button class="tab tab--disabled" data-tooltip="Not yet produced">Verify</button>
+      </div>
+      <div class="tab-content" style="font-size:11px; color:var(--text-muted);">
+        Tabs for artefacts that don't exist yet are greyed out (opacity 0.38) and
+        show cursor:not-allowed. Hovering a disabled tab reveals a tooltip: "Not yet produced".
+        Clicking a disabled tab has no effect.
+      </div>
+    </div>
+    <!-- Tooltip hover simulation -->
+    <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+      <div class="screen-label" style="margin-bottom:0;">Hover state on disabled tab →</div>
+      <div style="position:relative; display:inline-block;">
+        <div style="
+          position:absolute;
+          bottom:calc(100% + 6px);
+          left:50%;
+          transform:translateX(-50%);
+          background:#1E293B;
+          color:#F8FAFC;
+          font-size:10px;
+          font-weight:500;
+          padding:4px 8px;
+          border-radius:5px;
+          white-space:nowrap;
+          box-shadow:0 2px 8px rgba(0,0,0,0.25);
+          z-index:20;
+        ">Not yet produced</div>
+        <button class="tab tab--disabled" style="opacity:0.38; cursor:not-allowed; border-bottom:2px solid transparent;">Tech</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SECTION 4 — FULL APP COMPOSITE VIEW
+     ═══════════════════════════════════════════════════════════════════ -->
+<hr class="section-divider" />
+<div class="heading-row">
+  <h2 class="section-title">Composite — All Three Items in Context</h2>
+</div>
+<p class="screen-desc">
+  Full app shell showing the main window with agent-colored role dots in the sidebar,
+  plus a feature grid where each card would display the active agent pill.
+</p>
+
+<div class="app-shell">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar__logo">
+      <div class="sidebar__logo-icon">F</div>
+      <span class="sidebar__logo-text">Flow Monitor</span>
+    </div>
+    <div class="sidebar__section-label">Projects</div>
+    <ul class="sidebar__list">
+      <li class="sidebar__item sidebar__item--active">
+        <span class="sidebar__role-dot" style="background: var(--agent-developer-sidebar-dot);"></span>
+        <span class="sidebar__item-label">20260422-monitor-polish</span>
+        <span class="sidebar__badge">impl</span>
+      </li>
+      <li class="sidebar__item">
+        <span class="sidebar__role-dot" style="background: var(--agent-qa-analyst-sidebar-dot);"></span>
+        <span class="sidebar__item-label">20260415-auth-flow</span>
+        <span class="sidebar__badge">gap</span>
+      </li>
+      <li class="sidebar__item">
+        <span class="sidebar__role-dot" style="background: var(--agent-architect-sidebar-dot);"></span>
+        <span class="sidebar__item-label">20260408-export-csv</span>
+        <span class="sidebar__badge">tech</span>
+      </li>
+      <li class="sidebar__item">
+        <span class="sidebar__role-dot" style="background: var(--agent-designer-sidebar-dot);"></span>
+        <span class="sidebar__item-label">20260401-dark-mode-v2</span>
+        <span class="sidebar__badge">dsn</span>
+      </li>
+    </ul>
+    <!-- Archived section collapsed -->
+    <div class="sidebar__archive-section">
+      <span class="sidebar__archive-label">Archived</span>
+      <span class="sidebar__badge sidebar__badge--archived">5</span>
+      <span class="sidebar__archive-chevron">▶</span>
+    </div>
+    <div class="sidebar__section-label" style="margin-top:4px;">Filter</div>
+    <ul class="sidebar__list">
+      <li class="sidebar__item">
+        <span class="sidebar__filter-dot" style="background:var(--stalled-red);"></span>
+        Stalled only
+      </li>
+      <li class="sidebar__item">
+        <span class="sidebar__filter-dot" style="background:var(--ui-badge);"></span>
+        Has UI
+      </li>
+    </ul>
+    <div class="sidebar__bottom">
+      <div class="sidebar__item sidebar__bottom-item">⚙ Settings</div>
+      <div class="sidebar__item sidebar__bottom-item" style="opacity:0.5;">☾ Dark theme</div>
+      <div style="padding:8px 12px; font-size:10px; color:var(--sidebar-section-label);">● Polling · 3s</div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="toolbar">
+      <div>
+        <div class="toolbar__title">All Projects</div>
+        <div class="toolbar__sub">4 features · 0 stalled · last refreshed just now</div>
+      </div>
+      <div class="toolbar__right">
+        <select class="sort-select"><option>Sort: recent</option></select>
+      </div>
+    </div>
+    <div class="card-grid">
+      <!-- Card 1 — Developer (implement) -->
+      <div class="session-card">
+        <div class="session-card__repo-row">
+          <span class="session-card__repo-name">specaffold</span>
+          <span class="ui-badge">UI</span>
+        </div>
+        <div class="session-card__slug-row">
+          <span class="session-card__slug">20260422-monitor-polish</span>
+          <span class="stage-pill" style="background:var(--pill-implement-bg); color:var(--pill-implement-text);">impl</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:5px; margin-top:2px;">
+          <span class="agent-pill agent-developer"><span class="agent-pill__dot"></span>Developer</span>
+        </div>
+        <p class="session-card__note">wave 2 complete; smoke tests passing on all platforms</p>
+        <div class="session-card__meta">
+          <span class="session-card__time">2m ago</span>
+          <span class="active-badge">Active</span>
+        </div>
+      </div>
+
+      <!-- Card 2 — QA-analyst (gap-check) -->
+      <div class="session-card">
+        <div class="session-card__repo-row">
+          <span class="session-card__repo-name">specaffold</span>
+        </div>
+        <div class="session-card__slug-row">
+          <span class="session-card__slug">20260415-auth-flow</span>
+          <span class="stage-pill" style="background:var(--pill-gap-check-bg); color:var(--pill-gap-check-text);">gap</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:5px; margin-top:2px;">
+          <span class="agent-pill agent-qa-analyst"><span class="agent-pill__dot"></span>QA-analyst</span>
+        </div>
+        <p class="session-card__note">3 acceptance criteria not yet verified — awaiting test fixtures</p>
+        <div class="session-card__meta">
+          <span class="session-card__time">18m ago</span>
+          <span class="active-badge">Active</span>
+        </div>
+      </div>
+
+      <!-- Card 3 — Architect (tech) -->
+      <div class="session-card">
+        <div class="session-card__repo-row">
+          <span class="session-card__repo-name">specaffold</span>
+        </div>
+        <div class="session-card__slug-row">
+          <span class="session-card__slug">20260408-export-csv</span>
+          <span class="stage-pill" style="background:var(--pill-tech-bg); color:var(--pill-tech-text);">tech</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:5px; margin-top:2px;">
+          <span class="agent-pill agent-architect"><span class="agent-pill__dot"></span>Architect</span>
+        </div>
+        <p class="session-card__note">streaming approach proposed; awaiting PRD sign-off on API shape</p>
+        <div class="session-card__meta">
+          <span class="session-card__time">1h ago</span>
+          <span class="active-badge">Active</span>
+        </div>
+      </div>
+
+      <!-- Card 4 — Designer (design) -->
+      <div class="session-card">
+        <div class="session-card__repo-row">
+          <span class="session-card__repo-name">specaffold</span>
+          <span class="ui-badge">UI</span>
+        </div>
+        <div class="session-card__slug-row">
+          <span class="session-card__slug">20260401-dark-mode-v2</span>
+          <span class="stage-pill" style="background:var(--pill-design-bg); color:var(--pill-design-text);">design</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:5px; margin-top:2px;">
+          <span class="agent-pill agent-designer"><span class="agent-pill__dot"></span>Designer</span>
+        </div>
+        <p class="session-card__note">mockup.html produced; awaiting user approval before PRD stage</p>
+        <div class="session-card__meta">
+          <span class="session-card__time">3h ago</span>
+          <span class="active-badge">Active</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CardDetail composite showing all 3 items -->
+<div style="margin-top:24px;">
+  <div class="screen-label">Card Detail — agent pill in header, disabled tabs, archived read-only indicator</div>
+</div>
+<div class="card-detail-shell" style="margin-top:8px;">
+  <!-- Narrow sidebar in card detail = just the left rail -->
+  <div class="card-detail-body" style="display:flex; flex:1; overflow:hidden; width:100%;">
+    <!-- Left rail -->
+    <div class="card-detail-rail">
+      <div>
+        <div style="font-size:9px; font-weight:600; text-transform:uppercase; letter-spacing:0.07em; color:var(--text-muted); margin-bottom:6px;">Stage progress</div>
+        <ol class="stage-checklist">
+          <li class="stage-checklist__item stage-checklist__item--complete"><span class="stage-checklist__marker">✓</span>Request</li>
+          <li class="stage-checklist__item stage-checklist__item--complete"><span class="stage-checklist__marker">✓</span>Brainstorm</li>
+          <li class="stage-checklist__item stage-checklist__item--complete"><span class="stage-checklist__marker">✓</span>Design</li>
+          <li class="stage-checklist__item stage-checklist__item--current"><span class="stage-checklist__marker">▶</span>PRD</li>
+          <li class="stage-checklist__item stage-checklist__item--future"><span class="stage-checklist__marker">○</span>Tech</li>
+          <li class="stage-checklist__item stage-checklist__item--future"><span class="stage-checklist__marker">○</span>Plan</li>
+          <li class="stage-checklist__item stage-checklist__item--future"><span class="stage-checklist__marker">○</span>Tasks</li>
+          <li class="stage-checklist__item stage-checklist__item--future"><span class="stage-checklist__marker">○</span>Implement</li>
+          <li class="stage-checklist__item stage-checklist__item--future"><span class="stage-checklist__marker">○</span>Gap check</li>
+          <li class="stage-checklist__item stage-checklist__item--future"><span class="stage-checklist__marker">○</span>Verify</li>
+        </ol>
+      </div>
+      <div>
+        <div class="notes-timeline__label">Status notes</div>
+        <ol class="notes-timeline">
+          <li class="notes-timeline__entry">
+            <time class="notes-timeline__date">2026-04-22</time>
+            <span class="notes-timeline__role notes-timeline__role--colored role-pm">PM</span>
+            — PRD draft ready for review
+          </li>
+          <li class="notes-timeline__entry">
+            <time class="notes-timeline__date">2026-04-21</time>
+            <span class="notes-timeline__role notes-timeline__role--colored role-designer">Designer</span>
+            — mockup approved by user
+          </li>
+          <li class="notes-timeline__entry">
+            <time class="notes-timeline__date">2026-04-20</time>
+            <span class="notes-timeline__role notes-timeline__role--colored role-pm">PM</span>
+            — brainstorm complete
+          </li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- Right pane -->
+    <div class="card-detail-right">
+      <!-- Header -->
+      <div class="card-detail-header">
+        <span class="card-detail-header__back">←</span>
+        <span class="card-detail-header__title">20260422-monitor-polish</span>
+        <span class="stage-pill" style="background:var(--pill-prd-bg); color:var(--pill-prd-text);">prd</span>
+        <span class="agent-pill agent-pm" style="margin-left:4px;"><span class="agent-pill__dot"></span>PM</span>
+      </div>
+      <!-- Tab strip with disabled tabs -->
+      <div class="tab-strip">
+        <button class="tab">Request</button>
+        <button class="tab">Brainstorm</button>
+        <button class="tab">Design</button>
+        <button class="tab tab--active">PRD</button>
+        <button class="tab tab--disabled" data-tooltip="Not yet produced" title="Not yet produced">Tech</button>
+        <button class="tab tab--disabled" data-tooltip="Not yet produced" title="Not yet produced">Plan</button>
+        <button class="tab tab--disabled" data-tooltip="Not yet produced" title="Not yet produced">Tasks</button>
+        <button class="tab tab--disabled" data-tooltip="Not yet produced" title="Not yet produced">Gaps</button>
+        <button class="tab tab--disabled" data-tooltip="Not yet produced" title="Not yet produced">Verify</button>
+      </div>
+      <!-- Content area -->
+      <div class="tab-content">
+        <div style="font-size:11px; color:var(--text-muted); line-height:1.7;">
+          <strong style="font-size:13px; color:var(--text-primary);"># PRD — 20260422-monitor-ui-polish</strong>
+          <br /><br />
+          <strong>Overview</strong><br />
+          Three UI polish items for the flow-monitor Tauri app: agent color coding,
+          archived features in sidebar, and disabled tabs for missing artefacts.
+          <br /><br />
+          <strong>Acceptance criteria</strong><br />
+          AC1. Each role renders with a consistent color across sessions…<br />
+          AC2. Archived features appear under a collapsible "Archived" section…<br />
+          AC3. Tabs for non-existent artefacts are disabled and show a tooltip…
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p style="font-size:10px; color:#94A3B8; margin-top:24px; text-align:center;">
+  flow-monitor UI Polish — Design Mockup — 20260422 — for user review before /scaff:prd
+</p>
+
+</body>
+</html>
