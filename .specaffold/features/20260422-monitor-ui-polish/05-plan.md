@@ -356,7 +356,7 @@ Effective W4 parallelism: T16 ∥ T17; then T18 after T16; T19 after T16+T17+T18
 - **Verify**: `bash test/t76_agent_color_frontmatter.sh` — exits 0 after T2 merges.
 - **Depends on**: T2
 - **Parallel-safe-with**: T1
-- [ ]
+- [x]
 
 ## T4 — Rust module: `list_archived_features` + classifier
 - **Milestone**: M2 (W1)

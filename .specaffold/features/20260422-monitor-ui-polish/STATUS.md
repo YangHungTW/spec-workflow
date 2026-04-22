@@ -30,3 +30,4 @@
 - 2026-04-22 Developer — T2 done (10 color: frontmatter added)
 - 2026-04-22 review result — wave 0 phase 1 verdict=NITS (T1 dead import afterEach; T2 clean); T1, T2 merged
 - 2026-04-22 Developer — T3 done (test/t76_agent_color_frontmatter.sh)
+- 2026-04-22 review result — wave 0 phase 2 verdict=NITS (T3 file re-read NIT); T3 merged; wave 0 complete (T1, T2, T3)
