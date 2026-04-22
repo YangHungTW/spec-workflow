@@ -57,12 +57,28 @@ vi.mock("../../i18n", () => ({
 // Hoist mockInvoke so it is available inside the vi.mock factory (which is
 // hoisted to top-of-file by Vitest before module evaluation).
 const { mockInvoke } = vi.hoisted(() => {
+  // Default all-present artefact map — existing tests that click tabs rely on
+  // all tabs being enabled. T18 tests override this mock per-test.
+  const ALL_PRESENT: Record<string, boolean> = {
+    "00-request.md": true,
+    "01-brainstorm.md": true,
+    "02-design": true,
+    "03-prd.md": true,
+    "04-tech.md": true,
+    "05-plan.md": true,
+    "06-tasks.md": true,
+    "07-gaps.md": true,
+    "08-verify.md": true,
+  };
   const mockInvoke = vi.fn((cmd: string) => {
     if (cmd === "read_artefact") {
       return Promise.resolve({ content: "# stub content" });
     }
     if (cmd === "get_settings") {
       return Promise.resolve({ repos: ["/Users/alice/projects/my-repo"] });
+    }
+    if (cmd === "list_feature_artefacts") {
+      return Promise.resolve({ files_present: ALL_PRESENT });
     }
     return Promise.resolve(undefined);
   });
@@ -418,5 +434,127 @@ describe("CardDetail — archived route (T15, AC18, AC19)", () => {
       mutateCommands.includes(c[0] as string),
     );
     expect(mutateCalls).toHaveLength(0);
+  });
+});
+
+// ── T18: CardDetail tab exists wired from list_feature_artefacts ─────────────
+
+/**
+ * Build a mock IPC handler that responds to list_feature_artefacts with only
+ * the given files marked present; all other TAB_DEFINITIONS files are false.
+ */
+function makeArtefactsMock(presentFiles: string[]) {
+  const ALL_FILES = [
+    "00-request.md",
+    "01-brainstorm.md",
+    "02-design",
+    "03-prd.md",
+    "04-tech.md",
+    "05-plan.md",
+    "06-tasks.md",
+    "07-gaps.md",
+    "08-verify.md",
+  ];
+  const files_present: Record<string, boolean> = {};
+  for (const f of ALL_FILES) {
+    files_present[f] = presentFiles.includes(f);
+  }
+  return (cmd: string) => {
+    if (cmd === "get_settings") {
+      return Promise.resolve({ repos: ["/Users/alice/projects/my-repo"] });
+    }
+    if (cmd === "list_feature_artefacts") {
+      return Promise.resolve({ files_present });
+    }
+    if (cmd === "read_artefact") {
+      return Promise.resolve("# stub");
+    }
+    return Promise.resolve(undefined);
+  };
+}
+
+describe("CardDetail — T18 tab exists from list_feature_artefacts (AC23)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    window.HTMLElement.prototype.scrollIntoView = vi.fn();
+  });
+
+  it("AC23: Request + PRD tabs enabled; other 7 render as --missing when only 00-request.md and 03-prd.md present", async () => {
+    mockInvoke.mockImplementation(makeArtefactsMock(["00-request.md", "03-prd.md"]));
+
+    renderCardDetail();
+
+    // Wait for async IPC effects
+    await new Promise((r) => setTimeout(r, 50));
+
+    // Request tab: exists=true → no --missing class
+    const requestTab = screen.getByRole("tab", { name: "00 request" });
+    expect(requestTab.classList.contains("tab-strip__tab--missing")).toBe(false);
+    expect(requestTab.getAttribute("aria-disabled")).toBe("false");
+
+    // PRD tab: exists=true → no --missing class
+    const prdTab = screen.getByRole("tab", { name: "03 prd" });
+    expect(prdTab.classList.contains("tab-strip__tab--missing")).toBe(false);
+    expect(prdTab.getAttribute("aria-disabled")).toBe("false");
+
+    // All other tabs should be missing
+    const missingLabels = [
+      "01 brainstorm",
+      "02 design",
+      "04 tech",
+      "05 plan",
+      "06 tasks",
+      "07 gaps",
+      "08 verify",
+    ];
+    for (const label of missingLabels) {
+      const tab = screen.getByRole("tab", { name: label });
+      expect(tab.classList.contains("tab-strip__tab--missing")).toBe(true);
+      expect(tab.getAttribute("aria-disabled")).toBe("true");
+    }
+  });
+
+  it("AC23: adding 04-tech.md to artefact response enables Tech tab", async () => {
+    // First render with only 00-request.md + 03-prd.md
+    mockInvoke.mockImplementation(makeArtefactsMock(["00-request.md", "03-prd.md"]));
+    const { unmount } = renderCardDetail();
+    await new Promise((r) => setTimeout(r, 50));
+
+    const techTabBefore = screen.getByRole("tab", { name: "04 tech" });
+    expect(techTabBefore.classList.contains("tab-strip__tab--missing")).toBe(true);
+
+    unmount();
+
+    // Re-render with 04-tech.md also present
+    mockInvoke.mockImplementation(
+      makeArtefactsMock(["00-request.md", "03-prd.md", "04-tech.md"]),
+    );
+    renderCardDetail();
+    await new Promise((r) => setTimeout(r, 50));
+
+    const techTabAfter = screen.getByRole("tab", { name: "04 tech" });
+    expect(techTabAfter.classList.contains("tab-strip__tab--missing")).toBe(false);
+    expect(techTabAfter.getAttribute("aria-disabled")).toBe("false");
+  });
+
+  it("AC22: clicking a --missing tab does NOT change the active tab", async () => {
+    // Only 00-request.md present → all others missing
+    mockInvoke.mockImplementation(makeArtefactsMock(["00-request.md"]));
+
+    renderCardDetail();
+    await new Promise((r) => setTimeout(r, 50));
+
+    // Active tab should be 00-request (first tab)
+    const requestTab = screen.getByRole("tab", { name: "00 request" });
+    expect(requestTab.getAttribute("aria-selected")).toBe("true");
+
+    // Click a missing tab
+    const brainstormTab = screen.getByRole("tab", { name: "01 brainstorm" });
+    expect(brainstormTab.classList.contains("tab-strip__tab--missing")).toBe(true);
+    fireEvent.click(brainstormTab);
+
+    // Active tab must remain 00-request
+    expect(requestTab.getAttribute("aria-selected")).toBe("true");
+    expect(brainstormTab.getAttribute("aria-selected")).toBe("false");
   });
 });
