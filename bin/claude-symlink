@@ -810,36 +810,6 @@ cmd_update() {
 }
 
 main() {
-  # Handle __probe before parse_flags to keep it hidden from normal dispatch.
-  # __probe is gated behind SPECFLOW_PROBE=1; without it, fall through to unknown-subcommand.
-  # __probe              — prints REPO=<repo> for smoke-verification
-  # __probe resolve <p>  — calls resolve_path and exits with its exit code
-  if [ "${1:-}" = "__probe" ] && [ "${SPECFLOW_PROBE:-}" = "1" ]; then
-    resolve_repo_root
-    if [ "${2:-}" = "resolve" ] && [ -n "${3:-}" ]; then
-      resolve_path "$3"
-      exit $?
-    elif [ "${2:-}" = "owned" ] && [ -n "${3:-}" ]; then
-      # Returns 0 if the path is owned by us, 1 otherwise (silent; caller checks $?)
-      owned_by_us "$3"
-      exit $?
-    elif [ "${2:-}" = "plan" ]; then
-      # Dump plan pairs one-per-line as <src>\t<tgt> (literal tab)
-      plan_links
-      local i=0
-      while [ "$i" -lt "${#PLAN_SRC[@]}" ]; do
-        printf '%s\t%s\n' "${PLAN_SRC[$i]}" "${PLAN_TGT[$i]}"
-        i=$((i + 1))
-      done
-    elif [ "${2:-}" = "classify" ] && [ -n "${3:-}" ] && [ -n "${4:-}" ]; then
-      # classify_target <tgt> <expected_src> — echoes the classification
-      classify_target "$3" "$4"
-    else
-      echo "REPO=$REPO"
-    fi
-    exit 0
-  fi
-
   parse_flags "$@"
   resolve_repo_root
 
