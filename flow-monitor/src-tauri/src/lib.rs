@@ -1,3 +1,4 @@
+pub mod archive_discovery;
 pub mod audit;
 pub mod command_taxonomy;
 pub mod invoke;
