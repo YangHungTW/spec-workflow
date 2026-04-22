@@ -8,13 +8,13 @@ English version: [README.md](README.md)
 
 ### 1. 一次性全域 bootstrap
 
-從本 repo 把 init skill 複製到全域 Claude skills 目錄:
+從本 repo 執行,在 `~/.claude/` 下建立受管理的 symlinks:
 
 ```sh
-cp -R .claude/skills/scaff-init ~/.claude/skills/
+bin/claude-symlink install
 ```
 
-這會在這台機器上的每個 Claude Code session 提供 `/scaff-init` slash 指令。
+這會安裝目錄 symlinks:`~/.claude/agents/scaff`、`~/.claude/commands/scaff`、`~/.claude/hooks`、`~/.claude/skills/scaff-init`,以及 `~/.claude/team-memory/` 底下每個檔案各一條 symlink — 讓 Specaffold 的 agents、commands、hooks,和 `/scaff-init` bootstrap skill 在這台機器上的每個 Claude Code session 都能用。詳細 `install` / `uninstall` / `update` / `--dry-run` 見下面 [`bin/claude-symlink`](#binclaude-symlink--全域-symlink-管理工具) 區塊。
 
 ### 2. 針對單一 consumer repo 初始化
 
@@ -325,6 +325,49 @@ bin/scaff-lint                             # pre-commit 語言偏好 linter
 `bin/scaff-tier` 是讀取 feature `STATUS.md` 中 `tier:` 欄位的 **唯一** code path。所有腳本、agent、command 都透過此 helper — 沒有第二個 parse site。此規範靠 code review 把關。
 
 `bin/scaff-aggregate-verdicts` 是 per-axis reviewer/validator verdict 的 **唯一** classifier。它從 scratch 目錄讀取 per-axis 輸出,在 stdout 第 1 行輸出 `PASS` / `NITS` / `BLOCK`;若出現 must-severity 的 security finding,則在第 2 行加上 `suggest-audited-upgrade: <task-id>`。
+
+---
+
+## `bin/claude-symlink` — 全域 symlink 管理工具
+
+`bin/claude-symlink` 管理 `~/.claude/` 下的 symlinks,讓本 repo 的 Specaffold 內容能在這台機器上的每個 project 的 Claude Code session 使用。`install` / `uninstall` / `update` 三個子指令都可重跑;有衝突會回報並跳過(無 `--force` flag)。
+
+### Managed set
+
+- `~/.claude/agents/scaff` → `<repo>/.claude/agents/scaff`
+- `~/.claude/commands/scaff` → `<repo>/.claude/commands/scaff`
+- `~/.claude/hooks` → `<repo>/.claude/hooks`
+- `~/.claude/skills/scaff-init` → `<repo>/.claude/skills/scaff-init`
+- `~/.claude/team-memory/**` — 每個 regular file 對應一條 symlink,指回 `<repo>/.claude/team-memory/` 下對應檔案
+
+所有 symlink 都指向 **絕對路徑**,所以 `ls -l` 隨時可讀。repo 被移動會讓 symlink 失效 — 從新位置重跑 `install`(或 `update`)重建。
+
+### 子指令
+
+```sh
+bin/claude-symlink install            # 首次安裝;冪等,可重跑
+bin/claude-symlink uninstall          # 只移除本工具擁有的 symlinks
+bin/claude-symlink update             # 補缺、修復 broken-ours、清除 owned orphans
+bin/claude-symlink install --dry-run  # 預覽(任一子指令都支援)
+```
+
+支援平台:macOS 與 Linux(bash 3.2 / BSD userland 可攜)。Windows shell 會 exit 2 並印出訊息。
+
+### 衝突處理
+
+當管理路徑無法安全動作時,工具會跳過並回報一個 verb。任何跳過會讓 exit code 為 1;手動解除衝突後重跑。
+
+| Verb | 意義 | 處理方式 |
+|---|---|---|
+| `skipped:real-file` | 目標位置有一般檔 | 檢查、備份、`rm`、重跑 |
+| `skipped:real-dir` | 目標位置有一般目錄 | 檢查、備份、確認後 `rm -rf`、重跑 |
+| `skipped:foreign-symlink` | 活 symlink 指向本 repo 以外(別的工具裝的) | 手動 `rm`、重跑 |
+| `skipped:foreign-broken-symlink` | 斷 symlink 指向本 repo 以外 | 手動 `rm`、重跑 |
+| `skipped:not-ours`(僅 `uninstall`) | 管理路徑上有本工具不擁有的 symlink | 視需要手動處理 |
+
+### 注意事項:`team-memory/` 的 orphan-walk
+
+`update` 會走過 `~/.claude/team-memory/`,清除本工具擁有的 orphan links。擁有權判斷規則單一:resolved 的 symlink 目標以 `<repo>/.claude/`(含結尾斜線)開頭。使用者手動在 `~/.claude/team-memory/` 下建立、且**剛好也指向本 repo** 的 symlink,與本工具建立的無法區分 — `update` 會當成 orphan 移除。請避免在 `~/.claude/team-memory/` 下手動放指向本 repo 的 symlink。
 
 ---
 

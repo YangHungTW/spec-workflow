@@ -8,13 +8,13 @@ Role-based spec-driven development workflow for Claude Code. A small virtual tea
 
 ### 1. One-time global bootstrap
 
-Copy the init skill from this repo into your global Claude skills directory:
+From this repo, create the managed symlinks under `~/.claude/`:
 
 ```sh
-cp -R .claude/skills/scaff-init ~/.claude/skills/
+bin/claude-symlink install
 ```
 
-This makes the `/scaff-init` slash-command available in every Claude Code session on this machine.
+This installs directory symlinks at `~/.claude/agents/scaff`, `~/.claude/commands/scaff`, `~/.claude/hooks`, `~/.claude/skills/scaff-init`, plus one file symlink per entry under `~/.claude/team-memory/` — making Specaffold's agents, commands, hooks, and the `/scaff-init` bootstrap skill available in every Claude Code session on this machine. See [`bin/claude-symlink`](#binclaude-symlink--global-symlink-manager) below for `install` / `uninstall` / `update` / `--dry-run` details.
 
 ### 2. Per-consumer initialisation
 
@@ -325,6 +325,49 @@ bin/scaff-lint                             # pre-commit language-preference lint
 `bin/scaff-tier` is the **only** code path that reads the `tier:` field from a feature's `STATUS.md`. All scripts, agents, and commands route through this helper — there is no second parse site. This is enforced by code-review discipline.
 
 `bin/scaff-aggregate-verdicts` is the **only** classifier that aggregates per-axis reviewer or validator verdicts. It reads per-axis outputs from a scratch dir and emits `PASS` / `NITS` / `BLOCK` on stdout line 1; a must-severity security finding adds `suggest-audited-upgrade: <task-id>` on line 2.
+
+---
+
+## `bin/claude-symlink` — global symlink manager
+
+`bin/claude-symlink` manages the symlinks under `~/.claude/` that make this repo's Specaffold content available to Claude Code sessions across every project on this machine. The `install` / `uninstall` / `update` subcommands are safe to re-run; conflicts are reported and skipped (no `--force` flag).
+
+### Managed set
+
+- `~/.claude/agents/scaff` → `<repo>/.claude/agents/scaff`
+- `~/.claude/commands/scaff` → `<repo>/.claude/commands/scaff`
+- `~/.claude/hooks` → `<repo>/.claude/hooks`
+- `~/.claude/skills/scaff-init` → `<repo>/.claude/skills/scaff-init`
+- `~/.claude/team-memory/**` — one file symlink per regular file under `<repo>/.claude/team-memory/`
+
+All symlinks point at **absolute paths** inside the repo, so `ls -l` is always diagnosable. Moving the repo breaks the links — re-run `install` (or `update`) from the new location to refresh them.
+
+### Subcommands
+
+```sh
+bin/claude-symlink install            # first-time setup; idempotent
+bin/claude-symlink uninstall          # remove only tool-owned symlinks
+bin/claude-symlink update             # add missing, replace broken-ours, prune owned orphans
+bin/claude-symlink install --dry-run  # preview without mutating (works with any subcommand)
+```
+
+Supported platforms: macOS and Linux (bash 3.2 / BSD userland portable). Windows shells exit 2 with a clear message.
+
+### Conflict handling
+
+When a managed path can't be safely touched, the tool skips it and reports a verb. Exit code is 1 when any skip occurs; resolve conflicts manually and re-run.
+
+| Verb | Meaning | Remediation |
+|---|---|---|
+| `skipped:real-file` | A regular file occupies the target path. | Inspect, back up, `rm`, re-run. |
+| `skipped:real-dir` | A regular directory occupies the target path. | Inspect, back up, `rm -rf` if safe, re-run. |
+| `skipped:foreign-symlink` | A live symlink points outside this repo (another tool's install). | Manually `rm` it, re-run. |
+| `skipped:foreign-broken-symlink` | A broken symlink points outside this repo. | Manually `rm` it, re-run. |
+| `skipped:not-ours` (`uninstall` only) | Managed path holds a symlink not owned by this tool. | Manual cleanup if desired. |
+
+### Caveat: orphan-walk under `team-memory/`
+
+`update` walks `~/.claude/team-memory/` for owned orphan links to prune. Ownership is determined by a single rule: the resolved link target begins with `<repo>/.claude/` (with trailing slash). A user-created symlink under `~/.claude/team-memory/` that **happens to point into this repo** is indistinguishable from one the tool created — `update` will treat it as an orphan and remove it. Avoid placing hand-crafted symlinks pointing into this repo under `~/.claude/team-memory/`.
 
 ---
 

@@ -24,6 +24,7 @@
 #     agents/scaff          — directory symlink → <repo>/.claude/agents/scaff
 #     commands/scaff        — directory symlink → <repo>/.claude/commands/scaff
 #     hooks                    — directory symlink → <repo>/.claude/hooks
+#     skills/scaff-init     — directory symlink → <repo>/.claude/skills/scaff-init
 #     team-memory/**       — one file symlink per regular file under
 #                            <repo>/.claude/team-memory/ (walked at run time)
 #
@@ -231,9 +232,13 @@ plan_links() {
   PLAN_SRC+=("$REPO/.claude/commands/scaff")
   PLAN_TGT+=("$HOME/.claude/commands/scaff")
 
-  # Fixed pair 3: hooks (NEW, feature 20260417-shareable-hooks)
+  # Fixed pair 3: hooks (feature 20260417-shareable-hooks)
   PLAN_SRC+=("$REPO/.claude/hooks")
   PLAN_TGT+=("$HOME/.claude/hooks")
+
+  # Fixed pair 4: skills/scaff-init — global bootstrap skill for consumer repos
+  PLAN_SRC+=("$REPO/.claude/skills/scaff-init")
+  PLAN_TGT+=("$HOME/.claude/skills/scaff-init")
 
   # File-level pairs: walk team-memory with -print0 for filename safety
   local prefix="$REPO/.claude/team-memory/"
@@ -432,6 +437,7 @@ Managed set:
   agents/scaff          → <repo>/.claude/agents/scaff   (directory symlink)
   commands/scaff        → <repo>/.claude/commands/scaff  (directory symlink)
   hooks                    → <repo>/.claude/hooks              (directory symlink)
+  skills/scaff-init     → <repo>/.claude/skills/scaff-init (directory symlink)
   team-memory/**       → one file symlink per file under <repo>/.claude/team-memory/
 
 Options:
@@ -662,6 +668,7 @@ cmd_uninstall() {
   dir_links+=("$HOME/.claude/agents/scaff")
   dir_links+=("$HOME/.claude/commands/scaff")
   dir_links+=("$HOME/.claude/hooks")
+  dir_links+=("$HOME/.claude/skills/scaff-init")
 
   local dl
   for dl in "${dir_links[@]}"; do
