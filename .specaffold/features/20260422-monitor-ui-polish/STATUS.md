@@ -51,5 +51,7 @@
 - 2026-04-22 Developer — T16 done (TabStrip onClick guard + aria-disabled + tabIndex)
 - 2026-04-22 Developer — T17 done (components.css disabled-tab opacity + ::after tooltip)
 - 2026-04-22 review result — wave 4 phase 1 verdict=NITS (T16 2 WHAT comments; T17 rgba theme-var drift); T16 T17 merged
-
 - 2026-04-22 orchestrator — tier upgrade standard→audited: security-must finding in T18-security (missing runtime guard on list_feature_artefacts IPC response)
+- 2026-04-22 Developer — T18 done (CardDetail exists wiring from list_feature_artefacts)
+- 2026-04-22 Developer — T18 retry 1: added runtime shape guard per security-must finding
+- 2026-04-22 review result — wave 4 phase 2 retry verdict=PASS (T18 all 3 axes PASS after retry 1 added IPC shape guard); T18 merged
