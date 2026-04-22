@@ -49,3 +49,5 @@
 - 2026-04-22 Developer — T15 done (archived route + CardDetail path swap + read-only badges)
 - 2026-04-22 review result — wave 3 phase 2 verdict=NITS (T14 2 WHAT comments; T15 unused lambda param); T14 T15 merged; wave 3 complete (T13 T14 T15)
 - 2026-04-22 Developer — T16 done (TabStrip onClick guard + aria-disabled + tabIndex)
+- 2026-04-22 Developer — T17 done (components.css disabled-tab opacity + ::after tooltip)
+- 2026-04-22 review result — wave 4 phase 1 verdict=NITS (T16 2 WHAT comments; T17 rgba theme-var drift); T16 T17 merged

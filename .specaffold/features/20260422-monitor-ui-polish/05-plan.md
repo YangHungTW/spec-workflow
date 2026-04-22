@@ -691,7 +691,7 @@ Effective W4 parallelism: T16 ∥ T17; then T18 after T16; T19 after T16+T17+T18
 - **Verify**: `cd flow-monitor && npm run test -- src/components/__tests__/CardDetail.test.tsx` passes (AC22 + AC23 both exercised).
 - **Depends on**: T16
 - **Parallel-safe-with**: —
-- [ ]
+- [x]
 
 ## T19 — Regression sweep (AC24 baseline)
 - **Milestone**: M5 (W4)
