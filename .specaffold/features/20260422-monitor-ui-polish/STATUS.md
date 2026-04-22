@@ -2,7 +2,7 @@
 
 - **slug**: 20260422-monitor-ui-polish
 - **has-ui**: true
-- **tier**: standard
+- **tier**: audited
 - **stage**: plan
 - **created**: 2026-04-22
 - **updated**: 2026-04-22
@@ -51,3 +51,5 @@
 - 2026-04-22 Developer — T16 done (TabStrip onClick guard + aria-disabled + tabIndex)
 - 2026-04-22 Developer — T17 done (components.css disabled-tab opacity + ::after tooltip)
 - 2026-04-22 review result — wave 4 phase 1 verdict=NITS (T16 2 WHAT comments; T17 rgba theme-var drift); T16 T17 merged
+
+- 2026-04-22 orchestrator — tier upgrade standard→audited: security-must finding in T18-security (missing runtime guard on list_feature_artefacts IPC response)
