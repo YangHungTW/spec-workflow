@@ -7,6 +7,8 @@
   "sidebar.hasUi": "有 UI",
   "sidebar.settings": "設定",
   "sidebar.pollingFooter": "輪詢中 · 每 {interval} 秒",
+  "sidebar.archived": "Archived",
+  "sidebar.archivedCount": "{count} archived",
 
   "role.pm": "PM",
   "role.architect": "架構師",

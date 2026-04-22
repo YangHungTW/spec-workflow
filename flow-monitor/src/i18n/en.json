@@ -7,6 +7,8 @@
   "sidebar.hasUi": "Has UI",
   "sidebar.settings": "Settings",
   "sidebar.pollingFooter": "Polling · {interval}s",
+  "sidebar.archived": "Archived",
+  "sidebar.archivedCount": "{count} archived",
 
   "role.pm": "PM",
   "role.architect": "Architect",
