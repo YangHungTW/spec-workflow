@@ -43,8 +43,9 @@ export interface RepoSidebarProps {
   /**
    * Called when user clicks on an archived feature row.
    * Parent (MainWindow/App) handles navigation to /:repoId/archived/:slug (T15).
+   * Named onArchivedFeatureClick to match MainWindow's pass-through prop (R18).
    */
-  onArchivedRowClick?: (repo: string, slug: string) => void;
+  onArchivedFeatureClick?: (repo: string, slug: string) => void;
 }
 
 /**
@@ -78,7 +79,7 @@ export function RepoSidebar({
   archivedFeatures = [],
   archiveExpanded = false,
   setArchiveExpanded,
-  onArchivedRowClick,
+  onArchivedFeatureClick,
 }: RepoSidebarProps) {
   const { t } = useTranslation();
 
@@ -220,13 +221,13 @@ export function RepoSidebar({
               {/* Slug — italic, no agent dot (R17, AC12) */}
               <span
                 className="repo-sidebar__archived-slug"
-                onClick={() => onArchivedRowClick?.(entry.repo, entry.slug)}
+                onClick={() => onArchivedFeatureClick?.(entry.repo, entry.slug)}
                 role="button"
                 tabIndex={0}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
-                    onArchivedRowClick?.(entry.repo, entry.slug);
+                    onArchivedFeatureClick?.(entry.repo, entry.slug);
                   }
                 }}
               >
