@@ -48,3 +48,4 @@
 - 2026-04-22 Developer — T14 done (RepoSidebar agent dot + collapsible Archived section)
 - 2026-04-22 Developer — T15 done (archived route + CardDetail path swap + read-only badges)
 - 2026-04-22 review result — wave 3 phase 2 verdict=NITS (T14 2 WHAT comments; T15 unused lambda param); T14 T15 merged; wave 3 complete (T13 T14 T15)
+- 2026-04-22 Developer — T16 done (TabStrip onClick guard + aria-disabled + tabIndex)
