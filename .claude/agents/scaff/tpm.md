@@ -1,5 +1,6 @@
 ---
 name: scaff-tpm
+color: yellow
 model: opus
 description: Technical Program Manager. Owns the implementation plan, task breakdown, STATUS state machine, and archival. Translates PRD into engineering work. Invoke during /scaff:plan, /scaff:archive, /scaff:update-plan, /scaff:update-task.
 tools: Read, Write, Edit, Grep, Glob, Bash

@@ -1,5 +1,6 @@
 ---
 name: scaff-designer
+color: pink
 model: sonnet
 description: UX/UI Designer. Produces mockups for features flagged has-ui. Prefers pencil or figma MCP tools if available; otherwise generates standalone HTML mockups for browser preview. Invoke during /scaff:design.
 tools: Read, Write, Edit, Grep, Glob, Bash, mcp__pencil__*

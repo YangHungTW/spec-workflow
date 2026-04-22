@@ -27,3 +27,5 @@
 - 2026-04-22 Architect — tech D1..D11 no blockers; palette SSOT = agentPalette.ts + agent-palette.css; 2 new Tauri cmds (list_archived_features, list_feature_artefacts); new AgentPill component; archived read-only via path swap
 - 2026-04-22 TPM — plan 19 tasks across 5 waves (W0 foundations 3, W1 rust 4, W2 frontend 5, W3 sidebar+archive 3, W4 disabled-tab 4); D11 wiring as explicit T7
 - 2026-04-22 Developer — T1 done (agentPalette.ts + agent-palette.css + test)
+- 2026-04-22 Developer — T2 done (10 color: frontmatter added)
+- 2026-04-22 review result — wave 0 phase 1 verdict=NITS (T1 dead import afterEach; T2 clean); T1, T2 merged
