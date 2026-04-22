@@ -300,7 +300,7 @@ mod tests {
     /// Build a minimal tempdir fixture with two feature sessions and one
     /// `_template/` directory that must be excluded.
     fn make_repo(base: &Path) -> PathBuf {
-        let features = base.join(".spec-workflow").join("features");
+        let features = base.join(".specaffold").join("features");
         fs::create_dir_all(features.join("session-alpha")).unwrap();
         fs::write(
             features.join("session-alpha").join("STATUS.md"),
@@ -481,7 +481,7 @@ mod tests {
 
         // Remove one STATUS.md so the next tick sees a removal.
         let status = repo
-            .join(".spec-workflow")
+            .join(".specaffold")
             .join("features")
             .join("session-alpha")
             .join("STATUS.md");

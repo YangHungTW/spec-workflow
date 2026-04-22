@@ -2,7 +2,7 @@
 ///
 /// Exposes tauri::command handlers for the renderer. Every command here is
 /// read-only or settings-only. No write-side commands (`send_instruction`,
-/// `invoke_specflow`, `advance_stage`, `write_status`, `edit_artefact`) exist
+/// `invoke_scaff`, `advance_stage`, `write_status`, `edit_artefact`) exist
 /// in B1 — that boundary is reserved for B2.
 ///
 /// `read_artefact` guards against path-traversal by canonicalising the
@@ -211,7 +211,7 @@ pub fn remove_repo(
     Ok(())
 }
 
-/// Read a `.spec-workflow` artefact file for display in the detail view.
+/// Read a `.specaffold` artefact file for display in the detail view.
 ///
 /// Security: `repo` and `file` are both validated before read:
 ///   1. `repo` must be one of the currently registered roots.
@@ -386,7 +386,7 @@ pub fn set_notification_strings(
 /// Security: path is canonicalised and verified against registered repo roots
 /// before invoking `open` (security check 2 — path traversal boundary).
 /// Argv-form invocation only — no string-built shell command (check 4).
-/// Read-only: `open` on macOS never mutates `.spec-workflow/**` (B1/B2 boundary).
+/// Read-only: `open` on macOS never mutates `.specaffold/**` (B1/B2 boundary).
 #[tauri::command]
 pub fn open_in_finder(
     path: String,
@@ -530,7 +530,7 @@ mod tests {
         let tmp = tempfile::tempdir().expect("tempdir");
         let repo = tmp.path().to_path_buf();
         let artefact_dir = repo
-            .join(".spec-workflow")
+            .join(".specaffold")
             .join("features")
             .join("my-feature");
         fs::create_dir_all(&artefact_dir).unwrap();
@@ -578,7 +578,7 @@ mod tests {
     // ---------------------------------------------------------------------------
 
     /// Verify that `read_artefact` rejects a slug constructed with `../` to
-    /// escape the `.spec-workflow/features/` subtree.
+    /// escape the `.specaffold/features/` subtree.
     ///
     /// This is the primary path-traversal AC for T11.
     #[test]
@@ -587,7 +587,7 @@ mod tests {
         let registered_roots = vec![repo.canonicalize().unwrap()];
 
         // Attempt traversal: slug = "../../../etc", file = "passwd"
-        // After joining: repo/.spec-workflow/features/../../../etc/passwd
+        // After joining: repo/.specaffold/features/../../../etc/passwd
         // After canonicalize: /etc/passwd (or equivalent outside repo)
         let result = read_artefact_inner(
             repo.to_string_lossy().to_string(),
@@ -1268,7 +1268,7 @@ pub fn read_artefact_inner(
 
     // Step 3 — build the full artefact path and canonicalise it.
     let artefact_path = canonical_repo
-        .join(".spec-workflow")
+        .join(".specaffold")
         .join("features")
         .join(&slug)
         .join(&file);

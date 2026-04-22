@@ -3,16 +3,16 @@
 /// Walks every `.rs` file under `src-tauri/src/` and asserts that no
 /// write-call pattern (`OpenOptions::write`, `OpenOptions::create`,
 /// `fs::write(`, `fs::create(`, `File::create(`) appears on the same
-/// line as the string `spec-workflow`.
+/// line as the string `specaffold`.
 ///
 /// The single legitimate write site is `settings.rs` — it writes to
 /// `app_data_dir` via a `.tmp` atomic rename, not to any
-/// `.spec-workflow/**` path.  All test-fixture writes (under
+/// `.specaffold/**` path.  All test-fixture writes (under
 /// `#[cfg(test)]` blocks in `ipc.rs` and `poller.rs`) reference
-/// `spec-workflow` path *variables* that are declared on separate lines,
+/// `specaffold` path *variables* that are declared on separate lines,
 /// so the same-line regex catches only true production-path violations.
 ///
-/// AC3.d: no write across any `.spec-workflow/**` path in production code.
+/// AC3.d: no write across any `.specaffold/**` path in production code.
 use std::fs;
 use std::path::PathBuf;
 use walkdir::WalkDir;
@@ -27,11 +27,11 @@ const WRITE_PATTERNS: &[&str] = &[
 ];
 
 /// The dangerous combination: a write call whose line also names the
-/// spec-workflow directory.  Any hit here is a Seam-4 violation.
-const SPEC_WORKFLOW_MARKER: &str = "spec-workflow";
+/// specaffold directory.  Any hit here is a Seam-4 violation.
+const SPECAFFOLD_MARKER: &str = "specaffold";
 
 #[test]
-fn seam4_no_write_call_references_spec_workflow_path() {
+fn seam4_no_write_call_references_specaffold_path() {
     // Resolve the `src` directory relative to this integration-test binary.
     // At test time `CARGO_MANIFEST_DIR` is the crate root
     // (`flow-monitor/src-tauri`), so `src` sits right below it.
@@ -65,12 +65,12 @@ fn seam4_no_write_call_references_spec_workflow_path() {
                 continue;
             }
 
-            // If the write-call line also references `spec-workflow`, that is
+            // If the write-call line also references `specaffold`, that is
             // a Seam-4 violation: production code is writing to a
-            // `.spec-workflow/**` path.
-            if line.contains(SPEC_WORKFLOW_MARKER) {
+            // `.specaffold/**` path.
+            if line.contains(SPECAFFOLD_MARKER) {
                 violations.push(format!(
-                    "{}:{}: write call references spec-workflow — {:?}",
+                    "{}:{}: write call references specaffold — {:?}",
                     path.display(),
                     line_no + 1,
                     line.trim()
@@ -81,8 +81,8 @@ fn seam4_no_write_call_references_spec_workflow_path() {
 
     assert!(
         violations.is_empty(),
-        "Seam 4 FAIL — write call(s) reference spec-workflow paths \
-         (AC3.d: app must never write to .spec-workflow/**):\n{}",
+        "Seam 4 FAIL — write call(s) reference specaffold paths \
+         (AC3.d: app must never write to .specaffold/**):\n{}",
         violations.join("\n")
     );
 }

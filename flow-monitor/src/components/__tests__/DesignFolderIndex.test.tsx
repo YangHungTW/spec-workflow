@@ -32,9 +32,9 @@ vi.mock("../../i18n", () => ({
 }));
 
 const SAMPLE_FILES = [
-  { name: "mockup.html", path: "/repo/.spec-workflow/features/my-feat/02-design/mockup.html" },
-  { name: "notes.md", path: "/repo/.spec-workflow/features/my-feat/02-design/notes.md" },
-  { name: "README.md", path: "/repo/.spec-workflow/features/my-feat/02-design/README.md" },
+  { name: "mockup.html", path: "/repo/.specaffold/features/my-feat/02-design/mockup.html" },
+  { name: "notes.md", path: "/repo/.specaffold/features/my-feat/02-design/notes.md" },
+  { name: "README.md", path: "/repo/.specaffold/features/my-feat/02-design/README.md" },
 ];
 
 describe("DesignFolderIndex", () => {
@@ -72,7 +72,7 @@ describe("DesignFolderIndex", () => {
     // notes.md is the second row (index 1)
     fireEvent.click(buttons[1]);
     expect(mockInvoke).toHaveBeenCalledWith("reveal_in_finder", {
-      path: "/repo/.spec-workflow/features/my-feat/02-design/notes.md",
+      path: "/repo/.specaffold/features/my-feat/02-design/notes.md",
     });
   });
 
@@ -81,7 +81,7 @@ describe("DesignFolderIndex", () => {
     const buttons = screen.getAllByRole("button", { name: /reveal in finder/i });
     fireEvent.click(buttons[0]);
     expect(mockInvoke).toHaveBeenCalledWith("reveal_in_finder", {
-      path: "/repo/.spec-workflow/features/my-feat/02-design/mockup.html",
+      path: "/repo/.specaffold/features/my-feat/02-design/mockup.html",
     });
   });
 

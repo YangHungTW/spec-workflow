@@ -1,0 +1,46 @@
+# T7 Security Review
+axis: security
+task: T7 — Tauri capability allow-list swap (flow-monitor/src-tauri/capabilities/default.json)
+prd-rids: R3
+reviewer: security
+
+## Analysis
+
+### Check 2 — Path traversal
+Old paths: $REPOS/.spec-workflow/.flow-monitor/audit.log{,.1}
+New paths: $REPOS/.specaffold/.flow-monitor/audit.log{,.1}
+
+Both old and new paths are anchored to the $REPOS base variable. The substitution
+replaces only the top-level directory segment (.spec-workflow → .specaffold) while
+the rest of the path shape is identical. There is no `..` segment, no absolute-path
+absorption, and no broadening of the path glob (both entries remain literal, not
+wildcard). The new prefix is strictly narrower to the correct renamed directory.
+
+### Check 6 — Secure defaults
+The diff is read-only at the capability-manifest level (a JSON configuration file).
+No --force flag, no file-system mutation code, no silent clobber is introduced.
+Tauri's allow-list is a deny-by-default system; the two entries are the only
+fs:allow-write-file grants and they remain literal paths.
+
+### Other permission blocks — unchanged verification
+Diff is exactly 2 lines removed / 2 lines added, both inside the fs:allow-write-file
+allow array. The following blocks are confirmed untouched:
+  - core:default            (line 7)
+  - dialog:default          (line 8)
+  - clipboard-manager:default (line 9)
+  - notification:default    (line 10)
+  - shell:allow-execute     (lines 12-24, including regex validator)
+  - fs:allow-write-text-file (lines 26-30, $APPLOCALDATA/tmp/invoke-*.command)
+
+No new entry was added. There is no dual-grant transition window: the old paths
+are removed atomically in the same commit that adds the new paths.
+
+### Architect sign-off claim verification
+Claim: "strictly narrowing swap — same path shape, new top-level dir, no new
+read/write surface, no widen-then-narrow transition window."
+Verdict: CONFIRMED. The diff matches the claim exactly on all four sub-claims.
+
+## Reviewer verdict
+axis: security
+verdict: PASS
+findings: []

@@ -116,8 +116,8 @@ function CardDetail() {
 
   // Real absolute feature path from resolved repo (was hardcoded `/${repoId}/...`)
   const featurePath = repoFullPath
-    ? `${repoFullPath}/.spec-workflow/features/${validSlug}`
-    : `/${validRepoId}/.spec-workflow/features/${validSlug}`;
+    ? `${repoFullPath}/.specaffold/features/${validSlug}`
+    : `/${validRepoId}/.specaffold/features/${validSlug}`;
 
   const stage: StageKey = "implement";
   const idleState: IdleState = "none";

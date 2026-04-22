@@ -1,12 +1,12 @@
 # Flow Monitor
 
-Native macOS desktop application for monitoring multiple parallel specflow
+Native macOS desktop application for monitoring multiple parallel scaff
 sessions across one or more git repositories. Read-only dashboard (B1 scope);
 control plane is a separate follow-up feature (B2).
 
 ## Status
 
-In active development. See `.spec-workflow/features/20260419-flow-monitor/`
+In active development. See `.specaffold/features/20260419-flow-monitor/`
 for full specs.
 
 ## Build
@@ -73,11 +73,11 @@ After launch, verify all six items before declaring the build good:
 
 1. Open `flow-monitor.app` (right-click → Open on first launch to bypass Gatekeeper).
 2. Click **Add Repository** in the empty-state screen.
-3. Select the root of any repository that runs specflow sessions (e.g. this
-   `spec-workflow` repo itself).
+3. Select the root of any repository that runs scaff sessions (e.g. this
+   `specaffold` repo itself).
 4. Enable macOS notifications when prompted: System Settings → Notifications →
    flow-monitor → Allow Notifications.
-5. Start a specflow session in the monitored repo; the sidebar card should
+5. Start a scaff session in the monitored repo; the sidebar card should
    appear within the polling interval (default 5 s).
 
 ### Where settings live
@@ -96,8 +96,8 @@ To reset to factory defaults, quit the app and delete
 ### Filing bugs against the app itself
 
 The recommended workflow is self-dogfood: use flow-monitor to observe the
-specflow sessions that are building flow-monitor. Open an issue by running a
-new specflow session in this repo and letting the app surface it, then file the
+scaff sessions that are building flow-monitor. Open an issue by running a
+new scaff session in this repo and letting the app surface it, then file the
 bug in the repo's issue tracker with the SESSION_ID from the sidebar card.
 
 However, this creates the **dogfood paradox** (see
@@ -133,9 +133,13 @@ structural-only.
   post-B1 follow-ups.
 - **Unsigned binary** — Gatekeeper will warn on first launch. Right-click →
   Open to bypass. Production signing and notarisation are a Q-plan-3 follow-up.
-- **Local only** — the app reads `.spec-workflow/` state files from the local
+- **Local only** — the app reads `.specaffold/` state files from the local
   filesystem; remote or SSH-mounted repos are not supported in B1.
 - **No auto-update** — manual reinstall required for new builds. A Sparkle-based
   auto-updater is a post-B1 consideration.
 - **Polling, not FS events** — session state is polled every 5 s; real-time push
   via FSEvents is a B2 enhancement.
+
+### Upgrade notes
+
+Pre-rename audit logs under `.spec-workflow/.flow-monitor/audit.log` are preserved on disk but are not surfaced in the new UI; see `docs/rename-migration.md` for the migration path.

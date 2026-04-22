@@ -1,14 +1,14 @@
 /// Audit log module — append-only TSV log with rotation + gitignore bootstrap.
 ///
-/// Per tech D7: log lives at `<repo>/.spec-workflow/.flow-monitor/audit.log`.
+/// Per tech D7: log lives at `<repo>/.specaffold/.flow-monitor/audit.log`.
 /// Fields: timestamp (ISO 8601), slug, command, entry_point, delivery, outcome.
 /// Rotation: on every append, if `audit.log` ≥ 1 048 576 bytes, rename to
 /// `audit.log.1` then open a fresh `audit.log`.
 /// Gitignore bootstrap: before the first write, `ensure_gitignore` appends
-/// `.spec-workflow/.flow-monitor/` to `<repo>/.gitignore` if absent (idempotent,
+/// `.specaffold/.flow-monitor/` to `<repo>/.gitignore` if absent (idempotent,
 /// atomic write-temp-then-rename per no-force-on-user-paths rule).
 /// Path-traversal guard: the audit log path is canonicalised and checked to
-/// start with `<repo>/.spec-workflow/.flow-monitor/` before any write.
+/// start with `<repo>/.specaffold/.flow-monitor/` before any write.
 
 use std::fs::{self, OpenOptions};
 use std::io::Write;
@@ -93,7 +93,7 @@ pub struct AuditLine {
     pub ts: String,
     /// Session slug (ASCII per B1 discipline).
     pub slug: String,
-    /// specflow command name (e.g. "implement").
+    /// scaff command name (e.g. "implement").
     pub command: String,
     pub entry_point: EntryPoint,
     pub delivery: DeliveryMethod,
@@ -138,10 +138,10 @@ const ROTATE_THRESHOLD_BYTES: u64 = 1_048_576;
 // Path helpers
 // ---------------------------------------------------------------------------
 
-/// Return the canonical `.spec-workflow/.flow-monitor/` directory path for `repo`.
+/// Return the canonical `.specaffold/.flow-monitor/` directory path for `repo`.
 /// The path may not yet exist; callers are responsible for creating it.
 fn flow_monitor_dir(repo: &Path) -> PathBuf {
-    repo.join(".spec-workflow").join(".flow-monitor")
+    repo.join(".specaffold").join(".flow-monitor")
 }
 
 /// Canonicalise `target` and verify it sits under the expected `allowed_prefix`.
@@ -187,21 +187,21 @@ fn canonicalise_and_check_under(
 // Public API
 // ---------------------------------------------------------------------------
 
-/// Ensure `<repo>/.spec-workflow/.flow-monitor/` exists (mkdir -p).
+/// Ensure `<repo>/.specaffold/.flow-monitor/` exists (mkdir -p).
 pub fn ensure_flow_monitor_dir_exists(repo: &Path) -> Result<(), AuditError> {
     let dir = flow_monitor_dir(repo);
     fs::create_dir_all(&dir)?;
     Ok(())
 }
 
-/// Idempotently append `.spec-workflow/.flow-monitor/` to `<repo>/.gitignore`.
+/// Idempotently append `.specaffold/.flow-monitor/` to `<repo>/.gitignore`.
 ///
 /// Reads the existing `.gitignore` first, then only writes when the target line
 /// is absent. The write uses an atomic temp-file-then-rename so a partial write
 /// never corrupts the live `.gitignore`. Per no-force-on-user-paths rule.
 pub fn ensure_gitignore(repo: &Path) -> Result<(), AuditError> {
     let gitignore_path = repo.join(".gitignore");
-    let target_line = ".spec-workflow/.flow-monitor/";
+    let target_line = ".specaffold/.flow-monitor/";
 
     // Read existing content (or empty string when file is absent).
     let existing = if gitignore_path.exists() {
@@ -243,7 +243,7 @@ pub fn ensure_gitignore(repo: &Path) -> Result<(), AuditError> {
     Ok(())
 }
 
-/// Append one audit line to `<repo>/.spec-workflow/.flow-monitor/audit.log`.
+/// Append one audit line to `<repo>/.specaffold/.flow-monitor/audit.log`.
 ///
 /// Workflow:
 ///   1. Path-traversal guard — verify the audit log path is under the expected subdir.
@@ -422,7 +422,7 @@ mod tests {
         let repo = tmp.path();
 
         // Pre-create the .flow-monitor dir and write a 1 MiB audit.log fixture.
-        let dir = repo.join(".spec-workflow").join(".flow-monitor");
+        let dir = repo.join(".specaffold").join(".flow-monitor");
         fs::create_dir_all(&dir).unwrap();
         let audit_log = dir.join("audit.log");
         let big_content = "x".repeat(1_048_576); // exactly 1 MiB
@@ -475,7 +475,7 @@ mod tests {
         let content_after_first = fs::read_to_string(&gitignore_path).unwrap();
         let count = content_after_first
             .lines()
-            .filter(|l| l.trim() == ".spec-workflow/.flow-monitor/")
+            .filter(|l| l.trim() == ".specaffold/.flow-monitor/")
             .count();
         assert_eq!(count, 1, "target line must appear exactly once after first call");
 
@@ -485,7 +485,7 @@ mod tests {
         let content_after_second = fs::read_to_string(&gitignore_path).unwrap();
         let count2 = content_after_second
             .lines()
-            .filter(|l| l.trim() == ".spec-workflow/.flow-monitor/")
+            .filter(|l| l.trim() == ".specaffold/.flow-monitor/")
             .count();
         assert_eq!(count2, 1, "target line must still appear exactly once after second call");
     }
@@ -513,7 +513,7 @@ mod tests {
             "existing entries must be preserved"
         );
         assert!(
-            content.contains(".spec-workflow/.flow-monitor/"),
+            content.contains(".specaffold/.flow-monitor/"),
             "target line must be appended"
         );
     }
