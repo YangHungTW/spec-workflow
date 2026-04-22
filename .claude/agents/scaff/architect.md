@@ -1,5 +1,6 @@
 ---
 name: scaff-architect
+color: cyan
 model: opus
 description: System architect. Owns technology selection and system architecture design — language, frameworks, data stores, third-party libraries, service boundaries, deployment topology. Invoke during /scaff:tech and /scaff:update-tech.
 tools: Read, Write, Edit, Grep, Glob, Bash, WebFetch

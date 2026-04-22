@@ -4,6 +4,8 @@ import { useTranslation } from "../i18n";
 import { StagePill, STAGE_KEYS, type StageKey } from "./StagePill";
 import { IdleBadge, type IdleState } from "./IdleBadge";
 import { SendPanel } from "./SendPanel";
+import { AgentPill } from "./AgentPill";
+import { roleForSession } from "../agentPalette";
 import type { InvokeStore } from "../stores/invokeStore";
 
 /**
@@ -28,6 +30,11 @@ export interface CardDetailHeaderProps {
   onBack: () => void;
   /** invokeStore — required for Advance dispatch (T107). */
   invokeStore: InvokeStore;
+  /**
+   * When true, the session is archived — render ARCHIVED + Read-only badges,
+   * skip AgentPill, and omit all mutate controls (D9: omit-not-disable).
+   */
+  isArchived?: boolean;
 }
 
 /**
@@ -50,6 +57,7 @@ export function CardDetailHeader({
   featurePath,
   onBack,
   invokeStore,
+  isArchived = false,
 }: CardDetailHeaderProps) {
   const { t } = useTranslation();
   const [showSendPanel, setShowSendPanel] = useState(false);
@@ -91,10 +99,17 @@ export function CardDetailHeader({
           {repoId}/{slug}
         </h1>
 
-        {/* Stage pill and idle badge */}
+        {/* Stage pill, agent pill (skipped for archived — D9), and idle badge */}
         <div className="card-detail-header__badges">
           <StagePill stage={stage} />
+          {!isArchived && <AgentPill role={roleForSession({ stage })} />}
           {idleState !== "none" && <IdleBadge state={idleState} />}
+          {isArchived && (
+            <>
+              <span className="card-detail__archived-badge">ARCHIVED</span>
+              <span className="card-detail__read-only">Read only</span>
+            </>
+          )}
         </div>
 
         {/* Utility action row — Open in Finder + Copy path */}
@@ -115,8 +130,9 @@ export function CardDetailHeader({
           </button>
         </div>
 
-        {/* Control-plane buttons — hidden when session is at archive (AC3.a) */}
-        {next !== null && (
+        {/* Control-plane buttons — omitted for archived (D9: omit-not-disable);
+            hidden when session is at archive stage (AC3.a). */}
+        {!isArchived && next !== null && (
           <div className="card-detail-header__control">
             <button
               type="button"
@@ -136,8 +152,8 @@ export function CardDetailHeader({
         )}
       </header>
 
-      {/* SendPanel — mounted below header when toggled by Message / Choice */}
-      {showSendPanel && next !== null && (
+      {/* SendPanel — mounted below header when toggled by Message / Choice; never for archived (D9) */}
+      {!isArchived && showSendPanel && next !== null && (
         <SendPanel
           command={next}
           slug={slug}

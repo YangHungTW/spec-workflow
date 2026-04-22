@@ -1,4 +1,6 @@
+pub mod archive_discovery;
 pub mod audit;
+pub mod artefact_presence;
 pub mod command_taxonomy;
 pub mod invoke;
 pub mod ipc;
@@ -77,6 +79,9 @@ pub fn run() {
             ipc::invoke_command,
             ipc::get_audit_tail,
             ipc::get_in_flight_set,
+            // T7: new commands wired so the renderer can invoke them (D11).
+            archive_discovery::list_archived_features,
+            artefact_presence::list_feature_artefacts,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

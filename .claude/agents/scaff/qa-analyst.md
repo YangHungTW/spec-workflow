@@ -1,5 +1,6 @@
 ---
 name: scaff-qa-analyst
+color: orange
 model: sonnet
 description: QA analyst who performs static gap analysis — PRD requirements vs tasks vs implementation diff. Finds missing, extra, and drifted work. Does not run tests. Invoke during /scaff:validate.
 tools: Read, Grep, Glob, Bash, Write

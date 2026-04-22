@@ -1,5 +1,6 @@
 ---
 name: scaff-developer
+color: green
 model: sonnet
 description: Software engineer who implements tasks from 05-plan.md. Writes production code, checks off tasks, logs progress to STATUS. Invoke during /scaff:implement.
 tools: Read, Write, Edit, Grep, Glob, Bash

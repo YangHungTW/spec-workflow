@@ -1,10 +1,15 @@
 import { useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import { useTranslation } from "../i18n";
+import { ROLE_TO_COLOR, roleForSession } from "../agentPalette";
+import type { ArchivedFeatureRecord } from "../stores/sessionStore";
 
 export interface RepoEntry {
   id: string;
   name: string;
   path: string;
+  /** Current stage of the active feature — used to derive the agent dot colour (T14). */
+  stage?: string;
 }
 
 export interface RepoSidebarProps {
@@ -29,6 +34,18 @@ export interface RepoSidebarProps {
    * Used for the count badge on each sidebar item.
    */
   repoSessionCounts?: Record<string, number>;
+  /** Archived feature records from sessionStore (T14, D7). Default empty. */
+  archivedFeatures?: ArchivedFeatureRecord[];
+  /** Whether the Archived section is expanded (T14, R15). Default false. */
+  archiveExpanded?: boolean;
+  /** Setter to toggle archiveExpanded — persisted by sessionStore (T14, D7). */
+  setArchiveExpanded?: (next: boolean) => void;
+  /**
+   * Called when user clicks on an archived feature row.
+   * Parent (MainWindow/App) handles navigation to /:repoId/archived/:slug (T15).
+   * Named onArchivedFeatureClick to match MainWindow's pass-through prop (R18).
+   */
+  onArchivedFeatureClick?: (repo: string, slug: string) => void;
 }
 
 /**
@@ -39,12 +56,15 @@ export interface RepoSidebarProps {
  *   - "Projects" section header (T48.2)
  *   - "All Projects" item with stalled count badge (T48.3)
  *   - One item per registered repo with session count badge (T48.3)
+ *     Each active repo row has a 7px coloured agent dot (T14, R12, AC12).
  *   - Ghost "Add repo…" item (AC12.c)
+ *   - Collapsible "Archived" section (T14, R14–R17, AC13–AC17)
  *   - "Filter" section with "Stalled only" + "Has UI" items (T48.4)
  *   - Bottom block: Settings + theme toggle + polling indicator (T48.5)
  *
- * Pure presentational — no IPC calls; selection state lifted to parent.
+ * Pure presentational — no IPC calls except for archived-row hover actions.
  * Filter items are visual-only toggle for T48; functional filtering is B2.
+ * archiveExpanded state is lifted to sessionStore (T13, D7).
  */
 export function RepoSidebar({
   repos,
@@ -56,12 +76,26 @@ export function RepoSidebar({
   theme,
   stalledCount = 0,
   repoSessionCounts = {},
+  archivedFeatures = [],
+  archiveExpanded = false,
+  setArchiveExpanded,
+  onArchivedFeatureClick,
 }: RepoSidebarProps) {
   const { t } = useTranslation();
 
   // Visual-only filter toggle state (B2 will wire to actual filtering)
   const [stalledOnlyActive, setStalledOnlyActive] = useState(false);
   const [hasUiActive, setHasUiActive] = useState(false);
+
+  function handleArchivedOpenInFinder(e: React.MouseEvent, dir: string) {
+    e.stopPropagation();
+    invoke("open_in_finder", { path: dir }).catch(() => undefined);
+  }
+
+  function handleArchivedCopyPath(e: React.MouseEvent, dir: string) {
+    e.stopPropagation();
+    navigator.clipboard.writeText(dir).catch(() => undefined);
+  }
 
   return (
     <nav className="repo-sidebar" aria-label={t("sidebar.allProjects")}>
@@ -83,7 +117,7 @@ export function RepoSidebar({
       <div className="repo-sidebar__section-label">{t("sidebar.projects")}</div>
 
       <ul className="repo-sidebar__list" role="listbox">
-        {/* All Projects item with stalled count badge */}
+        {/* All Projects item with stalled count badge — no agent dot (R17, AC12) */}
         <li
           role="option"
           aria-selected={selectedId === "all"}
@@ -105,29 +139,41 @@ export function RepoSidebar({
           </span>
         </li>
 
-        {/* One item per registered repo */}
-        {repos.map((repo) => (
-          <li
-            key={repo.id}
-            role="option"
-            aria-selected={selectedId === repo.id}
-            className={`repo-sidebar__item${selectedId === repo.id ? " repo-sidebar__item--active" : ""}`}
-            onClick={() => onSelect(repo.id)}
-            data-testid={`sidebar-repo-${repo.id}`}
-            title={repo.path}
-          >
-            <svg width="14" height="14" fill="none" viewBox="0 0 14 14" aria-hidden="true">
-              <path d="M2 3h10M2 7h6M2 11h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-            <span className="repo-sidebar__item-label">{repo.name}</span>
-            <span
-              className="repo-sidebar__badge repo-sidebar__badge--count"
-              data-testid={`badge-repo-${repo.id}`}
+        {/* One item per registered repo — each gets a 7px agent dot (T14, R12, AC12) */}
+        {repos.map((repo) => {
+          const dotColor = repo.stage
+            ? ROLE_TO_COLOR[roleForSession({ stage: repo.stage })]
+            : undefined;
+          return (
+            <li
+              key={repo.id}
+              role="option"
+              aria-selected={selectedId === repo.id}
+              className={`repo-sidebar__item${selectedId === repo.id ? " repo-sidebar__item--active" : ""}`}
+              onClick={() => onSelect(repo.id)}
+              data-testid={`sidebar-repo-${repo.id}`}
+              title={repo.path}
             >
-              {repoSessionCounts[repo.id] ?? 0}
-            </span>
-          </li>
-        ))}
+              {/* Agent dot — prepended to each active feature row (T14, R12, AC12) */}
+              {dotColor !== undefined && (
+                <span
+                  className="repo-sidebar__agent-dot"
+                  data-color={dotColor}
+                />
+              )}
+              <svg width="14" height="14" fill="none" viewBox="0 0 14 14" aria-hidden="true">
+                <path d="M2 3h10M2 7h6M2 11h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+              <span className="repo-sidebar__item-label">{repo.name}</span>
+              <span
+                className="repo-sidebar__badge repo-sidebar__badge--count"
+                data-testid={`badge-repo-${repo.id}`}
+              >
+                {repoSessionCounts[repo.id] ?? 0}
+              </span>
+            </li>
+          );
+        })}
 
         {/* Ghost "Add repo…" item — AC12.c */}
         <li
@@ -140,6 +186,73 @@ export function RepoSidebar({
           {t("sidebar.addRepo")}
         </li>
       </ul>
+
+      {/* Archived section — T14, R14–R17, AC13–AC17
+          Placed BELOW the active Projects list and ABOVE the Filter section (D7). */}
+      <div className="repo-sidebar__archived">
+        {/* Header row: label, count, disclosure chevron */}
+        <div
+          className="repo-sidebar__archive-header"
+          onClick={() => setArchiveExpanded(!archiveExpanded)}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              setArchiveExpanded(!archiveExpanded);
+            }
+          }}
+          aria-expanded={archiveExpanded}
+        >
+          <span className="repo-sidebar__archive-label">{t("sidebar.archived")}</span>
+          <span className="repo-sidebar__archive-count">{archivedFeatures.length}</span>
+          <span className="repo-sidebar__archive-chevron">
+            {archiveExpanded ? "▼" : "▶"}
+          </span>
+        </div>
+
+        {/* Archived rows — only when expanded (R15, AC15) */}
+        {archiveExpanded &&
+          archivedFeatures.map((entry) => (
+            <div
+              key={`${entry.repo}/${entry.slug}`}
+              className="repo-sidebar__archived-row"
+            >
+              {/* Slug — italic, no agent dot (R17, AC12) */}
+              <span
+                className="repo-sidebar__archived-slug"
+                onClick={() => onArchivedFeatureClick?.(entry.repo, entry.slug)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onArchivedFeatureClick?.(entry.repo, entry.slug);
+                  }
+                }}
+              >
+                {entry.slug}
+              </span>
+              {/* arch badge — existing CSS class from T8 */}
+              <span className="repo-sidebar__arch-badge">arch</span>
+              {/* 2 hover actions identical to active rows (R20, AC17) */}
+              <button
+                type="button"
+                className="repo-sidebar__archived-action"
+                onClick={(e) => handleArchivedOpenInFinder(e, entry.dir)}
+              >
+                {t("btn.openInFinder")}
+              </button>
+              <button
+                type="button"
+                className="repo-sidebar__archived-action"
+                onClick={(e) => handleArchivedCopyPath(e, entry.dir)}
+              >
+                {t("btn.copyPath")}
+              </button>
+            </div>
+          ))}
+      </div>
 
       {/* Filter section — T48.4 */}
       <div className="repo-sidebar__section-label repo-sidebar__section-label--spaced">

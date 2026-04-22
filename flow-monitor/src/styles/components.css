@@ -868,17 +868,43 @@ html.dark {
   font-weight: 600;
 }
 
-/* Missing tab — grey, not-yet-generated; cursor signals non-actionable */
+/* Missing tab — grey, not-yet-generated; cursor signals non-actionable (R21, AC20) */
 .tab-strip__tab--missing {
   color: var(--text-muted);
-  opacity: 0.5;
+  opacity: 0.38;
   cursor: not-allowed;
+  border-bottom-color: transparent;
+  position: relative;
 }
 
 /* Missing tab hover — no color change; reinforce non-actionable */
 .tab-strip__tab--missing:hover {
   color: var(--text-muted);
   background: transparent;
+}
+
+/* Tooltip on missing tabs — appears immediately on hover with no OS delay (R22, AC21) */
+.tab-strip__tab--missing::after {
+  content: "Not yet produced";
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--sidebar-bg);
+  color: var(--sidebar-logo-text);
+  font-size: 10px;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 5px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 20;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.tab-strip__tab--missing:hover::after {
+  display: block;
 }
 
 /* ── STAGE CHECKLIST ── */
@@ -1355,6 +1381,162 @@ html.dark {
   opacity: 0.9;
 }
 
+/* ── AGENT PILL ── */
+
+/* Base pill — same border-radius / font-size / padding geometry as .stage-pill */
+.agent-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Color mappings via data-color attribute (CCColorName values from agentPalette.ts) */
+.agent-pill[data-color="purple"]  { background: var(--agent-purple-bg);  color: var(--agent-purple-fg); }
+.agent-pill[data-color="cyan"]    { background: var(--agent-cyan-bg);    color: var(--agent-cyan-fg); }
+.agent-pill[data-color="yellow"]  { background: var(--agent-yellow-bg);  color: var(--agent-yellow-fg); }
+.agent-pill[data-color="green"]   { background: var(--agent-green-bg);   color: var(--agent-green-fg); }
+.agent-pill[data-color="pink"]    { background: var(--agent-pink-bg);    color: var(--agent-pink-fg); }
+.agent-pill[data-color="orange"]  { background: var(--agent-orange-bg);  color: var(--agent-orange-fg); }
+.agent-pill[data-color="blue"]    { background: var(--agent-blue-bg);    color: var(--agent-blue-fg); }
+.agent-pill[data-color="red"]     { background: var(--agent-red-bg);     color: var(--agent-red-fg); }
+
+/* 5px round inner dot — color driven by data-color on the parent pill */
+.agent-pill__dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.agent-pill[data-color="purple"]  .agent-pill__dot { background: var(--agent-purple-dot); }
+.agent-pill[data-color="cyan"]    .agent-pill__dot { background: var(--agent-cyan-dot); }
+.agent-pill[data-color="yellow"]  .agent-pill__dot { background: var(--agent-yellow-dot); }
+.agent-pill[data-color="green"]   .agent-pill__dot { background: var(--agent-green-dot); }
+.agent-pill[data-color="pink"]    .agent-pill__dot { background: var(--agent-pink-dot); }
+.agent-pill[data-color="orange"]  .agent-pill__dot { background: var(--agent-orange-dot); }
+.agent-pill[data-color="blue"]    .agent-pill__dot { background: var(--agent-blue-dot); }
+.agent-pill[data-color="red"]     .agent-pill__dot { background: var(--agent-red-dot); }
+
+/* Reviewer axis sub-badge (sec / perf / style) — small inset label after the role text */
+.agent-pill__axis {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 0 4px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.12);
+  color: inherit;
+  text-transform: uppercase;
+}
+
+/* ── REPO SIDEBAR — AGENT DOT ── */
+
+/* 7px round coloured dot prepended to active-feature sidebar rows */
+.repo-sidebar__agent-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.repo-sidebar__agent-dot[data-color="purple"]  { background: var(--agent-purple-sidebar-dot); }
+.repo-sidebar__agent-dot[data-color="cyan"]    { background: var(--agent-cyan-sidebar-dot); }
+.repo-sidebar__agent-dot[data-color="yellow"]  { background: var(--agent-yellow-sidebar-dot); }
+.repo-sidebar__agent-dot[data-color="green"]   { background: var(--agent-green-sidebar-dot); }
+.repo-sidebar__agent-dot[data-color="pink"]    { background: var(--agent-pink-sidebar-dot); }
+.repo-sidebar__agent-dot[data-color="orange"]  { background: var(--agent-orange-sidebar-dot); }
+.repo-sidebar__agent-dot[data-color="blue"]    { background: var(--agent-blue-sidebar-dot); }
+.repo-sidebar__agent-dot[data-color="red"]     { background: var(--agent-red-sidebar-dot); }
+
+/* ── REPO SIDEBAR — ARCHIVED SECTION ── */
+
+/* Archived section header row — acts as a disclosure toggle */
+.repo-sidebar__archived {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px 4px;
+  cursor: pointer;
+}
+
+.repo-sidebar__archived-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--sidebar-text-muted);
+  flex: 1;
+}
+
+.repo-sidebar__archived-count {
+  font-size: 9px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 9999px;
+  background: var(--sidebar-count-bg);
+  color: var(--sidebar-count-text);
+  flex-shrink: 0;
+}
+
+.repo-sidebar__archived-chevron {
+  font-size: 9px;
+  color: var(--sidebar-text-muted);
+  flex-shrink: 0;
+}
+
+/* Archived feature row — italic slug, arch badge, reduced opacity */
+.repo-sidebar__archived-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  margin: 0 6px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--sidebar-text-muted);
+  cursor: pointer;
+  user-select: none;
+  border: none;
+  background: transparent;
+  text-align: left;
+  width: calc(100% - 12px);
+  opacity: 0.65;
+}
+
+.repo-sidebar__archived-row:hover {
+  opacity: 0.9;
+  background: var(--sidebar-border);
+  color: var(--card-bg);
+}
+
+/* Italic slug text inside archived rows.
+   The component renders the slug with .repo-sidebar__archived-slug, not
+   .repo-sidebar__item-label — this rule targets the actual class used (AC17). */
+.repo-sidebar__archived-row .repo-sidebar__archived-slug {
+  font-style: italic;
+  font-size: 11px;
+}
+
+/* "arch" badge on archived rows */
+.repo-sidebar__arch-badge {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  background: var(--sidebar-count-bg);
+  color: var(--sidebar-count-text);
+  letter-spacing: 0.03em;
+  flex-shrink: 0;
+}
+
 /* ── MARKDOWN PANE ── */
 
 /* [data-testid="markdown-pane"] is the MarkdownPane root div */
@@ -1474,4 +1656,33 @@ html.dark {
   position: absolute;
   left: 0;
   top: 3px;
+}
+
+/* ── ARCHIVED CARD DETAIL BADGES (T15) ── */
+
+.card-detail__archived-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: var(--stalled-red);
+  color: var(--sidebar-badge-stalled-text);
+  flex-shrink: 0;
+}
+
+.card-detail__read-only {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: var(--surface-secondary);
+  border: 1px solid var(--card-border);
+  flex-shrink: 0;
 }

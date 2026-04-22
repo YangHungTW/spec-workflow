@@ -10,6 +10,10 @@
  *            (session at "archive" — no valid next stage)
  *   AC3.b — Advance click triggers invokeStore.dispatch with next stage
  *   AC3.c — Message / Choice click toggles inline SendPanel visibility
+ *
+ * T11 additions (AC10):
+ *   AgentPill renders next to StagePill for a known stage.
+ *   DOM order: StagePill first, AgentPill second (mockup L1283–1284).
  */
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
@@ -48,6 +52,13 @@ vi.mock("@tauri-apps/api/core", () => ({
 // Stub SendPanel so it renders a predictable test ID
 vi.mock("../SendPanel", () => ({
   SendPanel: () => <div data-testid="send-panel-stub" />,
+}));
+
+// Stub AgentPill so it renders a predictable test ID containing the role
+vi.mock("../AgentPill", () => ({
+  AgentPill: ({ role }: { role: string }) => (
+    <span data-testid="agent-pill-stub" data-role={role} />
+  ),
 }));
 
 function makeInvokeStore(overrides?: Partial<InvokeStore>): InvokeStore {
@@ -194,6 +205,38 @@ describe("CardDetailHeader", () => {
       expect(screen.getByTestId("send-panel-stub")).toBeTruthy();
       fireEvent.click(btn);
       expect(screen.queryByTestId("send-panel-stub")).toBeNull();
+    });
+  });
+
+  // --- T11: AgentPill next to StagePill (AC10) ---
+
+  describe("AgentPill integration (AC10)", () => {
+    it("renders AgentPill next to StagePill for a known stage", () => {
+      render(<CardDetailHeader {...BASE_PROPS} stage="implement" />);
+      expect(screen.getByTestId("agent-pill-stub")).toBeTruthy();
+      // AgentPill role for implement stage is "developer" (roleForSession heuristic)
+      expect(
+        screen.getByTestId("agent-pill-stub").getAttribute("data-role"),
+      ).toBe("developer");
+    });
+
+    it("DOM order: StagePill appears before AgentPill in the badges container (mockup L1283–1284)", () => {
+      const { container } = render(
+        <CardDetailHeader {...BASE_PROPS} stage="implement" />,
+      );
+      const badgesDiv = container.querySelector(
+        ".card-detail-header__badges",
+      ) as HTMLElement;
+      expect(badgesDiv).not.toBeNull();
+      const children = Array.from(badgesDiv.children);
+      const stagePillIdx = children.findIndex((el) =>
+        el.classList.contains("stage-pill"),
+      );
+      const agentPillIdx = children.findIndex(
+        (el) => el.getAttribute("data-testid") === "agent-pill-stub",
+      );
+      expect(stagePillIdx).toBeGreaterThanOrEqual(0);
+      expect(agentPillIdx).toBeGreaterThan(stagePillIdx);
     });
   });
 });

@@ -17,23 +17,33 @@ function isSafeId(s: string | undefined): s is string {
   return typeof s === "string" && SAFE_ID.test(s);
 }
 
+// Static tab definitions without exists — existence is computed from IPC on mount.
 const TAB_DEFINITIONS = [
-  { id: "00-request", labelKey: "tab.request" as const, exists: true, file: "00-request.md" },
-  { id: "01-brainstorm", labelKey: "tab.brainstorm" as const, exists: true, file: "01-brainstorm.md" },
-  { id: "02-design", labelKey: "tab.design" as const, exists: true, file: "02-design" },
-  { id: "03-prd", labelKey: "tab.prd" as const, exists: true, file: "03-prd.md" },
-  { id: "04-tech", labelKey: "tab.tech" as const, exists: true, file: "04-tech.md" },
-  { id: "05-plan", labelKey: "tab.plan" as const, exists: true, file: "05-plan.md" },
-  { id: "06-tasks", labelKey: "tab.tasks" as const, exists: true, file: "06-tasks.md" },
-  { id: "07-gaps", labelKey: "tab.gaps" as const, exists: true, file: "07-gaps.md" },
-  { id: "08-verify", labelKey: "tab.verify" as const, exists: true, file: "08-verify.md" },
+  { id: "00-request", labelKey: "tab.request" as const, file: "00-request.md" },
+  { id: "01-brainstorm", labelKey: "tab.brainstorm" as const, file: "01-brainstorm.md" },
+  { id: "02-design", labelKey: "tab.design" as const, file: "02-design" },
+  { id: "03-prd", labelKey: "tab.prd" as const, file: "03-prd.md" },
+  { id: "04-tech", labelKey: "tab.tech" as const, file: "04-tech.md" },
+  { id: "05-plan", labelKey: "tab.plan" as const, file: "05-plan.md" },
+  { id: "06-tasks", labelKey: "tab.tasks" as const, file: "06-tasks.md" },
+  { id: "07-gaps", labelKey: "tab.gaps" as const, file: "07-gaps.md" },
+  { id: "08-verify", labelKey: "tab.verify" as const, file: "08-verify.md" },
 ];
+
+interface ArtefactPresence {
+  files_present: Record<string, boolean>;
+}
 
 interface SettingsResponse {
   repos?: string[];
 }
 
-function CardDetail() {
+interface CardDetailProps {
+  /** When true, the view is read-only — path resolves under .specaffold/archive/ (D9). */
+  isArchived?: boolean;
+}
+
+function CardDetail({ isArchived = false }: CardDetailProps) {
   const { repoId, slug } = useParams<{ repoId: string; slug: string }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -44,6 +54,8 @@ function CardDetail() {
   const [tabContent, setTabContent] = useState<string>("");
   const [contentError, setContentError] = useState<string | null>(null);
   const tabContentRef = useRef<HTMLDivElement>(null);
+  // filesPresent: null = not yet loaded (fall back to false for all tabs until resolved).
+  const [filesPresent, setFilesPresent] = useState<Record<string, boolean> | null>(null);
 
   // Scroll to top when active tab or content changes.
   // The actual scroll container is the inner [data-testid="markdown-pane"]
@@ -73,6 +85,38 @@ function CardDetail() {
       })
       .catch(() => setRepoFullPath(null));
   }, [validRepoId]);
+
+  // Fetch which artefact files exist via list_feature_artefacts on mount and
+  // whenever repo/slug/archived change. On IPC failure, fall back to all-false
+  // so tabs degrade gracefully rather than silently showing stale data.
+  useEffect(() => {
+    if (!repoFullPath || !validSlug) return;
+    invoke<ArtefactPresence>("list_feature_artefacts", {
+      repo: repoFullPath,
+      slug: validSlug,
+      archived: isArchived,
+    })
+      .then((presence) => {
+        // Runtime shape guard: reject malformed IPC responses before storing state.
+        // TypeScript types are compile-time only; the backend may return null,
+        // omit files_present, or return a non-object — any of these would cause
+        // a TypeError when indexing filesPresent[tab.file] at render time.
+        if (
+          !presence ||
+          typeof presence.files_present !== "object" ||
+          presence.files_present === null
+        ) {
+          console.warn("list_feature_artefacts returned malformed response", presence);
+          setFilesPresent({});
+          return;
+        }
+        setFilesPresent(presence.files_present);
+      })
+      .catch((e) => {
+        console.warn("list_feature_artefacts failed; falling back to exists:false for all tabs", e);
+        setFilesPresent({});
+      });
+  }, [repoFullPath, validSlug, isArchived]);
 
   // Load active-tab markdown content via read_artefact IPC
   useEffect(() => {
@@ -114,10 +158,11 @@ function CardDetail() {
     navigate(buildBackUrl());
   }
 
-  // Real absolute feature path from resolved repo (was hardcoded `/${repoId}/...`)
+  // Compute the feature directory — archive path when isArchived, features path otherwise (D9).
+  // ONE logic branch, one path string per D9 constraint.
   const featurePath = repoFullPath
-    ? `${repoFullPath}/.specaffold/features/${validSlug}`
-    : `/${validRepoId}/.specaffold/features/${validSlug}`;
+    ? `${repoFullPath}/.specaffold/${isArchived ? "archive" : "features"}/${validSlug}`
+    : `/${validRepoId}/.specaffold/${isArchived ? "archive" : "features"}/${validSlug}`;
 
   const stage: StageKey = "implement";
   const idleState: IdleState = "none";
@@ -133,6 +178,7 @@ function CardDetail() {
         featurePath={featurePath}
         onBack={handleBack}
         invokeStore={invokeStore}
+        isArchived={isArchived}
       />
 
       <div className="card-detail__body">
@@ -143,7 +189,13 @@ function CardDetail() {
 
         <main className="card-detail__right-pane" data-testid="card-detail-right-pane">
           <TabStrip
-            tabs={TAB_DEFINITIONS}
+            tabs={TAB_DEFINITIONS.map((tab) => ({
+              ...tab,
+              // Optimistic default while IPC is in-flight (null): show all tabs enabled
+              // so interaction is not blocked before presence data arrives.
+              // Once the IPC resolves, use the backend value; on error ({}) all are false.
+              exists: filesPresent !== null ? (filesPresent[tab.file] ?? false) : true,
+            }))}
             activeId={activeTabId}
             onSelect={setActiveTabId}
           />

@@ -1,0 +1,62 @@
+/*
+ * agent-palette.css — THE ONLY authorised hex-bearing file in flow-monitor/src/
+ *
+ * Hex values copied verbatim from 02-design/palette.md "Role-to-color mapping"
+ * and "Sidebar dot variants" tables.
+ *
+ * Slot convention: --agent-<CCColorName>-<bg|fg|dot|sidebar-dot>
+ * bg/fg are pill background/foreground (light bg); dot is the 5px inner-pill dot;
+ * sidebar-dot is the 7px dot on the dark sidebar (same hex as dot per palette.md).
+ *
+ * DO NOT add hex literals anywhere else in flow-monitor/src/ (AC6).
+ */
+
+:root {
+  /* purple — pm */
+  --agent-purple-bg: #F5F3FF;
+  --agent-purple-fg: #5B21B6;
+  --agent-purple-dot: #7C3AED;
+  --agent-purple-sidebar-dot: #7C3AED;
+
+  /* cyan — architect */
+  --agent-cyan-bg: #CFFAFE;
+  --agent-cyan-fg: #155E75;
+  --agent-cyan-dot: #0891B2;
+  --agent-cyan-sidebar-dot: #0891B2;
+
+  /* yellow — tpm */
+  --agent-yellow-bg: #FEF9C3;
+  --agent-yellow-fg: #713F12;
+  --agent-yellow-dot: #CA8A04;
+  --agent-yellow-sidebar-dot: #CA8A04;
+
+  /* green — developer */
+  --agent-green-bg: #DCFCE7;
+  --agent-green-fg: #14532D;
+  --agent-green-dot: #16A34A;
+  --agent-green-sidebar-dot: #16A34A;
+
+  /* pink — designer */
+  --agent-pink-bg: #FCE7F3;
+  --agent-pink-fg: #9D174D;
+  --agent-pink-dot: #DB2777;
+  --agent-pink-sidebar-dot: #DB2777;
+
+  /* orange — qa-analyst */
+  --agent-orange-bg: #FFF7ED;
+  --agent-orange-fg: #7C2D12;
+  --agent-orange-dot: #EA580C;
+  --agent-orange-sidebar-dot: #EA580C;
+
+  /* blue — qa-tester */
+  --agent-blue-bg: #DBEAFE;
+  --agent-blue-fg: #1E3A8A;
+  --agent-blue-dot: #2563EB;
+  --agent-blue-sidebar-dot: #2563EB;
+
+  /* red — reviewer-security, reviewer-performance, reviewer-style */
+  --agent-red-bg: #FEE2E2;
+  --agent-red-fg: #991B1B;
+  --agent-red-dot: #DC2626;
+  --agent-red-sidebar-dot: #DC2626;
+}

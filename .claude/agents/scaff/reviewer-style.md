@@ -1,5 +1,6 @@
 ---
 name: scaff-reviewer-style
+color: red
 model: sonnet
 description: Style-axis reviewer for diff-level review (naming, dead code, portability, test hygiene).
 tools: Read, Grep, Bash

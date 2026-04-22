@@ -1,5 +1,6 @@
 ---
 name: scaff-qa-tester
+color: blue
 model: sonnet
 description: QA tester who independently verifies each PRD acceptance criterion by running tests or exercising the feature. Reports pass/fail with evidence. Invoke during /scaff:validate.
 tools: Read, Grep, Glob, Bash

@@ -214,6 +214,13 @@ function MainWindow() {
           theme={theme}
           stalledCount={stalledCount}
           repoSessionCounts={repoSessionCounts}
+          // T15: archived-row click handler — navigates to /:repoId/archived/:slug.
+          // T14 adds onArchivedFeatureClick to RepoSidebarProps; pre-declared here
+          // so the wiring is ready when that prop lands.
+          {...({
+            onArchivedFeatureClick: (repoId: string, slug: string) =>
+              navigate(`/feature/${encodeURIComponent(repoId)}/archived/${encodeURIComponent(slug)}`),
+          } as Record<string, unknown>)}
         />
         {/* Compact panel toggle button (AC10.a) */}
         <button

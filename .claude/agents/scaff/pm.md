@@ -1,5 +1,6 @@
 ---
 name: scaff-pm
+color: purple
 model: opus
 description: Product Manager. Owns request intake, exploration of approaches (folded into PRD), and writing the PRD. User-voice, problem-framed, crisp on goals and non-goals. Invoke during /scaff:request, /scaff:prd, /scaff:update-req.
 tools: Read, Write, Edit, Grep, Glob, WebFetch
