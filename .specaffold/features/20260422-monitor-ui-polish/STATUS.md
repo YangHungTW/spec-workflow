@@ -3,7 +3,7 @@
 - **slug**: 20260422-monitor-ui-polish
 - **has-ui**: true
 - **tier**: audited
-- **stage**: plan
+- **stage**: implement
 - **created**: 2026-04-22
 - **updated**: 2026-04-22
 
@@ -13,7 +13,7 @@
 - [x] prd           (03-prd.md)                  — PM
 - [x] tech          (04-tech.md)                 — Architect
 - [x] plan          (05-plan.md)                 — TPM  [merged: narrative + task checklist]
-- [ ] implement     (05-plan.md tasks checked off) — Developer
+- [x] implement     (05-plan.md tasks checked off) — Developer
 - [ ] validate      (08-validate.md, verdict PASS) — QA-tester + QA-analyst  [merged: verify + gap-check]
 - [ ] archive       (moved to .specaffold/archive/)     — TPM
 
@@ -55,3 +55,5 @@
 - 2026-04-22 Developer — T18 done (CardDetail exists wiring from list_feature_artefacts)
 - 2026-04-22 Developer — T18 retry 1: added runtime shape guard per security-must finding
 - 2026-04-22 review result — wave 4 phase 2 retry verdict=PASS (T18 all 3 axes PASS after retry 1 added IPC shape guard); T18 merged
+- 2026-04-22 T19 regression sweep — Rust 126 lib + 56 integration all pass; frontend 480 pass / 11 pre-existing failures (unchanged from 06432ce baseline per risk log #4); no NEW failures introduced by this feature
+- 2026-04-22 implement — all 19 tasks complete; wave 4 closed; implement stage done

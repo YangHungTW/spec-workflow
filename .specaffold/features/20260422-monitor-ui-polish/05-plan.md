@@ -562,7 +562,7 @@ Effective W4 parallelism: T16 ∥ T17; then T18 after T16; T19 after T16+T17+T18
 - **Verify**: `cd flow-monitor && npm run test -- src/stores/__tests__/sessionStore.archive.test.ts` passes.
 - **Depends on**: T7
 - **Parallel-safe-with**: —
-- [ ]
+- [x]
 
 ## T14 — RepoSidebar: coloured dot + collapsible Archived section
 - **Milestone**: M4 (W3)
@@ -707,7 +707,7 @@ Effective W4 parallelism: T16 ∥ T17; then T18 after T16; T19 after T16+T17+T18
 - **Verify**: `cd flow-monitor && npm run test && cd src-tauri && cargo test` — both suites exit 0.
 - **Depends on**: T16, T17, T18
 - **Parallel-safe-with**: —
-- [ ]
+- [x]
 
 ---
 
