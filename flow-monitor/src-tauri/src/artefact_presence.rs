@@ -26,7 +26,7 @@ pub struct ArtefactPresence {
 ///
 /// `"02-design"` is a directory; all others are regular files. The order here
 /// matches the PRD R23 enumeration exactly so reviewers can diff against it.
-const TAB_KEYS: &[&str] = &[
+pub const TAB_KEYS: &[&str] = &[
     "00-request.md",
     "01-brainstorm.md",
     "02-design",
@@ -106,35 +106,23 @@ fn design_dir_has_regular_file(dir: &std::path::Path) -> bool {
     false
 }
 
-/// Tauri command: probe the 9 known tab artefacts for a feature.
+/// Core implementation of artefact-presence probing: takes the registered
+/// roots list directly so integration tests can call it without constructing
+/// `tauri::State`.
 ///
-/// - `repo` — absolute path to the repository root; must be in the registered
-///   allowlist from settings.
-/// - `slug` — feature slug; must be a simple identifier with no path-traversal
-///   characters (`/`, `\`, `..`).
-/// - `archived` — when `true`, resolve from `.specaffold/archive/<slug>`;
-///   when `false`, resolve from `.specaffold/features/<slug>`.
-///
-/// Returns `ArtefactPresence { files_present }` mapping each of the 9 tab
-/// keys to `true` or `false`. Guard failures return an `IpcError`.
-#[tauri::command]
-pub fn list_feature_artefacts(
+/// - `repo` — absolute path to the repository root; must be in `registered_roots`.
+/// - `slug` — feature slug; must pass the deny-list guard.
+/// - `archived` — when `true`, resolves from `.specaffold/archive/<slug>`;
+///   when `false`, from `.specaffold/features/<slug>`.
+/// - `registered_roots` — snapshot of the allowed repo paths from settings.
+pub fn list_feature_artefacts_inner(
     repo: String,
     slug: String,
     archived: bool,
-    settings: tauri::State<'_, SettingsState>,
+    registered_roots: &[PathBuf],
 ) -> Result<ArtefactPresence, IpcError> {
-    // Snapshot the registered roots without holding the lock during I/O.
-    let registered_roots: Vec<PathBuf> = {
-        let guard = settings.0.lock().map_err(|_| IpcError {
-            code: "LOCK_POISONED",
-            message: "settings lock is poisoned".into(),
-        })?;
-        guard.repos.clone()
-    };
-
     // Guard 1 — repo must be in the registered-root allowlist.
-    let canonical_repo = validate_repo(&repo, &registered_roots)?;
+    let canonical_repo = validate_repo(&repo, registered_roots)?;
 
     // Guard 2 — slug deny-list (path-traversal characters).
     validate_slug(&slug)?;
@@ -165,6 +153,36 @@ pub fn list_feature_artefacts(
     }
 
     Ok(ArtefactPresence { files_present })
+}
+
+/// Tauri command wrapper: unpacks `SettingsState`, then delegates to the
+/// testable inner function.
+///
+/// - `repo` — absolute path to the repository root; must be in the registered
+///   allowlist from settings.
+/// - `slug` — feature slug; must be a simple identifier with no path-traversal
+///   characters (`/`, `\`, `..`).
+/// - `archived` — when `true`, resolve from `.specaffold/archive/<slug>`;
+///   when `false`, resolve from `.specaffold/features/<slug>`.
+///
+/// Returns `ArtefactPresence { files_present }` mapping each of the 9 tab
+/// keys to `true` or `false`. Guard failures return an `IpcError`.
+#[tauri::command]
+pub fn list_feature_artefacts(
+    repo: String,
+    slug: String,
+    archived: bool,
+    settings: tauri::State<'_, SettingsState>,
+) -> Result<ArtefactPresence, IpcError> {
+    // Snapshot the registered roots without holding the lock during I/O.
+    let registered_roots: Vec<PathBuf> = {
+        let guard = settings.0.lock().map_err(|_| IpcError {
+            code: "LOCK_POISONED",
+            message: "settings lock is poisoned".into(),
+        })?;
+        guard.repos.clone()
+    };
+    list_feature_artefacts_inner(repo, slug, archived, &registered_roots)
 }
 
 // ---------------------------------------------------------------------------
