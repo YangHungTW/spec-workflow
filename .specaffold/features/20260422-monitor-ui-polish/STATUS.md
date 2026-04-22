@@ -26,3 +26,4 @@
 - 2026-04-22 PM — PRD locked R1..R27 / AC1..AC24; 4 open questions resolved with defaults (a=new-row, b=keep-hover, c=block-onSelect, d=defer-dark-mode)
 - 2026-04-22 Architect — tech D1..D11 no blockers; palette SSOT = agentPalette.ts + agent-palette.css; 2 new Tauri cmds (list_archived_features, list_feature_artefacts); new AgentPill component; archived read-only via path swap
 - 2026-04-22 TPM — plan 19 tasks across 5 waves (W0 foundations 3, W1 rust 4, W2 frontend 5, W3 sidebar+archive 3, W4 disabled-tab 4); D11 wiring as explicit T7
+- 2026-04-22 Developer — T1 done (agentPalette.ts + agent-palette.css + test)
