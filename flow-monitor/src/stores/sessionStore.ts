@@ -4,6 +4,7 @@
  * Consumed by:
  *   - T17 (MainWindow card grid)
  *   - T18 (CardDetail breadcrumb-back restoration — saves/restores URL search params)
+ *   - T14 (RepoSidebar archived section)
  *
  * Design decisions:
  *   - Default sort is LastUpdatedDesc (AC7.b).
@@ -11,11 +12,28 @@
  *   - Collapse state for repo headers is persisted via settings store (AC8.b).
  *   - Sorting is pure in-process — no IPC round-trip per AC7.c.
  *   - selectedRepoId = "all" means "All Projects" (shows collapsible headers if ≥2 repos).
+ *   - archivedFeatures is a renderer-side cache populated via list_archived_features IPC
+ *     on mount, on add_repo/remove_repo events, and on archiveExpanded false→true (D7, D8).
+ *   - archiveExpanded is persisted to the Tauri settings store via update_settings
+ *     to survive cross-session remounts (D7).
  */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
+import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import type { StageKey } from "../components/StagePill";
 import type { IdleState } from "../components/IdleBadge";
+
+// ---------------------------------------------------------------------------
+// Archived feature record — mirrors the Rust ArchivedFeatureRecord struct (D8).
+// ---------------------------------------------------------------------------
+
+/** Mirrors the Rust ArchivedFeatureRecord struct emitted by list_archived_features. */
+export interface ArchivedFeatureRecord {
+  repo: string;
+  slug: string;
+  dir: string;
+}
 
 /**
  * Stage sort order — hoisted to module level so the Record is created once,
@@ -110,6 +128,82 @@ export function useSessionStore() {
     new Set(),
   );
 
+  // ---------------------------------------------------------------------------
+  // Archived features — renderer-side cache (D7, D8, AC14, AC15, AC16)
+  // ---------------------------------------------------------------------------
+
+  const [archivedFeatures, setArchivedFeatures] = useState<
+    ArchivedFeatureRecord[]
+  >([]);
+
+  /**
+   * archiveExpanded — whether the Archived section is open in the sidebar.
+   * Default false per R15 ("collapsed by default on first render").
+   * Persisted to the Tauri settings store on change (D7).
+   */
+  const [archiveExpanded, setArchiveExpandedState] = useState<boolean>(false);
+
+  /**
+   * Ref tracking the previous value of archiveExpanded so the effect can detect
+   * a false→true transition (the only transition that triggers a cache refresh per D8).
+   */
+  const prevArchiveExpandedRef = useRef<boolean>(false);
+
+  /** Fetch archived features and update the renderer-side cache. */
+  const refreshArchivedFeatures = useCallback(() => {
+    invoke<ArchivedFeatureRecord[]>("list_archived_features")
+      .then((records) => {
+        setArchivedFeatures(records);
+      })
+      .catch(() => {
+        // IPC error is non-fatal; keep the current (possibly empty) cache.
+      });
+  }, []);
+
+  // Populate the cache on mount.
+  useEffect(() => {
+    refreshArchivedFeatures();
+  }, [refreshArchivedFeatures]);
+
+  // Re-populate on add_repo / remove_repo Tauri events (D8: "on repo add/remove").
+  useEffect(() => {
+    const unlisteners: Array<() => void> = [];
+
+    listen("add_repo", () => {
+      refreshArchivedFeatures();
+    }).then((fn) => unlisteners.push(fn));
+
+    listen("remove_repo", () => {
+      refreshArchivedFeatures();
+    }).then((fn) => unlisteners.push(fn));
+
+    return () => {
+      for (const fn of unlisteners) fn();
+    };
+  }, [refreshArchivedFeatures]);
+
+  // Refresh when archiveExpanded flips false→true (D8: "cache refresh on expand").
+  useEffect(() => {
+    if (!prevArchiveExpandedRef.current && archiveExpanded) {
+      refreshArchivedFeatures();
+    }
+    prevArchiveExpandedRef.current = archiveExpanded;
+  }, [archiveExpanded, refreshArchivedFeatures]);
+
+  /**
+   * setArchiveExpanded — updates in-memory state and persists to the Tauri
+   * settings store via update_settings (D7: "mirrored to the Tauri settings
+   * store on change"). The write is fire-and-forget; IPC errors are non-fatal.
+   */
+  const setArchiveExpanded = useCallback((next: boolean) => {
+    setArchiveExpandedState(next);
+    invoke("update_settings", { archive_expanded: next }).catch(() => undefined);
+  }, []);
+
+  // ---------------------------------------------------------------------------
+  // Collapse state for repo group headers
+  // ---------------------------------------------------------------------------
+
   const toggleRepoCollapse = useCallback((repoId: string) => {
     setCollapsedRepoIds((prev) => {
       const next = new Set(prev);
@@ -137,5 +231,8 @@ export function useSessionStore() {
     collapsedRepoIds,
     toggleRepoCollapse,
     DEFAULT_FILTER,
+    archivedFeatures,
+    archiveExpanded,
+    setArchiveExpanded,
   };
 }
