@@ -40,3 +40,4 @@
 - 2026-04-22 Developer — T8 done (components.css: agent-pill + sidebar-dot + archived-section classes, zero hex leaks)
 - 2026-04-22 review result — wave 2 phase 1 verdict=NITS (T8 4 style advisories: arch-badge naming, 3 WHAT comments); T8 merged
 - 2026-04-22 Developer — T9 done (AgentPill.tsx + test + i18n role.* keys)
+- 2026-04-22 review result — wave 2 phase 2 verdict=NITS (T9 test access pattern advisory); T9 merged

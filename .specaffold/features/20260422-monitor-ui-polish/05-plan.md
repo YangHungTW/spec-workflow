@@ -486,7 +486,7 @@ Effective W4 parallelism: T16 ∥ T17; then T18 after T16; T19 after T16+T17+T18
 - **Verify**: `cd flow-monitor && npm run test -- src/components/__tests__/AgentPill.test.tsx` passes.
 - **Depends on**: T8
 - **Parallel-safe-with**: — (gates T10, T11, T12 within W2)
-- [ ]
+- [x]
 
 ## T10 — Integrate AgentPill into SessionCard (new row)
 - **Milestone**: M3 (W2)
