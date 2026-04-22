@@ -32,3 +32,5 @@
 - 2026-04-22 Developer — T3 done (test/t76_agent_color_frontmatter.sh)
 - 2026-04-22 review result — wave 0 phase 2 verdict=NITS (T3 file re-read NIT); T3 merged; wave 0 complete (T1, T2, T3)
 - 2026-04-22 Developer — T4 done (archive_discovery.rs + classifier + inline tests)
+- 2026-04-22 Developer — T5 done (artefact_presence.rs + guards + inline tests)
+- 2026-04-22 review result — wave 1 phase 1 verdict=NITS (T4 path-trav settings, 2 comment WHAT; T5 canonicalize-after-join advisory, redundant metadata advisory); T4, T5 merged

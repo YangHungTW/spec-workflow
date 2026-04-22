@@ -1,5 +1,6 @@
 pub mod archive_discovery;
 pub mod audit;
+pub mod artefact_presence;
 pub mod command_taxonomy;
 pub mod invoke;
 pub mod ipc;
