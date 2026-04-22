@@ -3,7 +3,7 @@
 - **slug**: 20260422-monitor-ui-polish
 - **has-ui**: true
 - **tier**: audited
-- **stage**: implement
+- **stage**: validate
 - **created**: 2026-04-22
 - **updated**: 2026-04-22
 
@@ -14,7 +14,7 @@
 - [x] tech          (04-tech.md)                 — Architect
 - [x] plan          (05-plan.md)                 — TPM  [merged: narrative + task checklist]
 - [x] implement     (05-plan.md tasks checked off) — Developer
-- [ ] validate      (08-validate.md, verdict PASS) — QA-tester + QA-analyst  [merged: verify + gap-check]
+- [x] validate      (08-validate.md, verdict PASS) — QA-tester + QA-analyst  [merged: verify + gap-check]
 - [ ] archive       (moved to .specaffold/archive/)     — TPM
 
 ## Notes
@@ -59,3 +59,4 @@
 - 2026-04-22 implement — all 19 tasks complete; wave 4 closed; implement stage done
 - 2026-04-22 validate — slug=20260422-monitor-ui-polish verdict=BLOCK (tester AC17 italic never applied at runtime; analyst R18 prop-name mismatch onArchivedFeatureClick vs onArchivedRowClick — archived row click dead); see 08-validate.md
 - 2026-04-22 Developer — validate-fix1: AC17 italic + R18 prop rename
+- 2026-04-22 validate — slug=20260422-monitor-ui-polish verdict=NITS (advisory findings in 08-validate.md); re-run after fix1 merge
