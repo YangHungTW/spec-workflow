@@ -3,6 +3,8 @@ import { useTranslation } from "../i18n";
 import { StagePill, STAGE_KEYS, type StageKey } from "./StagePill";
 import { IdleBadge, type IdleState } from "./IdleBadge";
 import { ActionStrip } from "./ActionStrip";
+import { AgentPill } from "./AgentPill";
+import { roleForSession } from "../agentPalette";
 import type { SessionState } from "../stores/sessionStore";
 import type { InvokeStore } from "../stores/invokeStore";
 
@@ -143,6 +145,11 @@ export function SessionCard({
         <div className="session-card__slug-row">
           <span className="session-card__slug">{slug}</span>
           <StagePill stage={stage} />
+        </div>
+
+        {/* Agent role row — between slug/stage and note excerpt (D5, AC9) */}
+        <div className="session-card__agent-row">
+          <AgentPill role={roleForSession({ stage })} />
         </div>
       </header>
 
