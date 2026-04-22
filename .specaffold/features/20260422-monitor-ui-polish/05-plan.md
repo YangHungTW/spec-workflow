@@ -503,7 +503,7 @@ Effective W4 parallelism: T16 ∥ T17; then T18 after T16; T19 after T16+T17+T18
 - **Verify**: `cd flow-monitor && npm run test -- src/components/__tests__/SessionCard.test.tsx` passes.
 - **Depends on**: T9
 - **Parallel-safe-with**: T11, T12
-- [ ]
+- [x]
 
 ## T11 — Integrate AgentPill into CardDetailHeader
 - **Milestone**: M3 (W2)
@@ -519,7 +519,7 @@ Effective W4 parallelism: T16 ∥ T17; then T18 after T16; T19 after T16+T17+T18
 - **Verify**: `cd flow-monitor && npm run test -- src/components/__tests__/CardDetailHeader.test.tsx` passes.
 - **Depends on**: T9
 - **Parallel-safe-with**: T10, T12
-- [ ]
+- [x]
 
 ## T12 — Colour NotesTimeline role span
 - **Milestone**: M3 (W2)
@@ -540,7 +540,7 @@ Effective W4 parallelism: T16 ∥ T17; then T18 after T16; T19 after T16+T17+T18
 - **Verify**: `cd flow-monitor && npm run test -- src/components/__tests__/NotesTimeline.test.tsx` passes.
 - **Depends on**: T9
 - **Parallel-safe-with**: T10, T11
-- [ ]
+- [x]
 
 ## T13 — sessionStore: archivedFeatures array + archiveExpanded setting
 - **Milestone**: M4 (W3)
