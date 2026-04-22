@@ -66,6 +66,7 @@ function App() {
               <Route path="/" element={<MainWindow />} />
               <Route path="/repo/:repoId" element={<MainWindow />} />
               <Route path="/feature/:repoId/:slug" element={<CardDetail />} />
+              <Route path="/feature/:repoId/archived/:slug" element={<CardDetail isArchived />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/compact" element={<CompactPanel />} />
             </Routes>

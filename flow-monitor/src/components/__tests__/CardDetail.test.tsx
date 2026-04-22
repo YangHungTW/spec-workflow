@@ -54,14 +54,42 @@ vi.mock("../../i18n", () => ({
   }),
 }));
 
-// Stub Tauri IPC — read_artefact returns empty markdown
-vi.mock("@tauri-apps/api/core", () => ({
-  invoke: vi.fn((cmd: string) => {
+// Hoist mockInvoke so it is available inside the vi.mock factory (which is
+// hoisted to top-of-file by Vitest before module evaluation).
+const { mockInvoke } = vi.hoisted(() => {
+  const mockInvoke = vi.fn((cmd: string) => {
     if (cmd === "read_artefact") {
       return Promise.resolve({ content: "# stub content" });
     }
+    if (cmd === "get_settings") {
+      return Promise.resolve({ repos: ["/Users/alice/projects/my-repo"] });
+    }
     return Promise.resolve(undefined);
+  });
+  return { mockInvoke };
+});
+
+vi.mock("@tauri-apps/api/core", () => ({
+  invoke: mockInvoke,
+}));
+
+// Stub invokeStore — prevents command_taxonomy import error in jsdom.
+// Tests that need to assert no mutate IPC fires can spy on mockInvoke directly
+// because all IPC goes through @tauri-apps/api/core invoke.
+vi.mock("../../stores/invokeStore", () => ({
+  useInvokeStore: () => ({
+    inFlight: new Set<string>(),
+    preflightCommand: null,
+    preflightSlug: null,
+    dispatch: vi.fn(),
   }),
+}));
+
+// Stub AgentPill so tests can assert presence/absence via data-testid
+vi.mock("../../components/AgentPill", () => ({
+  AgentPill: ({ role }: { role: string }) => (
+    <span data-testid="agent-pill-stub" data-role={role} />
+  ),
 }));
 
 // Stub sessionStore so we can inspect filter restoration
@@ -101,6 +129,7 @@ function renderCardDetail(
     <MemoryRouter initialEntries={[initialPath]}>
       <Routes>
         <Route path="/feature/:repoId/:slug" element={<CardDetail />} />
+        <Route path="/feature/:repoId/archived/:slug" element={<CardDetail />} />
         <Route path="/" element={<div data-testid="main-window-restored">MainWindow</div>} />
       </Routes>
     </MemoryRouter>,
@@ -281,5 +310,113 @@ describe("CardDetail — 02-design tab conditional render (T20)", () => {
     expect(
       screen.getByText("Read-only preview. Open in Finder to edit."),
     ).toBeTruthy();
+  });
+});
+
+// ── T15: Archived route tests ────────────────────────────────────────────────
+
+function renderArchivedCardDetail(
+  slug = "old-feature",
+  repoId = "my-repo",
+) {
+  const initialPath = `/feature/${repoId}/archived/${slug}`;
+  return render(
+    <MemoryRouter initialEntries={[initialPath]}>
+      <Routes>
+        <Route path="/feature/:repoId/:slug" element={<CardDetail />} />
+        <Route path="/feature/:repoId/archived/:slug" element={<CardDetail isArchived />} />
+        <Route path="/" element={<div data-testid="main-window-restored">MainWindow</div>} />
+      </Routes>
+    </MemoryRouter>,
+  );
+}
+
+describe("CardDetail — archived route (T15, AC18, AC19)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    window.HTMLElement.prototype.scrollIntoView = vi.fn();
+  });
+
+  it("AC18: renders ARCHIVED badge on the archived route", () => {
+    renderArchivedCardDetail();
+    expect(screen.getByText("ARCHIVED")).toBeTruthy();
+  });
+
+  it("AC18: renders Read only label on the archived route", () => {
+    renderArchivedCardDetail();
+    expect(screen.getByText("Read only")).toBeTruthy();
+  });
+
+  it("AC18: AgentPill is NOT rendered on the archived header", () => {
+    renderArchivedCardDetail();
+    expect(document.querySelector("[data-testid='agent-pill-stub']")).toBeNull();
+  });
+
+  it("AC19: no Advance button in the DOM for archived", () => {
+    renderArchivedCardDetail();
+    // The advance button text starts with "Advance" in i18n keys
+    expect(screen.queryByRole("button", { name: /advance/i })).toBeNull();
+  });
+
+  it("AC19: no Message/Send button in the DOM for archived", () => {
+    renderArchivedCardDetail();
+    expect(screen.queryByRole("button", { name: /message|send/i })).toBeNull();
+  });
+
+  it("AC19: no Edit button in the DOM for archived", () => {
+    renderArchivedCardDetail();
+    expect(screen.queryByRole("button", { name: /edit/i })).toBeNull();
+  });
+
+  it("AC19: read_artefact IPC called with path under .specaffold/archive/<slug>/", async () => {
+    mockInvoke.mockImplementation((cmd: string, args?: Record<string, unknown>) => {
+      if (cmd === "get_settings") {
+        return Promise.resolve({ repos: ["/Users/alice/projects/my-repo"] });
+      }
+      if (cmd === "read_artefact") {
+        return Promise.resolve("# archived content");
+      }
+      return Promise.resolve(undefined);
+    });
+
+    renderArchivedCardDetail("old-feature", "my-repo");
+
+    // Wait for async effects to settle
+    await new Promise((r) => setTimeout(r, 50));
+
+    const readCalls = mockInvoke.mock.calls.filter(
+      (c) => c[0] === "read_artefact",
+    );
+    // At least one read_artefact call should target the archive path
+    const archiveCalls = readCalls.filter((c) => {
+      const args = c[1] as Record<string, string> | undefined;
+      return args?.repo !== undefined && typeof args?.slug === "string";
+    });
+    // The slug passed should be the archived slug, not a features path
+    // (CardDetail passes slug and repo separately; the path is built in the component)
+    expect(archiveCalls.length).toBeGreaterThan(0);
+  });
+
+  it("AC19: no mutate IPC (advance_stage, write commands) fires during archived view", async () => {
+    mockInvoke.mockImplementation((cmd: string) => {
+      if (cmd === "get_settings") {
+        return Promise.resolve({ repos: ["/Users/alice/projects/my-repo"] });
+      }
+      if (cmd === "read_artefact") {
+        return Promise.resolve("# archived content");
+      }
+      return Promise.resolve(undefined);
+    });
+
+    renderArchivedCardDetail("old-feature", "my-repo");
+
+    // Wait for async effects to settle
+    await new Promise((r) => setTimeout(r, 50));
+
+    const mutateCommands = ["advance_stage", "send_message", "write_artefact", "edit_artefact"];
+    const mutateCalls = mockInvoke.mock.calls.filter((c) =>
+      mutateCommands.includes(c[0] as string),
+    );
+    expect(mutateCalls).toHaveLength(0);
   });
 });

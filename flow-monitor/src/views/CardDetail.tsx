@@ -33,7 +33,12 @@ interface SettingsResponse {
   repos?: string[];
 }
 
-function CardDetail() {
+interface CardDetailProps {
+  /** When true, the view is read-only — path resolves under .specaffold/archive/ (D9). */
+  isArchived?: boolean;
+}
+
+function CardDetail({ isArchived = false }: CardDetailProps) {
   const { repoId, slug } = useParams<{ repoId: string; slug: string }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -114,10 +119,11 @@ function CardDetail() {
     navigate(buildBackUrl());
   }
 
-  // Real absolute feature path from resolved repo (was hardcoded `/${repoId}/...`)
+  // Compute the feature directory — archive path when isArchived, features path otherwise (D9).
+  // ONE logic branch, one path string per D9 constraint.
   const featurePath = repoFullPath
-    ? `${repoFullPath}/.specaffold/features/${validSlug}`
-    : `/${validRepoId}/.specaffold/features/${validSlug}`;
+    ? `${repoFullPath}/.specaffold/${isArchived ? "archive" : "features"}/${validSlug}`
+    : `/${validRepoId}/.specaffold/${isArchived ? "archive" : "features"}/${validSlug}`;
 
   const stage: StageKey = "implement";
   const idleState: IdleState = "none";
@@ -133,6 +139,7 @@ function CardDetail() {
         featurePath={featurePath}
         onBack={handleBack}
         invokeStore={invokeStore}
+        isArchived={isArchived}
       />
 
       <div className="card-detail__body">
