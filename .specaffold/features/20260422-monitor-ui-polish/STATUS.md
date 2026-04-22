@@ -57,3 +57,4 @@
 - 2026-04-22 review result — wave 4 phase 2 retry verdict=PASS (T18 all 3 axes PASS after retry 1 added IPC shape guard); T18 merged
 - 2026-04-22 T19 regression sweep — Rust 126 lib + 56 integration all pass; frontend 480 pass / 11 pre-existing failures (unchanged from 06432ce baseline per risk log #4); no NEW failures introduced by this feature
 - 2026-04-22 implement — all 19 tasks complete; wave 4 closed; implement stage done
+- 2026-04-22 validate — slug=20260422-monitor-ui-polish verdict=BLOCK (tester AC17 italic never applied at runtime; analyst R18 prop-name mismatch onArchivedFeatureClick vs onArchivedRowClick — archived row click dead); see 08-validate.md
