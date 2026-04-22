@@ -17,7 +17,14 @@
  * i18n note: Notes content is verbatim from the markdown file (AC9.c) and is
  * NOT passed through useTranslation — the date, role, and message are rendered
  * as-is. This is an explicit carve-out from the i18n discipline.
+ *
+ * T12 (AC11): role span receives inline color via normaliseRoleLabel +
+ * ROLE_TO_COLOR. Only the colour changes; font-weight, italic, and layout
+ * are preserved (R11 verbatim).
  */
+
+import type { Role } from "../agentPalette";
+import { ROLE_TO_COLOR } from "../agentPalette";
 
 export interface NoteEntry {
   /** ISO-8601 date string from the STATUS Notes line — rendered verbatim (AC9.c). */
@@ -30,6 +37,52 @@ export interface NoteEntry {
 
 interface NotesTimelineProps {
   notes: NoteEntry[];
+}
+
+/** All 10 canonical role keys for O(1) membership lookup. */
+const ROLE_SET: ReadonlySet<string> = new Set<Role>([
+  "pm",
+  "architect",
+  "tpm",
+  "developer",
+  "designer",
+  "qa-analyst",
+  "qa-tester",
+  "reviewer-security",
+  "reviewer-performance",
+  "reviewer-style",
+]);
+
+/**
+ * Normalise a free-form role string from STATUS Notes into a canonical Role key.
+ *
+ * Strategy (AC11 spec):
+ *   1. Lowercase the input.
+ *   2. Strip parentheses so "reviewer (security)" becomes "reviewer security".
+ *   3. Replace one or more whitespace chars with a single "-".
+ *   4. Collapse repeated dashes that may arise from adjacent parens/spaces.
+ *   5. Trim leading/trailing dashes.
+ *   6. Return null if the result is not one of the 10 known Role keys.
+ *
+ * Examples:
+ *   "Developer"           → "developer"
+ *   "PM"                  → "pm"
+ *   "Reviewer (security)" → "reviewer-security"
+ *   "reviewer-security"   → "reviewer-security"
+ *   "REVIEWER-SECURITY"   → "reviewer-security"
+ *   "UnknownRole"         → null
+ */
+function normaliseRoleLabel(raw: string): Role | null {
+  const normalised = raw
+    .toLowerCase()
+    .replace(/[()]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-{2,}/g, "-")
+    .replace(/^-|-$/g, "");
+  if (ROLE_SET.has(normalised)) {
+    return normalised as Role;
+  }
+  return null;
 }
 
 /**
@@ -53,20 +106,29 @@ export function NotesTimeline({ notes }: NotesTimelineProps) {
       data-testid="notes-timeline"
       aria-label="Notes timeline"
     >
-      {sorted.map((entry, idx) => (
-        <li
-          key={`${entry.date}-${entry.role}-${idx}`}
-          className="notes-timeline__entry"
-        >
-          <time dateTime={entry.date} className="notes-timeline__date">
-            {entry.date}
-          </time>
-          {" "}
-          <span className="notes-timeline__role">{entry.role}</span>
-          {" \u2014 "}
-          <span className="notes-timeline__message">{entry.message}</span>
-        </li>
-      ))}
+      {sorted.map((entry, idx) => {
+        const role = normaliseRoleLabel(entry.role);
+        const roleStyle =
+          role !== null
+            ? { color: `var(--agent-${ROLE_TO_COLOR[role]}-dot)` }
+            : undefined;
+        return (
+          <li
+            key={`${entry.date}-${entry.role}-${idx}`}
+            className="notes-timeline__entry"
+          >
+            <time dateTime={entry.date} className="notes-timeline__date">
+              {entry.date}
+            </time>
+            {" "}
+            <span className="notes-timeline__role" style={roleStyle}>
+              {entry.role}
+            </span>
+            {" — "}
+            <span className="notes-timeline__message">{entry.message}</span>
+          </li>
+        );
+      })}
     </ol>
   );
 }

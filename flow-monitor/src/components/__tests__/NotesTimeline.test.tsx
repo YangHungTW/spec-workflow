@@ -4,6 +4,11 @@
  * AC9.c — Notes rendered, source-order date prefixes preserved verbatim
  * AC9.i — newest-first order, NO truncation (B1 ceiling <100 entries assumed)
  *
+ * T12 additions: role-span colour via normaliseRoleLabel (AC11)
+ * - Known role renders style.color = var(--agent-<colour>-dot)
+ * - Unknown role renders no inline style
+ * - Case variants (pm, PM, Pm) colour identically
+ *
  * Stub strategy: component accepts notes prop directly; no IPC mock needed.
  * Real data wiring (IPC read_artefact → parser) lands in a later integration task.
  */
@@ -93,5 +98,75 @@ describe("NotesTimeline", () => {
     const items = document.querySelectorAll("li");
     expect(items[0].querySelector("time")?.textContent).toBe("2026-06-01");
     expect(items[1].querySelector("time")?.textContent).toBe("2026-01-01");
+  });
+
+  // T12: AC11 — role-span colour via normaliseRoleLabel
+  describe("role-span colour (AC11)", () => {
+    it("known role renders style.color containing var(--agent-<colour>-dot)", () => {
+      render(
+        <NotesTimeline
+          notes={[{ date: "2026-04-22", role: "developer", message: "done" }]}
+        />,
+      );
+      const roleSpan = document.querySelector(".notes-timeline__role") as HTMLElement;
+      expect(roleSpan).toBeTruthy();
+      // developer maps to green
+      expect(roleSpan.style.color).toBe("var(--agent-green-dot)");
+    });
+
+    it("unknown role renders no inline color style", () => {
+      render(
+        <NotesTimeline
+          notes={[{ date: "2026-04-22", role: "UnknownRoleXYZ", message: "test" }]}
+        />,
+      );
+      const roleSpan = document.querySelector(".notes-timeline__role") as HTMLElement;
+      expect(roleSpan).toBeTruthy();
+      expect(roleSpan.style.color).toBe("");
+    });
+
+    it("case variants pm, PM, Pm all produce the same inline color", () => {
+      const { unmount } = render(
+        <NotesTimeline
+          notes={[{ date: "2026-04-22", role: "pm", message: "lowercase" }]}
+        />,
+      );
+      const spanLower = document.querySelector(".notes-timeline__role") as HTMLElement;
+      const colorLower = spanLower.style.color;
+      unmount();
+
+      render(
+        <NotesTimeline
+          notes={[{ date: "2026-04-22", role: "PM", message: "uppercase" }]}
+        />,
+      );
+      const spanUpper = document.querySelector(".notes-timeline__role") as HTMLElement;
+      const colorUpper = spanUpper.style.color;
+      unmount();
+
+      render(
+        <NotesTimeline
+          notes={[{ date: "2026-04-22", role: "Pm", message: "mixed" }]}
+        />,
+      );
+      const spanMixed = document.querySelector(".notes-timeline__role") as HTMLElement;
+      const colorMixed = spanMixed.style.color;
+
+      // All three must be non-empty and identical (pm maps to purple)
+      expect(colorLower).toBe("var(--agent-purple-dot)");
+      expect(colorUpper).toBe(colorLower);
+      expect(colorMixed).toBe(colorLower);
+    });
+
+    it("reviewer paren variant 'Reviewer (security)' normalises to reviewer-security colour", () => {
+      render(
+        <NotesTimeline
+          notes={[{ date: "2026-04-22", role: "Reviewer (security)", message: "sec" }]}
+        />,
+      );
+      const roleSpan = document.querySelector(".notes-timeline__role") as HTMLElement;
+      // reviewer-security maps to red
+      expect(roleSpan.style.color).toBe("var(--agent-red-dot)");
+    });
   });
 });
