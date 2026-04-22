@@ -37,3 +37,5 @@
 - 2026-04-22 Developer — T6 done (archive_discovery_tests.rs + artefact_presence_tests.rs)
 - 2026-04-22 Developer — T7 done (invoke_handler wiring for 2 cmds)
 - 2026-04-22 review result — wave 1 phase 2 verdict=NITS (T6 6 WHAT comments in tests; T7 1 comment advisory); T6, T7 merged; wave 1 complete (T4 T5 T6 T7)
+- 2026-04-22 Developer — T8 done (components.css: agent-pill + sidebar-dot + archived-section classes, zero hex leaks)
+- 2026-04-22 review result — wave 2 phase 1 verdict=NITS (T8 4 style advisories: arch-badge naming, 3 WHAT comments); T8 merged

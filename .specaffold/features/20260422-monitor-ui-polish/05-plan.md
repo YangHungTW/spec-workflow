@@ -460,7 +460,7 @@ Effective W4 parallelism: T16 ∥ T17; then T18 after T16; T19 after T16+T17+T18
 - **Verify**: `cd flow-monitor && npm run build` succeeds (CSS is valid); AgentPill snapshot/DevTools parity will be verified by T9's test.
 - **Depends on**: T1
 - **Parallel-safe-with**: — (T8 gates T9, T10, T11, T12 within W2)
-- [ ]
+- [x]
 
 ## T9 — New `AgentPill` component + component test
 - **Milestone**: M3 (W2)
