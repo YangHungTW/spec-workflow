@@ -64,35 +64,21 @@ pub struct ArchivedFeatureRecord {
 }
 
 // ---------------------------------------------------------------------------
-// IPC command
+// IPC command — inner fn + thin wrapper (Pattern A)
 // ---------------------------------------------------------------------------
 
-/// Return a flat list of archived features across all registered repositories.
+/// Core implementation of archive discovery: takes the registered repo list
+/// directly so integration tests can call it without constructing `tauri::State`.
 ///
-/// For each registered repo, reads `.specaffold/archive/` once via a single
-/// `read_dir` call. Entries are classified by `classify_archive_entry`; only
-/// `Feature(slug)` variants are included in the result. Non-existent archive
-/// directories are silently skipped — not every repo has archived features.
-///
-/// No recursion, no per-entry file opens beyond `read_dir`. O(N) across the
-/// archive directory per repo (performance rule: no shell-out in loop, O(n)
-/// classifier pattern).
-#[tauri::command]
-pub fn list_archived_features(
-    settings: tauri::State<'_, SettingsState>,
+/// For each repo, reads `.specaffold/archive/` once via a single `read_dir`
+/// call. Non-existent archive directories are silently skipped. O(N) entries
+/// per repo, no recursion, no per-entry file opens.
+pub fn list_archived_features_inner(
+    repos: &[PathBuf],
 ) -> Result<Vec<ArchivedFeatureRecord>, IpcError> {
-    // Snapshot the registered repos without holding the lock during I/O.
-    let repos: Vec<PathBuf> = {
-        let guard = settings.0.lock().map_err(|_| IpcError {
-            code: "LOCK_POISONED",
-            message: "settings lock is poisoned".into(),
-        })?;
-        guard.repos.clone()
-    };
-
     let mut records: Vec<ArchivedFeatureRecord> = Vec::new();
 
-    for repo in &repos {
+    for repo in repos {
         let archive_dir = repo.join(".specaffold").join("archive");
 
         // Missing archive directory is not an error — skip gracefully.
@@ -123,6 +109,23 @@ pub fn list_archived_features(
     }
 
     Ok(records)
+}
+
+/// Tauri command wrapper: unpacks `SettingsState`, then delegates to the
+/// testable inner function.
+#[tauri::command]
+pub fn list_archived_features(
+    settings: tauri::State<'_, SettingsState>,
+) -> Result<Vec<ArchivedFeatureRecord>, IpcError> {
+    // Snapshot the registered repos without holding the lock during I/O.
+    let repos: Vec<PathBuf> = {
+        let guard = settings.0.lock().map_err(|_| IpcError {
+            code: "LOCK_POISONED",
+            message: "settings lock is poisoned".into(),
+        })?;
+        guard.repos.clone()
+    };
+    list_archived_features_inner(&repos)
 }
 
 // ---------------------------------------------------------------------------
