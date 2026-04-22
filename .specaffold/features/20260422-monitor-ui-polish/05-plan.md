@@ -375,7 +375,7 @@ Effective W4 parallelism: T16 ∥ T17; then T18 after T16; T19 after T16+T17+T18
 - **Verify**: sibling test file at T6 (`src-tauri/tests/archive_discovery_tests.rs`) — `cd flow-monitor/src-tauri && cargo test archive_discovery` passes after T6 lands.
 - **Depends on**: —
 - **Parallel-safe-with**: T5
-- [ ]
+- [x]
 
 ## T5 — Rust module: `list_feature_artefacts` with path-traversal guard
 - **Milestone**: M2 (W1)
@@ -397,7 +397,7 @@ Effective W4 parallelism: T16 ∥ T17; then T18 after T16; T19 after T16+T17+T18
 - **Verify**: sibling test file at T6 (`src-tauri/tests/artefact_presence_tests.rs`) — `cd flow-monitor/src-tauri && cargo test artefact_presence` passes after T6 lands.
 - **Depends on**: —
 - **Parallel-safe-with**: T4
-- [ ]
+- [x]
 
 ## T6 — Rust tests for the two new commands
 - **Milestone**: M2 (W1)
