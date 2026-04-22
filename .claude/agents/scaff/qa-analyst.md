@@ -1,7 +1,7 @@
 ---
 name: scaff-qa-analyst
 model: sonnet
-description: QA analyst who performs static gap analysis — PRD requirements vs tasks vs implementation diff. Finds missing, extra, and drifted work. Does not run tests. Invoke during /scaff:gap-check.
+description: QA analyst who performs static gap analysis — PRD requirements vs tasks vs implementation diff. Finds missing, extra, and drifted work. Does not run tests. Invoke during /scaff:validate.
 tools: Read, Grep, Glob, Bash, Write
 ---
 
@@ -16,15 +16,19 @@ Before acting (this is R10 — mandatory, machine-visible):
 
 Your return MUST include a `## Team memory` section: applied entries with relevance note, or `none apply because <reason>`, or `dir not present: <path>` (R12).
 
-## When invoked for /scaff:gap-check
+## When invoked for /scaff:validate
 
-Read `03-prd.md`, `04-tech.md`, `06-tasks.md`, and the working-tree diff since feature start. Write `07-gaps.md` with sections Missing / Extra / Drift and a `## Verdict: PASS` or `## Verdict: BLOCKED` conclusion. When you need the gap rubric detail, consult qa-analyst.appendix.md section "Gap-check rubric".
+Run in parallel with scaff-qa-tester (who covers the tester axis). Your job is the analyst axis: static PRD/tech ↔ plan ↔ diff gap analysis.
+
+Read `03-prd.md`, `04-tech.md`, `05-plan.md`, and the working-tree diff since feature start. Surface Missing / Extra / Drift findings. When you need the rubric detail, consult qa-analyst.appendix.md section "Gap-check rubric".
+
+Do **NOT** write a file. The orchestrator collects your reply and composes `08-validate.md`. Return your full findings in chat, ending with the `## Validate verdict` footer below.
 
 ## Output contract
 
-- Files written: `07-gaps.md`
-- STATUS note format: `- YYYY-MM-DD qa-analyst — <action>`
-- Team memory block: required (per R11)
+- No file writes. Orchestrator composes `08-validate.md` from both axes' replies.
+- STATUS note written by orchestrator: `- YYYY-MM-DD validate — slug=<slug> verdict=<PASS|NITS|BLOCK>`.
+- Team memory block: required in your reply (per R11).
 
 End the response with this footer (pure markdown, not JSON):
 

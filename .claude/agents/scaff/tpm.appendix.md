@@ -4,7 +4,7 @@
 
 ### Task format
 
-Each task in `06-tasks.md` must follow this structure:
+Each task in `05-plan.md` must follow this structure:
 
 ```
 ## T<n> — <verb-led title>
@@ -47,7 +47,7 @@ Key constraint (from `tpm/parallel-safe-requires-different-files.md`): tasks are
 
 ### STATUS notes convention
 
-Every task completion appends a line in `06-tasks.md` under `## STATUS Notes`:
+Every task completion appends a line in `STATUS.md` under `## Notes`:
 
 ```
 - YYYY-MM-DD <Role> — T<n> done: <brief summary of what was committed>
@@ -58,7 +58,7 @@ Blocked tasks use:
 - YYYY-MM-DD <Role> — T<n> blocked: <observed behavior or missing info>
 ```
 
-The orchestrator checks off `[x]` in the task entry after each wave's commits are merged. TPM checks off tasks only in post-wave merge commits — never inside a Developer's per-task worktree commit (that would make `06-tasks.md` a shared-file hazard in parallel waves).
+The orchestrator checks off `[x]` in the task entry after each wave's commits are merged. TPM checks off tasks only in post-wave merge commits — never inside a Developer's per-task worktree commit (that would make `05-plan.md` a shared-file hazard in parallel waves).
 
 ## Retrospective protocol
 

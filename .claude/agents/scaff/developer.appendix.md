@@ -14,7 +14,7 @@ Reference material for the Developer agent. Read when the core file's pointer tr
 ### Finish and commit
 
 8. `git add -A && git commit -m "$TASK_ID: <short title>"` in the worktree.
-9. Do NOT edit `06-tasks.md` or `STATUS.md` — those live in the feature folder and multiple parallel developers would clobber each other. The orchestrator updates them after wave collection.
+9. Do NOT edit `05-plan.md` or `STATUS.md` — those live in the feature folder and multiple parallel developers would clobber each other. The orchestrator updates them after wave collection.
 10. Return a summary to the orchestrator: task id, commit SHA, tests added, files changed, suite green.
 
 ### Worktree discipline

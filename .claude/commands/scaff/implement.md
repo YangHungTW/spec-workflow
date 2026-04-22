@@ -12,14 +12,10 @@ Wave-based parallel execution. Default behaviour: run **every remaining wave** e
 
 1. Locate task file:
    ```bash
-   if [ -f "$feature_dir/06-tasks.md" ]; then
-      TASK_FILE="$feature_dir/06-tasks.md"           # legacy / archived feature
-   elif [ -f "$feature_dir/05-plan.md" ] && \
-        grep -q '^- \[ \]' "$feature_dir/05-plan.md" 2>/dev/null; then
-      TASK_FILE="$feature_dir/05-plan.md"             # new merged shape
-   else
-      echo "ERROR: neither 06-tasks.md nor task-bearing 05-plan.md found" >&2
-      exit 2
+   TASK_FILE="$feature_dir/05-plan.md"
+   if [ ! -f "$TASK_FILE" ] || ! grep -q '^- \[ \]' "$TASK_FILE" 2>/dev/null; then
+     echo "ERROR: 05-plan.md missing or has no task checklist" >&2
+     exit 2
    fi
    ```
    Parse the **Tasks** list and **Wave schedule** from `$TASK_FILE`.

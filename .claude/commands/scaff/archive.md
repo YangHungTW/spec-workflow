@@ -2,7 +2,7 @@
 description: TPM archives a completed feature. Usage: /scaff:archive <slug> [--allow-unmerged REASON]
 ---
 
-1. Require the validation artefact's verdict is PASS or NITS. Prefer `08-validate.md` (new-shape merged artefact); fall back to `08-verify.md` (legacy) if the merged file is absent. If neither exists, or the found file's aggregate verdict is BLOCK, refuse and exit non-zero.
+1. Require `08-validate.md` exists and its aggregate verdict is `PASS` or `NITS`. If the file is absent or its verdict is `BLOCK`, refuse and exit non-zero.
 2. **Resolve tier and run merge-check** (skip to step 3 if `--allow-unmerged REASON` was supplied and REASON is non-empty):
 
    **Validate the slug and resolve `feature_dir`** (security: path traversal prevention):

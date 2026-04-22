@@ -2,7 +2,7 @@
 description: Validate a feature with qa-tester + qa-analyst in parallel; writes 08-validate.md. Usage: /scaff:validate <slug>
 ---
 
-Consolidated validate stage. Replaces the retired `/scaff:gap-check` + `/scaff:verify` pair. Runs the `tester` and `analyst` axes **in parallel** (D4), aggregates their verdicts via the shared aggregator (D5/R17), writes `08-validate.md`, and advances STATUS only on PASS or NITS.
+Consolidated validate stage. Runs the `tester` and `analyst` axes **in parallel**, aggregates their verdicts via the shared aggregator (`bin/scaff-aggregate-verdicts`), writes `08-validate.md`, and advances STATUS only on PASS or NITS.
 
 ## Steps
 
@@ -22,7 +22,7 @@ Consolidated validate stage. Replaces the retired `/scaff:gap-check` + `/scaff:v
    - (Archived features cannot be validated; use `/scaff:review` for post-archive spot checks.)
 
 3. **Require all implement tasks checked.**
-   - Read `$FEATURE_DIR/05-plan.md` if present, otherwise `$FEATURE_DIR/06-tasks.md`.
+   - Read `$FEATURE_DIR/05-plan.md`.
    - Search for unchecked task lines under the wave schedule section:
      ```sh
      unchecked="$(grep '^\- \[ \]' "$TASK_FILE" 2>/dev/null || true)"

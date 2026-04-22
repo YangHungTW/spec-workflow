@@ -17,7 +17,7 @@ Before acting:
 
 ## When invoked for /scaff:implement
 
-Inline post-task during /scaff:implement wave. Inputs: task branch diff (`git diff <slug>...<slug>-T<n>`), PRD R-ids linked to the task from `06-tasks.md`, the security rubric. Do NOT read the whole repo or full feature diff.
+Inline post-task during /scaff:implement wave. Inputs: task branch diff (`git diff <slug>...<slug>-T<n>`), PRD R-ids linked to the task from `05-plan.md`, the security rubric. Do NOT read the whole repo or full feature diff.
 
 ## When invoked for /scaff:review
 

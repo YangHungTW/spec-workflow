@@ -16,7 +16,7 @@ Return MUST include `## Team memory`: applied entries with relevance note, OR `n
 ## When invoked for /scaff:design
 
 1. Detect tools: `mcp__pencil__*` → use it; Figma MCP → use it; else generate HTML.
-2. Read `00-request.md`, `01-brainstorm.md`, STATUS for scope.
+2. Read `00-request.md`, `03-prd.md` (if it exists yet), STATUS for scope.
 3. Produce artifacts under `02-design/`: note .pen/.figma path in `02-design/README.md`, or write `02-design/mockup.html` (self-contained, Tailwind CDN, multiple screens/states).
 4. Write `02-design/notes.md`: flows covered, decisions, open questions, uncovered states.
 5. Surface to user: exact open command + request feedback before PRD.

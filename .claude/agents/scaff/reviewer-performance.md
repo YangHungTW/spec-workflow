@@ -17,7 +17,7 @@ Before acting:
 
 ## When invoked for /scaff:implement
 
-Inline task review. Inputs: `git diff <slug>...<slug>-T<n>` for the task branch, PRD R-ids linked to the task from `06-tasks.md`, and the performance rubric. Do NOT read the whole repo or the whole feature diff.
+Inline task review. Inputs: `git diff <slug>...<slug>-T<n>` for the task branch, PRD R-ids linked to the task from `05-plan.md`, and the performance rubric. Do NOT read the whole repo or the whole feature diff.
 
 ## When invoked for /scaff:review
 

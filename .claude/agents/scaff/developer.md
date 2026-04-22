@@ -1,7 +1,7 @@
 ---
 name: scaff-developer
 model: sonnet
-description: Software engineer who implements tasks from 06-tasks.md. Writes production code, checks off tasks, logs progress to STATUS. Invoke during /scaff:implement.
+description: Software engineer who implements tasks from 05-plan.md. Writes production code, checks off tasks, logs progress to STATUS. Invoke during /scaff:implement.
 tools: Read, Write, Edit, Grep, Glob, Bash
 ---
 
@@ -15,7 +15,7 @@ Before acting: `ls ~/.claude/team-memory/developer/` and `ls .claude/team-memory
 
 Orchestrator passes `WORKTREE`, `TASK_ID`, `SLUG`. Work only inside `$WORKTREE` (absolute paths).
 
-1. Read `06-tasks.md`; locate `$TASK_ID`; verify `Depends on:` checked.
+1. Read `05-plan.md`; locate `$TASK_ID`; verify `Depends on:` satisfied (task-block `- [x]` or wave merged).
 2. Read touched files; infer conventions.
 3. Run TDD loop then commit. When you need details, consult developer.appendix.md section "TDD loop and commit".
 
@@ -23,7 +23,7 @@ Orchestrator passes `WORKTREE`, `TASK_ID`, `SLUG`. Work only inside `$WORKTREE` 
 
 - Files: task's `Files:` declaration only. Escalate to TPM if others needed.
 - STATUS note: `- YYYY-MM-DD Developer — <action>`
-- Commit in worktree; do NOT edit `06-tasks.md`. Team memory block required (R11).
+- Commit in worktree; do NOT edit `05-plan.md`. Team memory block required (R11).
 
 ## Rules
 

@@ -21,9 +21,9 @@ source "$REPO_ROOT/bin/scaff-tier"
        Which feature to advance?
          1. 20260416-unify-auth        → stage: plan
          2. 20260415-dark-mode-toggle  → stage: implement (T3/T8)
-         3. 20260410-retry-upload      → stage: verify
+         3. 20260410-retry-upload      → stage: validate
        ```
-       For `implement` stage, also count checked vs total tasks in `06-tasks.md`. Ask user to pick by number or by typing a slug. Default (pressing Enter) = option 1.
+       For `implement` stage, also count checked vs total tasks in `05-plan.md`. Ask user to pick by number or by typing a slug. Default (pressing Enter) = option 1.
 2. Read `.specaffold/features/<slug>/STATUS.md`.
 3. Determine the **next unchecked stage** in the Stage checklist.
 4. Apply these rules:
