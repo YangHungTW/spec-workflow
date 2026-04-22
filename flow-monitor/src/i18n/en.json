@@ -8,6 +8,17 @@
   "sidebar.settings": "Settings",
   "sidebar.pollingFooter": "Polling · {interval}s",
 
+  "role.pm": "PM",
+  "role.architect": "Architect",
+  "role.tpm": "TPM",
+  "role.developer": "Developer",
+  "role.designer": "Designer",
+  "role.qa-analyst": "QA Analyst",
+  "role.qa-tester": "QA Tester",
+  "role.reviewer-security": "Reviewer",
+  "role.reviewer-performance": "Reviewer",
+  "role.reviewer-style": "Reviewer",
+
   "stage.request": "request",
   "stage.brainstorm": "brainstorm",
   "stage.design": "design",

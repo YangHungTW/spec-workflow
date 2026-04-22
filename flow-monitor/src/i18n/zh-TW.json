@@ -8,6 +8,17 @@
   "sidebar.settings": "設定",
   "sidebar.pollingFooter": "輪詢中 · 每 {interval} 秒",
 
+  "role.pm": "PM",
+  "role.architect": "架構師",
+  "role.tpm": "TPM",
+  "role.developer": "開發者",
+  "role.designer": "設計師",
+  "role.qa-analyst": "QA 分析師",
+  "role.qa-tester": "QA 測試員",
+  "role.reviewer-security": "審查員",
+  "role.reviewer-performance": "審查員",
+  "role.reviewer-style": "審查員",
+
   "stage.request": "需求",
   "stage.brainstorm": "腦力激盪",
   "stage.design": "設計",
