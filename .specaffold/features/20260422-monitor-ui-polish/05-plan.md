@@ -651,7 +651,7 @@ Effective W4 parallelism: T16 ∥ T17; then T18 after T16; T19 after T16+T17+T18
 - **Verify**: `cd flow-monitor && npm run test -- src/components/__tests__/TabStrip.test.tsx` passes.
 - **Depends on**: —
 - **Parallel-safe-with**: T17
-- [ ]
+- [x]
 
 ## T17 — CSS: tighten disabled-tab opacity + `::after` tooltip
 - **Milestone**: M5 (W4)
@@ -670,7 +670,7 @@ Effective W4 parallelism: T16 ∥ T17; then T18 after T16; T19 after T16+T17+T18
 - **Verify**: manual DevTools check (opacity 0.38 computed; hover reveals tooltip with correct text) — regression covered by T19 smoke run; CSS build validated by `cd flow-monitor && npm run build`.
 - **Depends on**: —
 - **Parallel-safe-with**: T16
-- [ ]
+- [x]
 
 ## T18 — CardDetail: compute `exists` from `list_feature_artefacts`
 - **Milestone**: M5 (W4)
