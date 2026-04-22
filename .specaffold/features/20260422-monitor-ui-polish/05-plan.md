@@ -312,7 +312,7 @@ Effective W4 parallelism: T16 ∥ T17; then T18 after T16; T19 after T16+T17+T18
 - **Verify**: `cd flow-monitor && npm run test -- src/__tests__/agentPalette.test.ts`
 - **Depends on**: —
 - **Parallel-safe-with**: T2
-- [ ]
+- [x]
 
 ## T2 — Add `color:` frontmatter to the 10 scaff agent files
 - **Milestone**: M1 (W0)
@@ -337,7 +337,7 @@ Effective W4 parallelism: T16 ∥ T17; then T18 after T16; T19 after T16+T17+T18
 - **Verify**: `bash test/t76_agent_color_frontmatter.sh` (sibling test task T3) — verifies AC1–AC5 including appendix-file untouched check.
 - **Depends on**: —
 - **Parallel-safe-with**: T1
-- [ ]
+- [x]
 
 ## T3 — Shell-level frontmatter assertion script
 - **Milestone**: M1 (W0)
