@@ -1629,3 +1629,32 @@ html.dark {
   left: 0;
   top: 3px;
 }
+
+/* ── ARCHIVED CARD DETAIL BADGES (T15) ── */
+
+.card-detail__archived-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: var(--stalled-red);
+  color: var(--sidebar-badge-stalled-text);
+  flex-shrink: 0;
+}
+
+.card-detail__read-only {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: var(--surface-secondary);
+  border: 1px solid var(--card-border);
+  flex-shrink: 0;
+}
