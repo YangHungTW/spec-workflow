@@ -3,7 +3,7 @@
 - **slug**: 20260421-rename-flow-monitor
 - **has-ui**: true
 - **tier**: audited
-- **stage**: validate
+- **stage**: archive
 - **created**: 2026-04-21
 - **updated**: 2026-04-22
 
@@ -15,7 +15,7 @@
 - [x] plan          (05-plan.md)                 — TPM  [merged: narrative + task checklist]
 - [x] implement     (05-plan.md tasks checked off) — Developer
 - [x] validate      (08-validate.md, verdict NITS) — QA-tester + QA-analyst  [merged: verify + gap-check]
-- [ ] archive       (moved to .specaffold/archive/)     — TPM
+- [x] archive       (moved to .specaffold/archive/)     — TPM
 
 ## Notes
 <!-- date + role + what changed -->
@@ -39,3 +39,4 @@
 - 2026-04-22 Developer — T16 structural gates: T16.1 t_grep_allowlist.sh initially FAIL (plan gap per tpm/plan-gap-surfaces-at-reviewer-or-dry-run-not-at-plan-time); remediated by expanding .claude/carryover-allowlist.txt with 3 narrow carve-outs (flow-monitor/dist/**, .specaffold/features/20260421-rename-flow-monitor/**, .claude/team-memory/**); re-run PASS. T16.2–T16.5 (grep, capability JSON, i18n keys, SettingsRepositories path): PASS on first run.
 - 2026-04-22 implement stage complete — 16/16 tasks checked; wave 1 + wave 2a + wave 2b merged into feature branch
 - 2026-04-22 validate — slug=20260421-rename-flow-monitor verdict=NITS (aggregate of tester NITS + analyst NITS; 0 must, 6 should, 1 advisory; runtime AC10+AC11 deferred to manual desktop-app walkthrough; 4 retrospective signals captured for archive)
+- 2026-04-22 archive — merged to main (merge commit 6b297d9); 8 memory entries: 2 updates (tpm/plan-gap..., qa-analyst/pre-allow-before-file-exists), 6 new (qa-analyst/grep-assertion-scans-disk, developer/directory-rename-cargo-cache, developer/i18n-key-rename-consumer-sweep, tpm/two-wave-serial-merge-order, qa-tester/verify-green-vs-no-regressions, tpm/t16-inline-remediation-update-plan-mirror)
