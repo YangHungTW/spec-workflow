@@ -188,6 +188,30 @@ describe("SessionCard", () => {
   });
 });
 
+describe("SessionCard — T10 AgentPill integration (AC9)", () => {
+  it("renders AgentPill with role 'developer' for stage 'implement'", () => {
+    const { container } = render(<SessionCard {...BASE_PROPS} stage="implement" />);
+    const pill = container.querySelector(".agent-pill") as HTMLElement;
+    expect(pill).not.toBeNull();
+    expect(pill.getAttribute("data-role")).toBe("developer");
+    expect(pill.getAttribute("data-color")).toBe("green");
+  });
+
+  it("pre-existing elements remain present alongside AgentPill (AC24 guard)", () => {
+    render(<SessionCard {...BASE_PROPS} stage="implement" idleState="stale" hasUi />);
+    // stage pill
+    expect(screen.getByText("implement")).toBeTruthy();
+    // note excerpt
+    expect(
+      screen.getByText(
+        "First 80 chars of the newest note line goes here for display",
+      ),
+    ).toBeTruthy();
+    // UI badge
+    expect(document.querySelector("[data-testid='ui-badge']")).toBeTruthy();
+  });
+});
+
 describe("SessionCard — T106 ActionStrip gate (AC2.b)", () => {
   it("renders ActionStrip when idleState is stalled and session + invokeStore are provided", () => {
     const invokeStore = makeInvokeStore();
