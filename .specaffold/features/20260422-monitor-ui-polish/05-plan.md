@@ -590,7 +590,7 @@ Effective W4 parallelism: T16 ∥ T17; then T18 after T16; T19 after T16+T17+T18
 - **Verify**: `cd flow-monitor && npm run test -- src/components/__tests__/RepoSidebar.test.tsx` passes.
 - **Depends on**: T13
 - **Parallel-safe-with**: T15
-- [ ]
+- [x]
 
 ## T15 — Archived route + CardDetail path swap + header read-only badges
 - **Milestone**: M4 (W3)
@@ -624,7 +624,7 @@ Effective W4 parallelism: T16 ∥ T17; then T18 after T16; T19 after T16+T17+T18
 - **Verify**: `cd flow-monitor && npm run test -- src/components/__tests__/CardDetail.test.tsx` passes.
 - **Depends on**: T13
 - **Parallel-safe-with**: T14
-- [ ]
+- [x]
 
 ## T16 — TabStrip: guard onClick + a11y attributes
 - **Milestone**: M5 (W4)

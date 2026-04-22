@@ -43,3 +43,5 @@
 - 2026-04-22 review result — wave 2 phase 2 verdict=NITS (T9 test access pattern advisory); T9 merged
 - 2026-04-22 Developer — T10 T11 T12 done (SessionCard row, CardDetailHeader next-to-StagePill, NotesTimeline role colouring + normaliseRoleLabel)
 - 2026-04-22 review result — wave 2 phase 3 verdict=PASS (T10 T11 T12 all PASS); merged; wave 2 complete (T8 T9 T10 T11 T12). frontend baseline: 429 pass / 11 pre-existing failures unrelated to this feature
+- 2026-04-22 Developer — T13 done (sessionStore archivedFeatures + archiveExpanded + settings persistence)
+- 2026-04-22 review result — wave 3 phase 1 verdict=NITS (T13 IPC cast advisory, untranslated zh-TW strings, 1 WHAT comment); T13 merged
