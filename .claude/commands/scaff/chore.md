@@ -25,6 +25,24 @@ description: PM intakes a chore (maintenance / cleanup). Usage: /scaff:chore "<a
      ```
      Never silently correct a misnamed slug; the reject-and-report posture is intentional per `.claude/rules/common/no-force-on-user-paths.md`.
 
+   - **Slug character validation** (applies to both user-supplied and auto-derived slugs, before any filesystem op):
+
+     ```bash
+     # Reject if slug contains any character outside [a-z0-9-]
+     case "$slug" in
+       *[!a-z0-9-]*)
+         printf 'ERROR: slug contains forbidden characters; allowed: lowercase alphanumeric + hyphens only\n  slug: %s\n' "$slug" >&2
+         exit 2 ;;
+     esac
+
+     # Explicit .. reject (belt-and-suspenders; allowlist above already catches `.`)
+     case "$slug" in
+       *..*) 
+         printf 'ERROR: slug contains .. (path traversal)\n  slug: %s\n' "$slug" >&2
+         exit 2 ;;
+     esac
+     ```
+
 3. Copy `.specaffold/features/_template/` to `.specaffold/features/<slug>/`.
 
 4. Set STATUS `work-type: chore` — write the `work-type: chore` line to the newly seeded `STATUS.md` (between the `has-ui:` and `tier:` lines, replacing the template's `work-type: feature` default). Use the atomic-overwrite pattern:
