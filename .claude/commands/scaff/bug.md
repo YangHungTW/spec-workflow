@@ -46,6 +46,25 @@ description: PM intakes a bug report. Usage: /scaff:bug "<url|ticket-id|descript
      Usage: /scaff:bug "<arg>" [--tier tiny|standard|audited] [YYYYMMDD-fix-<body>]
      ```
 
+   - **Character allowlist** — apply to BOTH user-supplied and auto-derived slugs BEFORE any filesystem operation:
+
+     ```bash
+     # Reject if slug contains any character outside [a-z0-9-]
+     case "$slug" in
+       *[!a-z0-9-]*)
+         printf 'ERROR: slug contains forbidden characters; allowed: lowercase alphanumeric + hyphens only\n  slug: %s\n' "$slug" >&2
+         exit 2 ;;
+     esac
+
+     # Belt-and-suspenders: reject .. explicitly (path traversal)
+     # (the allowlist above already catches '.', but make intent clear)
+     case "$slug" in
+       *..*) 
+         printf 'ERROR: slug contains .. (path traversal)\n  slug: %s\n' "$slug" >&2
+         exit 2 ;;
+     esac
+     ```
+
 4. Copy `.specaffold/features/_template/` to `.specaffold/features/<slug>/`.
 
 5. **Set `work-type: bug`** in STATUS:
