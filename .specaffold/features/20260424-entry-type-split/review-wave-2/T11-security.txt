@@ -1,0 +1,6 @@
+T11 adds two `case` guards before the `cp` step: an allowlist `*[!a-z0-9-]*` that rejects any character outside lowercase alphanumeric and hyphens (making `.`, `/`, and `..` impossible in a valid slug), plus a belt-and-suspenders `*..*` explicit reject — together these fully close the path-traversal surface flagged in the prior advisory. All 8 security rubric checks pass on this diff.
+
+## Reviewer verdict
+axis: security
+verdict: PASS
+findings: []

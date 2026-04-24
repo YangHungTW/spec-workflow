@@ -1,0 +1,11 @@
+T14 performance review passes with advisory notes only. The three source files (request.md, feature.md, pm.md) are each re-read via separate grep invocations per assertion rather than read once into a variable, which is a minor should-level concern, but all loop counts are small hardcoded constants and this is a test script rather than a hot hook path, so no must-severity findings apply.
+
+## Reviewer verdict
+axis: performance
+verdict: NITS
+findings:
+  - severity: advisory
+    file: test/t105_request_backward_compat.sh
+    line: 68
+    rule: no-re-reading-same-file
+    message: assert_contains and assert_heading each invoke grep on the same file per call; REQUEST_MD is read 5 times, FEATURE_TEMPLATE_MD 7 times, PM_MD 4 times — read each file once into a variable and grep the variable to avoid repeated file reads.

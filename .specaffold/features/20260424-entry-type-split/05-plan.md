@@ -228,7 +228,7 @@ Each task below uses the new-merged-form task block shape per `tpm.appendix.md` 
 - **Verify**: `bash -n .claude/commands/scaff/next.md 2>/dev/null || true` — markdown; no syntax check applicable. Structural grep: `grep -F 'stage_status' .claude/commands/scaff/next.md` returns ≥ 1 line. Functional: T2's matrix test (already passing from W1) exercises the helper path; the runtime skip decision is deferred to the next actual `/scaff:next` invocation which is itself a runtime-deferred structural check per dogfood paradox (structural assertion is the grep of the helper invocation).
 - **Depends on**: T1 (needs `bin/scaff-stage-matrix` helper)
 - **Parallel-safe-with**: T9, T10, T11, T12, T13, T14
-- [ ]
+- [x]
 
 ## T9 — Wire `bin/scaff-stage-matrix` into `/scaff:implement` design-skip logic
 
@@ -240,7 +240,7 @@ Each task below uses the new-merged-form task block shape per `tpm.appendix.md` 
 - **Verify**: structural grep: `grep -F 'stage_status' .claude/commands/scaff/implement.md` returns ≥ 1 line. Functional assertion carried by T2.
 - **Depends on**: T1
 - **Parallel-safe-with**: T8, T10, T11, T12, T13, T14
-- [ ]
+- [x]
 
 ## T10 — Author `.claude/commands/scaff/bug.md` (new entry command)
 
@@ -259,7 +259,7 @@ Each task below uses the new-merged-form task block shape per `tpm.appendix.md` 
 - **Verify**: `bash test/t104_entry_commands_shape.sh` (T13 authors). Inline quick-check: `test -f .claude/commands/scaff/bug.md`; `grep -E '^description:.*scaff:bug' .claude/commands/scaff/bug.md` returns one line; `grep -F 'type=url' .claude/commands/scaff/bug.md` + `grep -F 'ticket-id' .claude/commands/scaff/bug.md` + `grep -F 'description' .claude/commands/scaff/bug.md` all return ≥ 1 line (AC1 three-branch evidence).
 - **Depends on**: T3 (consumes `prd-templates/bug.md`), T4 (consumes work-type template field), T5 (consumes pm.md bug probe branch)
 - **Parallel-safe-with**: T8, T9, T11, T12, T13, T14
-- [ ]
+- [x]
 
 ## T11 — Author `.claude/commands/scaff/chore.md` (new entry command)
 
@@ -277,7 +277,7 @@ Each task below uses the new-merged-form task block shape per `tpm.appendix.md` 
 - **Verify**: `bash test/t104_entry_commands_shape.sh` (T13). Inline quick-check: `test -f .claude/commands/scaff/chore.md`; `grep -E '^description:.*scaff:chore' .claude/commands/scaff/chore.md` returns one line; `grep -F 'prd-templates/chore.md' .claude/commands/scaff/chore.md` returns ≥ 1 line; `grep -F 'YYYYMMDD-chore-' .claude/commands/scaff/chore.md` OR equivalent slug-prefix evidence present.
 - **Depends on**: T3 (consumes `prd-templates/chore.md`), T4 (consumes work-type template field), T5 (consumes pm.md chore probe branch)
 - **Parallel-safe-with**: T8, T9, T10, T12, T13, T14
-- [ ]
+- [x]
 
 ## T12 — Minimal-diff edit to `.claude/commands/scaff/request.md` (add `work-type: feature` STATUS setter)
 
@@ -289,7 +289,7 @@ Each task below uses the new-merged-form task block shape per `tpm.appendix.md` 
 - **Verify**: `grep -F 'work-type' .claude/commands/scaff/request.md` returns ≥ 1 line. Backward-compat shape assertion in T14 confirms no other semantic drift.
 - **Depends on**: T4 (consumes template field)
 - **Parallel-safe-with**: T8, T9, T10, T11, T13, T14
-- [ ]
+- [x]
 
 ## T13 — Test: structural shape assertions for `bug.md` + `chore.md` + slug prefixes (AC1, AC2, AC7)
 
@@ -307,7 +307,7 @@ Each task below uses the new-merged-form task block shape per `tpm.appendix.md` 
 - **Verify**: `bash test/t104_entry_commands_shape.sh` prints `PASS` and exits 0 after T10 + T11 land.
 - **Depends on**: —
 - **Parallel-safe-with**: T8, T9, T10, T11, T12, T14
-- [ ]
+- [x]
 
 ## T14 — Test: backward-compat shape assertion for `/scaff:request` (AC3, AC15)
 
@@ -324,7 +324,7 @@ Each task below uses the new-merged-form task block shape per `tpm.appendix.md` 
 - **Verify**: `bash test/t105_request_backward_compat.sh` prints `PASS` and exits 0 after T3 + T5 + T12 land.
 - **Depends on**: —
 - **Parallel-safe-with**: T8, T9, T10, T11, T12, T13
-- [ ]
+- [x]
 
 ---
 

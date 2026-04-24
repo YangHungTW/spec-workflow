@@ -1,0 +1,7 @@
+## Reviewer verdict
+axis: security
+verdict: PASS
+findings: []
+
+---
+Summary: T14 adds a 149-line read-only backward-compat gate that correctly sandboxes HOME, validates source-file existence before any read, and uses grep with fixed-string flags and quoted argv arguments throughout — no injection surface, no untrusted path traversal, no hardcoded secrets. The env-var path overrides (`REQUEST_MD`, `FEATURE_TEMPLATE_MD`, `PM_MD`) are passed as quoted shell arguments to read-only grep calls, keeping injection risk nil even when overridden by a caller.

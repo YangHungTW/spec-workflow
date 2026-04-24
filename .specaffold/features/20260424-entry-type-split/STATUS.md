@@ -31,3 +31,9 @@
 - 2026-04-24 implement wave 1 done — T1, T2, T3, T4, T5, T6, T7; t102 78/78 PASS (72 cells + 4 asymmetries + malformed); t103 18/18 PASS
 - 2026-04-24 PLAN GAP discovered at W1 close — `.claude/commands/scaff/prd-templates/*.md` (T3 output) are auto-registered by Claude Code harness as slash commands (`scaff:prd-templates:bug/chore/feature`). tech-D7 location conflicts with command-harvesting scope. Needs remediation before W2 consumers (T10/T11 bug.md/chore.md) reference the path.
 - 2026-04-24 REMEDIATION — moved templates to `.specaffold/prd-templates/` (outside commands-harvest scope; semantically aligned with features/). Updated all path refs: 03-prd.md (R8/AC6/D7), 04-tech.md (tech-D7 addendum), 05-plan.md (T3/T5/T7 scope/verify), pm.md probe sections (2 lines), test/t103 (3 lines). t103 18/18 PASS with new path; skill list no longer shows scaff:prd-templates:* commands. ABI unchanged; just a path move.
+- 2026-04-24 review dispatched — slug=20260424-entry-type-split wave=2 tasks=T8,T9,T10,T11,T12,T13,T14 axes=security,performance,style
+- 2026-04-24 review result — wave 2 verdict=BLOCK (T10-security 2 must-severity: path traversal + injection on slug; T11-security 1 advisory same class; plus T13/T14 cosmetic perf NITS); suggest-audited-upgrade (already audited — no-op)
+- 2026-04-24 T10 retry dispatched — developer added POSIX character allowlist *[!a-z0-9-]* + explicit *..* reject guards
+- 2026-04-24 T11 retry dispatched — same slug-validation hardening applied symmetrically (preventive; fix the bug pattern not just the must-severity instance)
+- 2026-04-24 review retry result — wave 2 verdict=NITS (T10 + T11 all 6 reviewers PASS post-fix; remaining NITS are T13/T14 re-read-file cosmetic)
+- 2026-04-24 implement wave 2 done — T8, T9, T10, T11, T12, T13, T14; post-merge t104 15/15 PASS; t105 16/16 PASS (after 1 test-spelling fix accepting "why[- ]now" both forms); skill list correctly registers /scaff:bug + /scaff:chore commands.

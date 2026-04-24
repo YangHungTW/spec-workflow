@@ -1,0 +1,6 @@
+T11 adds `.claude/commands/scaff/chore.md` (88 lines): naming, indent, quoting, and comment style all match the established conventions in neighbouring files such as `request.md`, and the inline bash snippets use only bash 3.2-portable constructs (`case`, `printf`, POSIX `grep`). No commented-out code, no portability violations, and no dead symbols were found in the diff.
+
+## Reviewer verdict
+axis: style
+verdict: PASS
+findings: []

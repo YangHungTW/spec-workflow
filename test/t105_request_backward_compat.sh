@@ -113,9 +113,14 @@ else
   fail "request.md: work-type count is $WORK_TYPE_COUNT (expected: 1 or 2)"
 fi
 
-# A.2 — Existing probe anchors preserved
-for anchor in "why now" "success criteria" "out-of-scope" "has-ui"; do
-  assert_contains "$REQUEST_MD" "$anchor" "request.md anchor '$anchor'"
+# A.2 — Existing probe anchors preserved. Note: request.md writes "why-now"
+# (hyphenated) while pm.md's probe writes "why now" (spaced). Accept either spelling.
+for anchor in "why[- ]now" "success criteria" "out-of-scope" "has-ui"; do
+  if grep -qE "$anchor" "$REQUEST_MD"; then
+    pass "request.md anchor matching '$anchor' present"
+  else
+    fail "request.md anchor matching '$anchor' missing"
+  fi
 done
 
 # ---------------------------------------------------------------------------

@@ -1,0 +1,6 @@
+T8 adds a one-shot `grep -m1 | sed | sed` pipeline to extract `work-type` before each stage dispatch; this runs once per `scaff:next` invocation (not inside a tight loop), so no shell-out-in-loop violation applies. The double `sed` invocation where a single `awk` expression would suffice is a minor fork cost but occurs on a cold, human-paced path and does not breach the must-level rules.
+
+## Reviewer verdict
+axis: performance
+verdict: PASS
+findings: []

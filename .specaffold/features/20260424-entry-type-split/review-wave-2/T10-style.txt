@@ -1,0 +1,6 @@
+## Reviewer verdict
+axis: style
+verdict: PASS
+findings: []
+
+T10 adds `.claude/commands/scaff/bug.md`, a pure markdown command specification with embedded bash pseudocode snippets; no shipped bash scripts are introduced, so bash-32-portability and sandbox-home-in-tests rules do not apply. All code block comments explain rationale rather than restating the code, there is no commented-out dead code, and naming conventions are internally consistent throughout the new file.

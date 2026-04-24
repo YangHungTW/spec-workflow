@@ -1,0 +1,16 @@
+The test script calls `grep -cF` on `$BUG_MD` six times and on `$CHORE_MD` five times via `assert_literal`, re-reading each file from disk on every assertion rather than caching the file content to a variable on first read. This is a rule-5 (no re-reading the same file) `should`-severity finding; the fix is to read each file once into a shell variable and pipe that variable into each `grep` call instead of opening the file repeatedly.
+
+## Reviewer verdict
+axis: performance
+verdict: NITS
+findings:
+  - severity: should
+    file: test/t104_entry_commands_shape.sh
+    line: 81
+    rule: no-re-reading-file
+    message: assert_literal opens BUG_MD via grep -cF on every call (6 times); read file once into a variable and grep the cached content instead.
+  - severity: should
+    file: test/t104_entry_commands_shape.sh
+    line: 81
+    rule: no-re-reading-file
+    message: assert_literal opens CHORE_MD via grep -cF on every call (5 times); same fix — cache file content in a variable before the assertion block.

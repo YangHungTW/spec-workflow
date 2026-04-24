@@ -1,0 +1,6 @@
+## Reviewer verdict
+axis: style
+verdict: PASS
+findings: []
+
+T8 edits `next.md` to replace the single-dimension tier-skip logic with a three-dimension `stage_status` matrix call; all new variables and function references follow the existing `snake_case` convention, no commented-out code was introduced, and the embedded bash code fences use only POSIX-portable constructs (`grep -m1`, plain `sed`) with no bash 3.2 violations. The explanatory `# get_work_type:` comment correctly conveys the fallback rationale rather than restating the mechanic, satisfying the why-not-what requirement.

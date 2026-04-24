@@ -1,0 +1,6 @@
+T12 adds a single inline comment to a markdown command file (.claude/commands/scaff/request.md); no shell code, loops, subprocess calls, or data-loading paths are introduced or modified. All eight rubric checks (no-shell-out-in-loop, no-O(n²), cache-expensive-ops, awk-over-python, no-re-read-file, minimize-fork-exec, hook-latency, no-eager-load) are vacuously satisfied because the change contains no executable logic.
+
+## Reviewer verdict
+axis: performance
+verdict: PASS
+findings: []
