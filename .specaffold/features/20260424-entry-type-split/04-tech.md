@@ -63,7 +63,7 @@
 │    ├── STATUS.md    (gains `work-type:` field per R13)          │
 │    └── 00-request.md   (content populated by command + PM)      │
 │                                                                 │
-│  .claude/commands/scaff/prd-templates/    (NEW dir, D7)         │
+│  .specaffold/prd-templates/    (NEW dir, D7)         │
 │    ├── feature.md   (byte-identical to today's PRD shape)       │
 │    ├── bug.md       (Repro/Expected/Actual/Environment/Source)  │
 │    └── chore.md     (checklist-shaped per D2)                   │
@@ -206,6 +206,8 @@ Feature and chore flows are structurally identical, differing only in slug prefi
 - **Requirement link**: R6, R7, R7.1, AC5.
 
 ### tech-D7. PRD template format — plain markdown with HTML-comment placeholders
+
+> **Location addendum [2026-04-24 W1-close remediation]**: templates live at `.specaffold/prd-templates/`, NOT under `.claude/commands/scaff/`. During W1 close, putting templates under `.claude/commands/scaff/prd-templates/` caused Claude Code's harness to recursively harvest the `.md` files as slash commands (`scaff:prd-templates:bug/chore/feature`). Moved to `.specaffold/prd-templates/` which sits alongside `features/` — outside the commands-harvest scope and semantically aligned with other Specaffold data. All path references in 03-prd.md R8/AC6/D7, 05-plan.md T3/T5/T7, pm.md probe sections, and test/t103 updated. No ABI or AC change beyond the path string itself.
 
 - **Options considered**:
   - **(a)** Plain markdown with `<!-- placeholder: <description> -->` comments at fill-in points; PM agent replaces placeholders inline.

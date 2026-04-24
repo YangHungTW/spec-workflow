@@ -24,7 +24,7 @@
 #      (find .specaffold/features/_template -mindepth 1 -type d | wc -l == 0)
 #      Per R12 / AC12: _template is a flat directory with no per-type subdirs.
 #
-# Template files live at .claude/commands/scaff/prd-templates/ (D7 location,
+# Template files live at .specaffold/prd-templates/ (D7 location,
 # as shipped by T3).  The _template dir check is a separate assertion on
 # .specaffold/features/_template/ (T4 scope).
 #
@@ -59,8 +59,8 @@ esac
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd -P)"
 
-# T3 ships templates to .claude/commands/scaff/prd-templates/ (D7 location).
-PRD_TEMPLATES_DIR="${PRD_TEMPLATES_DIR:-$REPO_ROOT/.claude/commands/scaff/prd-templates}"
+# T3 ships templates to .specaffold/prd-templates/ (D7 location).
+PRD_TEMPLATES_DIR="${PRD_TEMPLATES_DIR:-$REPO_ROOT/.specaffold/prd-templates}"
 FEATURE_MD="$PRD_TEMPLATES_DIR/feature.md"
 BUG_MD="$PRD_TEMPLATES_DIR/bug.md"
 CHORE_MD="$PRD_TEMPLATES_DIR/chore.md"

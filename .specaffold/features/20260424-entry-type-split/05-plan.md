@@ -38,7 +38,7 @@ The feature itself **cannot** runtime-exercise `/scaff:bug` or `/scaff:chore` du
 
 ### Parallel-safety analysis per wave
 
-**W1** — Seven tasks across seven disjoint file namespaces. T1 writes `bin/scaff-stage-matrix` (new file); T2 writes `test/t102_stage_matrix.sh` (new); T3 writes three new files under `.claude/commands/scaff/prd-templates/` (new directory — no pre-existing collision); T4 edits `.specaffold/features/_template/STATUS.md` (one added line, no other edits); T5 edits `.claude/agents/scaff/pm.md` (consolidates both probe-branch and keyword-table work — they both live in pm.md, so a single task owns the whole file edit); T6 edits `.claude/agents/scaff/tpm.md`; T7 writes `test/t103_prd_templates_shape.sh` (new). No two tasks write to the same file; no shared config / fixture collision.
+**W1** — Seven tasks across seven disjoint file namespaces. T1 writes `bin/scaff-stage-matrix` (new file); T2 writes `test/t102_stage_matrix.sh` (new); T3 writes three new files under `.specaffold/prd-templates/` (new directory — no pre-existing collision); T4 edits `.specaffold/features/_template/STATUS.md` (one added line, no other edits); T5 edits `.claude/agents/scaff/pm.md` (consolidates both probe-branch and keyword-table work — they both live in pm.md, so a single task owns the whole file edit); T6 edits `.claude/agents/scaff/tpm.md`; T7 writes `test/t103_prd_templates_shape.sh` (new). No two tasks write to the same file; no shared config / fixture collision.
 
 Why T5 bundles probe branches + keyword table: both deliverables edit `pm.md`. Splitting would create a same-file hazard (`tpm/parallel-safe-requires-different-files.md`: tasks are parallel-safe only if they edit different files). Combined into one task; still well under the ~1-hour target because the content is additive (two new `## When invoked for /scaff:<cmd>` sections + one 3-row master table replacing the current feature-only keyword list).
 
@@ -134,18 +134,18 @@ Each task below uses the new-merged-form task block shape per `tpm.appendix.md` 
 - **Parallel-safe-with**: T1, T3, T4, T5, T6, T7
 - [x]
 
-## T3 — [x] Author the three PRD template files under `.claude/commands/scaff/prd-templates/`
+## T3 — [x] Author the three PRD template files under `.specaffold/prd-templates/`
 
 - **Milestone**: M1
 - **Requirements**: R8, R8.1
 - **Decisions**: D2, D7, tech-D7
-- **Scope**: Create a new directory `.claude/commands/scaff/prd-templates/` (D7 location) and three new files:
+- **Scope**: Create a new directory `.specaffold/prd-templates/` (D7 location) and three new files:
   1. `feature.md` — byte-identical feature PRD shape (Problem / Goals / Non-goals / Users / Requirements / ACs / Decisions / Open questions headings) with `<!-- placeholder: <description> -->` HTML-comment fill-in markers at each section body per tech-D7. Canonical source: today's PRD shape as seen in prior archives (e.g. `.specaffold/archive/20260421-rename-to-specaffold/03-prd.md`).
   2. `bug.md` — sections per R8: Problem, Source (with `type: url | ticket-id | description` subkey per D1), Repro, Expected, Actual, Environment, Root cause, Fix requirements (R1..Rn), Regression test requirements, Acceptance criteria (AC1..ACn), Decisions, Open questions. Use HTML-comment placeholders.
   3. `chore.md` — checklist-shaped per D2: Summary, Scope, Reason, Checklist items (literal skeleton entry `- [ ] <item> — verify: <assertion>` per AC6), Verify assertions (rolled up), Out-of-scope. Use HTML-comment placeholders.
   All three templates are English-content per `.claude/rules/common/language-preferences.md` carve-out (b). No frontmatter required (these are templates, not rules / agents).
-- **Deliverables**: `.claude/commands/scaff/prd-templates/feature.md`, `.claude/commands/scaff/prd-templates/bug.md`, `.claude/commands/scaff/prd-templates/chore.md` (all new).
-- **Verify**: `bash test/t103_prd_templates_shape.sh` (T7 authors this test). Also `ls .claude/commands/scaff/prd-templates/ | sort | tr '\n' ' '` outputs `bug.md chore.md feature.md `.
+- **Deliverables**: `.specaffold/prd-templates/feature.md`, `.specaffold/prd-templates/bug.md`, `.specaffold/prd-templates/chore.md` (all new).
+- **Verify**: `bash test/t103_prd_templates_shape.sh` (T7 authors this test). Also `ls .specaffold/prd-templates/ | sort | tr '\n' ' '` outputs `bug.md chore.md feature.md `.
 - **Depends on**: —
 - **Parallel-safe-with**: T1, T2, T4, T5, T6, T7
 - [x]
@@ -168,8 +168,8 @@ Each task below uses the new-merged-form task block shape per `tpm.appendix.md` 
 - **Requirements**: R4, R5, R6, R7, R7.1, R8.1
 - **Decisions**: D1, D6, D7, tech-D5, tech-D6
 - **Scope**: Edit `.claude/agents/scaff/pm.md` additively (no deletion of existing content; current `## When invoked for /scaff:request` section remains byte-identical per AC3 discipline). Additions:
-  1. **`## When invoked for /scaff:bug`** — new parallel section per tech-D5. Probe elicits (a) repro steps (ordered list), (b) expected behaviour, (c) actual behaviour, (d) environment (OS / version / relevant config), (e) the verbatim source value + detected type per R4 / D1. No has-ui probe. When producing `03-prd.md`, reads STATUS `work-type=bug` and selects `.claude/commands/scaff/prd-templates/bug.md` (R8.1).
-  2. **`## When invoked for /scaff:chore`** — new parallel section per tech-D5. Probe elicits (a) scope, (b) reason, (c) verify-assertion per R5. No has-ui probe (default has-ui=false by construction). When producing `03-prd.md`, reads STATUS `work-type=chore` and selects `.claude/commands/scaff/prd-templates/chore.md` (D2 / R8.1).
+  1. **`## When invoked for /scaff:bug`** — new parallel section per tech-D5. Probe elicits (a) repro steps (ordered list), (b) expected behaviour, (c) actual behaviour, (d) environment (OS / version / relevant config), (e) the verbatim source value + detected type per R4 / D1. No has-ui probe. When producing `03-prd.md`, reads STATUS `work-type=bug` and selects `.specaffold/prd-templates/bug.md` (R8.1).
+  2. **`## When invoked for /scaff:chore`** — new parallel section per tech-D5. Probe elicits (a) scope, (b) reason, (c) verify-assertion per R5. No has-ui probe (default has-ui=false by construction). When producing `03-prd.md`, reads STATUS `work-type=chore` and selects `.specaffold/prd-templates/chore.md` (D2 / R8.1).
   3. **Single 3-row master keyword table** per tech-D6 / R7.1, replacing the current feature-only keyword list. Columns: `type`, `tiny-keywords`, `audited-keywords`. Rows: feature (current keywords preserved verbatim), bug (R6 keyword set: tiny = `typo, wording, copy change, off-by-one, wrong label`; audited = `crash, data loss, data corruption, regression, security, xss, csrf, sql injection, auth bypass, privilege escalation, memory leak, race condition`), chore (R7 keyword set: tiny = `comment, docstring, readme, rename, cleanup, dead code, formatting, lint`; audited = `bump dep, dependency update, security patch, ci migration, settings.json, migration`). Default = standard is a footnote.
 
   All content English per `.claude/rules/common/language-preferences.md`. Changes to pm.md are additive; the feature-branch probe is unchanged so AC3's `/scaff:request` byte-identity survives.

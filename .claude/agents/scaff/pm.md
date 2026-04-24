@@ -79,7 +79,7 @@ Probe elicits:
 
 No `has-ui` probe — omit entirely.
 
-When producing `03-prd.md`: read STATUS `work-type=bug`; select `.claude/commands/scaff/prd-templates/bug.md` per R8.1.
+When producing `03-prd.md`: read STATUS `work-type=bug`; select `.specaffold/prd-templates/bug.md` per R8.1.
 
 ## When invoked for /scaff:chore
 
@@ -93,7 +93,7 @@ Probe elicits:
 
 No `has-ui` probe — default `has-ui=false` by construction per D3.
 
-When producing `03-prd.md`: read STATUS `work-type=chore`; select `.claude/commands/scaff/prd-templates/chore.md` per D2 / R8.1.
+When producing `03-prd.md`: read STATUS `work-type=chore`; select `.specaffold/prd-templates/chore.md` per D2 / R8.1.
 
 ## When invoked for /scaff:prd
 
