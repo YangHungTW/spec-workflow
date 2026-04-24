@@ -1,0 +1,197 @@
+#!/usr/bin/env bash
+# =============================================================================
+# scaff-stage-matrix — sourceable bash library for ternary stage classification
+# =============================================================================
+#
+# SOURCE, DO NOT EXEC:
+#   source "$REPO_ROOT/bin/scaff-stage-matrix"
+#
+# PUBLIC FUNCTIONS
+#   stage_status <work-type> <tier> <stage>
+#       Outputs one of: required | optional | skipped
+#       Based on the 9-cell × 8-stage matrix in PRD D3 (72 cells total).
+#       Work-types: feature | bug | chore
+#       Tiers:      tiny | standard | audited
+#       Stages:     request | design | prd | tech | plan | implement | validate | archive
+#       Exits 2 with usage message to stderr on unknown work-type / tier / stage.
+#       Pure function — no file I/O, no side effects, no REPO_ROOT dependency.
+#
+#   is_stage_required <work-type> <tier> <stage>
+#       Returns 0 iff stage_status == required; returns 1 otherwise.
+#
+#   is_stage_skipped <work-type> <tier> <stage>
+#       Returns 0 iff stage_status == skipped; returns 1 otherwise.
+#
+# =============================================================================
+
+# Double-source guard — safe to source multiple times.
+[ "${SCAFF_STAGE_MATRIX_LOADED:-0}" = "1" ] && return 0
+SCAFF_STAGE_MATRIX_LOADED=1
+
+# ---------------------------------------------------------------------------
+# stage_status <work-type> <tier> <stage>
+#
+# Flat case table over "<work-type>-<tier>-<stage>" keys (72 cells).
+# Flat form chosen over nested case to avoid bash 3.2 parse errors when
+# case blocks are nested inside $() subshells (bash32-case-in-subshell.md).
+# The flat table is also easier to audit against the PRD D3 matrix directly.
+# ---------------------------------------------------------------------------
+stage_status() {
+  if [ "$#" -ne 3 ]; then
+    printf 'stage_status: usage: stage_status <work-type> <tier> <stage>\n' >&2
+    return 2
+  fi
+
+  local work_type="$1"
+  local tier="$2"
+  local stage="$3"
+
+  # Validate work-type
+  case "$work_type" in
+    feature|bug|chore) ;;
+    *)
+      printf 'stage_status: unknown work-type "%s" (expected: feature|bug|chore)\n' \
+        "$work_type" >&2
+      return 2
+      ;;
+  esac
+
+  # Validate tier
+  case "$tier" in
+    tiny|standard|audited) ;;
+    *)
+      printf 'stage_status: unknown tier "%s" (expected: tiny|standard|audited)\n' \
+        "$tier" >&2
+      return 2
+      ;;
+  esac
+
+  # Validate stage
+  case "$stage" in
+    request|design|prd|tech|plan|implement|validate|archive) ;;
+    *)
+      printf 'stage_status: unknown stage "%s" (expected: request|design|prd|tech|plan|implement|validate|archive)\n' \
+        "$stage" >&2
+      return 2
+      ;;
+  esac
+
+  # Flat lookup table — key: "<work-type>-<tier>-<stage>"
+  # Matrix source: PRD D3 (entry-type-split feature)
+  #
+  # Columns: feature-tiny | feature-standard | feature-audited |
+  #          bug-tiny | bug-standard | bug-audited |
+  #          chore-tiny | chore-standard | chore-audited
+  #
+  # Stages (rows):
+  #   request:  all 9 cells → required
+  #   design:   feature-tiny=skipped   feature-standard=optional  feature-audited=optional
+  #             bug-tiny=skipped       bug-standard=optional      bug-audited=optional
+  #             chore-tiny=skipped     chore-standard=skipped     chore-audited=skipped
+  #   prd:      all 9 cells → required
+  #   tech:     feature-tiny=skipped   feature-standard=required  feature-audited=required
+  #             bug-tiny=skipped       bug-standard=optional      bug-audited=required
+  #             chore-tiny=skipped     chore-standard=skipped     chore-audited=optional
+  #   plan:     feature-tiny=optional  feature-standard=required  feature-audited=required
+  #             bug-tiny=optional      bug-standard=required      bug-audited=required
+  #             chore-tiny=optional    chore-standard=required    chore-audited=required
+  #   implement: all 9 cells → required
+  #   validate:  all 9 cells → required
+  #   archive:   all 9 cells → required
+
+  local key="${work_type}-${tier}-${stage}"
+
+  # Cells that are "required" — largest group; checked first for short-circuit
+  case "$key" in
+    # request: all required
+    feature-tiny-request|feature-standard-request|feature-audited-request|\
+    bug-tiny-request|bug-standard-request|bug-audited-request|\
+    chore-tiny-request|chore-standard-request|chore-audited-request)
+      printf 'required\n'; return 0 ;;
+
+    # prd: all required
+    feature-tiny-prd|feature-standard-prd|feature-audited-prd|\
+    bug-tiny-prd|bug-standard-prd|bug-audited-prd|\
+    chore-tiny-prd|chore-standard-prd|chore-audited-prd)
+      printf 'required\n'; return 0 ;;
+
+    # tech: required cells
+    feature-standard-tech|feature-audited-tech|\
+    bug-audited-tech)
+      printf 'required\n'; return 0 ;;
+
+    # plan: required cells
+    feature-standard-plan|feature-audited-plan|\
+    bug-standard-plan|bug-audited-plan|\
+    chore-standard-plan|chore-audited-plan)
+      printf 'required\n'; return 0 ;;
+
+    # implement: all required
+    feature-tiny-implement|feature-standard-implement|feature-audited-implement|\
+    bug-tiny-implement|bug-standard-implement|bug-audited-implement|\
+    chore-tiny-implement|chore-standard-implement|chore-audited-implement)
+      printf 'required\n'; return 0 ;;
+
+    # validate: all required
+    feature-tiny-validate|feature-standard-validate|feature-audited-validate|\
+    bug-tiny-validate|bug-standard-validate|bug-audited-validate|\
+    chore-tiny-validate|chore-standard-validate|chore-audited-validate)
+      printf 'required\n'; return 0 ;;
+
+    # archive: all required
+    feature-tiny-archive|feature-standard-archive|feature-audited-archive|\
+    bug-tiny-archive|bug-standard-archive|bug-audited-archive|\
+    chore-tiny-archive|chore-standard-archive|chore-audited-archive)
+      printf 'required\n'; return 0 ;;
+  esac
+
+  # Cells that are "optional"
+  case "$key" in
+    # design: optional cells
+    feature-standard-design|feature-audited-design|\
+    bug-standard-design|bug-audited-design)
+      printf 'optional\n'; return 0 ;;
+
+    # tech: optional cells
+    bug-standard-tech|\
+    chore-audited-tech)
+      printf 'optional\n'; return 0 ;;
+
+    # plan: optional cells
+    feature-tiny-plan|\
+    bug-tiny-plan|\
+    chore-tiny-plan)
+      printf 'optional\n'; return 0 ;;
+  esac
+
+  # Remaining cells are "skipped"
+  # design: skipped cells — feature-tiny, bug-tiny, chore-tiny/standard/audited
+  # tech:   skipped cells — feature-tiny, bug-tiny, chore-tiny/standard
+  # (all valid combos have been covered above; fall through = skipped)
+  printf 'skipped\n'
+  return 0
+}
+
+# ---------------------------------------------------------------------------
+# is_stage_required <work-type> <tier> <stage>
+#
+# Thin predicate wrapper: returns 0 iff stage_status == required.
+# Propagates return 2 on usage error.
+# ---------------------------------------------------------------------------
+is_stage_required() {
+  local _stage_status_out
+  _stage_status_out="$(stage_status "$@")" || return $?
+  [ "$_stage_status_out" = "required" ]
+}
+
+# ---------------------------------------------------------------------------
+# is_stage_skipped <work-type> <tier> <stage>
+#
+# Thin predicate wrapper: returns 0 iff stage_status == skipped.
+# Propagates return 2 on usage error.
+# ---------------------------------------------------------------------------
+is_stage_skipped() {
+  local _stage_status_out
+  _stage_status_out="$(stage_status "$@")" || return $?
+  [ "$_stage_status_out" = "skipped" ]
+}
