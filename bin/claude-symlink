@@ -25,8 +25,13 @@
 #     commands/scaff        — directory symlink → <repo>/.claude/commands/scaff
 #     hooks                    — directory symlink → <repo>/.claude/hooks
 #     skills/scaff-init     — directory symlink → <repo>/.claude/skills/scaff-init
-#     team-memory/**       — one file symlink per regular file under
-#                            <repo>/.claude/team-memory/ (walked at run time)
+#
+#   team-memory is intentionally NOT managed: repo-local memory
+#   (<repo>/.claude/team-memory/) stays repo-scoped; global memory
+#   (~/.claude/team-memory/) is per-user real files, promoted
+#   explicitly via /scaff:promote — never auto-symlinked from a repo.
+#   `uninstall` and `update` still walk ~/.claude/team-memory/ to
+#   prune any owned symlinks left by earlier releases.
 #
 # OPTIONS
 #   --dry-run   Compute the full plan and print would-* verbs; zero mutations.
@@ -240,13 +245,11 @@ plan_links() {
   PLAN_SRC+=("$REPO/.claude/skills/scaff-init")
   PLAN_TGT+=("$HOME/.claude/skills/scaff-init")
 
-  # File-level pairs: walk team-memory with -print0 for filename safety
-  local prefix="$REPO/.claude/team-memory/"
-  while IFS= read -r -d '' src; do
-    local rel="${src#$prefix}"
-    PLAN_SRC+=("$src")
-    PLAN_TGT+=("$HOME/.claude/team-memory/$rel")
-  done < <(find "$REPO/.claude/team-memory" -type f -print0)
+  # team-memory is intentionally NOT in the managed set.
+  # Repo-local memory stays repo-scoped; global memory is per-user real
+  # files, promoted explicitly via /scaff:promote. The orphan sweep in
+  # cmd_update still prunes any team-memory symlinks owned by us from
+  # earlier releases (Pass 2 of cmd_update, and step 2 of cmd_uninstall).
 }
 
 # ---------------------------------------------------------------------------
@@ -438,7 +441,11 @@ Managed set:
   commands/scaff        → <repo>/.claude/commands/scaff  (directory symlink)
   hooks                    → <repo>/.claude/hooks              (directory symlink)
   skills/scaff-init     → <repo>/.claude/skills/scaff-init (directory symlink)
-  team-memory/**       → one file symlink per file under <repo>/.claude/team-memory/
+
+team-memory is NOT managed. Repo-local memory stays repo-scoped;
+global memory (~/.claude/team-memory/) is per-user real files,
+promoted explicitly via /scaff:promote. `uninstall` and `update`
+still prune any team-memory symlinks owned by earlier releases.
 
 Options:
   --dry-run   Show what would be done without making any changes (exit 0).

@@ -14,7 +14,7 @@ From this repo, create the managed symlinks under `~/.claude/`:
 bin/claude-symlink install
 ```
 
-This installs directory symlinks at `~/.claude/agents/scaff`, `~/.claude/commands/scaff`, `~/.claude/hooks`, `~/.claude/skills/scaff-init`, plus one file symlink per entry under `~/.claude/team-memory/` — making Specaffold's agents, commands, hooks, and the `/scaff-init` bootstrap skill available in every Claude Code session on this machine. See [`bin/claude-symlink`](#binclaude-symlink--global-symlink-manager) below for `install` / `uninstall` / `update` / `--dry-run` details.
+This installs directory symlinks at `~/.claude/agents/scaff`, `~/.claude/commands/scaff`, `~/.claude/hooks`, and `~/.claude/skills/scaff-init` — making Specaffold's agents, commands, hooks, and the `/scaff-init` bootstrap skill available in every Claude Code session on this machine. Repo-local team-memory stays repo-scoped (not symlinked as user-global); see [Team memory](#team-memory) below. See [`bin/claude-symlink`](#binclaude-symlink--global-symlink-manager) for `install` / `uninstall` / `update` / `--dry-run` details.
 
 ### 2. Per-consumer initialisation
 
@@ -338,7 +338,8 @@ bin/scaff-lint                             # pre-commit language-preference lint
 - `~/.claude/commands/scaff` → `<repo>/.claude/commands/scaff`
 - `~/.claude/hooks` → `<repo>/.claude/hooks`
 - `~/.claude/skills/scaff-init` → `<repo>/.claude/skills/scaff-init`
-- `~/.claude/team-memory/**` — one file symlink per regular file under `<repo>/.claude/team-memory/`
+
+`team-memory/**` is intentionally **not** managed. Repo-local memory (`<repo>/.claude/team-memory/`) stays repo-scoped; global memory (`~/.claude/team-memory/`) is per-user real files, promoted explicitly via `/scaff:promote` — never auto-symlinked from a repo. `update` still walks `~/.claude/team-memory/` to prune any owned symlinks left by earlier releases.
 
 All symlinks point at **absolute paths** inside the repo, so `ls -l` is always diagnosable. Moving the repo breaks the links — re-run `install` (or `update`) from the new location to refresh them.
 
@@ -368,6 +369,23 @@ When a managed path can't be safely touched, the tool skips it and reports a ver
 ### Caveat: orphan-walk under `team-memory/`
 
 `update` walks `~/.claude/team-memory/` for owned orphan links to prune. Ownership is determined by a single rule: the resolved link target begins with `<repo>/.claude/` (with trailing slash). A user-created symlink under `~/.claude/team-memory/` that **happens to point into this repo** is indistinguishable from one the tool created — `update` will treat it as an orphan and remove it. Avoid placing hand-crafted symlinks pointing into this repo under `~/.claude/team-memory/`.
+
+---
+
+## Team memory
+
+Specaffold keeps two tiers of team memory, read by every agent at invocation:
+
+| Tier | Location | Scope |
+|---|---|---|
+| Global | `~/.claude/team-memory/<role>/` | Lessons that apply across every project on this machine. Real files, one per lesson. |
+| Local | `<repo>/.claude/team-memory/<role>/` | Repo-scoped lessons. Version-controlled with the repo and shared via git. |
+
+Read order at agent start: **global first, local second**. Local overrides same-topic global silently.
+
+`/scaff:archive`'s retrospective pass asks each role for lessons worth saving; approved entries land as files in the relevant tier. To move a local entry to global: `/scaff:promote <role>/<file>`. The two tiers are kept **independent** — `bin/claude-symlink install` never auto-syncs repo-local memory into the user-global directory.
+
+Full authoring protocol: [.claude/team-memory/README.md](.claude/team-memory/README.md).
 
 ---
 

@@ -14,7 +14,7 @@ English version: [README.md](README.md)
 bin/claude-symlink install
 ```
 
-這會安裝目錄 symlinks:`~/.claude/agents/scaff`、`~/.claude/commands/scaff`、`~/.claude/hooks`、`~/.claude/skills/scaff-init`,以及 `~/.claude/team-memory/` 底下每個檔案各一條 symlink — 讓 Specaffold 的 agents、commands、hooks,和 `/scaff-init` bootstrap skill 在這台機器上的每個 Claude Code session 都能用。詳細 `install` / `uninstall` / `update` / `--dry-run` 見下面 [`bin/claude-symlink`](#binclaude-symlink--全域-symlink-管理工具) 區塊。
+這會安裝目錄 symlinks:`~/.claude/agents/scaff`、`~/.claude/commands/scaff`、`~/.claude/hooks`、`~/.claude/skills/scaff-init` — 讓 Specaffold 的 agents、commands、hooks,和 `/scaff-init` bootstrap skill 在這台機器上的每個 Claude Code session 都能用。**Repo-local team-memory 刻意不 symlink 為 user-global**;詳見下方 [Team memory](#team-memory)。`install` / `uninstall` / `update` / `--dry-run` 細節見下方 [`bin/claude-symlink`](#binclaude-symlink--全域-symlink-管理工具) 區塊。
 
 ### 2. 針對單一 consumer repo 初始化
 
@@ -338,7 +338,8 @@ bin/scaff-lint                             # pre-commit 語言偏好 linter
 - `~/.claude/commands/scaff` → `<repo>/.claude/commands/scaff`
 - `~/.claude/hooks` → `<repo>/.claude/hooks`
 - `~/.claude/skills/scaff-init` → `<repo>/.claude/skills/scaff-init`
-- `~/.claude/team-memory/**` — 每個 regular file 對應一條 symlink,指回 `<repo>/.claude/team-memory/` 下對應檔案
+
+`team-memory/**` **刻意不納入 managed set**。Repo-local memory(`<repo>/.claude/team-memory/`)留在 repo 範圍;全域 memory(`~/.claude/team-memory/`)是 per-user 的真實檔案,透過 `/scaff:promote` 顯式升級 — 不由 claude-symlink 從 repo 自動 symlink 過去。`update` 仍會走 `~/.claude/team-memory/` 把之前舊版留下的 owned symlink 清掉。
 
 所有 symlink 都指向 **絕對路徑**,所以 `ls -l` 隨時可讀。repo 被移動會讓 symlink 失效 — 從新位置重跑 `install`(或 `update`)重建。
 
@@ -368,6 +369,23 @@ bin/claude-symlink install --dry-run  # 預覽(任一子指令都支援)
 ### 注意事項:`team-memory/` 的 orphan-walk
 
 `update` 會走過 `~/.claude/team-memory/`,清除本工具擁有的 orphan links。擁有權判斷規則單一:resolved 的 symlink 目標以 `<repo>/.claude/`(含結尾斜線)開頭。使用者手動在 `~/.claude/team-memory/` 下建立、且**剛好也指向本 repo** 的 symlink,與本工具建立的無法區分 — `update` 會當成 orphan 移除。請避免在 `~/.claude/team-memory/` 下手動放指向本 repo 的 symlink。
+
+---
+
+## Team memory
+
+Specaffold 維護兩層 team memory,每次 agent 被喚起時都讀:
+
+| Tier | 位置 | 用途 |
+|---|---|---|
+| Global | `~/.claude/team-memory/<role>/` | 跨所有專案通用的 lesson。真實檔案,每條一個 md。 |
+| Local | `<repo>/.claude/team-memory/<role>/` | repo 專屬 lesson。隨 repo 納入版控、透過 git 分享。 |
+
+Agent 讀取順序:**先 global、再 local**;local 同主題 entry 會靜默覆蓋 global 的。
+
+`/scaff:archive` 會在 retrospective 階段問每個角色有無值得保存的心得;接受的條目就直接寫進對應 tier 的檔案。想把 local 條目升級到 global:`/scaff:promote <role>/<file>`。兩 tier 是**獨立**的 — `bin/claude-symlink install` 永遠不會自動把 repo-local memory 同步進 user-global 目錄。
+
+完整撰寫協定:[.claude/team-memory/README.md](.claude/team-memory/README.md)。
 
 ---
 
