@@ -4,6 +4,8 @@ Role-based spec-driven development workflow for Claude Code. A small virtual tea
 
 繁體中文版:[README.zh-TW.md](README.zh-TW.md)
 
+See also: [README.zh-TW.md](README.zh-TW.md)
+
 ## Install
 
 ### 1. One-time global bootstrap
@@ -126,6 +128,24 @@ Two escape hatches are available when the language preference must be suppressed
 /scaff:archive      → TPM retrospective + archive move
 ```
 
+**Work-type entry commands** (alternatives to `/scaff:request` for non-feature work):
+
+```
+/scaff:bug   <input>   → PM intake for fix-type work
+/scaff:chore <input>   → PM intake for maintenance/cleanup work
+```
+
+**`/scaff:bug`** — for fix-type intake. The `<input>` argument is auto-classified:
+- URL (e.g. `https://github.com/user/repo/issues/123`) → `type: url`
+- Ticket ID (e.g. `PROJ-456`) → `type: ticket-id`
+- Free-form description → `type: description`
+
+Slug convention: `YYYYMMDD-fix-<body>`. PM probe elicits: repro steps, expected vs actual behaviour, environment. PRD template is bug-shaped (Repro / Expected / Actual / Environment / Root cause / Fix requirements / Regression test requirements). At archive time, the retrospective prompt focuses on **guardrail gaps** — what checks or tests could have caught this earlier.
+
+**`/scaff:chore`** — for maintenance/cleanup intake. Slug convention: `YYYYMMDD-chore-<body>`. PM probe elicits: scope, reason, verify-assertion. PRD template is checklist-shaped (items to do + verify assertions). At archive time, the retrospective prompt focuses on **automation potential** — what recurring manual work could be automated.
+
+For feature work, `/scaff:request` remains the entry point. Its retrospective prompt focuses on **tech decisions** — rationale for architecture and library choices made during the feature.
+
 Shortcut — advance one stage at a time based on STATUS:
 
 ```
@@ -226,6 +246,8 @@ The tier → stage dispatch table (✅ required, 🔵 optional, ⚫ conditional 
 | archive | ✅ | ✅ (merge-check) | ✅ (merge-check strict) |
 
 `/scaff:next` reads the `tier:` field from `STATUS.md` and skips stages that are not required for the feature's tier, writing a STATUS Note for each skipped stage.
+
+The skip logic is extended by a **3×3 work-type × tier matrix** implemented in `bin/scaff-stage-matrix`. Work-type (`feature` / `bug` / `chore`) and tier (`tiny` / `standard` / `audited`) together determine which stages are required, optional, or skipped. Notable rules: `chore` work-type always skips the design stage regardless of tier; `bug-tiny` still runs validate (regression test required even for the smallest fix).
 
 ### Declaring a tier at request time
 
