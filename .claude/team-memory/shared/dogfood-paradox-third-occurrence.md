@@ -3,7 +3,7 @@ name: Dogfood paradox — structural verify during bootstrap, runtime exercise n
 description: Features that deliver the tool they would themselves use need structural-only verification; live runtime exercise happens on the next feature.
 type: pattern
 created: 2026-04-18
-updated: 2026-04-20
+updated: 2026-04-24
 ---
 
 <!-- 2026-04-18 update: added fifth and sixth occurrences from
@@ -256,3 +256,41 @@ in the final wave**, not as an archive-time afterthought. The handoff line reads
 If the feature invokes the paradox, the TPM should reference this shared memory
 at plan time (not just the PM at PRD time). The ninth occurrence's 05-plan.md §1.2
 did this explicitly.
+
+## Tenth occurrence (2026-04-24, `20260424-entry-type-split`)
+
+New variant — **work-type split (`/scaff:request` vs `/scaff:bug` vs
+`/scaff:chore`) is itself a self-shipping mechanism**. The feature could
+not exercise its own dispatch via the new entry commands during implement
+because the commands didn't exist until merge. Validate was
+structural-only (3×3 stage-matrix table assertions, slash-command file
+shape, PM/TPM probe-anchor presence) per the established discipline.
+
+Three reinforcements observed, no new failure mode:
+
+1. **Pre-commit RUNTIME HANDOFF line held clean** — T17 authored a
+   `RUNTIME HANDOFF (for successor feature):` sentinel into STATUS
+   before W3 closed; t106 structurally asserted the sentinel line via
+   `grep -q "RUNTIME HANDOFF"`. Discipline from 9th occurrence carried
+   forward without drift.
+2. **Bootstrapped entry must dispatch through existing entry** — this
+   feature's own `/scaff:request` invocation predated the split, so
+   intake ran via the legacy single-entry path. Documented in PRD R2
+   ("backward compat: legacy `/scaff:request` continues to accept all
+   work-types until the next major bump"). No special bootstrap flag
+   needed because the legacy path remained valid.
+3. **Tier matrix asymmetry caught structurally** — t102_stage_matrix.sh
+   asserts the full 72-cell ternary (work-type × tier × stage →
+   required|optional|skipped). Structural assertion of the dispatch
+   table is the dogfood-paradox-safe equivalent of "actually dispatch a
+   bug feature end-to-end" — the next bug feature will be the runtime
+   exercise.
+
+Cumulative pattern at 10 occurrences: structural verify + RUNTIME
+HANDOFF sentinel + grep-anchored test of the sentinel line is now the
+**default** dogfood-paradox handling. The split was novel only as a
+data-shape change (3 entry commands instead of 1); the discipline did
+not need to evolve.
+
+RUNTIME HANDOFF (this feature):
+> `2026-04-25 (or first day with a new bug/chore) — bug feature exercised /scaff:bug end-to-end via auto-classify branch; chore feature exercised /scaff:chore end-to-end with tier=tiny default.`
