@@ -3,7 +3,7 @@
 - **slug**: 20260424-entry-type-split
 - **has-ui**: false
 - **tier**: audited
-- **stage**: implement
+- **stage**: validate
 - **created**: 2026-04-24
 - **updated**: 2026-04-24
 
@@ -14,7 +14,7 @@
 - [x] tech          (04-tech.md)                 — Architect
 - [x] plan          (05-plan.md)                 — TPM  [merged: narrative + task checklist]
 - [x] implement     (05-plan.md tasks checked off) — Developer
-- [ ] validate      (08-validate.md, verdict PASS) — QA-tester + QA-analyst  [merged: verify + gap-check]
+- [x] validate      (08-validate.md, verdict NITS) — QA-tester + QA-analyst  [merged: verify + gap-check]
 - [ ] archive       (moved to .specaffold/archive/)     — TPM
 
 ## Notes
@@ -42,3 +42,4 @@
 - 2026-04-24 review result — wave 3 verdict=PASS (9/9 reviewers PASS)
 - 2026-04-24 implement wave 3 done — T15, T16, T17; t106 passed after 1 path fix (TEMPLATE_STATUS/TEMPLATE_DIR defaults missing /features/ segment)
 - 2026-04-24 implement stage complete — 17/17 tasks checked; wave 1 (T1-T7) + wave 2 (T8-T14, retry-fixed) + wave 3 (T15-T17) all merged into feature branch. Full structural test suite: t102 78/78 + t103 18/18 + t104 15/15 + t105 16/16 + t106 12/12 = 139/139 PASS.
+- 2026-04-24 validate — slug=20260424-entry-type-split verdict=NITS (0 must, 2 should, 2 advisory; 139/139 structural tests PASS; runtime ACs deferred per PRD D8 / dogfood paradox 10th occurrence; 5 retrospective signals captured for archive)
