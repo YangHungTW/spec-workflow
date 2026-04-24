@@ -1,0 +1,6 @@
+T4 adds a single static metadata field (`work-type: feature`) to a template markdown file; no code, shell commands, secrets, user input, or file mutations are involved, so all 8 security rubric checks are vacuously satisfied. No findings.
+
+## Reviewer verdict
+axis: security
+verdict: PASS
+findings: []

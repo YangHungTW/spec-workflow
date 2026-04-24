@@ -1,0 +1,8 @@
+T6 security review: tpm.md additive — per-type retrospective prompts + work-type dispatch sentence.
+
+The diff is documentation-only: three markdown bullet points containing static prompt strings are added to `.claude/agents/scaff/tpm.md`. There is no shell code, no file I/O, no user-supplied input handling, no secrets, no path operations, and no subprocess calls; none of the 8 security checks in the rubric find a surface to evaluate.
+
+## Reviewer verdict
+axis: security
+verdict: PASS
+findings: []

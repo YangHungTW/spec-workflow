@@ -1,0 +1,11 @@
+T7 (test/t103_prd_templates_shape.sh) contains no loops over variable-length lists with shell-outs, no repeated expensive operations (uname, git, network), and no O(n²) patterns; all shell-out calls are sequential with a fixed constant count. The `assert_literal` helper spawns three processes per call (`grep -F | wc -l | tr -d ' '`) where `grep -c` (already used in `assert_heading`) would suffice with one, but with only 4 call sites this is a minor advisory rather than a blocking concern.
+
+## Reviewer verdict
+axis: performance
+verdict: NITS
+findings:
+  - severity: advisory
+    file: test/t103_prd_templates_shape.sh
+    line: 97
+    rule: reviewer-performance
+    message: assert_literal pipes through wc -l and tr -d (3 forks per call); use grep -c as assert_heading already does to reduce to 1 fork per call

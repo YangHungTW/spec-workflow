@@ -1,0 +1,6 @@
+T5 modifies only `.claude/agents/scaff/pm.md`, a pure markdown agent-instructions document with no executable code, no shell commands, no credential references, and no file mutation paths. All 8 security rubric checks (hardcoded secrets, path traversal, input validation, injection, untrusted parsing, secure defaults, atomic writes, sentinel-file races) are inapplicable or pass cleanly against this diff.
+
+## Reviewer verdict
+axis: security
+verdict: PASS
+findings: []

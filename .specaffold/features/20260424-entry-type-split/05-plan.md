@@ -110,7 +110,7 @@ Each task below uses the new-merged-form task block shape per `tpm.appendix.md` 
 
 ### W1 — Foundation (producers)
 
-## T1 — Author `bin/scaff-stage-matrix` ternary classifier helper
+## T1 — [x] Author `bin/scaff-stage-matrix` ternary classifier helper
 
 - **Milestone**: M1
 - **Requirements**: R10, R10.1
@@ -120,9 +120,9 @@ Each task below uses the new-merged-form task block shape per `tpm.appendix.md` 
 - **Verify**: `bash test/t102_stage_matrix.sh` (T2 authors this test; T1 delivers the helper the test exercises). Also `bash -n bin/scaff-stage-matrix` for syntax-check. Also `grep -qE '^stage_status\(\)' bin/scaff-stage-matrix` to confirm public-function presence.
 - **Depends on**: —
 - **Parallel-safe-with**: T2, T3, T4, T5, T6, T7
-- [ ]
+- [x]
 
-## T2 — Unit-test `stage_status` against all 72 `(work-type × tier × stage)` cells
+## T2 — [x] Unit-test `stage_status` against all 72 `(work-type × tier × stage)` cells
 
 - **Milestone**: M1
 - **Requirements**: R10, R10.1
@@ -132,9 +132,9 @@ Each task below uses the new-merged-form task block shape per `tpm.appendix.md` 
 - **Verify**: `bash test/t102_stage_matrix.sh` prints `PASS` and exits 0.
 - **Depends on**: —
 - **Parallel-safe-with**: T1, T3, T4, T5, T6, T7
-- [ ]
+- [x]
 
-## T3 — Author the three PRD template files under `.claude/commands/scaff/prd-templates/`
+## T3 — [x] Author the three PRD template files under `.claude/commands/scaff/prd-templates/`
 
 - **Milestone**: M1
 - **Requirements**: R8, R8.1
@@ -148,9 +148,9 @@ Each task below uses the new-merged-form task block shape per `tpm.appendix.md` 
 - **Verify**: `bash test/t103_prd_templates_shape.sh` (T7 authors this test). Also `ls .claude/commands/scaff/prd-templates/ | sort | tr '\n' ' '` outputs `bug.md chore.md feature.md `.
 - **Depends on**: —
 - **Parallel-safe-with**: T1, T2, T4, T5, T6, T7
-- [ ]
+- [x]
 
-## T4 — Add `work-type:` field to `.specaffold/features/_template/STATUS.md`
+## T4 — [x] Add `work-type:` field to `.specaffold/features/_template/STATUS.md`
 
 - **Milestone**: M1
 - **Requirements**: R12, R13
@@ -160,9 +160,9 @@ Each task below uses the new-merged-form task block shape per `tpm.appendix.md` 
 - **Verify**: `grep -c '^- \*\*work-type\*\*: feature$' .specaffold/features/_template/STATUS.md` returns `1`. Also `diff -u` of the template before/after shows exactly one added line between `has-ui` and `tier`.
 - **Depends on**: —
 - **Parallel-safe-with**: T1, T2, T3, T5, T6, T7
-- [ ]
+- [x]
 
-## T5 — Add three parallel `## When invoked for /scaff:<cmd>` probe sections + single master 3-row keyword table to `pm.md`
+## T5 — [x] Add three parallel `## When invoked for /scaff:<cmd>` probe sections + single master 3-row keyword table to `pm.md`
 
 - **Milestone**: M1
 - **Requirements**: R4, R5, R6, R7, R7.1, R8.1
@@ -177,9 +177,9 @@ Each task below uses the new-merged-form task block shape per `tpm.appendix.md` 
 - **Verify**: structural grep assertions run by T16 (`bash test/t106_pm_tpm_status_shape.sh`). Inline quick-check: `grep -c '^## When invoked for /scaff:bug' .claude/agents/scaff/pm.md` returns `1`; `grep -c '^## When invoked for /scaff:chore' .claude/agents/scaff/pm.md` returns `1`; `grep -F 'race condition' .claude/agents/scaff/pm.md` returns one line (R6 audited bug keyword anchor); `grep -F 'bump dep' .claude/agents/scaff/pm.md` returns one line (R7 audited chore keyword anchor).
 - **Depends on**: —
 - **Parallel-safe-with**: T1, T2, T3, T4, T6, T7
-- [ ]
+- [x]
 
-## T6 — Add per-type retrospective prompts + `work-type` read to `tpm.md`
+## T6 — [x] Add per-type retrospective prompts + `work-type` read to `tpm.md`
 
 - **Milestone**: M1
 - **Requirements**: R11
@@ -194,9 +194,9 @@ Each task below uses the new-merged-form task block shape per `tpm.appendix.md` 
 - **Verify**: structural grep run by T16. Inline quick-check: `grep -F 'What technical decisions surprised you? Architecture patterns worth extracting into memory?' .claude/agents/scaff/tpm.md` returns one line; `grep -F 'What guardrail (test, review axis, rule) would have caught this bug before release?' .claude/agents/scaff/tpm.md` returns one line; `grep -F 'Could this cleanup have been automated? Does it indicate a broader tech-debt pattern worth naming?' .claude/agents/scaff/tpm.md` returns one line.
 - **Depends on**: —
 - **Parallel-safe-with**: T1, T2, T3, T4, T5, T7
-- [ ]
+- [x]
 
-## T7 — Test: PRD-template shape assertions (AC6, AC12 support)
+## T7 — [x] Test: PRD-template shape assertions (AC6, AC12 support)
 
 - **Milestone**: M1
 - **Requirements**: R8 (AC6), R12 (AC12)
@@ -212,7 +212,7 @@ Each task below uses the new-merged-form task block shape per `tpm.appendix.md` 
 - **Verify**: `bash test/t103_prd_templates_shape.sh` prints `PASS` and exits 0 after T3 + T4 land.
 - **Depends on**: —
 - **Parallel-safe-with**: T1, T2, T3, T4, T5, T6
-- [ ]
+- [x]
 
 ---
 

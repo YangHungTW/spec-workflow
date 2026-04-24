@@ -1,0 +1,6 @@
+The diff is a pure additive markdown block in `.claude/agents/scaff/tpm.md` introducing a `### Per-type retrospective prompts` subsection; naming, indentation, bullet style, and quoting all match the surrounding file conventions. The inline parenthetical comment explains rationale and cites a decision ID (tech-D3), satisfying the WHY-not-WHAT convention, and no commented-out code or dead symbols are present.
+
+## Reviewer verdict
+axis: style
+verdict: PASS
+findings: []

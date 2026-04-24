@@ -1,0 +1,6 @@
+T6 adds three bullet points of prose to `.claude/agents/scaff/tpm.md`; the diff contains no shell code, loops, subprocess invocations, or file reads, so no performance-rubric rule is triggered. The change is purely additive documentation with zero runtime execution impact.
+
+## Reviewer verdict
+axis: performance
+verdict: PASS
+findings: []

@@ -1,0 +1,6 @@
+T3 adds three static markdown template files (bug.md, chore.md, feature.md) containing only placeholder comments and headings. No executable code, loops, subprocess calls, file reads, or hook paths are present, so no performance rubric rules are triggered.
+
+## Reviewer verdict
+axis: performance
+verdict: PASS
+findings: []

@@ -1,0 +1,6 @@
+## Reviewer verdict
+axis: style
+verdict: PASS
+findings: []
+
+All style axis checks pass: naming is consistent snake_case throughout, no commented-out code, comments explain rationale rather than restating code, indentation and quoting are uniform, `set -u -o pipefail` matches the directory's mixed convention (t29/t82/t84 use the same form), bash 3.2 portability is clean (no `readlink -f`, `realpath`, `jq`, `mapfile`, or `[[ =~ ]]`), and sandbox-HOME discipline is fully present with `mktemp -d`, `trap`, `export HOME`, `mkdir -p`, and the preflight `case` assertion. No dead symbols or unused variables were found in the diff.
