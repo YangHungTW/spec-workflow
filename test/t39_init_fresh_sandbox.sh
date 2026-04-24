@@ -12,8 +12,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd -P)"
-SPECFLOW_SRC="${SPECFLOW_SRC:-$REPO_ROOT}"
-SEED="${SEED:-$SPECFLOW_SRC/bin/scaff-seed}"
+SCAFF_SRC="${SCAFF_SRC:-$REPO_ROOT}"
+SEED="${SEED:-$SCAFF_SRC/bin/scaff-seed}"
 
 # ---------------------------------------------------------------------------
 # Sandbox + HOME isolation (sandbox-home-in-tests.md — non-negotiable)
@@ -50,13 +50,13 @@ git -C "$CONSUMER" add .gitignore
 git -C "$CONSUMER" commit -q -m "init"
 
 # Capture the source HEAD SHA before running init; used for manifest ref-sniff.
-AT_REF="$(git -C "$SPECFLOW_SRC" rev-parse HEAD)"
+AT_REF="$(git -C "$SCAFF_SRC" rev-parse HEAD)"
 
 # ---------------------------------------------------------------------------
 # Run init
 # ---------------------------------------------------------------------------
 cd "$CONSUMER"
-"$SEED" init --from "$SPECFLOW_SRC" --ref "$AT_REF"
+"$SEED" init --from "$SCAFF_SRC" --ref "$AT_REF"
 cd "$SANDBOX"
 
 # ---------------------------------------------------------------------------
@@ -72,7 +72,7 @@ fail() {
 #          is a regular file (not a symlink) whose bytes match the source.
 # ---------------------------------------------------------------------------
 for subdir in ".claude/agents/scaff" ".claude/commands/scaff" ".claude/hooks"; do
-  src_dir="$SPECFLOW_SRC/$subdir"
+  src_dir="$SCAFF_SRC/$subdir"
   dst_dir="$CONSUMER/$subdir"
   [ -d "$src_dir" ] || continue
   while IFS= read -r src_file; do
@@ -122,7 +122,7 @@ fi
 # ---------------------------------------------------------------------------
 # AC4.a — team-memory skeleton: role dirs have index.md only (no inherited lessons)
 # ---------------------------------------------------------------------------
-expected_roles="$(ls "$SPECFLOW_SRC/.claude/team-memory/" | grep -v 'README.md')"
+expected_roles="$(ls "$SCAFF_SRC/.claude/team-memory/" | grep -v 'README.md')"
 while IFS= read -r role; do
   role_dir="$CONSUMER/.claude/team-memory/$role"
   [ -d "$role_dir" ] || fail "AC4.a" "team-memory role dir missing: $role"
@@ -137,7 +137,7 @@ extra_md="$(find "$CONSUMER/.claude/team-memory" -name '*.md' -not -name 'index.
 # ---------------------------------------------------------------------------
 # AC5.a — every file under .claude/rules/ is byte-identical to its source
 # ---------------------------------------------------------------------------
-src_rules="$SPECFLOW_SRC/.claude/rules"
+src_rules="$SCAFF_SRC/.claude/rules"
 dst_rules="$CONSUMER/.claude/rules"
 [ -d "$dst_rules" ] || fail "AC5.a" ".claude/rules not found in consumer"
 while IFS= read -r src_file; do

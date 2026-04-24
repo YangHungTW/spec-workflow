@@ -83,7 +83,7 @@
   "settings.notifications.statusDenied": "Denied",
   "settings.notifications.statusDefault": "Not yet requested",
   "settings.notifications.deniedHint": "Notifications denied — open System Settings → Notifications → Flow Monitor to enable.",
-  "settings.repoNotSpecflow": "Not a scaff repository: missing .specaffold/ folder.",
+  "settings.repoNotScaff": "Not a scaff repository: missing .specaffold/ folder.",
   "settings.repoAddFailed": "Failed to add repository.",
   "settings.language": "Language",
   "settings.about": "About",

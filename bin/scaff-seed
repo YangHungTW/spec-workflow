@@ -488,14 +488,14 @@ preflight() {
 cmd_init() {
   # ---------------------------------------------------------------------------
   # Step 1: Resolve source repo root via layered fallback (D7):
-  #   --from > $SPECFLOW_SRC > readlink ~/.claude/agents/scaff → strip suffix
+  #   --from > $SCAFF_SRC > readlink ~/.claude/agents/scaff → strip suffix
   # ---------------------------------------------------------------------------
   local src_root=""
 
   if [ -n "$SRC" ]; then
     src_root="$SRC"
-  elif [ -n "${SPECFLOW_SRC:-}" ]; then
-    src_root="$SPECFLOW_SRC"
+  elif [ -n "${SCAFF_SRC:-}" ]; then
+    src_root="$SCAFF_SRC"
   else
     # Auto-discover: bare readlink (no -f) on the global agents symlink
     local agent_link="$HOME/.claude/agents/scaff"
@@ -518,7 +518,7 @@ cmd_init() {
     fi
   fi
 
-  [ -n "$src_root" ] || die "cannot resolve source repo; pass --from <path> or set SPECFLOW_SRC"
+  [ -n "$src_root" ] || die "cannot resolve source repo; pass --from <path> or set SCAFF_SRC"
 
   # Resolve to an absolute path using cd (no readlink -f / realpath)
   src_root=$(cd "$src_root" 2>/dev/null && pwd -P) \
@@ -821,14 +821,14 @@ cmd_update() {
 
   # ---------------------------------------------------------------------------
   # Step 3: Resolve source repo root via layered fallback (D7):
-  #   --from > $SPECFLOW_SRC > readlink ~/.claude/agents/scaff → strip suffix
+  #   --from > $SCAFF_SRC > readlink ~/.claude/agents/scaff → strip suffix
   # ---------------------------------------------------------------------------
   local src_root=""
 
   if [ -n "$SRC" ]; then
     src_root="$SRC"
-  elif [ -n "${SPECFLOW_SRC:-}" ]; then
-    src_root="$SPECFLOW_SRC"
+  elif [ -n "${SCAFF_SRC:-}" ]; then
+    src_root="$SCAFF_SRC"
   else
     local agent_link="$HOME/.claude/agents/scaff"
     if [ -L "$agent_link" ]; then
@@ -847,7 +847,7 @@ cmd_update() {
     fi
   fi
 
-  [ -n "$src_root" ] || die "cannot resolve source repo; pass --from <path> or set SPECFLOW_SRC"
+  [ -n "$src_root" ] || die "cannot resolve source repo; pass --from <path> or set SCAFF_SRC"
 
   src_root=$(cd "$src_root" 2>/dev/null && pwd -P) \
     || die "source repo path not accessible: $src_root"
@@ -1069,15 +1069,15 @@ EOF
 cmd_migrate() {
   # ---------------------------------------------------------------------------
   # Step 1: Resolve source repo root via layered fallback (D7):
-  #   --from > $SPECFLOW_SRC > readlink ~/.claude/agents/scaff → strip suffix
+  #   --from > $SCAFF_SRC > readlink ~/.claude/agents/scaff → strip suffix
   # Same resolution logic as cmd_init; no --to overload for migrate.
   # ---------------------------------------------------------------------------
   local src_root=""
 
   if [ -n "$SRC" ]; then
     src_root="$SRC"
-  elif [ -n "${SPECFLOW_SRC:-}" ]; then
-    src_root="$SPECFLOW_SRC"
+  elif [ -n "${SCAFF_SRC:-}" ]; then
+    src_root="$SCAFF_SRC"
   else
     # Auto-discover via bare readlink (no -f) on the global agents symlink.
     # This is a READ-ONLY operation — D10 forbids any write to ~/.claude/.
@@ -1101,7 +1101,7 @@ cmd_migrate() {
     fi
   fi
 
-  [ -n "$src_root" ] || die "no source repo; pass --from or set SPECFLOW_SRC or ensure ~/.claude/agents/scaff resolves"
+  [ -n "$src_root" ] || die "no source repo; pass --from or set SCAFF_SRC or ensure ~/.claude/agents/scaff resolves"
 
   # Resolve to an absolute path using cd (no readlink -f / realpath)
   src_root=$(cd "$src_root" 2>/dev/null && pwd -P) \

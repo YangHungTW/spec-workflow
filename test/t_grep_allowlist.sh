@@ -100,7 +100,7 @@ PATEOF
 # Suppress non-zero exit (no matches) with || true.
 # ---------------------------------------------------------------------------
 cd "$REPO_ROOT"
-HIT_FILES="$(grep -rlE "specflow|spec-workflow" . --exclude-dir=.git 2>/dev/null || true)"
+HIT_FILES="$(grep -rilE "specflow|spec[_-]workflow" . --exclude-dir=.git 2>/dev/null || true)"
 
 # ---------------------------------------------------------------------------
 # Filter: collect files that are NOT covered by any allow-list pattern.

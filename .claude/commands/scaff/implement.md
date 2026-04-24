@@ -157,8 +157,8 @@ EOF
 
    # FEATURE_TIER set at step 7 (line ~53); reuse here — no re-fork needed.
    if [ "$FEATURE_TIER" = "tiny" ]; then
-     TIER_DIFF_LINES="${SPECFLOW_TIER_DIFF_LINES:-200}"
-     TIER_DIFF_FILES="${SPECFLOW_TIER_DIFF_FILES:-3}"
+     TIER_DIFF_LINES="${SCAFF_TIER_DIFF_LINES:-200}"
+     TIER_DIFF_FILES="${SCAFF_TIER_DIFF_FILES:-3}"
      if [ "$diff_lines" -gt "$TIER_DIFF_LINES" ] || \
         [ "$diff_files" -gt "$TIER_DIFF_FILES" ]; then
        printf 'WARNING: tiny-tier feature exceeds threshold after wave %s: %s lines, %s files (limits: %s lines, %s files). TPM should confirm or upgrade tier via set_tier.\n' \

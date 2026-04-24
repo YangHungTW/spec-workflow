@@ -31,8 +31,8 @@
 # =============================================================================
 
 # Double-source guard — safe to source multiple times.
-[ "${SPECFLOW_TIER_LOADED:-0}" = "1" ] && return 0
-SPECFLOW_TIER_LOADED=1
+[ "${SCAFF_TIER_LOADED:-0}" = "1" ] && return 0
+SCAFF_TIER_LOADED=1
 
 # ---------------------------------------------------------------------------
 # _tier_resolve_and_check <feature_dir>

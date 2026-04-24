@@ -7,13 +7,13 @@
 # appropriate production artefact:
 #
 #   A. Diff-lines trigger  — implement.md threshold block:
-#        250-line single-file diff exceeds SPECFLOW_TIER_DIFF_LINES:-200.
+#        250-line single-file diff exceeds SCAFF_TIER_DIFF_LINES:-200.
 #        Verify the threshold logic is present and the WARNING/STATUS note
 #        shape matches the D7 spec (structural grep — full implement
 #        invocation is infeasible per tech §4.4).
 #
 #   B. Diff-files trigger  — implement.md threshold block:
-#        100-line diff across 5 files exceeds SPECFLOW_TIER_DIFF_FILES:-3.
+#        100-line diff across 5 files exceeds SCAFF_TIER_DIFF_FILES:-3.
 #        Same structural verification strategy.
 #
 #   C. Security-must trigger — bin/scaff-aggregate-verdicts:
@@ -128,12 +128,12 @@ grep_in_file() {
 # Sub-test A — Diff-lines trigger (structural grep of implement.md)
 #
 # The threshold check (D7) must:
-#   1. Reference the SPECFLOW_TIER_DIFF_LINES env-var with default 200.
+#   1. Reference the SCAFF_TIER_DIFF_LINES env-var with default 200.
 #   2. Emit a WARNING line when the check fires.
 #   3. Append a STATUS Notes pending line (the STATUS_NOTE or equivalent).
 #
 # 250 lines > 200 default — so the lines trigger fires when diff_lines
-# exceeds SPECFLOW_TIER_DIFF_LINES.
+# exceeds SCAFF_TIER_DIFF_LINES.
 # ---------------------------------------------------------------------------
 
 if [ ! -f "$IMPL" ]; then
@@ -143,8 +143,8 @@ if [ ! -f "$IMPL" ]; then
 else
   # A1: env-var with default 200 present in threshold block
   grep_in_file \
-    "A1: SPECFLOW_TIER_DIFF_LINES default 200 in implement.md" \
-    'SPECFLOW_TIER_DIFF_LINES[^:]*:-200' \
+    "A1: SCAFF_TIER_DIFF_LINES default 200 in implement.md" \
+    'SCAFF_TIER_DIFF_LINES[^:]*:-200' \
     "$IMPL"
 
   # A2: comparison against the lines threshold
@@ -182,8 +182,8 @@ if [ ! -f "$IMPL" ]; then
 else
   # B1: env-var with default 3 present
   grep_in_file \
-    "B1: SPECFLOW_TIER_DIFF_FILES default 3 in implement.md" \
-    'SPECFLOW_TIER_DIFF_FILES[^:]*:-3' \
+    "B1: SCAFF_TIER_DIFF_FILES default 3 in implement.md" \
+    'SCAFF_TIER_DIFF_FILES[^:]*:-3' \
     "$IMPL"
 
   # B2: comparison against the files threshold

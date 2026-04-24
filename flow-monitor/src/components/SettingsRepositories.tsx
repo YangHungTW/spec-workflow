@@ -37,7 +37,7 @@ export function SettingsRepositories({
     }
 
     if (!hasSpecWorkflow) {
-      setRepoError(t("settings.repoNotSpecflow"));
+      setRepoError(t("settings.repoNotScaff"));
       return;
     }
 

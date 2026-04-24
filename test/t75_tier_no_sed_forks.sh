@@ -98,7 +98,7 @@ mkdir -p "$FIXTURE_DIR"
 printf -- '- **slug**: test\n- **has-ui**: false\n- **tier**: audited\n- **stage**: plan\n' \
   > "$FIXTURE_DIR/STATUS.md"
 
-result=$(SPECFLOW_TIER_LOADED=0 REPO_ROOT="$REPO_ROOT" bash -c \
+result=$(SCAFF_TIER_LOADED=0 REPO_ROOT="$REPO_ROOT" bash -c \
   ". '$TIER_LIB'; get_tier '$FIXTURE_DIR'" 2>/dev/null) || true
 
 if [ "$result" = "audited" ]; then
@@ -109,7 +109,7 @@ fi
 
 # Also test 'tiny' and 'malformed'
 printf -- '- **tier**: tiny\n' > "$FIXTURE_DIR/STATUS.md"
-result_tiny=$(SPECFLOW_TIER_LOADED=0 REPO_ROOT="$REPO_ROOT" bash -c \
+result_tiny=$(SCAFF_TIER_LOADED=0 REPO_ROOT="$REPO_ROOT" bash -c \
   ". '$TIER_LIB'; get_tier '$FIXTURE_DIR'" 2>/dev/null) || true
 if [ "$result_tiny" = "tiny" ]; then
   pass "Check 4b: get_tier returns 'tiny' correctly"
@@ -118,7 +118,7 @@ else
 fi
 
 printf -- '- **tier**: notavalid\n' > "$FIXTURE_DIR/STATUS.md"
-result_mal=$(SPECFLOW_TIER_LOADED=0 REPO_ROOT="$REPO_ROOT" bash -c \
+result_mal=$(SCAFF_TIER_LOADED=0 REPO_ROOT="$REPO_ROOT" bash -c \
   ". '$TIER_LIB'; get_tier '$FIXTURE_DIR'" 2>/dev/null) || true
 if [ "$result_mal" = "malformed" ]; then
   pass "Check 4c: get_tier returns 'malformed' for invalid value"

@@ -67,7 +67,7 @@ pass() { printf 'PASS: %s\n' "$1"; PASS=$((PASS + 1)); }
 fail() { printf 'FAIL: %s\n' "$1" >&2; FAIL=$((FAIL + 1)); }
 
 # Source the library
-SPECFLOW_TIER_LOADED=0
+SCAFF_TIER_LOADED=0
 # shellcheck source=/dev/null
 . "$TIER_LIB"
 

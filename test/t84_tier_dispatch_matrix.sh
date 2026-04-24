@@ -65,7 +65,7 @@ if [ ! -f "$TIER_LIB" ]; then
 fi
 
 # Guard: tier_skips_stage must be defined after sourcing the library
-SPECFLOW_TIER_LOADED=0
+SCAFF_TIER_LOADED=0
 # shellcheck source=/dev/null
 . "$TIER_LIB"
 

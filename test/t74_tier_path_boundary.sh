@@ -73,12 +73,12 @@ make_status_md() {
 EOF
 }
 
-# Source the library into a subshell so SPECFLOW_TIER_LOADED resets between
+# Source the library into a subshell so SCAFF_TIER_LOADED resets between
 # test cases.  Returns the exit code of the subshell.
 run_get_tier() {
   local dir="$1"
   # shellcheck disable=SC1090
-  ( SPECFLOW_TIER_LOADED=0
+  ( SCAFF_TIER_LOADED=0
     # Export REPO_ROOT so the boundary guard can reference it.
     export REPO_ROOT
     . "$TIER_LIB"
@@ -91,7 +91,7 @@ run_set_tier() {
   # We need to capture stderr separately; use a file.
   local stderr_file="$SANDBOX/stderr_$$.txt"
   local rc=0
-  ( SPECFLOW_TIER_LOADED=0
+  ( SCAFF_TIER_LOADED=0
     export REPO_ROOT
     . "$TIER_LIB"
     # First seed the file with tier: tiny so the transition tiny→standard is valid.
@@ -127,7 +127,7 @@ OUTSIDE_DIR="$SANDBOX/outside-feature"
 make_status_md "$OUTSIDE_DIR" "standard"
 
 stderr_file2="$SANDBOX/check2_err.txt"
-result2=$(SPECFLOW_TIER_LOADED=0 REPO_ROOT="$REPO_ROOT" bash -c \
+result2=$(SCAFF_TIER_LOADED=0 REPO_ROOT="$REPO_ROOT" bash -c \
   ". '$TIER_LIB'; get_tier '$OUTSIDE_DIR'" 2>"$stderr_file2") || true
 rc2=$?
 stderr2="$(cat "$stderr_file2")"
@@ -147,7 +147,7 @@ OUTSIDE_DIR2="$SANDBOX/outside-set-feature"
 make_status_md "$OUTSIDE_DIR2" "tiny"
 
 stderr_file3="$SANDBOX/check3_err.txt"
-SPECFLOW_TIER_LOADED=0 REPO_ROOT="$REPO_ROOT" bash -c \
+SCAFF_TIER_LOADED=0 REPO_ROOT="$REPO_ROOT" bash -c \
   ". '$TIER_LIB'; set_tier '$OUTSIDE_DIR2' standard developer retrytest" \
   >"$SANDBOX/check3_out.txt" 2>"$stderr_file3"
 rc3=$?
@@ -165,7 +165,7 @@ fi
 NON_EXISTENT="$SANDBOX/does-not-exist"
 
 stderr_file4="$SANDBOX/check4_err.txt"
-SPECFLOW_TIER_LOADED=0 REPO_ROOT="$REPO_ROOT" bash -c \
+SCAFF_TIER_LOADED=0 REPO_ROOT="$REPO_ROOT" bash -c \
   ". '$TIER_LIB'; set_tier '$NON_EXISTENT' standard developer retrytest" \
   >"$SANDBOX/check4_out.txt" 2>"$stderr_file4"
 rc4=$?
@@ -182,7 +182,7 @@ fi
 # The guard fires before the file-existence check.
 # ---------------------------------------------------------------------------
 stderr_file5="$SANDBOX/check5_err.txt"
-result5=$(SPECFLOW_TIER_LOADED=0 REPO_ROOT="$REPO_ROOT" bash -c \
+result5=$(SCAFF_TIER_LOADED=0 REPO_ROOT="$REPO_ROOT" bash -c \
   ". '$TIER_LIB'; get_tier '$NON_EXISTENT'" 2>"$stderr_file5") || true
 rc5=$?
 stderr5="$(cat "$stderr_file5")"
@@ -207,7 +207,7 @@ make_status_md "$VALID_SET_DIR" "tiny"
 trap 'rm -rf "$SANDBOX" "$REPO_ROOT/.specaffold/features/_t74_test_fixture" "$REPO_ROOT/.specaffold/features/_t74_set_test"' EXIT
 
 stderr_file6="$SANDBOX/check6_err.txt"
-SPECFLOW_TIER_LOADED=0 REPO_ROOT="$REPO_ROOT" bash -c \
+SCAFF_TIER_LOADED=0 REPO_ROOT="$REPO_ROOT" bash -c \
   ". '$TIER_LIB'; set_tier '$VALID_SET_DIR' standard developer retrytest" \
   >"$SANDBOX/check6_out.txt" 2>"$stderr_file6"
 rc6=$?

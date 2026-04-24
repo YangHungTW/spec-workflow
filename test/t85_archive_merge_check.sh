@@ -151,9 +151,9 @@ run_archive_check() {
   local allow_reason="$3"
 
   # Load tier library with REPO_ROOT = mock git repo root.
-  # Re-source each call to reset state (SPECFLOW_TIER_LOADED guard bypassed
+  # Re-source each call to reset state (SCAFF_TIER_LOADED guard bypassed
   # by unsetting the flag first).
-  SPECFLOW_TIER_LOADED=0
+  SCAFF_TIER_LOADED=0
   REPO_ROOT="$git_repo"
   # shellcheck source=/dev/null
   . "$TIER_LIB"

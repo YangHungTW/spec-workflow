@@ -62,7 +62,7 @@ fail() { printf 'FAIL: %s\n' "$1" >&2; FAIL=$((FAIL + 1)); }
 
 # Source the library — reset the loaded-guard to allow re-source within this
 # test process when needed.
-SPECFLOW_TIER_LOADED=0
+SCAFF_TIER_LOADED=0
 # shellcheck source=/dev/null
 . "$TIER_LIB"
 
@@ -228,7 +228,7 @@ done
 # Format: YYYY-MM-DD <role> — tier upgrade <old>→<new>: <reason>
 d="$SANDBOX/feat_set_audit_trail"
 make_status_fixture "$d" "tiny"
-export SPECFLOW_INVOKER_ROLE="tpm"
+export SCAFF_INVOKER_ROLE="tpm"
 set +e
 set_tier "$d" "standard" "tpm" "test-audit-trail"
 rc=$?

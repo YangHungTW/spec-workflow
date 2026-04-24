@@ -1,7 +1,7 @@
 /**
  * CommandPalette — overlay modal per Screen 3 (B2).
  *
- * Renders SAFE ∪ WRITE commands grouped into Control Actions and Specflow
+ * Renders SAFE ∪ WRITE commands grouped into Control Actions and Scaff
  * Commands. The Destructive group is intentionally empty in B2: this component
  * imports only SAFE and WRITE from the generated taxonomy; DESTROY is never
  * imported so the T99 grep test can assert DESTROY names appear only in
