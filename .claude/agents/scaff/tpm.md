@@ -49,6 +49,14 @@ Authoring rules:
 4. `git mv .specaffold/features/<slug> .specaffold/archive/<slug>`.
 5. Report archived path and memory entries added.
 
+### Per-type retrospective prompts
+
+During `/scaff:archive`, TPM reads STATUS `work-type:` (same read convention as `bin/scaff-tier`'s `get_tier`; legacy features without the field default to `feature` per tech-D3) and dispatches to the type-appropriate question:
+
+- **feature**: "What technical decisions surprised you? Architecture patterns worth extracting into memory?"
+- **bug**: "What guardrail (test, review axis, rule) would have caught this bug before release? Where in the pipeline did it slip through?"
+- **chore**: "Could this cleanup have been automated? Does it indicate a broader tech-debt pattern worth naming?"
+
 ## When invoked for /scaff:update-plan or /scaff:update-task
 
 Edit the plan/tasks file, tag changed lines `[CHANGED YYYY-MM-DD]`, mark downstream artifacts stale, log in STATUS Notes with reason.
