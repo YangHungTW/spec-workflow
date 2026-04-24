@@ -37,3 +37,4 @@
 - 2026-04-24 T11 retry dispatched — same slug-validation hardening applied symmetrically (preventive; fix the bug pattern not just the must-severity instance)
 - 2026-04-24 review retry result — wave 2 verdict=NITS (T10 + T11 all 6 reviewers PASS post-fix; remaining NITS are T13/T14 re-read-file cosmetic)
 - 2026-04-24 implement wave 2 done — T8, T9, T10, T11, T12, T13, T14; post-merge t104 15/15 PASS; t105 16/16 PASS (after 1 test-spelling fix accepting "why[- ]now" both forms); skill list correctly registers /scaff:bug + /scaff:chore commands.
+- 2026-04-24 TPM — RUNTIME HANDOFF (for successor bug/chore): first real /scaff:bug or /scaff:chore invocation must open its STATUS Notes with "exercised entry-type-split commands on this feature's first live session". Structural ACs verified in this feature's validate; runtime ACs deferred per PRD §6.2 AC-runtime-deferred.
