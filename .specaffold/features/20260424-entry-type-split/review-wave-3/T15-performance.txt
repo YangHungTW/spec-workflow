@@ -1,0 +1,6 @@
+T15 adds only Markdown documentation (README.md and README.zh-TW.md) — no shell scripts, no loops, no subprocess calls, and no hook paths are touched. There are no performance-relevant constructs in scope for this task.
+
+## Reviewer verdict
+axis: performance
+verdict: PASS
+findings: []

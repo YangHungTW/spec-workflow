@@ -340,7 +340,7 @@ Each task below uses the new-merged-form task block shape per `tpm.appendix.md` 
 - **Verify**: `grep -F '/scaff:bug' README.md` returns ≥ 1 line; `grep -F '/scaff:chore' README.md` returns ≥ 1 line; `grep -F '-fix-' README.md` returns ≥ 1 line (slug convention evidence); `grep -F '-chore-' README.md` returns ≥ 1 line.
 - **Depends on**: —
 - **Parallel-safe-with**: T16, T17
-- [ ]
+- [x]
 
 ## T16 — Test: structural grep gates for pm.md / tpm.md / _template/STATUS.md + RUNTIME HANDOFF sentinel (AC4, AC5, AC10, AC11, AC12, §6.2 assertion hook)
 
@@ -360,7 +360,7 @@ Each task below uses the new-merged-form task block shape per `tpm.appendix.md` 
 - **Verify**: `bash test/t106_pm_tpm_status_shape.sh` prints `PASS` and exits 0 after T17 lands.
 - **Depends on**: T17 (the RUNTIME HANDOFF sentinel must be present before the assertion fires)
 - **Parallel-safe-with**: T15 (different files)
-- [ ]
+- [x]
 
 ## T17 — Pre-commit RUNTIME HANDOFF STATUS Notes line for next bug/chore successor
 
@@ -378,7 +378,7 @@ Each task below uses the new-merged-form task block shape per `tpm.appendix.md` 
 - **Verify**: `grep -cE '^- [0-9]{4}-[0-9]{2}-[0-9]{2} .* RUNTIME HANDOFF \(for successor bug/chore\):' .specaffold/features/20260424-entry-type-split/STATUS.md` returns `1`. Full structural verification runs as part of T16.
 - **Depends on**: —
 - **Parallel-safe-with**: T15 (different files)
-- [ ]
+- [x]
 
 ---
 

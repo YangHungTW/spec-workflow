@@ -1,0 +1,6 @@
+T15 adds 44 lines of purely additive documentation to README.md and README.zh-TW.md, covering new /scaff:bug and /scaff:chore commands, slug conventions, and the 3x3 work-type x tier matrix. No source code, shell commands, credential literals, file mutations, path joins, input parsing, or sentinel-file patterns were introduced, so all 8 security rubric checks pass cleanly.
+
+## Reviewer verdict
+axis: security
+verdict: PASS
+findings: []

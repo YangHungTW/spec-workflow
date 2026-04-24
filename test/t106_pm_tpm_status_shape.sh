@@ -56,8 +56,8 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd -P)"
 # Env-var overrides for all path inputs
 PM_MD="${PM_MD:-$REPO_ROOT/.claude/agents/scaff/pm.md}"
 TPM_MD="${TPM_MD:-$REPO_ROOT/.claude/agents/scaff/tpm.md}"
-TEMPLATE_STATUS="${TEMPLATE_STATUS:-$REPO_ROOT/.specaffold/_template/STATUS.md}"
-TEMPLATE_DIR="${TEMPLATE_DIR:-$REPO_ROOT/.specaffold/_template}"
+TEMPLATE_STATUS="${TEMPLATE_STATUS:-$REPO_ROOT/.specaffold/features/_template/STATUS.md}"
+TEMPLATE_DIR="${TEMPLATE_DIR:-$REPO_ROOT/.specaffold/features/_template}"
 FEATURE_STATUS="${FEATURE_STATUS:-$REPO_ROOT/.specaffold/features/20260424-entry-type-split/STATUS.md}"
 
 # ---------------------------------------------------------------------------

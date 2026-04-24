@@ -3,7 +3,7 @@
 - **slug**: 20260424-entry-type-split
 - **has-ui**: false
 - **tier**: audited
-- **stage**: plan
+- **stage**: implement
 - **created**: 2026-04-24
 - **updated**: 2026-04-24
 
@@ -13,7 +13,7 @@
 - [x] prd           (03-prd.md)                  — PM
 - [x] tech          (04-tech.md)                 — Architect
 - [x] plan          (05-plan.md)                 — TPM  [merged: narrative + task checklist]
-- [ ] implement     (05-plan.md tasks checked off) — Developer
+- [x] implement     (05-plan.md tasks checked off) — Developer
 - [ ] validate      (08-validate.md, verdict PASS) — QA-tester + QA-analyst  [merged: verify + gap-check]
 - [ ] archive       (moved to .specaffold/archive/)     — TPM
 
@@ -38,3 +38,7 @@
 - 2026-04-24 review retry result — wave 2 verdict=NITS (T10 + T11 all 6 reviewers PASS post-fix; remaining NITS are T13/T14 re-read-file cosmetic)
 - 2026-04-24 implement wave 2 done — T8, T9, T10, T11, T12, T13, T14; post-merge t104 15/15 PASS; t105 16/16 PASS (after 1 test-spelling fix accepting "why[- ]now" both forms); skill list correctly registers /scaff:bug + /scaff:chore commands.
 - 2026-04-24 TPM — RUNTIME HANDOFF (for successor bug/chore): first real /scaff:bug or /scaff:chore invocation must open its STATUS Notes with "exercised entry-type-split commands on this feature's first live session". Structural ACs verified in this feature's validate; runtime ACs deferred per PRD §6.2 AC-runtime-deferred.
+- 2026-04-24 review dispatched — slug=20260424-entry-type-split wave=3 tasks=T15,T16,T17 axes=security,performance,style
+- 2026-04-24 review result — wave 3 verdict=PASS (9/9 reviewers PASS)
+- 2026-04-24 implement wave 3 done — T15, T16, T17; t106 passed after 1 path fix (TEMPLATE_STATUS/TEMPLATE_DIR defaults missing /features/ segment)
+- 2026-04-24 implement stage complete — 17/17 tasks checked; wave 1 (T1-T7) + wave 2 (T8-T14, retry-fixed) + wave 3 (T15-T17) all merged into feature branch. Full structural test suite: t102 78/78 + t103 18/18 + t104 15/15 + t105 16/16 + t106 12/12 = 139/139 PASS.
