@@ -1,0 +1,7 @@
+## Reviewer verdict
+axis: style
+verdict: PASS
+findings: []
+
+## Summary
+T14 adds `test/t105_request_backward_compat.sh`, a well-structured test script with consistent snake_case function names, SCREAMING_SNAKE_CASE globals, 2-space indentation, double-quoting throughout, and all comments explaining rationale rather than restating code. The sandbox-HOME discipline, `set -euo pipefail`, and Bash 3.2 portability constraints are all correctly applied with no commented-out code or dead symbols present.

@@ -1,0 +1,21 @@
+T7 security review — test/t103_prd_templates_shape.sh
+
+The script correctly implements sandbox-HOME per the rubric: mktemp -d sandbox,
+HOME exported to a subdir, trap EXIT cleanup, and a preflight case-guard before
+any mutation.  No hardcoded secrets, no path traversal on user input, no
+string-built shell commands, and no injection surface — all external data is
+passed as fixed literal arguments to grep -F or find.
+
+The only externally influenced paths are PRD_TEMPLATES_DIR and
+SPECAFFOLD_TEMPLATE_DIR, which are either the env-var override or a
+REPO_ROOT-anchored expansion.  REPO_ROOT is derived from the script's own
+directory via cd + pwd -P — a closed, repo-controlled path — not from arbitrary
+user input, so path traversal (check 2) does not apply here.
+
+No secure-defaults violations: the script is read-only (grep/find only), no
+user-owned files are written, so checks 6 and 7 are not triggered.
+
+## Reviewer verdict
+axis: security
+verdict: PASS
+findings: []

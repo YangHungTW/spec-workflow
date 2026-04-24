@@ -29,6 +29,54 @@ Wave-based parallel execution. Default behaviour: run **every remaining wave** e
    - Ensure feature branch `<slug>` exists; create from current HEAD if missing.
    - Confirm clean working tree.
    - Ensure `.worktrees/` is in `.gitignore`.
+   - **Design-artefact gate** — consult the stage matrix to decide whether a design artefact is required before running implement:
+     ```bash
+     # Source helpers — both are double-source safe; REPO_ROOT must be set by caller.
+     source "$REPO_ROOT/bin/scaff-tier"
+     source "$REPO_ROOT/bin/scaff-stage-matrix"
+
+     # Read tier (needed for both design gate and inline-review tier check in step 7)
+     FEATURE_TIER="$(get_tier "$feature_dir")"
+
+     # Read work-type from STATUS (default: feature per tech-D3 for legacy archives)
+     work_type="$(grep '^- \*\*work-type\*\*:' "$feature_dir/STATUS.md" \
+       | head -1 | sed 's/^- \*\*work-type\*\*:[[:space:]]*//' \
+       | tr -cd 'A-Za-z-')"
+     work_type="${work_type:-feature}"
+
+     # Consult matrix for design stage
+     design_gate="$(stage_status "$work_type" "$FEATURE_TIER" design)"
+
+     case "$design_gate" in
+       skipped)
+         # Design is not applicable for this work-type × tier combination
+         # (e.g. chore × all tiers; feature/bug × tiny). No design artefact needed.
+         : ;;
+       optional)
+         # Matrix defers to has-ui for this cell (feature/bug × standard|audited).
+         # Preserve existing has-ui short-circuit: if has-ui is false, no design needed.
+         has_ui="$(grep '^- \*\*has-ui\*\*:' "$feature_dir/STATUS.md" \
+           | head -1 | sed 's/^- \*\*has-ui\*\*:[[:space:]]*//' \
+           | tr -cd 'A-Za-ztruefalse')"
+         if [ "$has_ui" != "false" ]; then
+           if [ ! -d "$feature_dir/02-design" ] || \
+              [ -z "$(ls "$feature_dir/02-design/" 2>/dev/null)" ]; then
+             echo "ERROR: design stage is optional (has-ui=true); run /scaff:design <slug> first." >&2
+             exit 2
+           fi
+         fi
+         ;;
+       required)
+         # Design is required regardless of has-ui (future-proof branch; not triggered by D3).
+         if [ ! -d "$feature_dir/02-design" ] || \
+            [ -z "$(ls "$feature_dir/02-design/" 2>/dev/null)" ]; then
+           echo "ERROR: design artefact required (stage_status=$design_gate); run /scaff:design <slug> first." >&2
+           exit 2
+         fi
+         ;;
+     esac
+     ```
+     `FEATURE_TIER` resolved here is reused in step 7 — do not re-source or re-call `get_tier`.
 
 ## Per-wave loop
 
@@ -43,11 +91,8 @@ Wave-based parallel execution. Default behaviour: run **every remaining wave** e
    - All developer branches are now ready (`<slug>-T<n>`); do NOT merge yet.
 7. **Inline review** (pre-merge gate):
 
-   **Tier-based default (R16):** Before dispatching reviewers, resolve the feature tier:
-   ```bash
-   source "$REPO_ROOT/bin/scaff-tier"
-   FEATURE_TIER="$(get_tier "$feature_dir")"
-   ```
+   **Tier-based default (R16):** `FEATURE_TIER` was resolved in the pre-flight design-artefact gate (step 3); reuse it here — do not re-source `scaff-tier` or re-call `get_tier`.
+
    Determine whether inline review runs for this wave:
    - If `--inline-review` flag is set → always run inline review (opt-in for tiny).
    - Else if `--skip-inline-review` flag is set → skip inline review (emergency bypass).
@@ -155,7 +200,7 @@ Wave-based parallel execution. Default behaviour: run **every remaining wave** e
 $(git diff --shortstat "$BASE...HEAD" | awk '{files=$1; s+=$4+$6} END {print files+0, s+0}')
 EOF
 
-   # FEATURE_TIER set at step 7 (line ~53); reuse here — no re-fork needed.
+   # FEATURE_TIER set at pre-flight design-artefact gate (step 3); reuse here — no re-fork needed.
    if [ "$FEATURE_TIER" = "tiny" ]; then
      TIER_DIFF_LINES="${SCAFF_TIER_DIFF_LINES:-200}"
      TIER_DIFF_FILES="${SCAFF_TIER_DIFF_FILES:-3}"

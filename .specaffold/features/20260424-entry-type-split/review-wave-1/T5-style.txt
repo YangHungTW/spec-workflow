@@ -1,0 +1,6 @@
+The diff renames a heading and replaces two bold-paragraph keyword blocks with a markdown table, then adds two new `## When invoked for /scaff:bug` and `## When invoked for /scaff:chore` sections — all consistent with the surrounding file's naming conventions, heading levels, and list styles. No commented-out code, no naming drift, no portability or sandbox issues, and no dead symbols were introduced.
+
+## Reviewer verdict
+axis: style
+verdict: PASS
+findings: []

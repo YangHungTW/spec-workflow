@@ -1,0 +1,6 @@
+## Reviewer verdict
+axis: style
+verdict: PASS
+findings: []
+
+The new file `bin/scaff-stage-matrix` follows all style axis checks: naming is consistent snake_case throughout, no commented-out code is present (the `#`-prefixed matrix data lines are inline documentation explaining the lookup table, not dead code), and comments explain WHY (flat-form rationale citing bash32-case-in-subshell.md, PRD D3 matrix source, subshell parse-error avoidance). Indentation is uniform 2-space, `printf` quoting is consistent, no Bash 3.2 portability violations were found (`readlink -f`, `mapfile`, `jq`, `realpath`, and `[[ =~ ]]` are all absent), and no test script is present so the sandbox-HOME rule is not triggered.

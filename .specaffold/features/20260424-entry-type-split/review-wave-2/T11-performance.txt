@@ -1,0 +1,6 @@
+T11 adds `.claude/commands/scaff/chore.md`, a pure markdown command specification (88 lines); the +18 slug-guard lines are `case`-statement patterns embedded in prose, not executable shell, so there are no loops, subprocess calls, file reads, or hook-path code to evaluate. No performance-axis findings apply.
+
+## Reviewer verdict
+axis: performance
+verdict: PASS
+findings: []

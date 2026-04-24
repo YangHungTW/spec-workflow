@@ -1,0 +1,6 @@
+T15 adds purely additive documentation to README.md and README.zh-TW.md: new prose blocks describing /scaff:bug and /scaff:chore commands, plus a paragraph on the 3×3 work-type × tier matrix. No bash scripts, test scripts, or code files are touched, so the portability, sandbox-HOME, set -euo pipefail, and naming-convention checks are all N/A; the markdown additions contain no commented-out code, no what-not-why comments, and no dead symbols.
+
+## Reviewer verdict
+axis: style
+verdict: PASS
+findings: []

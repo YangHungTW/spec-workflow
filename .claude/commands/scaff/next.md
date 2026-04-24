@@ -5,8 +5,9 @@ description: Advance a feature to its next stage automatically. Usage: /scaff:ne
 Orchestrator. Reads STATUS and advances one stage. Stops at any point that needs your input (blocker questions, design approval, one task at a time during implement).
 
 ```bash
-# Source tier helper — double-source safe; REPO_ROOT must be set by caller.
+# Source tier and stage-matrix helpers — double-source safe; REPO_ROOT must be set by caller.
 source "$REPO_ROOT/bin/scaff-tier"
+source "$REPO_ROOT/bin/scaff-stage-matrix"
 ```
 
 ## Steps
@@ -27,21 +28,32 @@ source "$REPO_ROOT/bin/scaff-tier"
 2. Read `.specaffold/features/<slug>/STATUS.md`.
 3. Determine the **next unchecked stage** in the Stage checklist.
 4. Apply these rules:
-   - **Read tier** (before every stage dispatch):
+   - **Read tier and work-type** (before every stage dispatch):
      ```bash
      tier=$(get_tier "$feature_dir")
+     # get_work_type: reads "- **work-type**: <value>" from STATUS.md;
+     # defaults to "feature" when the field is absent (legacy feature default per tech-D3).
+     work_type=$(grep -m1 '^\- \*\*work-type\*\*:' "$feature_dir/STATUS.md" 2>/dev/null | sed 's/.*\*\*work-type\*\*: *//' | sed 's/[[:space:]]*$//' || true)
+     if [ -z "$work_type" ]; then work_type="feature"; fi
      ```
      - If `tier = missing`: treat as `standard` for skip decisions (legacy feature, no `tier:` field yet).
      - If `tier = malformed`: stop immediately — print error to user, exit 2. Do not advance.
-   - **Tier-aware skip check** — before dispatching to any stage, test whether the tier mandates skipping it:
+   - **Matrix-driven skip check** — before dispatching to any stage, consult `stage_status` with all three dimensions:
      ```bash
-     if tier_skips_stage "$tier" "$next_stage"; then
-       # check the box inline: append `[x]` to that stage line with note `skipped (tier: <t>)`
-       # append STATUS Notes line: `<date> next — tier <t> skips <stage>`
-       # re-read STATUS and advance again (loop — same as has-ui skip below)
-     fi
+     status=$(stage_status "$work_type" "$tier" "$next_stage")
+     case "$status" in
+       skipped)
+         # check the box inline: append `[x]` to that stage line with note `skipped (work-type: <wt>, tier: <t>)`
+         # append STATUS Notes line: `<date> next — stage_status $work_type/$tier/$next_stage = skipped`
+         # re-read STATUS and advance again (loop — same as has-ui skip below)
+         ;;
+       required|optional)
+         # proceed to dispatch; optional stages are still dispatched — downstream command decides
+         ;;
+     esac
      ```
-     STATUS Notes line format: `YYYY-MM-DD next — tier <t> skips <stage>`
+     STATUS Notes line format: `YYYY-MM-DD next — stage_status <work-type>/<tier>/<stage> = skipped`
+     R10.1 byte-identity: for `work_type=feature`, `stage_status` produces identical skip verdicts to the former `tier_skips_stage` table — no behavioural change for legacy feature workflows.
    - If `has-ui: false` and next stage is `design` → auto-check the `design` box with note `skipped (has-ui: false)` in STATUS Notes, then re-read and advance again.
    - Otherwise, follow the matching command file's instructions:
 

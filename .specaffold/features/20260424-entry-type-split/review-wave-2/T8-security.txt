@@ -1,0 +1,13 @@
+T8 wires `get_work_type` (a `grep | sed` STATUS reader) into the skip-logic
+dispatch and replaces the former `tier_skips_stage` call with
+`stage_status "$work_type" "$tier" "$next_stage"`.  All variable expansions
+that touch external input (`$feature_dir`, `$work_type`) remain in argv
+position inside double quotes; no string-built shell commands are introduced.
+No hardcoded secrets, path traversal, missing boundary validation, injection
+vectors, YAML/JSON parsing, file writes, or sentinel-file patterns appear in
+the diff.
+
+## Reviewer verdict
+axis: security
+verdict: PASS
+findings: []

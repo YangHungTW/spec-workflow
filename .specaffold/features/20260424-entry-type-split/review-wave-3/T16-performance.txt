@@ -1,0 +1,6 @@
+The script performs all grep assertions as one-shot calls outside any loop, with no shell-out-per-iteration, no repeated file reads in a loop body, no Python3 for simple transforms, and no uncached out-of-process calls (uname, git, network). No performance findings against any of the 8 rubric rules.
+
+## Reviewer verdict
+axis: performance
+verdict: PASS
+findings: []

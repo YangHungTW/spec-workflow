@@ -1,0 +1,6 @@
+T9 wires the stage-matrix design-artefact gate into implement.md; all user-supplied values (work_type, has_ui) are sanitised with tr -cd before use, shell-function arguments are properly quoted, and no string-built commands or hardcoded secrets are introduced. No security findings against the rubric.
+
+## Reviewer verdict
+axis: security
+verdict: PASS
+findings: []

@@ -1,0 +1,6 @@
+T10 adds a single new markdown command file (bug.md) containing illustrative pseudo-code snippets — there are no executable shell loops, no subprocess invocations per iteration, and no hook-path code, so no performance rubric checks are triggered. The one-shot `sed` call in step 5 is outside any loop and within normal single-invocation cost.
+
+## Reviewer verdict
+axis: performance
+verdict: PASS
+findings: []

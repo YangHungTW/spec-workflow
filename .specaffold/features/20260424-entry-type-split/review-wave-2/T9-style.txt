@@ -1,0 +1,6 @@
+T9 adds a design-artefact gate code block to `implement.md` and removes the duplicate `scaff-tier` sourcing at step 7, replacing it with a prose reference to the pre-flight resolution. All new variables follow the UPPER_CASE/snake_case convention of the surrounding shell snippets, inline comments explain rationale rather than restating code, and no commented-out code or dead symbols are introduced.
+
+## Reviewer verdict
+axis: style
+verdict: PASS
+findings: []

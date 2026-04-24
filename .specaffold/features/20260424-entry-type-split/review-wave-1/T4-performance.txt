@@ -1,0 +1,6 @@
+T4 adds a single static string field (`- **work-type**: feature`) to a markdown template file; there is no executable code, no shell invocations, no loops, and no file I/O beyond the template itself. No performance rubric rule is triggered.
+
+## Reviewer verdict
+axis: performance
+verdict: PASS
+findings: []

@@ -1,0 +1,6 @@
+The `bin/scaff-stage-matrix` library is a pure in-process classifier with no loops, no subprocess calls on hot paths, and a flat O(1) `case`-table dispatch across 72 cells. The two predicate wrappers each fork a single subshell per call — not inside any loop — which is within budget.
+
+## Reviewer verdict
+axis: performance
+verdict: PASS
+findings: []

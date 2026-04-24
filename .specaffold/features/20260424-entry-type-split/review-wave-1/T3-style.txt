@@ -1,0 +1,6 @@
+T3 adds three new markdown PRD template files (bug.md, chore.md, feature.md) under .claude/commands/scaff/prd-templates/. All HTML comment blocks are instructional placeholder scaffolding, not commented-out code held over as future reference, so rule 2 does not apply; naming, indentation, and structure are internally consistent with no style violations found.
+
+## Reviewer verdict
+axis: style
+verdict: PASS
+findings: []

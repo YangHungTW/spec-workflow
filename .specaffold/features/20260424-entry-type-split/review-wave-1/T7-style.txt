@@ -1,0 +1,8 @@
+T7 style review — test/t103_prd_templates_shape.sh
+
+Summary: The test script is well-structured with consistent snake_case naming, explanatory comments that state rationale rather than restating what the code does, uniform double-quoting, 2-space indentation, `set -euo pipefail`, sandbox-HOME with mktemp/trap/preflight, and no commented-out code or unused symbols. All bash 3.2 / BSD portability constraints are met: no readlink -f, realpath, jq, mapfile, [[ =~ ]], or GNU-only flags; case-in-subshell avoidance is respected throughout.
+
+## Reviewer verdict
+axis: style
+verdict: PASS
+findings: []

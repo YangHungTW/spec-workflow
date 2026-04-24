@@ -1,0 +1,6 @@
+The 72 matrix assertions are enumerated as flat inline calls rather than a loop, so there is no shell-out-per-iteration pattern; the single `$(stage_status ...)` subshell per `assert_cell` invocation is the intended SUT call and is not a rule-1 violation. No expensive operations (`uname`, `git rev-parse`, network fetches) are repeated, the library is sourced exactly once, and no Python spawns or file re-reads are present.
+
+## Reviewer verdict
+axis: performance
+verdict: PASS
+findings: []

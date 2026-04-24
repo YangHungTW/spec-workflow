@@ -1,0 +1,6 @@
+T5 modifies only `pm.md` — a pure markdown documentation file with no shell code, loops, subprocess calls, file I/O, or hook paths. No performance-axis rules from the rubric apply to this diff.
+
+## Reviewer verdict
+axis: performance
+verdict: PASS
+findings: []

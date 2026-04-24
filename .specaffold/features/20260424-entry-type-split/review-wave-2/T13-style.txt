@@ -1,0 +1,6 @@
+T13 style review: `test/t104_entry_commands_shape.sh` passes all eight checklist items — naming is consistent snake_case, no commented-out code, sandbox-HOME discipline is fully applied (mktemp, trap, export HOME, preflight case), set -euo pipefail is present, and the file is Bash 3.2/BSD-portable with no readlink -f, realpath, jq, mapfile, or [[ =~ ]] usage. No findings to report.
+
+## Reviewer verdict
+axis: style
+verdict: PASS
+findings: []

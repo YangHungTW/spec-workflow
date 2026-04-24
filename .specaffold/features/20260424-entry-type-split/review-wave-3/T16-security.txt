@@ -1,0 +1,14 @@
+T16 security review — test/t106_pm_tpm_status_shape.sh (238 lines).
+
+All paths are derived from repo-root resolution (`cd && pwd -P`) or env-var
+overrides used exclusively in read-only operations (`grep`, `find`, `[ -e ]`);
+there are no writes to user-owned paths, no shell-string-built commands, and no
+credential literals. The sandbox-HOME discipline (mktemp -d, exported HOME,
+trap cleanup, preflight case-guard) is applied correctly per
+`.claude/rules/bash/sandbox-home-in-tests.md`, satisfying the secure-defaults
+check even though the script is read-only.
+
+## Reviewer verdict
+axis: security
+verdict: PASS
+findings: []

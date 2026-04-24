@@ -1,0 +1,6 @@
+T3 adds three static Markdown PRD template files (feature.md, bug.md, chore.md) containing only HTML-comment placeholders and plain text; there is no executable code, shell invocation, user input handling, path manipulation, secret material, or file mutation logic in the diff. All eight checks in the security rubric are inapplicable to static documentation templates, and no findings were identified.
+
+## Reviewer verdict
+axis: security
+verdict: PASS
+findings: []

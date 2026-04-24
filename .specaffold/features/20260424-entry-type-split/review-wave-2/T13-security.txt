@@ -1,0 +1,6 @@
+T13 test/t104_entry_commands_shape.sh passes all 8 security rubric checks: sandbox-HOME is correctly established with mktemp -d, trap EXIT, exported HOME, mkdir -p, and a preflight case assertion before any file access. No injection surface exists (grep invoked with -F literal mode and -- terminator, all variables quoted), no path traversal, no secrets, and the script is read-only with no mutation of user-owned paths.
+
+## Reviewer verdict
+axis: security
+verdict: PASS
+findings: []

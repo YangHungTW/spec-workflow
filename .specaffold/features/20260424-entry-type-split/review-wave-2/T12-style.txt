@@ -1,0 +1,6 @@
+## Reviewer verdict
+axis: style
+verdict: PASS
+findings: []
+
+The single added parenthetical in `request.md` explains rationale (grep-ability intent and R13 cross-reference) rather than restating the copy command, satisfying rule 3. No other style rules are implicated by this 1-line prose change.

@@ -1,0 +1,6 @@
+The T12 diff adds a single prose annotation to `.claude/commands/scaff/request.md` referencing the work-type setter for future reviewer discoverability; it contains no runtime code, no user input handling, no file mutations, and no shell command construction. All 8 security rubric checks pass with no findings.
+
+## Reviewer verdict
+axis: security
+verdict: PASS
+findings: []

@@ -1,0 +1,6 @@
+T17 appends a single STATUS Notes line to STATUS.md — pure documentation with no shell code, loops, subprocess calls, or file reads. No performance rubric rules are triggered.
+
+## Reviewer verdict
+axis: performance
+verdict: PASS
+findings: []

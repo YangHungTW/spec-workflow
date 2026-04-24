@@ -1,0 +1,6 @@
+T16 introduces `test/t106_pm_tpm_status_shape.sh`, which is consistent across all style-axis checks: naming conventions, indentation, quoting, and comment discipline all match neighbouring scripts exactly, and there are no commented-out code blocks, dead symbols, portability violations (Bash 3.2 / BSD clean), or sandbox-HOME gaps. No findings.
+
+## Reviewer verdict
+axis: style
+verdict: PASS
+findings: []

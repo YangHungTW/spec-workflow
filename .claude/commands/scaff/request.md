@@ -19,7 +19,7 @@ description: PM intakes a new feature. Usage: /scaff:request "<one-line ask>" [-
    - Always prepend today's date in `YYYYMMDD` form → final slug = `YYYYMMDD-<body>`.
    - If `.specaffold/features/<slug>/` already exists, append `-<HHMM>` to disambiguate.
 
-3. Copy `.specaffold/features/_template/` to `.specaffold/features/<slug>/`.
+3. Copy `.specaffold/features/_template/` to `.specaffold/features/<slug>/`. (Template already sets `work-type: feature` per R13; this line is here so future reviewers can grep the command for the work-type setter.)
 
 4. Invoke the **scaff-pm** subagent to fill `00-request.md` and set `has-ui` in STATUS. PM will probe for missing context (why-now, success criteria, out-of-scope, has-ui).
 
