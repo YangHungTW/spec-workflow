@@ -175,7 +175,7 @@ Each task below uses the merged-form task block shape per `tpm.appendix.md` §"T
 - **Verify**: `bash test/t107_preflight_lint_and_body.sh` (T3 authors this test; T1 delivers the body). Also `[ -f .specaffold/preflight.md ]` and `grep -F '# === SCAFF PREFLIGHT' .specaffold/preflight.md` and `grep -F 'REFUSED:PREFLIGHT' .specaffold/preflight.md`.
 - **Depends on**: —
 - **Parallel-safe-with**: T2, T3
-- [ ]
+- [x]
 
 ## T2 — Extend `bin/scaff-lint` with the `preflight-coverage` subcommand
 
@@ -190,7 +190,7 @@ Each task below uses the merged-form task block shape per `tpm.appendix.md` §"T
 - **Verify**: `bash test/t107_preflight_lint_and_body.sh` (T3 authors). Also `bash -n bin/scaff-lint` for syntax check. Also a manual smoke step: `bin/scaff-lint preflight-coverage; echo "exit=$?"` from repo root — at W1 close, this should print 18 `missing-marker:` lines and `exit=1` (none of the command files carry the marker yet; this confirms the lint's negative path works). Also `time bin/scaff-lint preflight-coverage` should run in under 100ms warm cache (reviewer-performance budget).
 - **Depends on**: —
 - **Parallel-safe-with**: T1, T3
-- [ ]
+- [x]
 
 ## T3 — Author structural test for the gate body and the lint subcommand
 
@@ -207,7 +207,7 @@ Each task below uses the merged-form task block shape per `tpm.appendix.md` §"T
 - **Verify**: `bash test/t107_preflight_lint_and_body.sh` exits 0.
 - **Depends on**: —
 - **Parallel-safe-with**: T1, T2
-- [ ]
+- [x]
 
 ---
 
