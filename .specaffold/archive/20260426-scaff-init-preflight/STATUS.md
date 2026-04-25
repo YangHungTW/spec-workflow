@@ -4,7 +4,7 @@
 - **has-ui**: false
 - **work-type**: feature
 - **tier**: standard
-- **stage**: validate
+- **stage**: archive
 - **created**: 2026-04-26
 - **updated**: 2026-04-26
 
@@ -16,7 +16,7 @@
 - [x] plan          (05-plan.md)                 — TPM  [merged: narrative + task checklist]
 - [x] implement     (05-plan.md tasks checked off) — Developer
 - [x] validate      (08-validate.md, verdict PASS) — QA-tester + QA-analyst  [merged: verify + gap-check]
-- [ ] archive       (moved to .specaffold/archive/)     — TPM
+- [x] archive       (moved to .specaffold/archive/)     — TPM
 
 ## Notes
 <!-- date + role + what changed -->
@@ -44,3 +44,4 @@
 - 2026-04-26 implement wave 4 done — T8, T9, T10
 - 2026-04-26 implement stage complete — 10/10 tasks; 5 test files (t107–t111) all PASS; lint exit 0; AC6 grep matches
 - 2026-04-26 validate — slug=20260426-scaff-init-preflight verdict=NITS (advisory findings in 08-validate.md)
+- 2026-04-26 archive — feature merged to main (commit c947a4c); 5 retro memories landed (architect/by-construction-coverage-via-lint-anchor, tpm/no-verify-bookkeeping-when-feature-ships-its-own-precommit, developer/git-archive-pipe-tar-for-batch-ref-extraction, qa-analyst/partial-wiring-trace-every-entry-point, shared/dogfood-paradox 11th occurrence appended); moved to .specaffold/archive/

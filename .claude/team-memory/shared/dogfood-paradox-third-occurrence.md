@@ -3,7 +3,7 @@ name: Dogfood paradox — structural verify during bootstrap, runtime exercise n
 description: Features that deliver the tool they would themselves use need structural-only verification; live runtime exercise happens on the next feature.
 type: pattern
 created: 2026-04-18
-updated: 2026-04-24
+updated: 2026-04-26
 ---
 
 <!-- 2026-04-18 update: added fifth and sixth occurrences from
@@ -294,3 +294,23 @@ not need to evolve.
 
 RUNTIME HANDOFF (this feature):
 > `2026-04-25 (or first day with a new bug/chore) — bug feature exercised /scaff:bug end-to-end via auto-classify branch; chore feature exercised /scaff:chore end-to-end with tier=tiny default.`
+
+## Eleventh occurrence (2026-04-26, `20260426-scaff-init-preflight`)
+
+New variant — **the feature ships its own pre-commit enforcement loop**: the W2 wave wires a hook that calls `bin/scaff-lint preflight-coverage`, which exits 1 until W3's marker propagation lands. The four-layer enforcement shape (shared body + lint + pre-commit + per-file markers) is itself a generalisable architectural pattern — see `architect/by-construction-coverage-via-lint-anchor.md`.
+
+Two new disciplines surfaced (no new failure mode beyond the umbrella pattern):
+
+1. **`--no-verify` discipline applies at TWO sites, not one** — orchestrator W2 bookkeeping AND every developer commit in W3 whose worktree branch does not yet carry the marker-bearing files. The plan §1.4 noted only the first; the analyst caught the missing STATUS Notes log for the developer (T7) site as a `should`-class advisory. Captured as `tpm/no-verify-bookkeeping-when-feature-ships-its-own-precommit.md`. Plan-time enumeration of every bypass site is now the discipline.
+
+2. **Wiring-trace gap on mirror emit sites** — the pre-commit shim emitter exists at TWO call sites in `bin/scaff-seed` (`cmd_init` line 733 AND `cmd_migrate` line 1314). The plan T4 only named line 733; the W2 reviewer caught the line 1314 mirror as out-of-scope; the orchestrator landed a fixup updating both. But t108 only tests `cmd_init`, not `cmd_migrate` — a runtime-correct + test-gap state. Captured as `qa-analyst/partial-wiring-trace-every-entry-point.md`. Future analogous features must enumerate every emit site at plan time and ship a test per site.
+
+Dogfood-paradox handling itself worked as expected:
+- W3 T6 commit (the marker-bearing one) ran the new pre-commit hook successfully — first live dogfood loop confirmation in the same wave.
+- All subsequent bookkeeping and W4 commits passed the hook cleanly.
+- 5 new structural tests (`t107`–`t111`) exercise gate body, shim wiring, marker coverage, runtime sandbox ACs, and baseline-diff shape; all green at validate.
+
+Cumulative pattern at 11 occurrences: structural verify + RUNTIME HANDOFF sentinel + grep-anchored test of the sentinel line is still the **default** dogfood-paradox handling. The new sub-disciplines (`--no-verify` enumeration, wiring-trace gap) attach to the umbrella pattern without re-cutting the taxonomy.
+
+RUNTIME HANDOFF (this feature):
+> `2026-04-26+ — first /scaff:* invocation in a non-init'd repo (any project that has the user-global symlinks but no .specaffold/config.yml) exercises the gate live: should print REFUSED:PREFLIGHT and exit 70 with no side effect. Until that natural occurrence, only the structural sandbox harness (test/t110_runtime_sandbox_acs.sh) confirms the runtime path.`
