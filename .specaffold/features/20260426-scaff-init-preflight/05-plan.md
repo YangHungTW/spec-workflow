@@ -236,7 +236,7 @@ Each task below uses the merged-form task block shape per `tpm.appendix.md` §"T
 - **Verify**: `bash test/t108_precommit_preflight_wiring.sh` (T5 authors). Also: `grep -F 'preflight-coverage' bin/scaff-seed | wc -l` returns 1; `[ -x .git/hooks/pre-commit ]` AND `grep -F 'preflight-coverage' .git/hooks/pre-commit` matches.
 - **Depends on**: T2 (lint subcommand must exist before the shim references it; W1 → W2 strict serial guarantees this)
 - **Parallel-safe-with**: T5
-- [ ]
+- [x]
 
 ## T5 — Author structural test for the pre-commit shim wiring
 
@@ -252,7 +252,7 @@ Each task below uses the merged-form task block shape per `tpm.appendix.md` §"T
 - **Verify**: `bash test/t108_precommit_preflight_wiring.sh` exits 0.
 - **Depends on**: T4 (the test's A1/A2/A3 assertions require T4's edit to be in place; W2-internal dependency)
 - **Parallel-safe-with**: T4 — the test author can write the test scaffolding (sandbox setup, helper functions) in parallel with T4's edit; the test only needs to be run/passing after T4 lands. Both edit different files (T4: `bin/scaff-seed`; T5: `test/t108_*.sh`). Parallel-safe by file-disjointness.
-- [ ]
+- [x]
 
 ---
 

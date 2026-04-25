@@ -30,3 +30,8 @@
 - 2026-04-26 review result — wave 1 verdict=NITS (T3-performance: re-reading preflight.md)
 - 2026-04-26 implement — fixup W1: t107 pipefail-tolerant grep + $BLOCK reuse (post-merge hand-fix; NITS resolved + hard-fail bug missed by reviewers)
 - 2026-04-26 implement wave 1 done — T1, T2, T3
+- 2026-04-26 review dispatched — slug=20260426-scaff-init-preflight wave=2 tasks=T4,T5 axes=security,performance,style
+- 2026-04-26 review result — wave 2 verdict=NITS (T4-perf: 2 forks/commit; T4-style: set -e vs set -euo pipefail; T5-perf: scaff-seed read 5x; T5-style: 2 WHAT-only comments)
+- 2026-04-26 implement — fixup W2: scaff-seed cmd_migrate shim mirror at line 1314 (out-of-scope security observation; plan-scope gap) + tighten emitted shim to set -euo pipefail (T4-style NITS)
+- 2026-04-26 implement — W2 bookkeeping commits use --no-verify per dogfood-paradox sequencing (lint won't pass until W3 markers land)
+- 2026-04-26 implement wave 2 done — T4, T5
