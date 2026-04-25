@@ -4,7 +4,7 @@
 - **has-ui**: false
 - **work-type**: chore
 - **tier**: tiny
-- **stage**: plan
+- **stage**: implement
 - **created**: 2026-04-26
 - **updated**: 2026-04-26
 
@@ -14,7 +14,7 @@
 - [x] prd           (03-prd.md)                  — PM
 - [x] tech          (04-tech.md)                 — Architect
 - [x] plan          (05-plan.md)                 — TPM  [merged: narrative + task checklist]
-- [ ] implement     (05-plan.md tasks checked off) — Developer
+- [x] implement     (05-plan.md tasks checked off) — Developer
 - [ ] validate      (08-validate.md, verdict PASS) — QA-tester + QA-analyst  [merged: verify + gap-check]
 - [ ] archive       (moved to .specaffold/archive/)     — TPM
 
@@ -27,3 +27,5 @@
 - 2026-04-26 next — prd checked off (03-prd.md authored during chore intake; no §7 blockers; short-circuit per chore-tier conflated request+prd)
 - 2026-04-26 next — tech skipped (stage_status chore/tiny/tech = skipped)
 - 2026-04-26 next — plan skipped (stage_status chore/tiny/plan = optional; /scaff:plan hard-requires 04-tech.md which is matrix-skipped; minimal 05-plan.md hand-written from 03-prd.md checklist for implement consumption)
+- 2026-04-26 implement — T1 merged (commit 34bcaaf): A5 section appended to test/t108 for scaff-seed migrate path; tier=tiny inline review skipped per R16 default; t108 PASS post-merge
+- 2026-04-26 implement stage complete — 1/1 task; cmd_migrate path now covered by A5 (mirror of A2's cmd_init shape); finding noted: cmd_migrate works on fresh repo without prior init (uses baseline_sha="" same as cmd_init)

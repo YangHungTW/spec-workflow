@@ -57,7 +57,7 @@ Single wave (W1), single task (T1). No inline review (R16 default for tier=tiny)
   - In the diff: `git diff --stat HEAD~1 -- test/t108_precommit_preflight_wiring.sh` shows additions only (no deletions to existing assertions).
 - **Depends on**: —
 - **Parallel-safe-with**: — (single task in single wave)
-- [ ]
+- [x]
 
 ---
 
