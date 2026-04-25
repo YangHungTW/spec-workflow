@@ -11,6 +11,7 @@ then name.
 | absolute-symlink-targets | common | should | [common/absolute-symlink-targets.md](common/absolute-symlink-targets.md) |
 | classify-before-mutate | common | must | [common/classify-before-mutate.md](common/classify-before-mutate.md) |
 | language-preferences | common | should | [common/language-preferences.md](common/language-preferences.md) |
+| minimal-diff | common | should | [common/minimal-diff.md](common/minimal-diff.md) |
 | no-force-on-user-paths | common | must | [common/no-force-on-user-paths.md](common/no-force-on-user-paths.md) |
 | performance | reviewer | should | [reviewer/performance.md](reviewer/performance.md) |
 | security | reviewer | must | [reviewer/security.md](reviewer/security.md) |
