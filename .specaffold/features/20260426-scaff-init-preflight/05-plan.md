@@ -314,7 +314,7 @@ Each task below uses the merged-form task block shape per `tpm.appendix.md` §"T
 - **Verify**: `grep -E '(config\.yml.*scaff-init|scaff-init.*config\.yml)' README.md` matches at least one line. Also `git diff --stat HEAD~1 -- README.md` shows a small additive diff (≤ ~3 lines for the sentence + any whitespace).
 - **Depends on**: —
 - **Parallel-safe-with**: T9, T10
-- [ ]
+- [x]
 
 ## T9 — Author runtime sandbox AC harness for AC7, AC8, AC10, AC11
 
@@ -336,7 +336,7 @@ Each task below uses the merged-form task block shape per `tpm.appendix.md` §"T
 - **Verify**: `bash test/t110_runtime_sandbox_acs.sh` exits 0.
 - **Depends on**: T1 (the test extracts from `.specaffold/preflight.md`; W1 → W4 strict serial guarantees this)
 - **Parallel-safe-with**: T8, T10
-- [ ]
+- [x]
 
 ## T10 — Author baseline-diff structural test for AC12 and AC13
 
@@ -352,7 +352,7 @@ Each task below uses the merged-form task block shape per `tpm.appendix.md` §"T
 - **Verify**: `bash test/t111_baseline_diff_shape.sh` exits 0 (after T6 merges).
 - **Depends on**: T6 (the baseline-diff is computed against the pre-T6 commit; W3 → W4 strict serial guarantees the commit exists)
 - **Parallel-safe-with**: T8, T9
-- [ ]
+- [x]
 
 ---
 
