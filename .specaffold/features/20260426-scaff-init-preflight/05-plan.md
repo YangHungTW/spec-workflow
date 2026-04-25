@@ -175,7 +175,7 @@ Each task below uses the merged-form task block shape per `tpm.appendix.md` §"T
 - **Verify**: `bash test/t107_preflight_lint_and_body.sh` (T3 authors this test; T1 delivers the body). Also `[ -f .specaffold/preflight.md ]` and `grep -F '# === SCAFF PREFLIGHT' .specaffold/preflight.md` and `grep -F 'REFUSED:PREFLIGHT' .specaffold/preflight.md`.
 - **Depends on**: —
 - **Parallel-safe-with**: T2, T3
-- [ ]
+- [x]
 
 ## T2 — Extend `bin/scaff-lint` with the `preflight-coverage` subcommand
 
@@ -190,7 +190,7 @@ Each task below uses the merged-form task block shape per `tpm.appendix.md` §"T
 - **Verify**: `bash test/t107_preflight_lint_and_body.sh` (T3 authors). Also `bash -n bin/scaff-lint` for syntax check. Also a manual smoke step: `bin/scaff-lint preflight-coverage; echo "exit=$?"` from repo root — at W1 close, this should print 18 `missing-marker:` lines and `exit=1` (none of the command files carry the marker yet; this confirms the lint's negative path works). Also `time bin/scaff-lint preflight-coverage` should run in under 100ms warm cache (reviewer-performance budget).
 - **Depends on**: —
 - **Parallel-safe-with**: T1, T3
-- [ ]
+- [x]
 
 ## T3 — Author structural test for the gate body and the lint subcommand
 
@@ -207,7 +207,7 @@ Each task below uses the merged-form task block shape per `tpm.appendix.md` §"T
 - **Verify**: `bash test/t107_preflight_lint_and_body.sh` exits 0.
 - **Depends on**: —
 - **Parallel-safe-with**: T1, T2
-- [ ]
+- [x]
 
 ---
 
@@ -236,7 +236,7 @@ Each task below uses the merged-form task block shape per `tpm.appendix.md` §"T
 - **Verify**: `bash test/t108_precommit_preflight_wiring.sh` (T5 authors). Also: `grep -F 'preflight-coverage' bin/scaff-seed | wc -l` returns 1; `[ -x .git/hooks/pre-commit ]` AND `grep -F 'preflight-coverage' .git/hooks/pre-commit` matches.
 - **Depends on**: T2 (lint subcommand must exist before the shim references it; W1 → W2 strict serial guarantees this)
 - **Parallel-safe-with**: T5
-- [ ]
+- [x]
 
 ## T5 — Author structural test for the pre-commit shim wiring
 
@@ -252,7 +252,7 @@ Each task below uses the merged-form task block shape per `tpm.appendix.md` §"T
 - **Verify**: `bash test/t108_precommit_preflight_wiring.sh` exits 0.
 - **Depends on**: T4 (the test's A1/A2/A3 assertions require T4's edit to be in place; W2-internal dependency)
 - **Parallel-safe-with**: T4 — the test author can write the test scaffolding (sandbox setup, helper functions) in parallel with T4's edit; the test only needs to be run/passing after T4 lands. Both edit different files (T4: `bin/scaff-seed`; T5: `test/t108_*.sh`). Parallel-safe by file-disjointness.
-- [ ]
+- [x]
 
 ---
 
@@ -276,7 +276,7 @@ Each task below uses the merged-form task block shape per `tpm.appendix.md` §"T
 - **Verify**: `bash test/t109_marker_coverage.sh` (T7 authors). Also: `bin/scaff-lint preflight-coverage; echo "exit=$?"` should now print 18 `ok:<path>` lines and `exit=0` (the post-W3 expected state). Also: `git diff --stat HEAD~1 -- .claude/commands/scaff/` should show exactly `90 insertions(+), 0 deletions(-)` across 18 files (5 lines × 18 files).
 - **Depends on**: T1 (the wiring directive references `.specaffold/preflight.md` which T1 creates), T2 (the lint must exist before W3 commits — pre-commit hook needs the subcommand resolvable), T4 (the local pre-commit hook is wired in W2; T6's commit will pass that hook because the markers being added are exactly what the lint requires)
 - **Parallel-safe-with**: T7
-- [ ]
+- [x]
 
 ## T7 — Author structural test for marker coverage (the post-W3 expected state)
 
@@ -294,7 +294,7 @@ Each task below uses the merged-form task block shape per `tpm.appendix.md` §"T
 - **Verify**: `bash test/t109_marker_coverage.sh` exits 0 (after T6 lands).
 - **Depends on**: T6 (A1/A3 require markers to be in place; W3-internal dependency)
 - **Parallel-safe-with**: T6 — T7 author writes the test logic in parallel with T6's bulk edit; T7's `Verify:` only passes after T6 merges. Different files (T6: 18 command files; T7: 1 new test file). Parallel-safe by file-disjointness.
-- [ ]
+- [x]
 
 ---
 
@@ -314,7 +314,7 @@ Each task below uses the merged-form task block shape per `tpm.appendix.md` §"T
 - **Verify**: `grep -E '(config\.yml.*scaff-init|scaff-init.*config\.yml)' README.md` matches at least one line. Also `git diff --stat HEAD~1 -- README.md` shows a small additive diff (≤ ~3 lines for the sentence + any whitespace).
 - **Depends on**: —
 - **Parallel-safe-with**: T9, T10
-- [ ]
+- [x]
 
 ## T9 — Author runtime sandbox AC harness for AC7, AC8, AC10, AC11
 
@@ -336,7 +336,7 @@ Each task below uses the merged-form task block shape per `tpm.appendix.md` §"T
 - **Verify**: `bash test/t110_runtime_sandbox_acs.sh` exits 0.
 - **Depends on**: T1 (the test extracts from `.specaffold/preflight.md`; W1 → W4 strict serial guarantees this)
 - **Parallel-safe-with**: T8, T10
-- [ ]
+- [x]
 
 ## T10 — Author baseline-diff structural test for AC12 and AC13
 
@@ -352,7 +352,7 @@ Each task below uses the merged-form task block shape per `tpm.appendix.md` §"T
 - **Verify**: `bash test/t111_baseline_diff_shape.sh` exits 0 (after T6 merges).
 - **Depends on**: T6 (the baseline-diff is computed against the pre-T6 commit; W3 → W4 strict serial guarantees the commit exists)
 - **Parallel-safe-with**: T8, T9
-- [ ]
+- [x]
 
 ---
 

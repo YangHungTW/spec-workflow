@@ -2,6 +2,12 @@
 description: Validate a feature with qa-tester + qa-analyst in parallel; writes 08-validate.md. Usage: /scaff:validate <slug>
 ---
 
+<!-- preflight: required -->
+Run the preflight from `.specaffold/preflight.md` first.
+If preflight refuses (output starts with `REFUSED:PREFLIGHT`), abort
+this command immediately with no side effects (no agent dispatch,
+no file writes, no git ops); print the refusal line verbatim.
+
 Consolidated validate stage. Runs the `tester` and `analyst` axes **in parallel**, aggregates their verdicts via the shared aggregator (`bin/scaff-aggregate-verdicts`), writes `08-validate.md`, and advances STATUS only on PASS or NITS.
 
 ## Steps

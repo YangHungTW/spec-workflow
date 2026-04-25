@@ -408,6 +408,40 @@ PYEOF
 }
 
 # ---------------------------------------------------------------------------
+# run_preflight_coverage
+#   Asserts every *.md under .claude/commands/scaff/ carries the marker
+#   <!-- preflight: required -->.  Single grep -L fork; no per-file shell-out.
+#   stdout:
+#     missing-marker:<path>   — file lacks the marker
+#     ok:<path>               — file carries the marker
+#   Exit 0 if every file has the marker; exit 1 if any are missing.
+# ---------------------------------------------------------------------------
+run_preflight_coverage() {
+  if [ $# -gt 0 ]; then
+    echo "scaff-lint: preflight-coverage takes no arguments" >&2
+    exit 2
+  fi
+
+  # Single fork: grep -L lists files MISSING the marker.
+  local missing
+  missing=$(grep -L -F '<!-- preflight: required -->' .claude/commands/scaff/*.md 2>/dev/null || true)
+
+  local rc=0
+  for f in .claude/commands/scaff/*.md; do
+    case "$missing" in
+      *"$f"*)
+        echo "missing-marker:$f"
+        rc=1
+        ;;
+      *)
+        echo "ok:$f"
+        ;;
+    esac
+  done
+  return $rc
+}
+
+# ---------------------------------------------------------------------------
 # Argument dispatch
 # ---------------------------------------------------------------------------
 case "${1:-}" in
@@ -425,6 +459,11 @@ case "${1:-}" in
       exit 2
     fi
     run_scanner "paths" "$@"
+    exit $?
+    ;;
+  preflight-coverage)
+    shift
+    run_preflight_coverage "$@"
     exit $?
     ;;
   *)

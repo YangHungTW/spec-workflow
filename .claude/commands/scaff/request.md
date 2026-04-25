@@ -2,6 +2,12 @@
 description: PM intakes a new feature. Usage: /scaff:request "<one-line ask>" [--tier <tiny|standard|audited>] [slug]
 ---
 
+<!-- preflight: required -->
+Run the preflight from `.specaffold/preflight.md` first.
+If preflight refuses (output starts with `REFUSED:PREFLIGHT`), abort
+this command immediately with no side effects (no agent dispatch,
+no file writes, no git ops); print the refusal line verbatim.
+
 1. Parse `$ARGUMENTS`. Supported forms:
    - `"<ask>"` — AI generates the slug from the ask (preferred)
    - `"<ask>" <slug>` — user supplies the slug body explicitly
