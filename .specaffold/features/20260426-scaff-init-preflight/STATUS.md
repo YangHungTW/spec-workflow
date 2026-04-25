@@ -4,7 +4,7 @@
 - **has-ui**: false
 - **work-type**: feature
 - **tier**: standard
-- **stage**: implement
+- **stage**: validate
 - **created**: 2026-04-26
 - **updated**: 2026-04-26
 
@@ -15,7 +15,7 @@
 - [x] tech          (04-tech.md)                 — Architect
 - [x] plan          (05-plan.md)                 — TPM  [merged: narrative + task checklist]
 - [x] implement     (05-plan.md tasks checked off) — Developer
-- [ ] validate      (08-validate.md, verdict PASS) — QA-tester + QA-analyst  [merged: verify + gap-check]
+- [x] validate      (08-validate.md, verdict PASS) — QA-tester + QA-analyst  [merged: verify + gap-check]
 - [ ] archive       (moved to .specaffold/archive/)     — TPM
 
 ## Notes
@@ -43,3 +43,4 @@
 - 2026-04-26 review result — wave 4 verdict=NITS (T10-perf: A1 loop ~145 forks; T10-style: ALLCAPS loop-locals)
 - 2026-04-26 implement wave 4 done — T8, T9, T10
 - 2026-04-26 implement stage complete — 10/10 tasks; 5 test files (t107–t111) all PASS; lint exit 0; AC6 grep matches
+- 2026-04-26 validate — slug=20260426-scaff-init-preflight verdict=NITS (advisory findings in 08-validate.md)
