@@ -2,6 +2,12 @@
 description: PM revises request or PRD mid-stream. Usage: /scaff:update-req <slug>
 ---
 
+<!-- preflight: required -->
+Run the preflight from `.specaffold/preflight.md` first.
+If preflight refuses (output starts with `REFUSED:PREFLIGHT`), abort
+this command immediately with no side effects (no agent dispatch,
+no file writes, no git ops); print the refusal line verbatim.
+
 1. Ask user what changed and why.
 2. Invoke **scaff-pm** subagent in update mode. PM edits `00-request.md` and/or `03-prd.md`, tagging changed lines `[CHANGED YYYY-MM-DD]`.
 3. PM prepends `> ⚠ STALE since <date> — PRD changed, re-run <command>` to every downstream artifact that exists.

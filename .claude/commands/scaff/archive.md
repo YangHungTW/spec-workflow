@@ -2,6 +2,12 @@
 description: TPM archives a completed feature. Usage: /scaff:archive <slug> [--allow-unmerged REASON]
 ---
 
+<!-- preflight: required -->
+Run the preflight from `.specaffold/preflight.md` first.
+If preflight refuses (output starts with `REFUSED:PREFLIGHT`), abort
+this command immediately with no side effects (no agent dispatch,
+no file writes, no git ops); print the refusal line verbatim.
+
 1. Require `08-validate.md` exists and its aggregate verdict is `PASS` or `NITS`. If the file is absent or its verdict is `BLOCK`, refuse and exit non-zero.
 2. **Resolve tier and run merge-check** (skip to step 3 if `--allow-unmerged REASON` was supplied and REASON is non-empty):
 

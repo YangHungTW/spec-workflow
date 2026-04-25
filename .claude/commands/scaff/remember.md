@@ -2,6 +2,12 @@
 description: Manually save a team-memory entry. Usage: /scaff:remember <role> "<lesson>" [--scope local|global]
 ---
 
+<!-- preflight: required -->
+Run the preflight from `.specaffold/preflight.md` first.
+If preflight refuses (output starts with `REFUSED:PREFLIGHT`), abort
+this command immediately with no side effects (no agent dispatch,
+no file writes, no git ops); print the refusal line verbatim.
+
 1. Parse `$ARGUMENTS` for `<role>` (one of: pm, designer, architect, tpm, developer, qa-analyst, qa-tester, shared), `<lesson>` quoted text, and optional `--scope` flag.
 2. If role unknown, list the valid roles and ask user.
 3. Default scope: **local**. If `--scope global`, write to `~/.claude/team-memory/<role>/`; else to `.claude/team-memory/<role>/`.

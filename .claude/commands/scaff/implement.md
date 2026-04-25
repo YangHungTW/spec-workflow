@@ -2,6 +2,12 @@
 description: Run all remaining waves in parallel until done or blocked. Usage: /scaff:implement <slug> [--one-wave] [--task T<n>] [--serial] [--skip-inline-review] [--inline-review]
 ---
 
+<!-- preflight: required -->
+Run the preflight from `.specaffold/preflight.md` first.
+If preflight refuses (output starts with `REFUSED:PREFLIGHT`), abort
+this command immediately with no side effects (no agent dispatch,
+no file writes, no git ops); print the refusal line verbatim.
+
 Wave-based parallel execution. Default behaviour: run **every remaining wave** end-to-end, stopping only on task failure, merge conflict, or user interrupt. TPM's dependency graph is the plan — no reason to pause between healthy waves.
 
 `--skip-inline-review` — bypasses reviewer dispatch entirely for this run (emergency / debug / dogfood-paradox use only). Every use is logged to STATUS Notes as `YYYY-MM-DD implement — skip-inline-review flag USED for wave <N>` so the skip is visible in the archive. Default is OFF (inline review runs), EXCEPT on `tiny`-tier features where the default is to skip (R16).

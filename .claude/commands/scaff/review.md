@@ -2,6 +2,12 @@
 description: Multi-axis review of a feature branch diff (security / performance / style); writes a timestamped report; never advances STATUS. Usage: /scaff:review <slug> [--axis security|performance|style]
 ---
 
+<!-- preflight: required -->
+Run the preflight from `.specaffold/preflight.md` first.
+If preflight refuses (output starts with `REFUSED:PREFLIGHT`), abort
+this command immediately with no side effects (no agent dispatch,
+no file writes, no git ops); print the refusal line verbatim.
+
 Run a one-shot parallel review of a feature branch. Spawns security, performance, and style reviewer subagents (or a single axis via `--axis`), aggregates their verdicts, writes a timestamped report, and exits non-zero if any reviewer returned BLOCK. Never advances the STATUS stage checklist.
 
 ## Steps

@@ -2,6 +2,12 @@
 description: PM intakes a bug report. Usage: /scaff:bug "<url|ticket-id|description>" [--tier <tiny|standard|audited>] [slug]
 ---
 
+<!-- preflight: required -->
+Run the preflight from `.specaffold/preflight.md` first.
+If preflight refuses (output starts with `REFUSED:PREFLIGHT`), abort
+this command immediately with no side effects (no agent dispatch,
+no file writes, no git ops); print the refusal line verbatim.
+
 1. Parse `$ARGUMENTS`. Supported forms:
    - `"<arg>"` — AI generates the slug from the arg (preferred)
    - `"<arg>" <slug>` — user supplies the slug body explicitly
