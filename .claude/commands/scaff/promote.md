@@ -2,6 +2,12 @@
 description: Promote a repo-local team-memory entry to global. Usage: /scaff:promote <role>/<file>
 ---
 
+<!-- preflight: required -->
+Run the preflight from `.specaffold/preflight.md` first.
+If preflight refuses (output starts with `REFUSED:PREFLIGHT`), abort
+this command immediately with no side effects (no agent dispatch,
+no file writes, no git ops); print the refusal line verbatim.
+
 1. Parse `$ARGUMENTS` as `<role>/<file>` (e.g. `developer/tdd-before-green.md`).
 2. Verify source exists at `.claude/team-memory/<role>/<file>`.
 3. Ask user: why is this ready to promote? (Usually "seen it apply in ≥2 repos"). Record the rationale.

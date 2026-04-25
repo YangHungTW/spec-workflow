@@ -2,6 +2,12 @@
 description: Advance a feature to its next stage automatically. Usage: /scaff:next <slug>
 ---
 
+<!-- preflight: required -->
+Run the preflight from `.specaffold/preflight.md` first.
+If preflight refuses (output starts with `REFUSED:PREFLIGHT`), abort
+this command immediately with no side effects (no agent dispatch,
+no file writes, no git ops); print the refusal line verbatim.
+
 Orchestrator. Reads STATUS and advances one stage. Stops at any point that needs your input (blocker questions, design approval, one task at a time during implement).
 
 ```bash
