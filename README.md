@@ -26,6 +26,8 @@ From inside the **target consumer repo**, run the init skill:
 /scaff-init
 ```
 
+Every `/scaff:*` command (except `/scaff-init`) refuses to run when `.specaffold/config.yml` is missing — run `/scaff-init` first.
+
 For headless or scripted use, invoke the seed binary directly:
 
 ```sh
