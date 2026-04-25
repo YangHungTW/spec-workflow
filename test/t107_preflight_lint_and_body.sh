@@ -127,8 +127,7 @@ else
   # ---------------------------------------------------------------------------
   printf '\n=== A2: extracted shell block syntax check + smoke-run ===\n'
 
-  awk '/^# === SCAFF PREFLIGHT/,/^# === END SCAFF PREFLIGHT/' "$PREFLIGHT_MD" \
-    > "$SANDBOX/extracted.sh"
+  printf '%s\n' "$BLOCK" > "$SANDBOX/extracted.sh"
 
   # Syntax check
   if bash -n "$SANDBOX/extracted.sh"; then
@@ -166,12 +165,16 @@ LINT_BIN="$REPO_ROOT/bin/scaff-lint"
 if [ ! -x "$LINT_BIN" ]; then
   fail "A3: bin/scaff-lint not executable or not found (T2 has not merged yet)"
 else
-  # Count how many command files currently carry the marker
+  # Count how many command files currently carry the marker.
+  # grep -lF exits 1 when no files match — capture with `|| true` so set -e/pipefail
+  # don't abort the test in the W1-close state (zero markers = expected, not error).
   marker_count=0
   if ls "$REPO_ROOT/.claude/commands/scaff/"*.md > /dev/null 2>&1; then
-    marker_count="$(grep -lF '<!-- preflight: required -->' \
-      "$REPO_ROOT/.claude/commands/scaff/"*.md 2>/dev/null \
-      | wc -l | tr -d ' ')"
+    matched_files="$(grep -lF '<!-- preflight: required -->' \
+      "$REPO_ROOT/.claude/commands/scaff/"*.md 2>/dev/null || true)"
+    if [ -n "$matched_files" ]; then
+      marker_count="$(printf '%s\n' "$matched_files" | grep -c '^' | tr -d ' ')"
+    fi
   fi
 
   # Count total command files
