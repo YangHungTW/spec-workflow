@@ -170,4 +170,23 @@ FOREIGN_ACTUAL="$(cat "$CONSUMER_F/.git/hooks/pre-commit")"
 [ "$FOREIGN_ACTUAL" = "$FOREIGN_EXPECTED" ] \
   || fail "A4" "foreign pre-commit hook content was changed by init (no-force rule violated)"
 
+# ===========================================================================
+# A5 — scaff-seed migrate produces hook with both invocations
+# ===========================================================================
+CONSUMER_M="$SANDBOX/consumer-migrate"
+make_consumer "$CONSUMER_M"
+
+(cd "$CONSUMER_M" && "$SEED" migrate --from "$REPO_ROOT" --ref "$SRC_REF") > /dev/null 2>&1
+
+HOOK_M="$CONSUMER_M/.git/hooks/pre-commit"
+
+[ -x "$HOOK_M" ] \
+  || fail "A5" ".git/hooks/pre-commit is missing or not executable after migrate"
+
+grep -F 'scaff-lint scan-staged' "$HOOK_M" >/dev/null 2>&1 \
+  || fail "A5" ".git/hooks/pre-commit does not contain 'scaff-lint scan-staged'"
+
+grep -F 'scaff-lint preflight-coverage' "$HOOK_M" >/dev/null 2>&1 \
+  || fail "A5" ".git/hooks/pre-commit does not contain 'scaff-lint preflight-coverage'"
+
 echo "PASS: t108"
