@@ -276,7 +276,7 @@ Each task below uses the merged-form task block shape per `tpm.appendix.md` §"T
 - **Verify**: `bash test/t109_marker_coverage.sh` (T7 authors). Also: `bin/scaff-lint preflight-coverage; echo "exit=$?"` should now print 18 `ok:<path>` lines and `exit=0` (the post-W3 expected state). Also: `git diff --stat HEAD~1 -- .claude/commands/scaff/` should show exactly `90 insertions(+), 0 deletions(-)` across 18 files (5 lines × 18 files).
 - **Depends on**: T1 (the wiring directive references `.specaffold/preflight.md` which T1 creates), T2 (the lint must exist before W3 commits — pre-commit hook needs the subcommand resolvable), T4 (the local pre-commit hook is wired in W2; T6's commit will pass that hook because the markers being added are exactly what the lint requires)
 - **Parallel-safe-with**: T7
-- [ ]
+- [x]
 
 ## T7 — Author structural test for marker coverage (the post-W3 expected state)
 
@@ -294,7 +294,7 @@ Each task below uses the merged-form task block shape per `tpm.appendix.md` §"T
 - **Verify**: `bash test/t109_marker_coverage.sh` exits 0 (after T6 lands).
 - **Depends on**: T6 (A1/A3 require markers to be in place; W3-internal dependency)
 - **Parallel-safe-with**: T6 — T7 author writes the test logic in parallel with T6's bulk edit; T7's `Verify:` only passes after T6 merges. Different files (T6: 18 command files; T7: 1 new test file). Parallel-safe by file-disjointness.
-- [ ]
+- [x]
 
 ---
 

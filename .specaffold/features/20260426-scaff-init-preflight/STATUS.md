@@ -35,3 +35,7 @@
 - 2026-04-26 implement — fixup W2: scaff-seed cmd_migrate shim mirror at line 1314 (out-of-scope security observation; plan-scope gap) + tighten emitted shim to set -euo pipefail (T4-style NITS)
 - 2026-04-26 implement — W2 bookkeeping commits use --no-verify per dogfood-paradox sequencing (lint won't pass until W3 markers land)
 - 2026-04-26 implement wave 2 done — T4, T5
+- 2026-04-26 review dispatched — slug=20260426-scaff-init-preflight wave=3 tasks=T6,T7 axes=security,performance,style
+- 2026-04-26 review result — wave 3 verdict=NITS (T7-perf advisory: 18 forks per-file grep; bounded constant + non-hook test)
+- 2026-04-26 implement — W3 marker propagation: 18 command files +6 each (5 markers + 1 separator); pre-commit hook now enforces preflight-coverage; t107 ternary flipped to post-W3 branch (PASS); t108/t109/lint all green
+- 2026-04-26 implement wave 3 done — T6, T7
