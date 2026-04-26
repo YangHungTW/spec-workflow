@@ -4,6 +4,9 @@ import { StagePill, STAGE_KEYS, type StageKey } from "./StagePill";
 import { IdleBadge, type IdleState } from "./IdleBadge";
 import { ActionStrip } from "./ActionStrip";
 import { AgentPill } from "./AgentPill";
+import { SessionGraph } from "./SessionGraph";
+import { TaskProgressBar } from "./TaskProgressBar";
+import { useTaskProgress } from "../stores/artifactStore";
 import { roleForSession } from "../agentPalette";
 import type { SessionState } from "../stores/sessionStore";
 import type { InvokeStore } from "../stores/invokeStore";
@@ -85,6 +88,7 @@ export function SessionCard({
   invokeStore,
 }: SessionCardProps) {
   const { t } = useTranslation();
+  const { tasks_done: tasksDone, tasks_total: tasksTotal } = useTaskProgress(repoPath, slug);
 
   // Truncate note excerpt to ≤80 chars at component level (AC7.a)
   const displayExcerpt =
@@ -184,6 +188,14 @@ export function SessionCard({
           <IdleBadge state={idleState} />
         )}
       </div>
+
+      {/* TaskProgressBar — only during implement stage when task data is available (R11) */}
+      {stage === "implement" && tasksTotal > 0 && (
+        <TaskProgressBar tasksDone={tasksDone} tasksTotal={tasksTotal} />
+      )}
+
+      {/* SessionGraph — replaces StageChecklist; shows full stage DAG (R1, R6, R8) */}
+      <SessionGraph repoPath={repoPath} slug={slug} currentStage={stage} />
 
       {/* Hover actions — EXACTLY 2 per AC7.d; B2 boundary: no edit/advance/send */}
       <div className="session-card__actions">
