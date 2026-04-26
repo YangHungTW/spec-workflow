@@ -4,7 +4,7 @@
 - **has-ui**: true
 - **work-type**: feature
 - **tier**: audited
-- **stage**: validate
+- **stage**: archive
 - **created**: 2026-04-26
 - **updated**: 2026-04-26
 
@@ -16,7 +16,7 @@
 - [x] plan          (05-plan.md)                 — TPM  [merged: narrative + task checklist]
 - [x] implement     (05-plan.md tasks checked off) — Developer
 - [x] validate      (08-validate.md, verdict PASS) — QA-tester + QA-analyst  [merged: verify + gap-check]
-- [ ] archive       (moved to .specaffold/archive/)     — TPM
+- [x] archive       (moved to .specaffold/archive/)     — TPM
 
 ## Notes
 <!-- date + role + what changed -->
@@ -48,3 +48,5 @@
 - 2026-04-26 validate — slug=20260426-flow-monitor-graph-view verdict=BLOCK (analyst F1 must: R2/AC2 8-of-11 unlabeled edges + test checks only 2; tester NITS on AC8 height jsdom defer; 6 should/extra findings logged in 08-validate.md)
 - 2026-04-26 validate fix `e46700f` — labeled all 10 edges + bridge wraps in <g> with <text> + AC2 test iterates ALL_EDGE_IDS (10 entries, was 2)
 - 2026-04-26 validate — slug=20260426-flow-monitor-graph-view verdict=NITS (advisory findings in 08-validate.md: AC8 manual smoke deferral + 6 analyst should-level findings persisting from prior run); [x] validate; stage→validate
+- 2026-04-26 merge — branch 20260426-flow-monitor-graph-view merged into main as bc24d7a (carries 20260426-fix-init-missing-preflight-files commits as riders per F4)
+- 2026-04-26 archive — TPM retrospective: 5 memory entries approved by user (developer/lint-suppression-sentinel, qa-tester/universal-quantifier-acs, qa-analyst/tech-doc-named-risk, tpm/merge-note-consolidation, shared/cross-feature-commits-leak); [x] archive; moved to .specaffold/archive/
