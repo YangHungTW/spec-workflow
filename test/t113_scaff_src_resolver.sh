@@ -76,26 +76,6 @@ if [ -z "${SCAFF_SRC:-}" ] || [ ! -d "${SCAFF_SRC}" ]; then
 fi
 [ -d "${SCAFF_SRC:-}" ] || { printf '"'"'%s\n'"'"' '"'"'ERROR: cannot resolve SCAFF_SRC; set the SCAFF_SRC env var, or run `bin/claude-symlink install` from the scaff source repo'"'"' >&2; exit 65; }'
 
-# Helper: write the resolver block to a temp script and evaluate it
-# in a controlled subshell. Returns the SCAFF_SRC value via a file.
-run_resolver() {
-  local resolver_out="$SANDBOX/resolver_out.$$"
-  local resolver_err="$SANDBOX/resolver_err.$$"
-  local resolver_exit=0
-  # Write resolver to a temp script that also prints SCAFF_SRC on success
-  local resolver_script="$SANDBOX/resolver_script.$$"
-  printf '%s\n' "$RESOLVER_BLOCK" > "$resolver_script"
-  printf 'printf '"'"'%%s\n'"'"' "${SCAFF_SRC:-__unset__}"\n' >> "$resolver_script"
-  # Run in a subshell so env var changes don't affect the parent
-  ( eval "$(cat "$resolver_script")" ) > "$resolver_out" 2> "$resolver_err" \
-    || resolver_exit=$?
-  printf '%s' "$resolver_exit" > "$SANDBOX/resolver_exit.$$"
-  if [ -f "$resolver_out" ]; then cat "$resolver_out"; fi
-  if [ -f "$resolver_err" ]; then cat "$resolver_err" >&2; fi
-  rm -f "$resolver_script" "$resolver_out" "$resolver_err"
-  return "$resolver_exit"
-}
-
 # ---------------------------------------------------------------------------
 # Set up the user-global symlink in the sandbox
 # ---------------------------------------------------------------------------
