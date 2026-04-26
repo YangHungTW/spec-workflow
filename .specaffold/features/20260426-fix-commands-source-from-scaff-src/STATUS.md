@@ -25,3 +25,7 @@
 - 2026-04-26 next — design skipped (has-ui: false; stage_status bug/standard/design = optional → skip)
 - 2026-04-26 Architect — wrote 04-tech.md; resolved D1–D4 (PM placeholders) and added D5–D7 (lint reuse, plan_copy cleanup, t113 sandbox test); 0 blockers; applied by-construction-coverage + commands-harvest-scope memory entries.
 - 2026-04-26 TPM — wrote 05-plan.md (2 waves, 4 tasks; W1 parallel T1/T2/T3 file-disjoint, W2 single bulk T4 marker sweep across 18 files; dogfood-paradox 12th occurrence; --no-verify enumerated for T1 dev commit + every W1 merge + W1 bookkeeping per no-verify-bookkeeping memory; t113 pre-declared; cross-surface byte-identity check across lint canonical block + 2 scaff-seed heredocs + 18 marker blocks per partial-wiring-trace lesson).
+- 2026-04-26 review dispatched — slug=20260426-fix-commands-source-from-scaff-src wave=1 tasks=T1,T2,T3 axes=security,performance,style
+- 2026-04-26 review result — wave 1 verdict=NITS (T1-perf advisory: 2 extra forks; T1-style advisory: WHAT-style awk comments; T2-style 3 should: dead run_resolver + orphan resolver_exit + WHAT-comment)
+- 2026-04-26 implement — fixup W1: t113 dropped dead run_resolver helper + orphan resolver_exit (T2-style NITS resolved); --no-verify used (lint now fails on un-swept markers per dogfood-paradox sequencing)
+- 2026-04-26 implement wave 1 done — T1, T2, T3 (W1 commits + bookkeeping ALL use --no-verify per plan §1.4 — lint extension landed before satisfier)
