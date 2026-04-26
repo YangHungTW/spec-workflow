@@ -1,6 +1,4 @@
 {
-  "_allow": "<!-- scaff-lint: allow-cjk reason=\"i18n bundle — zh-TW values are legitimately CJK\" -->",
-
   "sidebar.allProjects": "全部專案",
   "sidebar.addRepo": "+ 新增倉庫…",
   "sidebar.projects": "專案",
