@@ -4,7 +4,7 @@
 - **has-ui**: false
 - **work-type**: bug
 - **tier**: standard
-- **stage**: implement
+- **stage**: validate
 - **created**: 2026-04-26
 - **updated**: 2026-04-26
 
@@ -15,7 +15,7 @@
 - [x] tech          (04-tech.md)                 — Architect
 - [x] plan          (05-plan.md)                 — TPM  [merged: narrative + task checklist]
 - [x] implement     (05-plan.md tasks checked off) — Developer
-- [ ] validate      (08-validate.md, verdict PASS) — QA-tester + QA-analyst  [merged: verify + gap-check]
+- [x] validate      (08-validate.md, verdict PASS) — QA-tester + QA-analyst  [merged: verify + gap-check]
 - [ ] archive       (moved to .specaffold/archive/)     — TPM
 
 ## Notes
@@ -28,3 +28,5 @@
 - 2026-04-26 review result — wave 1 verdict=NITS (T2-perf: A3 reads config.yml 3× via separate greps)
 - 2026-04-26 implement — fixup W1: t112 grep-target mismatch (config.yml uses 'already:<path>' helper format; preflight.md uses 'already: <path>' plan_copy format; mixed convention inside scaff-seed itself — finding worth surfacing)
 - 2026-04-26 implement wave 1 done — T1, T2; all 6 tests t107-t112 green
+- 2026-04-26 validate — slug=20260426-fix-init-missing-preflight-files verdict=NITS (1 should + 2 advisory: scaff-seed already:<path> vs already: <path> token format inconsistency between helper and plan_copy; tech doc D3 stale)
+- 2026-04-26 architectural-shift discovered post-validate — runtime exploration found that bin/* (scaff-tier, scaff-stage-matrix, scaff-lint, scaff-aggregate-verdicts) are also missing from scaff-seed manifest, so /scaff:next still fails in consumer repos. Decision: NOT expand this bug to copy bin/ (option A); instead pivot to thin-consumer architecture (option B) — command preambles source from $SCAFF_SRC, not $REPO_ROOT. This fix's emit_default_config_yml helper remains keep-worthy in B world (config.yml lives in consumer); plan_copy preflight.md becomes redundant but harmless. B-world fix lands in follow-up bug.
