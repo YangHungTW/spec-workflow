@@ -43,6 +43,12 @@ vi.mock("../stores/invokeStore", () => ({
   }),
 }));
 
+// Stub artifactStore — controlled watcher state for T9 toast effect tests.
+let _mockWatcherState: "running" | "errored" = "running";
+vi.mock("../stores/artifactStore", () => ({
+  useWatcherStatus: () => ({ state: _mockWatcherState }),
+}));
+
 // Stub Tauri event API — MainWindow and PollingFooter call listen() on mount;
 // without this mock the test environment throws because the Tauri IPC bridge
 // (window.__TAURI_INTERNALS__) is not present in jsdom.
@@ -76,6 +82,8 @@ afterEach(() => {
   // Reset mock preflight state between tests.
   _mockPreflightCommand = null;
   _mockPreflightSlug = null;
+  // Reset watcher state between tests.
+  _mockWatcherState = "running";
 });
 
 describe("App T111 — CommandPalette + PreflightToast overlays + ⌘K keybinding", () => {
@@ -135,6 +143,39 @@ describe("App T111 — CommandPalette + PreflightToast overlays + ⌘K keybindin
       </MemoryRouter>,
     );
     expect(document.querySelector("[data-testid='preflight-toast']")).toBeNull();
+  });
+});
+
+describe("App T9 — watcher error toast effect (AC16)", () => {
+  it("watcher error toast is absent when state is running", () => {
+    _mockWatcherState = "running";
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <App />
+      </MemoryRouter>,
+    );
+    expect(document.querySelector("[data-testid='watcher-error-toast']")).toBeNull();
+  });
+
+  it("watcher error toast appears when state transitions to errored", () => {
+    _mockWatcherState = "errored";
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <App />
+      </MemoryRouter>,
+    );
+    expect(document.querySelector("[data-testid='watcher-error-toast']")).toBeTruthy();
+  });
+
+  it("watcher error toast shows i18n key watcher.error.toast", () => {
+    _mockWatcherState = "errored";
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <App />
+      </MemoryRouter>,
+    );
+    const toast = document.querySelector("[data-testid='watcher-error-toast']");
+    expect(toast?.textContent).toBe("watcher.error.toast");
   });
 });
 
