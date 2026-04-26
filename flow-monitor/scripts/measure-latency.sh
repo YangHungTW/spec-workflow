@@ -78,6 +78,12 @@ esac
 # ---------------------------------------------------------------------------
 CONSOLE_LOG="${CONSOLE_LOG:-}"
 FIXTURE_SLUG="${FIXTURE_SLUG:-latency-test-fixture}"
+
+# Validate FIXTURE_SLUG: must not contain '/' or '..' (path traversal guard).
+case "$FIXTURE_SLUG" in
+  */*|*..*) printf 'FAIL: FIXTURE_SLUG must not contain "/" or "..": %s\n' "$FIXTURE_SLUG" >&2; exit 2 ;;
+esac
+
 WRITE_COUNT="${WRITE_COUNT:-20}"
 WRITE_DELAY="${WRITE_DELAY:-0.2}"
 P95_LIMIT_MS="${P95_LIMIT_MS:-1000}"
@@ -112,13 +118,14 @@ printf 'INFO: writing fixture to %s (%s times, %ss delay)\n' \
 BASELINE_LINES="$(wc -l < "$CONSOLE_LOG" | tr -d ' ')"
 
 # ---------------------------------------------------------------------------
-# Write fixture WRITE_COUNT times; each write uses the epoch-ms timestamp
-# so the log correlation works without a separate IPC round-trip.
-# No per-iteration shell-out for date: compute epoch once then increment.
+# Write fixture WRITE_COUNT times.  The script-side timestamp is not needed:
+# latency is computed from the [artifactStore] LATENCY_MS= log line emitted
+# by artifactStore.ts at render-commit time, so the file's OS mtime alone
+# triggers the watcher.  No per-iteration shell-out.
 # ---------------------------------------------------------------------------
 i=1
 while [ "$i" -le "$WRITE_COUNT" ]; do
-  printf '# prd fixture write %d — ts:%d\n' "$i" "$(date +%s)000" > "$FIXTURE_FILE"
+  printf 'iteration %d\n' "$i" > "$FIXTURE_FILE"
   i=$((i + 1))
   if [ "$i" -le "$WRITE_COUNT" ]; then
     sleep "$WRITE_DELAY"
