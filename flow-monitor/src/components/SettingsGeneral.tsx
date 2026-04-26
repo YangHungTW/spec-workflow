@@ -78,6 +78,7 @@ export function SettingsGeneral({
           value={settings.polling_interval_secs}
           onChange={handlePollingChange}
         />
+        <p className="settings__deprecated">{t("settings.polling.deprecated.note")}</p>
       </section>
 
       <section className="settings-section">
