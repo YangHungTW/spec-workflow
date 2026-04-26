@@ -409,6 +409,51 @@ emit_default_config_yml() {
 }
 
 # ---------------------------------------------------------------------------
+# emit_pre_commit_shim <consumer_root>
+# Dispatcher for the pre-commit shim install.
+# Called from cmd_init AND cmd_migrate — single source of truth for shim
+# content (D2: hook-run-time resolver; no inlined heredoc duplication at
+# call sites).
+# ---------------------------------------------------------------------------
+emit_pre_commit_shim() {
+  local consumer_root="$1"
+  local shim_state
+  shim_state=$(classify_pre_commit_shim "$consumer_root")
+  local shim_dst="${consumer_root}/.git/hooks/pre-commit"
+
+  case "$shim_state" in
+    missing)
+      cat <<'SHIM_EOF' | write_atomic "$shim_dst"
+#!/usr/bin/env bash
+# scaff-lint: pre-commit shim — installed by bin/scaff-seed init/migrate
+set -euo pipefail
+# Resolve $SCAFF_SRC: env var, then user-global symlink, then fail.
+if [ -z "${SCAFF_SRC:-}" ] || [ ! -d "${SCAFF_SRC}" ]; then
+  _scaff_src_link=$(readlink "$HOME/.claude/agents/scaff" 2>/dev/null || true)
+  SCAFF_SRC="${_scaff_src_link%/.claude/agents/scaff}"
+  unset _scaff_src_link
+fi
+[ -d "${SCAFF_SRC:-}" ] || { printf '%s\n' 'ERROR: cannot resolve SCAFF_SRC; set the SCAFF_SRC env var, or run `bin/claude-symlink install` from the scaff source repo' >&2; exit 65; }
+"$SCAFF_SRC/bin/scaff-lint" scan-staged "$@"
+"$SCAFF_SRC/bin/scaff-lint" preflight-coverage
+SHIM_EOF
+      chmod +x "$shim_dst"
+      echo "created:.git/hooks/pre-commit"
+      _CNT_CREATED=$((_CNT_CREATED + 1))
+      ;;
+    ok)
+      echo "already:.git/hooks/pre-commit"
+      _CNT_ALREADY=$((_CNT_ALREADY + 1))
+      ;;
+    foreign-pre-commit)
+      echo "skipped:foreign-pre-commit:.git/hooks/pre-commit"
+      _CNT_SKIPPED=$((_CNT_SKIPPED + 1))
+      if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
+      ;;
+  esac
+}
+
+# ---------------------------------------------------------------------------
 # plan_copy <src_root> <mode>
 # Enumerates managed relpaths from the source tree.
 # mode=init|migrate: includes static subtrees + team-memory skeleton.
@@ -433,13 +478,6 @@ plan_copy() {
       done
     fi
   done
-
-  # Explicit single-file entries for .specaffold/ files that must not be
-  # copied verbatim from the prefix loop (D6: sibling block, not prefix-list
-  # entry, because the prefix loop guards with [ -d ] which skips regular files).
-  if [ -f "${src_root}/.specaffold/preflight.md" ]; then
-    printf '.specaffold/preflight.md\n'
-  fi
 
   # Team-memory skeleton — only for init or migrate modes
   case "$mode" in
@@ -788,28 +826,7 @@ EOF
   # shortcut so the shim outcome is included in the counter values that gate
   # the early-exit check. cmd_update does NOT install hooks (tech §6 D11).
   # ---------------------------------------------------------------------------
-  local shim_state
-  shim_state=$(classify_pre_commit_shim "$consumer_root")
-  local shim_dst="${consumer_root}/.git/hooks/pre-commit"
-
-  case "$shim_state" in
-    missing)
-      printf '#!/usr/bin/env bash\n# scaff-lint: pre-commit shim — installed by bin/scaff-seed init/migrate\nset -euo pipefail\nbin/scaff-lint scan-staged "$@"\nbin/scaff-lint preflight-coverage\n' \
-        | write_atomic "$shim_dst"
-      chmod +x "$shim_dst"
-      echo "created:.git/hooks/pre-commit"
-      _CNT_CREATED=$((_CNT_CREATED + 1))
-      ;;
-    ok)
-      echo "already:.git/hooks/pre-commit"
-      _CNT_ALREADY=$((_CNT_ALREADY + 1))
-      ;;
-    foreign-pre-commit)
-      echo "skipped:foreign-pre-commit:.git/hooks/pre-commit"
-      _CNT_SKIPPED=$((_CNT_SKIPPED + 1))
-      if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
-      ;;
-  esac
+  emit_pre_commit_shim "$consumer_root"
 
   # ---------------------------------------------------------------------------
   # Step 8c: Emit default config.yml (D1, D5).
@@ -1375,28 +1392,7 @@ EOF
   # so the shim outcome feeds into the counters that gate the idempotent shortcut
   # and the MAX_CODE conflict gate. cmd_update does NOT install hooks (D11).
   # ---------------------------------------------------------------------------
-  local shim_state
-  shim_state=$(classify_pre_commit_shim "$consumer_root")
-  local shim_dst="${consumer_root}/.git/hooks/pre-commit"
-
-  case "$shim_state" in
-    missing)
-      printf '#!/usr/bin/env bash\n# scaff-lint: pre-commit shim — installed by bin/scaff-seed init/migrate\nset -euo pipefail\nbin/scaff-lint scan-staged "$@"\nbin/scaff-lint preflight-coverage\n' \
-        | write_atomic "$shim_dst"
-      chmod +x "$shim_dst"
-      echo "created:.git/hooks/pre-commit"
-      _CNT_CREATED=$((_CNT_CREATED + 1))
-      ;;
-    ok)
-      echo "already:.git/hooks/pre-commit"
-      _CNT_ALREADY=$((_CNT_ALREADY + 1))
-      ;;
-    foreign-pre-commit)
-      echo "skipped:foreign-pre-commit:.git/hooks/pre-commit"
-      _CNT_SKIPPED=$((_CNT_SKIPPED + 1))
-      if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
-      ;;
-  esac
+  emit_pre_commit_shim "$consumer_root"
 
   # ---------------------------------------------------------------------------
   # Step 8c: Emit default config.yml (D1, D5).
