@@ -29,3 +29,5 @@
 - 2026-04-26 review dispatched — slug=20260426-chore-scaff-plan-chore-aware wave=1 tasks=T1 axes=security,performance,style
 - 2026-04-26 implement wave 1 done — T1
 - 2026-04-26 review dispatched — slug=20260426-chore-scaff-plan-chore-aware wave=2 tasks=T2 axes=security,performance,style
+- 2026-04-26 Developer — T2: generalised next.md matrix-skip suffix wording; updated chore-tiny-plan-short-circuit-plumbing-gap.md to acknowledge plumbing fix landed; refreshed tpm/index.md hook
+- 2026-04-26 implement — T2 merge conflict on STATUS Notes append (orchestrator dispatch line vs Developer T2 note); resolved by keeping both; root cause: dev wrote to orchestrator-controlled STATUS.md from worktree; not a parallel-safety failure (single-task wave).
