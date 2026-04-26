@@ -4,7 +4,7 @@
 - **has-ui**: false
 - **work-type**: chore
 - **tier**: tiny
-- **stage**: implement
+- **stage**: archive
 - **created**: 2026-04-26
 - **updated**: 2026-04-26
 
@@ -14,9 +14,9 @@
 - [x] prd           (03-prd.md)                  — PM
 - [x] tech          (04-tech.md)                 — Architect
 - [x] plan          (05-plan.md)                 — TPM  [merged: narrative + task checklist]
-- [ ] implement     (05-plan.md tasks checked off) — Developer
-- [ ] validate      (08-validate.md, verdict PASS) — QA-tester + QA-analyst  [merged: verify + gap-check]
-- [ ] archive       (moved to .specaffold/archive/)     — TPM
+- [x] implement     (05-plan.md tasks checked off) — Developer
+- [x] validate      (08-validate.md, verdict PASS) — QA-tester + QA-analyst  [merged: verify + gap-check]
+- [x] archive       (moved to .specaffold/archive/)     — TPM
 
 ## Notes
 <!-- date + role + what changed -->
@@ -27,3 +27,15 @@
 - 2026-04-26 next — stage_status chore/tiny/tech = skipped.
 - 2026-04-26 next — plan skipped (stage_status chore/tiny/plan = optional; /scaff:plan hard-requires 04-tech.md which is matrix-skipped; minimal 05-plan.md hand-written from 03-prd.md checklist for implement consumption — see tpm/chore-tiny-plan-short-circuit-plumbing-gap.md).
 - 2026-04-26 next — advanced stage field prd → implement.
+- 2026-04-26 Developer — T1 done: test/t114_seed_settings_json.sh extended with A4: migrate path block (pre-init manifest, scaff-seed migrate --from, post-migrate settings.json + .bak assertions); covers cmd_migrate dispatcher arm at bin/scaff-seed:1402; t114 exits 0 with 17 PASS lines (5 for A4); closes parent feature analyst Finding 1 (qa-analyst/scaff-seed-dual-emit-site-hazard).
+- 2026-04-26 implement — skip-inline-review USED for wave 1 (reason: tiny-default).
+- 2026-04-26 implement wave 1 done — T1.
+- 2026-04-26 implement — threshold check OK: 3 files / 104 lines vs tiny limits 3/200; no upgrade SUGGESTED.
+- 2026-04-26 implement — all tasks done (T1); checked [x] implement; advanced stage field implement → validate.
+- 2026-04-26 validate — slug=20260426-chore-t114-migrate-coverage verdict=NITS (advisory findings in 08-validate.md): tester=PASS / analyst=NITS with 2 should-severity findings (A4 .bak content fidelity not asserted; STATUS [x] tech checkbox-vs-Notes inconsistency).
+- 2026-04-26 validate — checked [x] validate; advanced stage field validate → archive.
+- 2026-04-26 archive — tier stays tiny (3 files / 104 lines vs 3/200; SUGGEST did not fire; 100% test additions, 0% prod).
+- 2026-04-26 archive — analyst Finding 1 (A4 partial mirror of A2c — .bak content fidelity not asserted) deferred to backlog: production code is byte-identical between cmd_init/cmd_migrate; A2c already covers .bak content fidelity for the cmd_init arm; PM memory pm/scope-mirror-of-X-must-itemize-X-in-checklist closes the upstream wording-asymmetry gap (user-approved at retro).
+- 2026-04-26 archive — analyst Finding 2 (STATUS [x] tech checkbox-vs-Notes inconsistency) accepted-with-rationale: chore-tiny convention "checked-means-done-or-skipped, Notes authoritative" validated across three archived precedents (t108, seed-copies-settings, t114); plumbing follow-up chore filed to update _template/STATUS.md so chore × tiny initialises [ ] for design/tech/plan (user-approved at retro).
+- 2026-04-26 archive — retro produced 2 user-approved memory entries: pm/scope-mirror-of-X-must-itemize-X-in-checklist.md; qa-analyst/chore-tiny-status-checkbox-vs-notes-asymmetry.md. Plus 1 edit: tpm/chore-tiny-plan-short-circuit-plumbing-gap.md §Why bumped to "three chore-tiny shipped, plumbing fix overdue".
+- 2026-04-26 archive — checked [x] archive; feature complete.

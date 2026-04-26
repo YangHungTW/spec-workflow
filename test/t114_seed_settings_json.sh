@@ -258,6 +258,108 @@ else
 fi
 
 # ===========================================================================
+# A4 — migrate path
+# Pre-init a consumer, then run scaff-seed migrate --from "$REPO_ROOT".
+# Asserts:
+#   (a) exit 0
+#   (b) post-migrate .claude/settings.json contains SessionStart hook command
+#       referencing .claude/hooks/session-start.sh  (mirror of A1)
+#   (c) merge sub-case: pre-existing settings.json triggers .bak creation
+#       (mirror of A2c)
+# ===========================================================================
+printf '\n=== A4: migrate path ===\n'
+
+CONSUMER4="$SANDBOX/consumer4"
+make_consumer "$CONSUMER4"
+
+# Pre-init so cmd_migrate takes the wiring-rewrite path (not init-from-scratch).
+(cd "$CONSUMER4" && PATH=/usr/bin:/bin:$PATH \
+  "$REPO_ROOT/bin/scaff-seed" init --from "$REPO_ROOT" --ref "$SRC_REF") \
+  > /dev/null 2>&1 || true
+
+# Run scaff-seed migrate (captures exit code without aborting on non-zero)
+MIGRATE4_EXIT=0
+(cd "$CONSUMER4" && PATH=/usr/bin:/bin:$PATH \
+  "$REPO_ROOT/bin/scaff-seed" migrate --from "$REPO_ROOT") \
+  > /dev/null 2>&1 || MIGRATE4_EXIT=$?
+
+if [ "$MIGRATE4_EXIT" = "0" ]; then
+  pass "A4: scaff-seed migrate exited 0"
+else
+  fail "A4: scaff-seed migrate exited $MIGRATE4_EXIT (expected 0)"
+fi
+
+SETTINGS4="$CONSUMER4/.claude/settings.json"
+if [ -f "$SETTINGS4" ]; then
+  pass "A4: .claude/settings.json exists after migrate"
+else
+  fail "A4: .claude/settings.json missing after migrate"
+fi
+
+# Extract the SessionStart hook command via python3 (no jq — bash-32-portability.md)
+CMD4=""
+if [ -f "$SETTINGS4" ]; then
+  CMD4="$(python3 - "$SETTINGS4" <<'PYEOF'
+import json, sys
+with open(sys.argv[1]) as f:
+    data = json.load(f)
+hooks = data.get("hooks", {})
+ss = hooks.get("SessionStart", [])
+for grp in ss:
+    for h in grp.get("hooks", []):
+        if h.get("type") == "command" and h.get("command"):
+            print(h["command"])
+            raise SystemExit(0)
+PYEOF
+  )" || true
+fi
+
+if printf '%s\n' "$CMD4" | grep -qF '.claude/hooks/session-start.sh'; then
+  pass "A4: SessionStart command references .claude/hooks/session-start.sh"
+else
+  fail "A4: SessionStart command missing or wrong: '$CMD4'"
+fi
+
+# A4 merge sub-case: pre-existing settings.json triggers .bak creation
+# Use a separate consumer so the pre-existing file state is clean.
+CONSUMER4B="$SANDBOX/consumer4b"
+make_consumer "$CONSUMER4B"
+mkdir -p "$CONSUMER4B/.claude"
+
+# Pre-init to author the manifest (wiring-rewrite path for migrate)
+(cd "$CONSUMER4B" && PATH=/usr/bin:/bin:$PATH \
+  "$REPO_ROOT/bin/scaff-seed" init --from "$REPO_ROOT" --ref "$SRC_REF") \
+  > /dev/null 2>&1 || true
+
+# Overwrite settings.json with an unrelated key (no hooks block)
+python3 - "$CONSUMER4B/.claude/settings.json" <<'PYEOF'
+import json, sys
+data = {"permissions": {"allow": ["Bash(*)", "Read(*)", "Write(*)"]}}
+with open(sys.argv[1], "w") as f:
+    json.dump(data, f, indent=2)
+    f.write("\n")
+PYEOF
+
+# Run scaff-seed migrate — should merge and produce .bak
+MIGRATE4B_EXIT=0
+(cd "$CONSUMER4B" && PATH=/usr/bin:/bin:$PATH \
+  "$REPO_ROOT/bin/scaff-seed" migrate --from "$REPO_ROOT") \
+  > /dev/null 2>&1 || MIGRATE4B_EXIT=$?
+
+if [ "$MIGRATE4B_EXIT" = "0" ]; then
+  pass "A4: merge sub-case: scaff-seed migrate exited 0"
+else
+  fail "A4: merge sub-case: scaff-seed migrate exited $MIGRATE4B_EXIT (expected 0)"
+fi
+
+BAK4B="$CONSUMER4B/.claude/settings.json.bak"
+if [ -f "$BAK4B" ]; then
+  pass "A4: merge sub-case: .claude/settings.json.bak exists"
+else
+  fail "A4: merge sub-case: .claude/settings.json.bak missing after migrate"
+fi
+
+# ===========================================================================
 # Summary
 # ===========================================================================
 printf '\n'
