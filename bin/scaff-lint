@@ -222,6 +222,9 @@ def is_out_of_scope(path):
     for prefix in ('.specaffold/archive/', '.git/', 'node_modules/'):
         if norm.startswith(prefix) or ('/' + prefix) in ('/' + norm):
             return True
+    # i18n bundles legitimately contain CJK translation values — exclude narrow path
+    if norm.endswith('.json') and 'flow-monitor/src/i18n/' in norm:
+        return True
     return False
 
 # ---------------------------------------------------------------------------
