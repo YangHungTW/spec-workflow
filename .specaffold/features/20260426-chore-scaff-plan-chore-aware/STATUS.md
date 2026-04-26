@@ -28,3 +28,4 @@
 - 2026-04-26 next — advanced stage field prd → implement.
 - 2026-04-26 review dispatched — slug=20260426-chore-scaff-plan-chore-aware wave=1 tasks=T1 axes=security,performance,style
 - 2026-04-26 implement wave 1 done — T1
+- 2026-04-26 review dispatched — slug=20260426-chore-scaff-plan-chore-aware wave=2 tasks=T2 axes=security,performance,style
