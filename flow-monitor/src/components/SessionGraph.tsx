@@ -46,18 +46,20 @@ interface StageEdge {
   label?: string;
 }
 
-// 10 sequential edges + 1 bridge (plan → tasks)
+// Every edge carries an artifact label (PRD R2 / AC2). Convention: the label is
+// the destination stage's primary artifact (the file or state the edge produces).
+// Bridge edge (plan → tasks) connects the two rows.
 const STAGE_EDGES: StageEdge[] = [
-  { from: "request",    to: "brainstorm"                      },
-  { from: "brainstorm", to: "design"                          },
-  { from: "design",     to: "prd",      label: "03-prd.md"   },
-  { from: "prd",        to: "tech",     label: "04-tech.md"  },
-  { from: "tech",       to: "plan"                            },
-  { from: "plan",       to: "tasks",    label: "tasks.md"    },
-  { from: "tasks",      to: "implement"                       },
-  { from: "implement",  to: "gap-check"                       },
-  { from: "gap-check",  to: "verify"                          },
-  { from: "verify",     to: "archive"                         },
+  { from: "request",    to: "brainstorm", label: "01-brainstorm.md" },
+  { from: "brainstorm", to: "design",     label: "02-design/"       },
+  { from: "design",     to: "prd",        label: "03-prd.md"        },
+  { from: "prd",        to: "tech",       label: "04-tech.md"       },
+  { from: "tech",       to: "plan",       label: "05-plan.md"       },
+  { from: "plan",       to: "tasks",      label: "tasks.md"         },
+  { from: "tasks",      to: "implement",  label: "[x] tasks"        },
+  { from: "implement",  to: "gap-check",  label: "06-gap-check.md"  },
+  { from: "gap-check",  to: "verify",     label: "07-verify.md"     },
+  { from: "verify",     to: "archive",    label: "08-validate.md"   },
 ];
 
 // ---------------------------------------------------------------------------
@@ -173,15 +175,27 @@ function StageEdges({ currentStage, brainstormSkipped }: StageEdgesProps) {
           const cx  = (bx1 + bx2) / 2;
           const cy  = (by1 + by2) / 2 + 8;
           return (
-            <path
-              key={`${edge.from}-${edge.to}`}
-              data-stage-edge={`${edge.from}-${edge.to}`}
-              d={`M ${bx1} ${by1} Q ${cx} ${cy} ${bx2} ${by2}`}
-              stroke={stroke}
-              strokeWidth={strokeW}
-              fill="none"
-              markerEnd={arrowId}
-            />
+            <g key={`${edge.from}-${edge.to}`}>
+              <path
+                data-stage-edge={`${edge.from}-${edge.to}`}
+                d={`M ${bx1} ${by1} Q ${cx} ${cy} ${bx2} ${by2}`}
+                stroke={stroke}
+                strokeWidth={strokeW}
+                fill="none"
+                markerEnd={arrowId}
+              />
+              {edge.label && (
+                <text
+                  x={cx}
+                  y={cy + 4}
+                  fontSize="7"
+                  fill="var(--graph-edge-label)"
+                  textAnchor="middle"
+                >
+                  {edge.label}
+                </text>
+              )}
+            </g>
           );
         }
 

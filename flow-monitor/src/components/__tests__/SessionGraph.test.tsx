@@ -49,9 +49,21 @@ const ROW1_STAGES = ["request", "brainstorm", "design", "prd", "tech", "plan"];
 const ROW2_STAGES = ["tasks", "implement", "gap-check", "verify", "archive"];
 const ALL_STAGES = [...ROW1_STAGES, ...ROW2_STAGES];
 
-// Edges that render visible <text> label siblings (non-bridge edges with label).
-// The bridge edge plan-tasks renders as a bare <path> without a text child.
-const LABELED_EDGES = ["design-prd", "prd-tech"];
+// PRD R2 / AC2 contract: every directed edge in the DAG carries an artifact label.
+// Test iterates [data-stage-edge] elements rather than a hardcoded subset, so adding
+// or removing edges in STAGE_EDGES is automatically covered.
+const ALL_EDGE_IDS = [
+  "request-brainstorm",
+  "brainstorm-design",
+  "design-prd",
+  "prd-tech",
+  "tech-plan",
+  "plan-tasks",
+  "tasks-implement",
+  "implement-gap-check",
+  "gap-check-verify",
+  "verify-archive",
+];
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -128,17 +140,43 @@ describe("SessionGraph — AC1: 11 nodes, 6 in row 1, 5 in row 2, bridge edge", 
 });
 
 describe("SessionGraph — AC2: every edge has a non-empty label", () => {
-  it("LABELED_EDGES all appear with non-empty text labels", () => {
-    const { container } = renderGraph("archive");
-    // Each labeled edge edge group contains a <text> child with the artifact name.
-    for (const edgeId of LABELED_EDGES) {
+  // Render with a non-skipped brainstorm so all 10 edges (including those
+  // touching the brainstorm node) materialise. The skipped-brainstorm path is
+  // covered separately by AC5 — here we want to assert the canonical contract
+  // that every defined edge has a label when rendered.
+  const ALL_EDGES_MTIMES = new Map<string, number>([
+    ["request", Date.now()],
+    ["brainstorm", Date.now()],
+    ["design", Date.now()],
+    ["prd", Date.now()],
+    ["tech", Date.now()],
+    ["plan", Date.now()],
+  ]);
+
+  it("renders all 10 directed edges (5 row-1 + 4 row-2 + 1 bridge)", () => {
+    const { container } = renderGraph("archive", { mtimes: ALL_EDGES_MTIMES });
+    const edges = container.querySelectorAll("[data-stage-edge]");
+    expect(edges).toHaveLength(ALL_EDGE_IDS.length);
+    for (const edgeId of ALL_EDGE_IDS) {
+      expect(
+        container.querySelector(`[data-stage-edge='${edgeId}']`),
+        `missing edge ${edgeId}`,
+      ).not.toBeNull();
+    }
+  });
+
+  it("every directed edge carries a non-empty <text> artifact label", () => {
+    const { container } = renderGraph("archive", { mtimes: ALL_EDGES_MTIMES });
+    for (const edgeId of ALL_EDGE_IDS) {
       const edgeEl = container.querySelector(`[data-stage-edge='${edgeId}']`);
       expect(edgeEl, `missing edge ${edgeId}`).not.toBeNull();
-      // The label <text> is a sibling inside the same <g> (edge group).
       const g = edgeEl!.closest("g");
       const labelText = g?.querySelector("text");
       expect(labelText, `missing label text for ${edgeId}`).not.toBeNull();
-      expect(labelText!.textContent?.trim()).toBeTruthy();
+      expect(
+        labelText!.textContent?.trim(),
+        `empty label for edge ${edgeId}`,
+      ).toBeTruthy();
     }
   });
 });
