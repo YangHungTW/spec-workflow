@@ -4,7 +4,7 @@
 - **has-ui**: false
 - **work-type**: chore
 - **tier**: tiny
-- **stage**: implement
+- **stage**: validate
 - **created**: 2026-04-26
 - **updated**: 2026-04-26
 
@@ -14,7 +14,7 @@
 - [x] prd           (03-prd.md)                  — PM
 - [x] tech          (04-tech.md)                 — Architect
 - [x] plan          (05-plan.md)                 — TPM  [merged: narrative + task checklist]
-- [ ] implement     (05-plan.md tasks checked off) — Developer
+- [x] implement     (05-plan.md tasks checked off) — Developer
 - [ ] validate      (08-validate.md, verdict PASS) — QA-tester + QA-analyst  [merged: verify + gap-check]
 - [ ] archive       (moved to .specaffold/archive/)     — TPM
 
@@ -31,3 +31,4 @@
 - 2026-04-26 implement — skip-inline-review USED for wave 1 (reason: tiny-default).
 - 2026-04-26 implement wave 1 done — T1.
 - 2026-04-26 implement — threshold check OK: 3 files / 104 lines vs tiny limits 3/200; no upgrade SUGGESTED.
+- 2026-04-26 implement — all tasks done (T1); checked [x] implement; advanced stage field implement → validate.
