@@ -479,6 +479,15 @@ plan_copy() {
     fi
   done
 
+  # settings.json — only for init or migrate modes (user-mutable; update skips it)
+  case "$mode" in
+    init|migrate)
+      if [ -f "${src_root}/.claude/settings.json" ]; then
+        printf '.claude/settings.json\n'
+      fi
+      ;;
+  esac
+
   # Team-memory skeleton — only for init or migrate modes
   case "$mode" in
     init|migrate)
@@ -744,6 +753,82 @@ EOF
     [ -n "$relpath" ] || continue
     local src_file="${src_root}/${relpath}"
     local dst_file="${consumer_root}/${relpath}"
+
+    # .claude/settings.json is always merged (read-merge-write) rather than
+    # copied verbatim — preserves consumer-owned keys, idempotent, atomic.
+    # Precedent: bin/scaff-install-hook do_add (no-force-on-user-paths.md).
+    if [ "$relpath" = ".claude/settings.json" ]; then
+      if python3 - "$src_file" "$dst_file" <<'PYEOF'
+import json, os, shutil, sys
+
+src_p = sys.argv[1]
+dst_p = sys.argv[2]
+
+# Read source settings.json to extract the SessionStart hook command.
+with open(src_p) as f:
+    src_data = json.load(f)
+src_hooks = src_data.get("hooks", {})
+src_ss = src_hooks.get("SessionStart", [])
+cmd = None
+for grp in src_ss:
+    for h in grp.get("hooks", []):
+        if h.get("type") == "command" and h.get("command"):
+            cmd = h["command"]
+            break
+    if cmd:
+        break
+if not cmd:
+    sys.exit(0)  # nothing to merge
+
+# Read consumer settings.json (absent = fresh install -> start from {}).
+try:
+    with open(dst_p) as f:
+        data = json.load(f)
+except FileNotFoundError:
+    data = {}
+except ValueError:
+    # Malformed JSON: back up then start from {} (same posture as scaff-install-hook).
+    shutil.copyfile(dst_p, dst_p + ".bak")
+    data = {}
+
+# Back up before mutation when consumer file exists.
+if os.path.exists(dst_p):
+    shutil.copyfile(dst_p, dst_p + ".bak")
+
+# Idempotent merge: add SessionStart hook entry only if not already present.
+hooks = data.setdefault("hooks", {})
+event_arr = hooks.setdefault("SessionStart", [])
+already = any(
+    any(h.get("command") == cmd for h in grp.get("hooks", []))
+    for grp in event_arr
+)
+if not already:
+    event_arr.append({"hooks": [{"type": "command", "command": cmd}]})
+
+# Ensure parent dir exists, then write atomically.
+os.makedirs(os.path.dirname(os.path.abspath(dst_p)), exist_ok=True)
+tmp = dst_p + ".tmp"
+with open(tmp, "w") as f:
+    json.dump(data, f, indent=2)
+    f.write("\n")
+os.replace(tmp, dst_p)
+PYEOF
+      then
+        echo "merged:settings: ${relpath}"
+        _CNT_CREATED=$((_CNT_CREATED + 1))
+        if [ -n "$manifest_tsv" ]; then
+          manifest_tsv="${manifest_tsv}
+${relpath}	${expected_sha}"
+        else
+          manifest_tsv="${relpath}	${expected_sha}"
+        fi
+      else
+        echo "FAIL: merge failed for ${relpath}" >&2
+        _CNT_SKIPPED=$((_CNT_SKIPPED + 1))
+        if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
+      fi
+      continue
+    fi
 
     case "$state" in
       missing)
@@ -1310,6 +1395,82 @@ EOF
     [ -n "$relpath" ] || continue
     local src_file="${src_root}/${relpath}"
     local dst_file="${consumer_root}/${relpath}"
+
+    # .claude/settings.json is always merged (read-merge-write) rather than
+    # copied verbatim — preserves consumer-owned keys, idempotent, atomic.
+    # Precedent: bin/scaff-install-hook do_add (no-force-on-user-paths.md).
+    if [ "$relpath" = ".claude/settings.json" ]; then
+      if python3 - "$src_file" "$dst_file" <<'PYEOF'
+import json, os, shutil, sys
+
+src_p = sys.argv[1]
+dst_p = sys.argv[2]
+
+# Read source settings.json to extract the SessionStart hook command.
+with open(src_p) as f:
+    src_data = json.load(f)
+src_hooks = src_data.get("hooks", {})
+src_ss = src_hooks.get("SessionStart", [])
+cmd = None
+for grp in src_ss:
+    for h in grp.get("hooks", []):
+        if h.get("type") == "command" and h.get("command"):
+            cmd = h["command"]
+            break
+    if cmd:
+        break
+if not cmd:
+    sys.exit(0)  # nothing to merge
+
+# Read consumer settings.json (absent = fresh install -> start from {}).
+try:
+    with open(dst_p) as f:
+        data = json.load(f)
+except FileNotFoundError:
+    data = {}
+except ValueError:
+    # Malformed JSON: back up then start from {} (same posture as scaff-install-hook).
+    shutil.copyfile(dst_p, dst_p + ".bak")
+    data = {}
+
+# Back up before mutation when consumer file exists.
+if os.path.exists(dst_p):
+    shutil.copyfile(dst_p, dst_p + ".bak")
+
+# Idempotent merge: add SessionStart hook entry only if not already present.
+hooks = data.setdefault("hooks", {})
+event_arr = hooks.setdefault("SessionStart", [])
+already = any(
+    any(h.get("command") == cmd for h in grp.get("hooks", []))
+    for grp in event_arr
+)
+if not already:
+    event_arr.append({"hooks": [{"type": "command", "command": cmd}]})
+
+# Ensure parent dir exists, then write atomically.
+os.makedirs(os.path.dirname(os.path.abspath(dst_p)), exist_ok=True)
+tmp = dst_p + ".tmp"
+with open(tmp, "w") as f:
+    json.dump(data, f, indent=2)
+    f.write("\n")
+os.replace(tmp, dst_p)
+PYEOF
+      then
+        echo "merged:settings: ${relpath}"
+        _CNT_CREATED=$((_CNT_CREATED + 1))
+        if [ -n "$manifest_tsv" ]; then
+          manifest_tsv="${manifest_tsv}
+${relpath}	${expected_sha}"
+        else
+          manifest_tsv="${relpath}	${expected_sha}"
+        fi
+      else
+        echo "FAIL: merge failed for ${relpath}" >&2
+        _CNT_SKIPPED=$((_CNT_SKIPPED + 1))
+        if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
+      fi
+      continue
+    fi
 
     case "$state" in
       missing)

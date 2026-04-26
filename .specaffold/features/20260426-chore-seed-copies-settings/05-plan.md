@@ -46,7 +46,7 @@ Single wave, single task. No inline review (`R16` default for `tier=tiny`). No w
   - `bash test/t114_seed_settings_json.sh` exits 0 (the test itself owns the deeper assertions: fresh-install file shape with `hooks.SessionStart[*].hooks[*].command` referencing `.claude/hooks/session-start.sh`; merge path preserves a pre-existing unrelated permission rule AND injects the SessionStart hook command; `.claude/settings.json.bak` exists with the original content on the merge path).
 - **Depends on**: —
 - **Parallel-safe-with**: —
-- [ ]
+- [x]
 
 ## 3. Risks
 
