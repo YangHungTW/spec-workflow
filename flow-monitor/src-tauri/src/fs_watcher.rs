@@ -205,6 +205,114 @@ fn emit_sessions_changed(repo: &Path, app: &AppHandle) {
     let _ = app.emit("sessions_changed", payload);
 }
 
+/// Spawn the filesystem watcher with a caller-supplied `artifact_emitter` callback.
+///
+/// This is the testable seam (T13 / AC12): the production caller [`spawn_watcher`]
+/// passes a closure that calls `app.emit("artifact_changed", ...)`, while test
+/// callers pass a closure that pushes to a `tokio::sync::mpsc` channel.
+///
+/// Only `artifact_changed` events are routed through the emitter; `watcher_status`
+/// and `sessions_changed` events require an `AppHandle` and are not emitted here.
+/// The test harness does not need those events to verify latency.
+///
+/// The debouncer uses a 150 ms window (D2) to coalesce burst writes.
+pub fn spawn_watcher_with_emitter<F>(
+    repos: Vec<PathBuf>,
+    artifact_emitter: F,
+) -> Result<tokio::task::JoinHandle<()>, String>
+where
+    F: Fn(ArtifactChangedPayload) + Send + 'static,
+{
+    // Use tokio::sync::mpsc with try_send from the debouncer callback.
+    // try_send is safe to call from a non-tokio thread (unlike blocking_send,
+    // which panics inside an async context). The async task uses recv().await.
+    let (tx, mut rx) = tokio::sync::mpsc::channel::<DebounceEventResult>(64);
+
+    let mut debouncer: Debouncer<notify::RecommendedWatcher, FileIdMap> =
+        new_debouncer(Duration::from_millis(150), None, move |result| {
+            // try_send does not require a tokio runtime context and returns
+            // immediately if the channel is full (capacity 64 prevents drops
+            // under normal operation).
+            let _ = tx.try_send(result);
+        })
+        .map_err(|e| format!("watcher init failed: {e}"))?;
+
+    // Canonicalise repo paths so that symlink-resolved event paths (e.g.
+    // macOS /var → /private/var) still match via starts_with.
+    let canonical_repos: Vec<PathBuf> = repos
+        .iter()
+        .map(|r| std::fs::canonicalize(r).unwrap_or_else(|_| r.clone()))
+        .collect();
+
+    for repo in &repos {
+        let watch_root = repo.join(".specaffold");
+        if let Err(e) = debouncer.watch(&watch_root, RecursiveMode::Recursive) {
+            tracing::warn!(
+                repo = %watch_root.display(),
+                err = ?e,
+                "fs_watcher: init failed for repo"
+            );
+        }
+    }
+
+    let repos_arc = Arc::new(canonical_repos);
+
+    let handle = tokio::task::spawn(async move {
+        let _debouncer = debouncer;
+
+        while let Some(result) = rx.recv().await {
+            match result {
+                Ok(events) => {
+                    for event in events {
+                        let path = match event.paths.first() {
+                            Some(p) => p.clone(),
+                            None => continue,
+                        };
+
+                        let repo =
+                            repos_arc.iter().find(|r| path.starts_with(r.as_path()));
+                        let repo = match repo {
+                            Some(r) => r,
+                            None => continue,
+                        };
+
+                        let kind = classify_artifact(&path);
+
+                        match &kind {
+                            ArtifactKind::Request
+                            | ArtifactKind::Design
+                            | ArtifactKind::Prd
+                            | ArtifactKind::Tech
+                            | ArtifactKind::Plan
+                            | ArtifactKind::Tasks => {
+                                let slug = match slug_from_path(repo, &path) {
+                                    Some(s) => s,
+                                    None => continue,
+                                };
+                                artifact_emitter(ArtifactChangedPayload {
+                                    repo: repo.clone(),
+                                    slug,
+                                    artifact: kind,
+                                    path: path.clone(),
+                                    mtime_ms: mtime_ms(&path),
+                                });
+                            }
+                            ArtifactKind::Status | ArtifactKind::Other => {}
+                        }
+                    }
+                }
+                Err(errors) => {
+                    for err in errors {
+                        tracing::warn!(err = ?err, "fs_watcher: debouncer error");
+                    }
+                }
+            }
+        }
+    });
+
+    Ok(handle)
+}
+
 /// Spawn the filesystem watcher for all registered repos.
 ///
 /// The returned `JoinHandle` runs a tokio task that owns the debouncer and
