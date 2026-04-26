@@ -4,7 +4,7 @@
 - **has-ui**: false
 - **work-type**: chore
 - **tier**: standard
-- **stage**: archive
+- **stage**: archived
 - **created**: 2026-04-26
 - **updated**: 2026-04-26
 
@@ -16,7 +16,7 @@
 - [x] plan          (05-plan.md)                 — TPM  [merged: narrative + task checklist]
 - [x] implement     (05-plan.md tasks checked off) — Developer
 - [x] validate      (08-validate.md, verdict PASS) — QA-tester + QA-analyst  [merged: verify + gap-check]
-- [ ] archive       (moved to .specaffold/archive/)     — TPM
+- [x] archive       (moved to .specaffold/archive/)     — TPM
 
 ## Notes
 <!-- date + role + what changed -->
@@ -34,3 +34,4 @@
 - 2026-04-26 implement wave 2 done — T2
 - 2026-04-26 implement — all waves complete (T1, T2); checked off [x] implement; advanced stage field implement → validate.
 - 2026-04-26 validate — slug=20260426-chore-scaff-plan-chore-aware verdict=NITS (advisory findings in 08-validate.md: 1 should-severity drifted-example on .claude/commands/scaff/next.md line 63 — `After:` example hardcodes tier `standard` instead of the `<tier>` placeholder used in the active instruction line 59).
+- 2026-04-26 archive — feature branch merged to main as 1dd78b4; 4 retro memory entries written (developer/status-notes-collide-with-orchestrator-on-worktree-branch.md, orchestrator/status-notes-append-collision-defer-dispatch-log.md, qa-analyst/instruction-generalised-but-example-still-concrete.md, tpm/workaround-uses-converge-on-self-fixing-chore.md); moved to .specaffold/archive/.
