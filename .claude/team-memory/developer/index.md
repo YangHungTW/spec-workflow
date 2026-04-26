@@ -5,6 +5,7 @@
 -->
 
 - [Ownership check on broken symlinks — skip resolve_path](broken-symlink-ownership.md) — `owned_by_us` can't classify broken symlinks — `resolve_path` errors on a non-existent parent. Bypass with bare `readlink` + literal prefix string compare.
+- [Confirm a "regression" is actually yours before claiming it](pre-existing-test-failure-before-changing.md) — Before reporting an adjacent test failure as caused by your task, stash your changes (or use a parent-SHA worktree) and re-run; pre-existing failures must be surfaced as STATUS notes, not flagged as regressions.
 - [Helper self-reports — guard caller's report under dry-run](helper-self-report-caller-guard.md) — If a helper self-emits a `would-*` verb under `--dry-run`, callers must guard their own `report` call — otherwise you double-emit.
 - [Test scripts discover their own location](test-script-path-convention.md) — Test scripts must discover their own location, not hardcode worktree paths.
 - [Bash heredoc-python3 inside a function consumes caller's stdin](bash-heredoc-stdin-conflict.md) — A bash function that runs `python3 - args <<'PYEOF'` cannot also receive piped stdin from its caller — the heredoc wins and the pipe payload is silently dropped. Drain stdin to a tmp file first.

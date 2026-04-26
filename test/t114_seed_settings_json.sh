@@ -1,0 +1,270 @@
+#!/usr/bin/env bash
+# t114 — regression test for 20260426-chore-seed-copies-settings
+# Verifies scaff-seed init seeds .claude/settings.json via read-merge-write.
+# Covers:
+#   A1: fresh-install path — no prior settings.json → file created with SessionStart hook
+#   A2: merge path — pre-existing settings.json with unrelated key preserved + hook added + .bak written
+#   A3: update-mode parity — scaff-seed update does NOT touch settings.json
+#
+# Bash 3.2 / BSD portable:
+#   no readlink -f, realpath, jq, mapfile/readarray, [[ =~ ]], GNU-only flags.
+#   No `case` inside subshells (bash32-case-in-subshell.md).
+#
+# Sandbox-HOME discipline per .claude/rules/bash/sandbox-home-in-tests.md.
+
+set -euo pipefail
+
+# ---------------------------------------------------------------------------
+# Sandbox HOME — uniform discipline per sandbox-home-in-tests.md
+# ---------------------------------------------------------------------------
+SANDBOX="$(mktemp -d)"
+trap 'rm -rf "$SANDBOX"' EXIT
+
+export HOME="$SANDBOX/home"
+mkdir -p "$HOME"
+
+# Preflight — refuse to run against real HOME (POSIX case, no `[[`)
+case "$HOME" in
+  "$SANDBOX"*) ;;  # OK — HOME is inside sandbox
+  *) printf 'FAIL: HOME not isolated: %s\n' "$HOME" >&2; exit 2 ;;
+esac
+
+# ---------------------------------------------------------------------------
+# Locate repo root relative to this script
+# (developer/test-script-path-convention.md — never hardcode worktree path)
+# ---------------------------------------------------------------------------
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd -P)"
+
+# ---------------------------------------------------------------------------
+# Failure accumulator — collect all failures before exiting
+# ---------------------------------------------------------------------------
+FAIL_COUNT=0
+
+fail() {
+  printf 'FAIL: %s\n' "$1" >&2
+  FAIL_COUNT=$((FAIL_COUNT + 1))
+}
+
+pass() {
+  printf 'PASS: %s\n' "$1"
+}
+
+# ---------------------------------------------------------------------------
+# Helper: build a minimal consumer git repo
+# ---------------------------------------------------------------------------
+make_consumer() {
+  local dir="$1"
+  mkdir -p "$dir"
+  git -C "$dir" init -q
+  git -C "$dir" config user.email "t@example.com"
+  git -C "$dir" config user.name "t"
+  printf '*.log\n' > "$dir/.gitignore"
+  git -C "$dir" add .gitignore
+  git -C "$dir" commit -q -m "init"
+}
+
+SRC_REF="$(git -C "$REPO_ROOT" rev-parse HEAD)"
+
+# ===========================================================================
+# A1 — fresh-install path
+# No prior .claude/settings.json in consumer; after scaff-seed init the file
+# must contain a hooks.SessionStart[*].hooks[*].command referencing session-start.sh.
+# ===========================================================================
+printf '=== A1: fresh-install path ===\n'
+
+CONSUMER1="$SANDBOX/consumer1"
+make_consumer "$CONSUMER1"
+
+# Run scaff-seed init (suppress output; capture exit code)
+INIT1_EXIT=0
+(cd "$CONSUMER1" && PATH=/usr/bin:/bin:$PATH \
+  "$REPO_ROOT/bin/scaff-seed" init --from "$REPO_ROOT" --ref "$SRC_REF") \
+  > /dev/null 2>&1 || INIT1_EXIT=$?
+
+if [ "$INIT1_EXIT" = "0" ]; then
+  pass "A1: scaff-seed init exited 0"
+else
+  fail "A1: scaff-seed init exited $INIT1_EXIT (expected 0)"
+fi
+
+SETTINGS1="$CONSUMER1/.claude/settings.json"
+if [ -f "$SETTINGS1" ]; then
+  pass "A1: .claude/settings.json exists after init"
+else
+  fail "A1: .claude/settings.json missing after init"
+fi
+
+# Extract the command value via python3 (no jq — bash-32-portability.md)
+CMD1=""
+if [ -f "$SETTINGS1" ]; then
+  CMD1="$(python3 - "$SETTINGS1" <<'PYEOF'
+import json, sys
+with open(sys.argv[1]) as f:
+    data = json.load(f)
+hooks = data.get("hooks", {})
+ss = hooks.get("SessionStart", [])
+for grp in ss:
+    for h in grp.get("hooks", []):
+        if h.get("type") == "command" and h.get("command"):
+            print(h["command"])
+            raise SystemExit(0)
+PYEOF
+  )" || true
+fi
+
+if printf '%s\n' "$CMD1" | grep -qF '.claude/hooks/session-start.sh'; then
+  pass "A1: SessionStart command references .claude/hooks/session-start.sh"
+else
+  fail "A1: SessionStart command missing or wrong: '$CMD1'"
+fi
+
+# ===========================================================================
+# A2 — merge path
+# Pre-existing settings.json with an unrelated top-level key (permissions)
+# and no hooks block. After scaff-seed init:
+#   (a) unrelated key preserved
+#   (b) SessionStart hook command added
+#   (c) .claude/settings.json.bak exists with original content
+# ===========================================================================
+printf '\n=== A2: merge path ===\n'
+
+CONSUMER2="$SANDBOX/consumer2"
+make_consumer "$CONSUMER2"
+mkdir -p "$CONSUMER2/.claude"
+
+# Pre-create settings.json with an unrelated key and no hooks block
+python3 - "$CONSUMER2/.claude/settings.json" <<'PYEOF'
+import json, sys
+data = {"permissions": {"allow": ["Bash(*)", "Read(*)", "Write(*)"]}}
+with open(sys.argv[1], "w") as f:
+    json.dump(data, f, indent=2)
+    f.write("\n")
+PYEOF
+
+ORIGINAL_CONTENT="$(cat "$CONSUMER2/.claude/settings.json")"
+
+# Run scaff-seed init
+INIT2_EXIT=0
+(cd "$CONSUMER2" && PATH=/usr/bin:/bin:$PATH \
+  "$REPO_ROOT/bin/scaff-seed" init --from "$REPO_ROOT" --ref "$SRC_REF") \
+  > /dev/null 2>&1 || INIT2_EXIT=$?
+
+if [ "$INIT2_EXIT" = "0" ]; then
+  pass "A2: scaff-seed init exited 0"
+else
+  fail "A2: scaff-seed init exited $INIT2_EXIT (expected 0)"
+fi
+
+SETTINGS2="$CONSUMER2/.claude/settings.json"
+
+# (a) unrelated key preserved
+HAS_PERMS="$(python3 - "$SETTINGS2" <<'PYEOF'
+import json, sys
+with open(sys.argv[1]) as f:
+    data = json.load(f)
+print("yes" if "permissions" in data else "no")
+PYEOF
+)"
+if [ "$HAS_PERMS" = "yes" ]; then
+  pass "A2a: pre-existing permissions key preserved"
+else
+  fail "A2a: pre-existing permissions key lost after merge"
+fi
+
+# (b) SessionStart hook command added
+CMD2=""
+CMD2="$(python3 - "$SETTINGS2" <<'PYEOF'
+import json, sys
+with open(sys.argv[1]) as f:
+    data = json.load(f)
+hooks = data.get("hooks", {})
+ss = hooks.get("SessionStart", [])
+for grp in ss:
+    for h in grp.get("hooks", []):
+        if h.get("type") == "command" and h.get("command"):
+            print(h["command"])
+            raise SystemExit(0)
+PYEOF
+)" || true
+
+if printf '%s\n' "$CMD2" | grep -qF '.claude/hooks/session-start.sh'; then
+  pass "A2b: SessionStart hook command added during merge"
+else
+  fail "A2b: SessionStart hook command missing after merge: '$CMD2'"
+fi
+
+# (c) .bak exists with original content
+BAK2="$CONSUMER2/.claude/settings.json.bak"
+if [ -f "$BAK2" ]; then
+  pass "A2c: .claude/settings.json.bak exists"
+else
+  fail "A2c: .claude/settings.json.bak missing after merge"
+fi
+
+BAK2_CONTENT="$(cat "$BAK2")"
+if [ "$BAK2_CONTENT" = "$ORIGINAL_CONTENT" ]; then
+  pass "A2c: .bak content matches original pre-merge content"
+else
+  fail "A2c: .bak content differs from original: expected '$ORIGINAL_CONTENT', got '$BAK2_CONTENT'"
+fi
+
+# ===========================================================================
+# A3 — update-mode parity
+# scaff-seed update must NOT touch .claude/settings.json.
+# Seed a consumer, then place a known settings.json content; run update;
+# assert the file is byte-identical afterward.
+# ===========================================================================
+printf '\n=== A3: update-mode parity ===\n'
+
+CONSUMER3="$SANDBOX/consumer3"
+make_consumer "$CONSUMER3"
+
+# Run scaff-seed init first so the manifest exists
+(cd "$CONSUMER3" && PATH=/usr/bin:/bin:$PATH \
+  "$REPO_ROOT/bin/scaff-seed" init --from "$REPO_ROOT" --ref "$SRC_REF") \
+  > /dev/null 2>&1 || true
+
+# Now overwrite settings.json with a known sentinel value
+SENTINEL='{"sentinel": "update-must-not-touch"}'
+python3 - "$CONSUMER3/.claude/settings.json" <<'PYEOF'
+import json, sys
+data = {"sentinel": "update-must-not-touch"}
+with open(sys.argv[1], "w") as f:
+    json.dump(data, f, indent=2)
+    f.write("\n")
+PYEOF
+
+BEFORE="$(cat "$CONSUMER3/.claude/settings.json")"
+
+# Run scaff-seed update
+UPDATE_EXIT=0
+(cd "$CONSUMER3" && PATH=/usr/bin:/bin:$PATH \
+  "$REPO_ROOT/bin/scaff-seed" update --from "$REPO_ROOT" --to "$SRC_REF") \
+  > /dev/null 2>&1 || UPDATE_EXIT=$?
+
+# Exit code 1 is acceptable (user-modified files may be skipped); 0 also fine
+if [ "$UPDATE_EXIT" = "0" ] || [ "$UPDATE_EXIT" = "1" ]; then
+  pass "A3: scaff-seed update exited $UPDATE_EXIT (acceptable)"
+else
+  fail "A3: scaff-seed update exited $UPDATE_EXIT (expected 0 or 1)"
+fi
+
+AFTER="$(cat "$CONSUMER3/.claude/settings.json")"
+if [ "$BEFORE" = "$AFTER" ]; then
+  pass "A3: settings.json byte-identical after update (update did not touch it)"
+else
+  fail "A3: settings.json was modified by update (expected no change)"
+fi
+
+# ===========================================================================
+# Summary
+# ===========================================================================
+printf '\n'
+if [ "$FAIL_COUNT" -eq 0 ]; then
+  printf 'PASS: t114\n'
+  exit 0
+else
+  printf 'FAIL: t114 — %d assertion(s) failed\n' "$FAIL_COUNT" >&2
+  exit 1
+fi
