@@ -15,7 +15,16 @@ If preflight refuses (output starts with `REFUSED:PREFLIGHT`), abort
 this command immediately with no side effects (no agent dispatch,
 no file writes, no git ops); print the refusal line verbatim.
 
-1. Read STATUS. Require `03-prd.md` AND `04-tech.md` exist.
+1. Read STATUS. Always require `03-prd.md` exists.
+   Read `work_type` from STATUS (mirrors `.claude/commands/scaff/next.md` step 4 extraction;
+   see `tpm/chore-tiny-plan-short-circuit-plumbing-gap.md` for rationale):
+   ```bash
+   work_type=$(grep -m1 '^\- \*\*work-type\*\*:' "$feature_dir/STATUS.md" 2>/dev/null \
+     | sed 's/.*\*\*work-type\*\*: *//' | sed 's/[[:space:]]*$//' || true)
+   if [ -z "$work_type" ]; then work_type="feature"; fi
+   ```
+   Require `04-tech.md` exists ONLY when `work_type` is not `chore`.
+   Abort with an error message if any required file is missing.
 2. Invoke **scaff-tpm** subagent for plan mode → writes `05-plan.md`.
    - `05-plan.md` is the single merged file containing both the narrative plan (wave schedule, risks, sequencing rationale) and the task checklist (task blocks with `- [ ]` checkboxes).
    - See `tpm.md` for authoring detail and task-block format.
