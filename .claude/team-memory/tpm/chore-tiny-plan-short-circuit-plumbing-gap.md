@@ -32,6 +32,8 @@ The first chore-tiny feature shipped end-to-end (`20260426-chore-t108-migrate-co
 
 The plumbing fix (one of the two below) is owed to a future chore feature; capturing the workaround here saves the next TPM from re-deriving it and surfaces the gap as an actionable followup.
 
+As of 2026-04-26, three chore-tiny features have shipped end-to-end with this hand-written stub (`20260426-chore-t108-migrate-coverage`, `20260426-chore-seed-copies-settings`, `20260426-chore-t114-migrate-coverage`); the plumbing fix is now overdue and the workaround pattern is empirically stable enough to template either Option A or B.
+
 ## How to apply
 
 1. **At /scaff:next dispatch from prd to implement on a chore-tiny feature**:

@@ -16,7 +16,7 @@
 - [x] plan          (05-plan.md)                 — TPM  [merged: narrative + task checklist]
 - [x] implement     (05-plan.md tasks checked off) — Developer
 - [x] validate      (08-validate.md, verdict PASS) — QA-tester + QA-analyst  [merged: verify + gap-check]
-- [ ] archive       (moved to .specaffold/archive/)     — TPM
+- [x] archive       (moved to .specaffold/archive/)     — TPM
 
 ## Notes
 <!-- date + role + what changed -->
@@ -34,3 +34,8 @@
 - 2026-04-26 implement — all tasks done (T1); checked [x] implement; advanced stage field implement → validate.
 - 2026-04-26 validate — slug=20260426-chore-t114-migrate-coverage verdict=NITS (advisory findings in 08-validate.md): tester=PASS / analyst=NITS with 2 should-severity findings (A4 .bak content fidelity not asserted; STATUS [x] tech checkbox-vs-Notes inconsistency).
 - 2026-04-26 validate — checked [x] validate; advanced stage field validate → archive.
+- 2026-04-26 archive — tier stays tiny (3 files / 104 lines vs 3/200; SUGGEST did not fire; 100% test additions, 0% prod).
+- 2026-04-26 archive — analyst Finding 1 (A4 partial mirror of A2c — .bak content fidelity not asserted) deferred to backlog: production code is byte-identical between cmd_init/cmd_migrate; A2c already covers .bak content fidelity for the cmd_init arm; PM memory pm/scope-mirror-of-X-must-itemize-X-in-checklist closes the upstream wording-asymmetry gap (user-approved at retro).
+- 2026-04-26 archive — analyst Finding 2 (STATUS [x] tech checkbox-vs-Notes inconsistency) accepted-with-rationale: chore-tiny convention "checked-means-done-or-skipped, Notes authoritative" validated across three archived precedents (t108, seed-copies-settings, t114); plumbing follow-up chore filed to update _template/STATUS.md so chore × tiny initialises [ ] for design/tech/plan (user-approved at retro).
+- 2026-04-26 archive — retro produced 2 user-approved memory entries: pm/scope-mirror-of-X-must-itemize-X-in-checklist.md; qa-analyst/chore-tiny-status-checkbox-vs-notes-asymmetry.md. Plus 1 edit: tpm/chore-tiny-plan-short-circuit-plumbing-gap.md §Why bumped to "three chore-tiny shipped, plumbing fix overdue".
+- 2026-04-26 archive — checked [x] archive; feature complete.
