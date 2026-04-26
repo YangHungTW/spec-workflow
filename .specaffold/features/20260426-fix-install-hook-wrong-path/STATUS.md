@@ -3,7 +3,7 @@
 - **slug**: 20260426-fix-install-hook-wrong-path
 - **has-ui**: false
 - **work-type**: bug
-- **tier**: tiny
+- **tier**: standard
 - **stage**: implement
 - **created**: 2026-04-26
 - **updated**: 2026-04-26
@@ -30,3 +30,5 @@
 - 2026-04-26 implement wave 1 done — T1 (commit f031593, merged via 60d00c4); inline review skipped (tier=tiny default per R16)
 - 2026-04-26 implement — auto-upgrade SUGGESTED tiny→standard (diff: 442 lines, 11 files; threshold 200/3); awaiting TPM confirmation
 - 2026-04-26 implement complete — all tasks done; next is /scaff:next → validate
+
+- 2026-04-26 orchestrator — tier upgrade tiny→standard: wave 1 threshold trip (442 lines / 11 files vs 200/3 limits, D7/R14)
