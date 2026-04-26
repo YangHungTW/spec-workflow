@@ -103,20 +103,20 @@ done
 
 [ -f "$CONSUMER/.claude/scaff.manifest" ] || fail "AC2.a" "scaff.manifest not found"
 
-SETTINGS="$CONSUMER/settings.json"
-[ -f "$SETTINGS" ] || fail "AC2.a" "settings.json not found"
+SETTINGS="$CONSUMER/.claude/settings.json"
+[ -f "$SETTINGS" ] || fail "AC2.a" ".claude/settings.json not found"
 
-# settings.json must contain exactly one SessionStart and one Stop command entry,
+# .claude/settings.json must contain exactly one SessionStart and one Stop command entry,
 # both referencing .claude/hooks/ (consumer-local), never ~/.claude/hooks/.
 session_count="$(grep -c '"SessionStart"' "$SETTINGS" || true)"
 stop_count="$(grep -c '"Stop"' "$SETTINGS" || true)"
-[ "$session_count" -ge 1 ] || fail "AC2.a" "settings.json missing SessionStart entry"
-[ "$stop_count" -ge 1 ] || fail "AC2.a" "settings.json missing Stop entry"
+[ "$session_count" -ge 1 ] || fail "AC2.a" ".claude/settings.json missing SessionStart entry"
+[ "$stop_count" -ge 1 ] || fail "AC2.a" ".claude/settings.json missing Stop entry"
 
 # Both hook command strings must point to .claude/hooks/ (relative, consumer-local),
 # never to the tilde-expanded home path.
 if grep -q 'HOME\|~/.claude' "$SETTINGS" 2>/dev/null; then
-  fail "AC2.a" "settings.json contains non-consumer-local hook path (~/.claude or HOME)"
+  fail "AC2.a" ".claude/settings.json contains non-consumer-local hook path (~/.claude or HOME)"
 fi
 
 # ---------------------------------------------------------------------------

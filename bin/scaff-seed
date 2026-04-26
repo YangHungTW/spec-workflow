@@ -965,8 +965,8 @@ EOF
   # ---------------------------------------------------------------------------
   (
     cd "$consumer_root"
-    "${src_root}/bin/scaff-install-hook" add SessionStart ".claude/hooks/session-start.sh"
-    "${src_root}/bin/scaff-install-hook" add Stop ".claude/hooks/stop.sh"
+    "${src_root}/bin/scaff-install-hook" add SessionStart "bash .claude/hooks/session-start.sh"
+    "${src_root}/bin/scaff-install-hook" add Stop "bash .claude/hooks/stop.sh"
   )
 
   emit_summary
@@ -1619,8 +1619,8 @@ EOF
     cd "$consumer_root"
     "${src_root}/bin/scaff-install-hook" remove SessionStart "~/.claude/hooks/session-start.sh"
     "${src_root}/bin/scaff-install-hook" remove Stop "~/.claude/hooks/stop.sh"
-    "${src_root}/bin/scaff-install-hook" add SessionStart ".claude/hooks/session-start.sh"
-    "${src_root}/bin/scaff-install-hook" add Stop ".claude/hooks/stop.sh"
+    "${src_root}/bin/scaff-install-hook" add SessionStart "bash .claude/hooks/session-start.sh"
+    "${src_root}/bin/scaff-install-hook" add Stop "bash .claude/hooks/stop.sh"
   )
 
   emit_summary

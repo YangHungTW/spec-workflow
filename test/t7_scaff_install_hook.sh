@@ -65,15 +65,15 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# Check 4: sandbox add creates settings.json with the hook entry
+# Check 4: sandbox add creates .claude/settings.json with the hook entry
 # ---------------------------------------------------------------------------
 SB4="$SANDBOX/sb4"
 mkdir -p "$SB4"
 (cd "$SB4" && "$SCRIPT" add SessionStart .claude/hooks/session-start.sh) 2>/dev/null
-if [ ! -f "$SB4/settings.json" ]; then
-  fail "Check 4: settings.json not created"
+if [ ! -f "$SB4/.claude/settings.json" ]; then
+  fail "Check 4: .claude/settings.json not created"
 else
-  if python3 - "$SB4/settings.json" <<'PY' 2>/dev/null
+  if python3 - "$SB4/.claude/settings.json" <<'PY' 2>/dev/null
 import json, sys
 d = json.load(open(sys.argv[1]))
 assert any(
@@ -84,9 +84,9 @@ assert any(
 print("ok")
 PY
   then
-    pass "Check 4: settings.json contains expected hook entry"
+    pass "Check 4: .claude/settings.json contains expected hook entry"
   else
-    fail "Check 4: settings.json missing expected hook entry"
+    fail "Check 4: .claude/settings.json missing expected hook entry"
   fi
 fi
 
@@ -97,7 +97,7 @@ SB5="$SANDBOX/sb5"
 mkdir -p "$SB5"
 (cd "$SB5" && "$SCRIPT" add SessionStart .claude/hooks/session-start.sh) 2>/dev/null
 (cd "$SB5" && "$SCRIPT" add SessionStart .claude/hooks/session-start.sh) 2>/dev/null
-COUNT=$(python3 - "$SB5/settings.json" <<'PY' 2>/dev/null
+COUNT=$(python3 - "$SB5/.claude/settings.json" <<'PY' 2>/dev/null
 import json, sys
 d = json.load(open(sys.argv[1]))
 n = sum(
@@ -119,12 +119,12 @@ fi
 # Check 6: preservation — unrelated keys survive an add
 # ---------------------------------------------------------------------------
 SB6="$SANDBOX/sb6"
-mkdir -p "$SB6"
-cat > "$SB6/settings.json" <<'JSON'
+mkdir -p "$SB6/.claude"
+cat > "$SB6/.claude/settings.json" <<'JSON'
 {"permissions":{"allow":["Bash(ls:*)"]},"env":{"FOO":"bar"}}
 JSON
 (cd "$SB6" && "$SCRIPT" add SessionStart .claude/hooks/session-start.sh) 2>/dev/null
-PRESERVED=$(python3 - "$SB6/settings.json" <<'PY' 2>/dev/null
+PRESERVED=$(python3 - "$SB6/.claude/settings.json" <<'PY' 2>/dev/null
 import json, sys
 d = json.load(open(sys.argv[1]))
 assert d.get("permissions", {}).get("allow") == ["Bash(ls:*)"], "permissions.allow lost"
@@ -150,10 +150,10 @@ fi
 SB7="$SANDBOX/sb7"
 mkdir -p "$SB7"
 (cd "$SB7" && "$SCRIPT" add SessionStart .claude/hooks/session-start.sh) 2>/dev/null
-if [ -f "$SB7/settings.json.bak" ]; then
-  pass "Check 7: settings.json.bak exists after add"
+if [ -f "$SB7/.claude/settings.json.bak" ]; then
+  pass "Check 7: .claude/settings.json.bak exists after add"
 else
-  fail "Check 7: settings.json.bak missing after add"
+  fail "Check 7: .claude/settings.json.bak missing after add"
 fi
 
 # ---------------------------------------------------------------------------
