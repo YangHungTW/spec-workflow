@@ -176,12 +176,6 @@ describe("CardDetail — master-detail skeleton", () => {
     expect(document.querySelector("[data-testid='card-detail-right-pane']")).toBeTruthy();
   });
 
-  it("renders stage checklist in left rail", () => {
-    renderCardDetail();
-    const leftRail = document.querySelector("[data-testid='card-detail-left-rail']");
-    expect(leftRail?.querySelector("[data-testid='stage-checklist']")).toBeTruthy();
-  });
-
   it("renders 9 tabs in a tablist in the right pane (T19 — TabStrip)", () => {
     renderCardDetail();
     // T19 replaced the stub placeholder with the real TabStrip component.

@@ -37,3 +37,4 @@
 - 2026-04-26 implement wave 2 done — T5, T6, T7, T8, T9 merged (theme.css + components.css conflicts auto-resolved per parallel-safe-append-sections; both T6/T8 token blocks kept disjoint); tsc clean on new files
 - 2026-04-26 review result — wave 3 verdict=BLOCK blocking-tasks=T12 (style must: `_allow` key embeds scaff-lint directive as dead JSON in i18n bundle); T10 NITS (2 should — duplicate useTaskProgress, repoPath traversal); T11 PASS all 3 axes; auto-retry T12 (attempt 1/2)
 - 2026-04-26 review result — wave 3 retry=PASS; T12 fix `5eead94` removed `_allow` sentinel; allowlist clause added in bin/scaff-lint for flow-monitor/src/i18n/*.json (narrow scope); all 3 axes PASS; final wave 3 aggregate=NITS
+- 2026-04-26 Developer — T11 polling fully removed; consumer-grep gate clean; lib.rs run_session_polling deleted

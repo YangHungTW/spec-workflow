@@ -7,15 +7,12 @@ pub mod invoke;
 pub mod ipc;
 pub mod lock;
 pub mod notify;
-pub mod poller;
 pub mod repo_discovery;
 pub mod settings;
 pub mod status_parse;
 pub mod store;
 pub mod tray;
 
-use std::collections::{HashMap, HashSet};
-use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use tauri::Manager;
 
 /// Serialisable payload emitted on the `sessions_changed` event.
@@ -345,121 +342,3 @@ mod t4_type_tests {
     }
 }
 
-/// Background polling task: every interval_secs, scans every registered repo,
-/// discovers sessions, parses STATUS.md, updates SessionsState, emits event.
-/// Reads SettingsState.repos LIVE so add_repo / remove_repo are observed.
-///
-/// Per-tick diff cost budget: <50 ms (D5/RA). A `tracing::warn` fires if
-/// the diff + notification dispatch exceeds this budget.
-async fn run_session_polling(app: tauri::AppHandle) {
-    use tauri::Emitter;
-
-    // Persistent across ticks: the previous session map and stalled set.
-    // Initialised to empty; the first tick's diff sees all sessions as "added".
-    let mut prev_map: store::SessionMap = HashMap::new();
-    let mut prev_stalled_set: HashSet<store::SessionKey> = HashSet::new();
-
-    loop {
-        // Snapshot all settings needed this tick without holding the lock during scan.
-        let (repos, interval_secs, stalled_threshold, notif_enabled, notif_title, notif_body) = {
-            let settings_state = app.state::<ipc::SettingsState>();
-            let guard = settings_state.0.lock().expect("settings lock poisoned");
-            (
-                guard.repos.clone(),
-                guard.polling_interval_secs.max(1),
-                Duration::from_secs(guard.stalled_threshold_mins * 60),
-                guard.notifications_enabled,
-                guard.notification_title.clone(),
-                guard.notification_body.clone(),
-            )
-        };
-
-        // Build both the flat SessionRecord list (for SharedState / IPC)
-        // and the full SessionMap (for store::diff).
-        let mut new_list: Vec<ipc::SessionRecord> = Vec::new();
-        let mut new_map: store::SessionMap = HashMap::new();
-
-        for repo in &repos {
-            let sessions = repo_discovery::discover_sessions(repo);
-            for session_info in sessions {
-                let content = match std::fs::read_to_string(&session_info.status_path) {
-                    Ok(c) => c,
-                    Err(_) => continue,
-                };
-                let mtime = std::fs::metadata(&session_info.status_path)
-                    .and_then(|m| m.modified())
-                    .unwrap_or(SystemTime::UNIX_EPOCH);
-                let state = status_parse::parse(&content, mtime);
-                if matches!(state.stage, status_parse::Stage::Archive) {
-                    continue;
-                }
-                let last_activity_secs = state
-                    .last_activity
-                    .duration_since(UNIX_EPOCH)
-                    .map(|d| d.as_secs())
-                    .unwrap_or(0);
-                let stage_str = format!("{:?}", state.stage).to_lowercase();
-                let slug = session_info.slug.clone();
-                new_list.push(ipc::SessionRecord {
-                    repo: repo.clone(),
-                    slug: slug.clone(),
-                    stage: stage_str.clone(),
-                    last_activity_secs,
-                    has_ui: state.has_ui,
-                });
-                // Insert into SessionMap for diff; key is (repo_path, slug).
-                let key: store::SessionKey = (repo.clone(), slug);
-                new_map.insert(key, state);
-            }
-        }
-
-        // Compute diff and fire stalled notifications — measure cost per D5/RA.
-        let diff_start = Instant::now();
-        let diff_event = store::diff(&prev_map, &new_map, stalled_threshold, &prev_stalled_set);
-        let diff_elapsed = diff_start.elapsed();
-        if diff_elapsed.as_millis() > 50 {
-            tracing::warn!(
-                elapsed_ms = diff_elapsed.as_millis(),
-                "per-tick diff exceeded 50 ms budget — investigate session count"
-            );
-        }
-
-        // Fire one notification per newly stalled transition (AC1.b, D5).
-        // Dedup is guaranteed by store::diff: prev_stalled_set membership check.
-        #[cfg(not(test))]
-        {
-            let sink = notify::TauriSink::new(app.clone());
-            for (repo_path, slug) in &diff_event.stalled_transitions {
-                notify::fire_stalled_notification(
-                    repo_path.as_path(),
-                    slug,
-                    "", // stage string is informational only; not surfaced in banner
-                    &notif_title,
-                    &notif_body,
-                    notif_enabled,
-                    &sink,
-                );
-            }
-        }
-        // In test builds the notification vars are unused (TauriSink is not available).
-        #[cfg(test)]
-        let _ = (notif_enabled, notif_title, notif_body);
-
-        // Advance carry-state BEFORE sleep so the next tick sees post-diff state.
-        prev_stalled_set = diff_event.next_stalled_set.clone();
-        prev_map = new_map;
-
-        // Update shared state + emit extended payload.
-        {
-            let sessions_state = app.state::<ipc::SessionsState>();
-            let mut guard = sessions_state.0.lock().expect("sessions lock poisoned");
-            *guard = new_list;
-        }
-        let payload = SessionsChangedPayload {
-            stalled_transitions: diff_event.stalled_transitions,
-        };
-        let _ = app.emit("sessions_changed", payload);
-
-        tokio::time::sleep(Duration::from_secs(interval_secs)).await;
-    }
-}

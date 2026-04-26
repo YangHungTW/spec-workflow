@@ -22,7 +22,7 @@ vi.mock("../../i18n", () => ({
   }),
 }));
 
-// Stub Tauri event API — MainWindow and PollingFooter call listen() on mount.
+// Stub Tauri event API — MainWindow and LiveWatchFooter call listen() on mount.
 vi.mock("@tauri-apps/api/event", () => ({
   listen: vi.fn(() => Promise.resolve(() => undefined)),
 }));
