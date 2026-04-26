@@ -64,6 +64,29 @@ interface WatcherStatusPayload {
 }
 
 // ---------------------------------------------------------------------------
+// assertSafeArgs — input validation at IPC boundary.
+// Per .claude/rules/reviewer/security.md check 3: validate at first boundary.
+// ---------------------------------------------------------------------------
+
+/**
+ * Validate untrusted hook arguments before forwarding to IPC.
+ * - repoPath must be non-empty.
+ * - slug must be non-empty and contain only [A-Za-z0-9._-] (no /, \, ..).
+ * Throws a descriptive Error on violation.
+ */
+function assertSafeArgs(repoPath: string, slug: string): void {
+  if (!repoPath || repoPath.trim() === "") {
+    throw new Error("artifactStore: repoPath must be non-empty");
+  }
+  if (!slug || slug.trim() === "") {
+    throw new Error("artifactStore: slug must be non-empty");
+  }
+  if (/[/\\]/.test(slug) || slug.includes("..")) {
+    throw new Error(`artifactStore: slug contains forbidden chars: ${slug}`);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // parseTaskCounts — pure function, exported for unit testing (D5 verbatim).
 // ---------------------------------------------------------------------------
 
@@ -112,6 +135,7 @@ export function useArtifactChanges(
   repoPath: string,
   slug: string,
 ): Map<ArtifactKind, number> {
+  assertSafeArgs(repoPath, slug);
   const [mtimes, setMtimes] = useState<Map<ArtifactKind, number>>(new Map());
 
   useEffect(() => {
@@ -190,6 +214,7 @@ export function useTaskProgress(
   repoPath: string,
   slug: string,
 ): { tasks_done: number; tasks_total: number } {
+  assertSafeArgs(repoPath, slug);
   const [progress, setProgress] = useState({ tasks_done: 0, tasks_total: 0 });
   const lastFetchMs = useRef<number>(0);
 
