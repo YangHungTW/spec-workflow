@@ -28,3 +28,6 @@
 - 2026-04-26 next — plan skipped (stage_status chore/tiny/plan = optional; /scaff:plan hard-requires 04-tech.md which is matrix-skipped; minimal 05-plan.md hand-written from 03-prd.md checklist for implement consumption — see tpm/chore-tiny-plan-short-circuit-plumbing-gap.md).
 - 2026-04-26 next — advanced stage field prd → implement.
 - 2026-04-26 Developer — T1 done: test/t114_seed_settings_json.sh extended with A4: migrate path block (pre-init manifest, scaff-seed migrate --from, post-migrate settings.json + .bak assertions); covers cmd_migrate dispatcher arm at bin/scaff-seed:1402; t114 exits 0 with 17 PASS lines (5 for A4); closes parent feature analyst Finding 1 (qa-analyst/scaff-seed-dual-emit-site-hazard).
+- 2026-04-26 implement — skip-inline-review USED for wave 1 (reason: tiny-default).
+- 2026-04-26 implement wave 1 done — T1.
+- 2026-04-26 implement — threshold check OK: 3 files / 104 lines vs tiny limits 3/200; no upgrade SUGGESTED.
