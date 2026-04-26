@@ -29,6 +29,52 @@ pub struct SessionsChangedPayload {
     pub stalled_transitions: Vec<(std::path::PathBuf, String)>,
 }
 
+/// Identifies which artefact kind triggered an `artifact_changed` event (D3).
+#[derive(Clone, serde::Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ArtifactKind {
+    Request,
+    Design,
+    Prd,
+    Tech,
+    Plan,
+    Tasks,
+    Status,
+    Other,
+}
+
+/// Two-state watcher health indicator for `watcher_status` events (D3, R16).
+#[derive(Clone, serde::Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum WatcherState {
+    Running,
+    Errored,
+}
+
+/// Serialisable payload emitted on the `artifact_changed` event (D3).
+#[derive(Clone, serde::Serialize)]
+pub struct ArtifactChangedPayload {
+    /// Absolute path to the repository root.
+    pub repo_path: String,
+    /// Feature slug (e.g. "20260426-flow-monitor-graph-view").
+    pub slug: String,
+    /// Which artefact kind changed.
+    pub kind: ArtifactKind,
+    /// Absolute path to the changed artefact file.
+    pub path: String,
+    /// Unix epoch milliseconds of the file's mtime.
+    pub mtime_ms: u64,
+}
+
+/// Serialisable payload emitted on the `watcher_status` event (D3, R16).
+#[derive(Clone, serde::Serialize)]
+pub struct WatcherStatusPayload {
+    /// Current watcher health state.
+    pub state: WatcherState,
+    /// Human-readable error kind when state is Errored; None when Running.
+    pub error_kind: Option<String>,
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -219,6 +265,80 @@ mod tests {
             "tick 3: re-stalled session must fire again; got {:?}",
             e3.stalled_transitions,
         );
+    }
+}
+
+// ---------------------------------------------------------------------------
+// T4 struct / enum tests — compile-gate that the types exist with correct fields
+// ---------------------------------------------------------------------------
+
+#[cfg(test)]
+mod t4_type_tests {
+    use super::{ArtifactChangedPayload, ArtifactKind, WatcherState, WatcherStatusPayload};
+
+    /// Verifies ArtifactKind variants compile and Serialize/Clone derives work.
+    #[test]
+    fn artifact_kind_variants_compile() {
+        let kinds = [
+            ArtifactKind::Request,
+            ArtifactKind::Design,
+            ArtifactKind::Prd,
+            ArtifactKind::Tech,
+            ArtifactKind::Plan,
+            ArtifactKind::Tasks,
+            ArtifactKind::Status,
+            ArtifactKind::Other,
+        ];
+        let _ = kinds.clone();
+        let json = serde_json::to_string(&ArtifactKind::Plan).unwrap();
+        assert_eq!(json, "\"plan\"");
+    }
+
+    /// Verifies WatcherState variants compile and serialize to snake_case.
+    #[test]
+    fn watcher_state_variants_compile() {
+        let _ = WatcherState::Running.clone();
+        let _ = WatcherState::Errored.clone();
+        let json = serde_json::to_string(&WatcherState::Errored).unwrap();
+        assert_eq!(json, "\"errored\"");
+    }
+
+    /// Verifies ArtifactChangedPayload can be constructed and serialized.
+    #[test]
+    fn artifact_changed_payload_fields_and_serialize() {
+        let p = ArtifactChangedPayload {
+            repo_path: "/repo/test".to_string(),
+            slug: "my-feature".to_string(),
+            kind: ArtifactKind::Status,
+            path: "/repo/test/.specaffold/features/my-feature/STATUS.md".to_string(),
+            mtime_ms: 1_700_000_000_000,
+        };
+        let _ = p.clone();
+        let json = serde_json::to_string(&p).unwrap();
+        assert!(json.contains("\"repo_path\""));
+        assert!(json.contains("\"slug\""));
+        assert!(json.contains("\"kind\""));
+        assert!(json.contains("\"path\""));
+        assert!(json.contains("\"mtime_ms\""));
+    }
+
+    /// Verifies WatcherStatusPayload can be constructed with None and Some error_kind.
+    #[test]
+    fn watcher_status_payload_fields_and_serialize() {
+        let running = WatcherStatusPayload {
+            state: WatcherState::Running,
+            error_kind: None,
+        };
+        let _ = running.clone();
+        let errored = WatcherStatusPayload {
+            state: WatcherState::Errored,
+            error_kind: Some("init_failed".to_string()),
+        };
+        let _ = errored.clone();
+        let json = serde_json::to_string(&errored).unwrap();
+        assert!(json.contains("\"state\""));
+        assert!(json.contains("\"error_kind\""));
+        assert!(json.contains("init_failed"));
     }
 }
 
