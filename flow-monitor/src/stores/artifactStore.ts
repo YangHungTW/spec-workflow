@@ -144,6 +144,12 @@ export function useArtifactChanges(
     listen<ArtifactChangedPayload>("artifact_changed", (event) => {
       const p = event.payload;
       if (p.repo !== repoPath || p.slug !== slug) return;
+      // DEV-only: log disk_write_ts → render_commit_ts delta for AC14 latency harness.
+      // import.meta.env.DEV is false in production builds (compiled out by Vite).
+      const renderCommitTs = Date.now();
+      if (import.meta.env.DEV) {
+        console.log(`[artifactStore] LATENCY_MS=${renderCommitTs - p.mtime_ms}`);
+      }
       setMtimes((prev) => {
         const next = new Map(prev);
         next.set(p.artifact, p.mtime_ms);
