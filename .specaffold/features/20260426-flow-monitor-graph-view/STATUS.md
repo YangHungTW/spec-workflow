@@ -4,7 +4,7 @@
 - **has-ui**: true
 - **work-type**: feature
 - **tier**: audited
-- **stage**: implement
+- **stage**: validate
 - **created**: 2026-04-26
 - **updated**: 2026-04-26
 
@@ -15,7 +15,7 @@
 - [x] tech          (04-tech.md)                 — Architect
 - [x] plan          (05-plan.md)                 — TPM  [merged: narrative + task checklist]
 - [x] implement     (05-plan.md tasks checked off) — Developer
-- [ ] validate      (08-validate.md, verdict PASS) — QA-tester + QA-analyst  [merged: verify + gap-check]
+- [x] validate      (08-validate.md, verdict PASS) — QA-tester + QA-analyst  [merged: verify + gap-check]
 - [ ] archive       (moved to .specaffold/archive/)     — TPM
 
 ## Notes
@@ -46,3 +46,5 @@
 - 2026-04-26 review result — wave 5 retry=PASS; T18 fix `884dd56` removed README sentinel + extended bin/scaff-lint allowlist for flow-monitor/README.md + dropped [CHANGED] annotation in theme.css; all 3 axes PASS; final wave 5 aggregate=NITS
 - 2026-04-26 implement wave 5 done — T17, T18 merged; all 18 tasks done; [x] implement; stage→implement
 - 2026-04-26 validate — slug=20260426-flow-monitor-graph-view verdict=BLOCK (analyst F1 must: R2/AC2 8-of-11 unlabeled edges + test checks only 2; tester NITS on AC8 height jsdom defer; 6 should/extra findings logged in 08-validate.md)
+- 2026-04-26 validate fix `e46700f` — labeled all 10 edges + bridge wraps in <g> with <text> + AC2 test iterates ALL_EDGE_IDS (10 entries, was 2)
+- 2026-04-26 validate — slug=20260426-flow-monitor-graph-view verdict=NITS (advisory findings in 08-validate.md: AC8 manual smoke deferral + 6 analyst should-level findings persisting from prior run); [x] validate; stage→validate
