@@ -1764,3 +1764,15 @@ html.dark {
   50%  { stroke-dasharray: 18 7; }
   to   { stroke-dasharray: 0 25; stroke-dashoffset: -25; }
 }
+
+/* ── SETTINGS — DEPRECATED CONTROL NOTE (R13, D6) ── */
+
+/* Subdued notice beneath inert controls that write to settings but have
+   no runtime effect (polling_interval_secs replaced by FS-watch in T11). */
+.settings__deprecated {
+  font-size: 11px;
+  font-style: italic;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.45;
+}
