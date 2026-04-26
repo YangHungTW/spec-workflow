@@ -67,6 +67,10 @@ After launch, verify all six items before declaring the build good:
 6. **Tray icon** — the macOS menu-bar tray icon must appear after launch; clicking
    it must show a popover with active session count.
 
+Confirmed 2026-04-26: the graph-view feature (W2–W5) does not alter any of the
+six smoke procedures above. All six checks remain identical in procedure and
+pass criteria after the graph-view integration lands.
+
 ## Dogfood handoff
 
 ### First-run onboarding

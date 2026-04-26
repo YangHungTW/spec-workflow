@@ -225,6 +225,9 @@ def is_out_of_scope(path):
     # i18n bundles legitimately contain CJK translation values — exclude narrow path
     if norm.endswith('.json') and 'flow-monitor/src/i18n/' in norm:
         return True
+    # README.md documents the language-toggle smoke check (legitimate CJK label) — exclude
+    if norm.endswith('flow-monitor/README.md'):
+        return True
     return False
 
 # ---------------------------------------------------------------------------
