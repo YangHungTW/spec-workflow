@@ -28,3 +28,6 @@
 - 2026-04-26 next — plan skipped (stage_status chore/tiny/plan = optional; /scaff:plan hard-requires 04-tech.md which is matrix-skipped; minimal 05-plan.md hand-written from 03-prd.md checklist for implement consumption — see tpm/chore-tiny-plan-short-circuit-plumbing-gap.md).
 - 2026-04-26 next — advanced stage field prd → implement.
 - 2026-04-26 Developer — T1 done: bin/scaff-seed plan_copy enumerates .claude/settings.json for init/migrate (not update); read-merge-write atomic with .bak via bin/scaff-install-hook precedent; test/t114_seed_settings_json.sh covers fresh-install + merge + update-parity paths and exits 0.
+- 2026-04-26 implement — skip-inline-review USED for wave 1 (reason: tiny-default).
+- 2026-04-26 implement wave 1 done — T1.
+- 2026-04-26 implement — auto-upgrade SUGGESTED tiny→standard (diff: 433 lines, 4 files; threshold 200/3); awaiting TPM confirmation.
