@@ -83,7 +83,7 @@ Parallel-safety: **T17** edits `SettingsGeneral.tsx` (deprecation note for the i
 
 ## Section 3: Task checklist
 
-- [ ] T1: Author `fs_watcher.rs` — debouncer, classifier, dispatch
+- [x] T1: Author `fs_watcher.rs` — debouncer, classifier, dispatch
     - Wave: W1
     - Owner: Developer
     - Files: `flow-monitor/src-tauri/src/fs_watcher.rs` (new)
@@ -96,7 +96,7 @@ Parallel-safety: **T17** edits `SettingsGeneral.tsx` (deprecation note for the i
     - Depends on: T4 (Cargo.toml deps + payload structs must exist before fs_watcher imports them)
     - Parallel-safe-with: T2 (different file/dir tree)
 
-- [ ] T2: Author `artifactStore.ts` skeleton — `useArtifactChanges`, `useWatcherStatus`, `useTaskProgress`, `parseTaskCounts`
+- [x] T2: Author `artifactStore.ts` skeleton — `useArtifactChanges`, `useWatcherStatus`, `useTaskProgress`, `parseTaskCounts`
     - Wave: W1
     - Owner: Developer
     - Files: `flow-monitor/src/stores/artifactStore.ts` (new)
@@ -109,7 +109,7 @@ Parallel-safety: **T17** edits `SettingsGeneral.tsx` (deprecation note for the i
     - Depends on: none (no W0)
     - Parallel-safe-with: T1, T4
 
-- [ ] T3: (FOLDED INTO T2) — kept as task ID for traceability; no separate work
+- [x] T3: (FOLDED INTO T2) — kept as task ID for traceability; no separate work
     - Wave: W1
     - Owner: n/a
     - Files: n/a
@@ -122,7 +122,7 @@ Parallel-safety: **T17** edits `SettingsGeneral.tsx` (deprecation note for the i
     - Depends on: T2
     - Parallel-safe-with: (none — no work)
 
-- [ ] T4: Add `notify` + `notify-debouncer-full` deps + payload structs in `lib.rs`
+- [x] T4: Add `notify` + `notify-debouncer-full` deps + payload structs in `lib.rs`
     - Wave: W1
     - Owner: Developer
     - Files: `flow-monitor/src-tauri/Cargo.toml`, `flow-monitor/src-tauri/src/lib.rs` (struct additions only)

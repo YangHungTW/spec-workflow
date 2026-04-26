@@ -31,3 +31,4 @@
 - 2026-04-26 orchestrator — tier upgrade standard→audited: security-must finding in T2 (slug/repoPath input-validation gap on read_artefact IPC, W1 review)
 - 2026-04-26 review result — wave 1 verdict=BLOCK blocking-tasks=T2; T1/T4 non-blocking (T1 sec/perf NITS, T4 style NITS); auto-retry T2 (attempt 1/2)
 - 2026-04-26 review result — wave 1 retry=PASS; T2 fix `9f65e1f` cleared all 3 axes; final aggregate=NITS (T1 + T4 retain NITS findings; folded into merge commits)
+- 2026-04-26 implement wave 1 done — T1, T2, T3 (folded), T4 merged (Cargo.toml conflict resolved: dedup notify deps + keep tokio sync feature); cargo build PASS post-merge
