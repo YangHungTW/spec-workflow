@@ -240,7 +240,7 @@ Parallel-safety: **T17** edits `SettingsGeneral.tsx` (deprecation note for the i
     - Depends on: none
     - Parallel-safe-with: T10, T11
 
-- [ ] T13: Cargo integration test — watcher emits within 1s (AC12)
+- [x] T13: Cargo integration test — watcher emits within 1s (AC12)
     - Wave: W4
     - Owner: QA-tester
     - Files: `flow-monitor/src-tauri/tests/fs_watcher_latency.rs` (new)
@@ -253,7 +253,7 @@ Parallel-safety: **T17** edits `SettingsGeneral.tsx` (deprecation note for the i
     - Depends on: T1, T5
     - Parallel-safe-with: T14, T15, T16
 
-- [ ] T14: Vitest unit tests — every AC except AC8/AC12/AC13/AC14/AC17 (~14 ACs)
+- [x] T14: Vitest unit tests — every AC except AC8/AC12/AC13/AC14/AC17 (~14 ACs)
     - Wave: W4
     - Owner: QA-tester
     - Files: `flow-monitor/src/components/__tests__/SessionGraph.test.tsx` (new), `flow-monitor/src/components/__tests__/TaskProgressBar.test.tsx` (new), `flow-monitor/src/components/__tests__/LiveWatchFooter.test.tsx` (new), `flow-monitor/src/stores/__tests__/parseTaskCounts.test.ts` (new), `flow-monitor/src/stores/__tests__/artifactStore.test.ts` (new), `flow-monitor/src/components/__tests__/SessionCard.graph.test.tsx` (new — AC18 chrome assertion under graph view)
@@ -266,7 +266,7 @@ Parallel-safety: **T17** edits `SettingsGeneral.tsx` (deprecation note for the i
     - Depends on: T2 (parseTaskCounts), T6 (SessionGraph), T7 (TaskProgressBar), T8 (LiveWatchFooter), T10 (SessionCard mounts graph)
     - Parallel-safe-with: T13, T15, T16
 
-- [ ] T15: `bin/check-no-polling.sh` — static grep gate for AC13
+- [x] T15: `bin/check-no-polling.sh` — static grep gate for AC13
     - Wave: W4
     - Owner: QA-tester
     - Files: `flow-monitor/bin/check-no-polling.sh` (new — note: under `flow-monitor/bin/` not repo-root `bin/`, since the script is flow-monitor-specific)
@@ -279,7 +279,7 @@ Parallel-safety: **T17** edits `SettingsGeneral.tsx` (deprecation note for the i
     - Depends on: T11
     - Parallel-safe-with: T13, T14, T16
 
-- [ ] T16: `flow-monitor/scripts/measure-latency.sh` — manual latency harness for AC14
+- [x] T16: `flow-monitor/scripts/measure-latency.sh` — manual latency harness for AC14
     - Wave: W4
     - Owner: QA-tester
     - Files: `flow-monitor/scripts/measure-latency.sh` (new), `flow-monitor/src/stores/artifactStore.ts` (append a dev-mode `console.log` of `(disk_write_ts → render_commit_ts)` deltas guarded by `import.meta.env.DEV`)
