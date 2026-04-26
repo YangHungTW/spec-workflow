@@ -415,12 +415,16 @@ PYEOF
 
 # ---------------------------------------------------------------------------
 # run_preflight_coverage
-#   Asserts every *.md under .claude/commands/scaff/ carries the marker
-#   <!-- preflight: required -->.  Single grep -L fork; no per-file shell-out.
+#   Asserts every *.md under .claude/commands/scaff/ carries the FULL
+#   canonical resolver+marker block, byte-identically.
 #   stdout:
-#     missing-marker:<path>   — file lacks the marker
-#     ok:<path>               — file carries the marker
-#   Exit 0 if every file has the marker; exit 1 if any are missing.
+#     missing-marker:<path>   — file lacks the <!-- preflight: required --> anchor
+#     drift-marker:<path>     — anchor present but block content diverges
+#     ok:<path>               — full canonical block present byte-identically
+#   Exit 0 if every file emits ok:; exit 1 if any are missing or drifted.
+#
+#   Performance: two forks total (one grep -L for fast missing-marker
+#   detection; one awk over all remaining files for byte-identity).
 # ---------------------------------------------------------------------------
 run_preflight_coverage() {
   if [ $# -gt 0 ]; then
@@ -428,19 +432,94 @@ run_preflight_coverage() {
     exit 2
   fi
 
-  # Single fork: grep -L lists files MISSING the marker.
+  # CANONICAL_BLOCK — the authoritative 12-line resolver+marker text.
+  # T4 (W2) sweeps all 18 command files to match this exactly.
+  # T3 (W1) keeps the scaff-seed shim heredocs byte-identical to this resolver section.
+  CANONICAL_BLOCK='<!-- preflight: required -->
+# Resolve $SCAFF_SRC: env var, then user-global symlink, then fail.
+if [ -z "${SCAFF_SRC:-}" ] || [ ! -d "${SCAFF_SRC}" ]; then
+  _scaff_src_link=$(readlink "$HOME/.claude/agents/scaff" 2>/dev/null || true)
+  SCAFF_SRC="${_scaff_src_link%/.claude/agents/scaff}"
+  unset _scaff_src_link
+fi
+[ -d "${SCAFF_SRC:-}" ] || { printf '"'"'%s\n'"'"' '"'"'ERROR: cannot resolve SCAFF_SRC; set the SCAFF_SRC env var, or run `bin/claude-symlink install` from the scaff source repo'"'"' >&2; exit 65; }
+Run the preflight from `$SCAFF_SRC/.specaffold/preflight.md` first.
+If preflight refuses (output starts with `REFUSED:PREFLIGHT`), abort
+this command immediately with no side effects (no agent dispatch,
+no file writes, no git ops); print the refusal line verbatim.'
+
+  # Fork 1: single grep -L to find files missing the anchor line.
   local missing
   missing=$(grep -L -F '<!-- preflight: required -->' .claude/commands/scaff/*.md 2>/dev/null || true)
 
+  # Fork 2: single awk pass over all 18 files for byte-identity check.
+  # BSD awk: -v does not support multi-line values; pass canonical block
+  # via a temp file that awk reads in BEGIN via getline.
+  # Emits "ok:<file>" or "drift:<file>" per file to stdout, consumed below.
+  local canon_tmp
+  canon_tmp=$(mktemp)
+  printf '%s\n' "$CANONICAL_BLOCK" > "$canon_tmp"
+  local awk_results
+  awk_results=$(awk -v canon_file="$canon_tmp" '
+    BEGIN {
+      # Read canonical block lines from the temp file
+      n = 0
+      while ((getline line < canon_file) > 0) {
+        n++
+        clines[n] = line
+      }
+      close(canon_file)
+      prevfile = ""
+      found = 0
+      seq = 0
+    }
+    FNR == 1 {
+      # Flush result for previous file when a new file starts
+      if (prevfile != "") {
+        if (found) { print "ok:" prevfile } else { print "drift:" prevfile }
+      }
+      prevfile = FILENAME
+      found = 0
+      seq = 0
+    }
+    {
+      # Sequence matcher: track how many consecutive canonical lines seen
+      if ($0 == clines[seq + 1]) {
+        seq++
+        if (seq == n) { found = 1; seq = 0 }
+      } else if ($0 == clines[1]) {
+        seq = 1
+      } else {
+        seq = 0
+      }
+    }
+    END {
+      # Flush result for the last file
+      if (prevfile != "") {
+        if (found) { print "ok:" prevfile } else { print "drift:" prevfile }
+      }
+    }
+  ' .claude/commands/scaff/*.md 2>/dev/null || true)
+  rm -f "$canon_tmp"
+
   local rc=0
   for f in .claude/commands/scaff/*.md; do
+    # Files missing the anchor get missing-marker (no awk check needed).
     case "$missing" in
       *"$f"*)
         echo "missing-marker:$f"
         rc=1
+        continue
+        ;;
+    esac
+    # Files with the anchor: check byte-identity result from awk pass.
+    case "$awk_results" in
+      *"ok:$f"*)
+        echo "ok:$f"
         ;;
       *)
-        echo "ok:$f"
+        echo "drift-marker:$f"
+        rc=1
         ;;
     esac
   done

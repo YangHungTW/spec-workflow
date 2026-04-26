@@ -207,7 +207,7 @@ Each task below uses the merged-form task block shape per `tpm.appendix.md` §"T
 - **Verify**: `bash -n bin/scaff-lint` (syntax). After T4 lands (W2), `bin/scaff-lint preflight-coverage; echo "exit=$?"` from repo root should print 18 `ok:<file>` lines and `exit=0`. **At W1 close (before T4 lands), the same command should print 18 `missing-marker:<file>` lines and `exit=1`** — this is the expected negative-path behaviour and is asserted by T2's t113. Also `time bin/scaff-lint preflight-coverage` should run in under 100ms warm cache (reviewer-performance budget at W1 merge).
 - **Depends on**: —
 - **Parallel-safe-with**: T2, T3
-- [ ]
+- [x]
 
 ## T2 — Author `test/t113_scaff_src_resolver.sh` covering AC1, AC4, AC5, AC8 (assistant-not-in-loop sandbox)
 
@@ -234,7 +234,7 @@ Each task below uses the merged-form task block shape per `tpm.appendix.md` §"T
 - **Verify**: `bash test/t113_scaff_src_resolver.sh` exits 0 (after T3 and T4 land — T2 itself only authors the test; the test passing requires W1+W2 to be merged). At W1 close (T3 merged but T4 not yet): A1–A3 should pass (resolver behaviour is independent of marker shape); A4 requires T3's shim heredoc edit; A5 requires T4's marker sweep, so A5 fails at W1 close. Note in test header: `# At W1 close: A1–A4 pass; A5 fails (markers not yet swept). At W2 close: all pass.`
 - **Depends on**: —
 - **Parallel-safe-with**: T1, T3
-- [ ]
+- [x]
 
 ## T3 — Edit `bin/scaff-seed` — update shim heredocs at lines 797 + 1384 (byte-identical mirror) + drop `plan_copy` `.specaffold/preflight.md` entry at lines 440–442
 
@@ -275,7 +275,7 @@ Each task below uses the merged-form task block shape per `tpm.appendix.md` §"T
 - **Parallel-safe-with**: T1, T2
 
   **Pre-commit hook caveat (per §1.4)**: T3's worktree branched off old main has OLD lint + UNCHANGED markers. The hook runs OLD lint against OLD markers → passes. **No `--no-verify` needed** at T3 dev commit time *unless* the worktree was rebased post-T1-merge. If the developer rebases or the orchestrator merges T1 first, T3's worktree inherits new lint + old markers → hook fails. Conservative discipline: T3 developer MAY use `--no-verify` if the local hook fails; log the bypass in the dev reply per `tpm/no-verify-bookkeeping-when-feature-ships-its-own-precommit.md` step 4.
-- [ ]
+- [x]
 
 ---
 
@@ -332,7 +332,7 @@ Each task below uses the merged-form task block shape per `tpm.appendix.md` §"T
 - **Parallel-safe-with**: — (single task in W2; no peer)
 
   **Pre-commit hook clean path** (per §1.4): T4's worktree branches off post-W1 main (NEW lint + UNCHANGED markers in main; T4 sweeps markers in worktree before commit). At T4 dev commit time, working tree has NEW lint + NEW markers → hook passes. **No `--no-verify` needed** for T4's dev commit. T4 IS the satisfier; this is the one commit between W1 close and W2 close that should pass cleanly.
-- [ ]
+- [x]
 
 ---
 
