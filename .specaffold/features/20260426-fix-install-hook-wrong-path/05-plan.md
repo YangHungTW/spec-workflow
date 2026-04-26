@@ -93,7 +93,7 @@ Single wave (W1), single task (T1). No inline review (R16 default for tier=tiny)
   - Manual replay of the bug repro from PRD §Repro on a fresh `mktemp -d` consumer: `(cd "$tmpc" && bin/scaff-seed init --from "$REPO_ROOT" --ref HEAD)` then assert `[ ! -e "$tmpc/settings.json" ] && [ ! -e "$tmpc/settings.json.bak" ] && [ -f "$tmpc/.claude/settings.json" ]` and that the JSON contains both SessionStart and Stop with `bash .claude/hooks/...` commands.
 - **Depends on**: —
 - **Parallel-safe-with**: — (single task in single wave)
-- [ ]
+- [x]
 
 ---
 
