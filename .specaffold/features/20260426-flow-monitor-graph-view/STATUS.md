@@ -3,7 +3,7 @@
 - **slug**: 20260426-flow-monitor-graph-view
 - **has-ui**: true
 - **work-type**: feature
-- **tier**: standard
+- **tier**: audited
 - **stage**: plan
 - **created**: 2026-04-26
 - **updated**: 2026-04-26
@@ -27,3 +27,7 @@
 - 2026-04-26 PM — wrote 03-prd.md: R1–R19 (graph view R1–R9, tasks contract R10–R11, live updates R12–R16, preservation R17–R19); §7 zero blockers; resolved decisions folded into ACs; six B1 smoke checks pinned as R17 baseline
 - 2026-04-26 Architect — wrote 04-tech.md: D1–D10 + 0 blockers + 8 risks; D1 hand-laid SVG over React Flow (bundle + read-only by-construction); D2 notify 8.x + notify-debouncer-full 0.6 with 150ms window watching .specaffold/ per repo; D3 three IPC events (sessions_changed kept, artifact_changed new, watcher_status new); D4 hooks-not-store (useArtifactChanges/useWatcherStatus/useTaskProgress); D5 frontend regex parse for tasks.md; D6 full polling removal, slider becomes inert vestige; D7 component delta (+SessionGraph/TaskProgressBar/LiveWatchFooter, −StageChecklist/PollingFooter); D9 maps every AC1–AC19 to unit/integration/static/manual; D10 sandbox-HOME flagged for measure-latency.sh
 - 2026-04-26 TPM — wrote 05-plan.md: 18 tasks across 5 waves (W1 foundations T1–T4, W2 frontend leaves + setup wiring T5–T9, W3 integration + polling removal T10–T12, W4 tests + smoke T13–T16, W5 polish T17–T18); critical path T1→T5→T11→T13→T16; T5 carries explicit Wiring task marker; T11 has consumer-grep gate + STATUS Notes hook
+
+- 2026-04-26 orchestrator — tier upgrade standard→audited: security-must finding in T2 (slug/repoPath input-validation gap on read_artefact IPC, W1 review)
+- 2026-04-26 review result — wave 1 verdict=BLOCK blocking-tasks=T2; T1/T4 non-blocking (T1 sec/perf NITS, T4 style NITS); auto-retry T2 (attempt 1/2)
+- 2026-04-26 review result — wave 1 retry=PASS; T2 fix `9f65e1f` cleared all 3 axes; final aggregate=NITS (T1 + T4 retain NITS findings; folded into merge commits)
