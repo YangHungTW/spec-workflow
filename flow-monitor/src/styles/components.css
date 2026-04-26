@@ -687,30 +687,6 @@ html.dark {
   /* NO animation, NO transition per AC9.j */
 }
 
-/* ── POLLING FOOTER ── */
-
-.polling-footer {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 14px;
-  border-top: 1px solid var(--sidebar-border);
-  font-size: 11px;
-  color: var(--sidebar-text-muted);
-}
-
-.polling-footer__dot {
-  font-size: 8px;
-  line-height: 1;
-  flex-shrink: 0;
-}
-
-.polling-footer__label {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 /* ── CARD DETAIL ── */
 
 .card-detail {
@@ -905,67 +881,6 @@ html.dark {
 
 .tab-strip__tab--missing:hover::after {
   display: block;
-}
-
-/* ── STAGE CHECKLIST ── */
-
-.stage-checklist {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.stage-checklist__item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  color: var(--text-muted);
-  padding: 3px 0;
-}
-
-/* Completed stages — check mark in primary color, label muted */
-.stage-checklist__item--complete,
-.stage-checklist__item[data-completed="true"] {
-  color: var(--text-muted);
-}
-
-.stage-checklist__item--complete .stage-checklist__marker,
-.stage-checklist__item[data-completed="true"] .stage-checklist__marker {
-  color: var(--primary);
-}
-
-/* Current stage — primary color dot + bold label */
-.stage-checklist__item--current,
-.stage-checklist__item[data-current="true"] {
-  color: var(--primary);
-  font-weight: 700;
-}
-
-.stage-checklist__item--current .stage-checklist__marker {
-  color: var(--primary);
-}
-
-/* Future stages — empty circle + faint muted */
-.stage-checklist__item--future {
-  color: var(--text-muted);
-  opacity: 0.7;
-}
-
-.stage-checklist__marker {
-  font-size: 10px;
-  width: 14px;
-  text-align: center;
-  flex-shrink: 0;
-  color: var(--text-muted);
-}
-
-.stage-checklist__label {
-  font-size: 12px;
-  line-height: 1.3;
 }
 
 /* ── NOTES TIMELINE ── */

@@ -49,7 +49,7 @@ vi.mock("../stores/artifactStore", () => ({
   useWatcherStatus: () => ({ state: _mockWatcherState }),
 }));
 
-// Stub Tauri event API — MainWindow and PollingFooter call listen() on mount;
+// Stub Tauri event API — MainWindow and LiveWatchFooter call listen() on mount;
 // without this mock the test environment throws because the Tauri IPC bridge
 // (window.__TAURI_INTERNALS__) is not present in jsdom.
 vi.mock("@tauri-apps/api/event", () => ({

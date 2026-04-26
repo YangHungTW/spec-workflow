@@ -35,3 +35,4 @@
 - 2026-04-26 Developer — T5: .setup() swap complete; spawn_watcher wired; cargo build PASS; notify_dedupe_test 4/4 PASS
 - 2026-04-26 review result — wave 2 verdict=NITS (15 reviewers, 0 must, ~6 should/advisory across T5/T6/T8/T9 — all WHAT-comments or already-flagged W1 items); all 5 tasks merged
 - 2026-04-26 implement wave 2 done — T5, T6, T7, T8, T9 merged (theme.css + components.css conflicts auto-resolved per parallel-safe-append-sections; both T6/T8 token blocks kept disjoint); tsc clean on new files
+- 2026-04-26 Developer — T11 polling fully removed; consumer-grep gate clean; lib.rs run_session_polling deleted
