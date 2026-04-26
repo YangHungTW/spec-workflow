@@ -292,7 +292,7 @@ Parallel-safety: **T17** edits `SettingsGeneral.tsx` (deprecation note for the i
     - Depends on: T2 (artifactStore.ts must exist), T11 (polling removed so the measured path is event-driven)
     - Parallel-safe-with: T13, T14, T15
 
-- [ ] T17: Settings deprecation note for inert `polling_interval_secs` slider
+- [x] T17: Settings deprecation note for inert `polling_interval_secs` slider
     - Wave: W5
     - Owner: Developer
     - Files: `flow-monitor/src/components/SettingsGeneral.tsx`
@@ -305,7 +305,7 @@ Parallel-safety: **T17** edits `SettingsGeneral.tsx` (deprecation note for the i
     - Depends on: T11 (polling actually removed), T12 (i18n key registered)
     - Parallel-safe-with: T18
 
-- [ ] T18: README + smoke-checks update + dark-only token marker
+- [x] T18: README + smoke-checks update + dark-only token marker
     - Wave: W5
     - Owner: Developer
     - Files: `flow-monitor/README.md`, `flow-monitor/src/styles/theme.css` (add `[CHANGED 2026-04-26]` comment marker on the dark-only `--graph-*` tokens noting "light-mode tokens deferred — see follow-up")

@@ -4,7 +4,7 @@
 - **has-ui**: true
 - **work-type**: feature
 - **tier**: audited
-- **stage**: plan
+- **stage**: implement
 - **created**: 2026-04-26
 - **updated**: 2026-04-26
 
@@ -14,7 +14,7 @@
 - [x] prd           (03-prd.md)                  — PM
 - [x] tech          (04-tech.md)                 — Architect
 - [x] plan          (05-plan.md)                 — TPM  [merged: narrative + task checklist]
-- [ ] implement     (05-plan.md tasks checked off) — Developer
+- [x] implement     (05-plan.md tasks checked off) — Developer
 - [ ] validate      (08-validate.md, verdict PASS) — QA-tester + QA-analyst  [merged: verify + gap-check]
 - [ ] archive       (moved to .specaffold/archive/)     — TPM
 
@@ -44,3 +44,4 @@
 - 2026-04-26 implement wave 4 done — T13, T14, T15, T16 merged (all clean merges; 1452 LOC total: integration test + 5 vitest files + 2 bash scripts + DEV log instrument)
 - 2026-04-26 review result — wave 5 verdict=BLOCK blocking-tasks=T18 (style must: scaff-lint:allow-cjk sentinel in README — same anti-pattern as T12 _allow); T17 NITS (1 should — BEM naming drift); T18 sec/perf PASS; auto-retry T18 (attempt 1/2)
 - 2026-04-26 review result — wave 5 retry=PASS; T18 fix `884dd56` removed README sentinel + extended bin/scaff-lint allowlist for flow-monitor/README.md + dropped [CHANGED] annotation in theme.css; all 3 axes PASS; final wave 5 aggregate=NITS
+- 2026-04-26 implement wave 5 done — T17, T18 merged; all 18 tasks done; [x] implement; stage→implement
