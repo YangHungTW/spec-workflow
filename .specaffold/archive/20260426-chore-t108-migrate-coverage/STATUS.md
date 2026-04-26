@@ -4,7 +4,7 @@
 - **has-ui**: false
 - **work-type**: chore
 - **tier**: tiny
-- **stage**: validate
+- **stage**: archive
 - **created**: 2026-04-26
 - **updated**: 2026-04-26
 
@@ -16,7 +16,7 @@
 - [x] plan          (05-plan.md)                 — TPM  [merged: narrative + task checklist]
 - [x] implement     (05-plan.md tasks checked off) — Developer
 - [x] validate      (08-validate.md, verdict PASS) — QA-tester + QA-analyst  [merged: verify + gap-check]
-- [ ] archive       (moved to .specaffold/archive/)     — TPM
+- [x] archive       (moved to .specaffold/archive/)     — TPM
 
 ## Notes
 <!-- date + role + what changed -->
@@ -30,3 +30,4 @@
 - 2026-04-26 implement — T1 merged (commit 34bcaaf): A5 section appended to test/t108 for scaff-seed migrate path; tier=tiny inline review skipped per R16 default; t108 PASS post-merge
 - 2026-04-26 implement stage complete — 1/1 task; cmd_migrate path now covered by A5 (mirror of A2's cmd_init shape); finding noted: cmd_migrate works on fresh repo without prior init (uses baseline_sha="" same as cmd_init)
 - 2026-04-26 validate — slug=20260426-chore-t108-migrate-coverage verdict=PASS (tester PASS / analyst PASS with 2 advisory: chore-tiny plan short-circuit, pre-existing A1 proximity gap)
+- 2026-04-26 archive — feature merged to main (commit af4a596); 1 retro memory landed (tpm/chore-tiny-plan-short-circuit-plumbing-gap.md); first chore-tier feature shipped end-to-end
