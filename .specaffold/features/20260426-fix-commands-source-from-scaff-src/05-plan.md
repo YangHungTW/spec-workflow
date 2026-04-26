@@ -332,7 +332,7 @@ Each task below uses the merged-form task block shape per `tpm.appendix.md` §"T
 - **Parallel-safe-with**: — (single task in W2; no peer)
 
   **Pre-commit hook clean path** (per §1.4): T4's worktree branches off post-W1 main (NEW lint + UNCHANGED markers in main; T4 sweeps markers in worktree before commit). At T4 dev commit time, working tree has NEW lint + NEW markers → hook passes. **No `--no-verify` needed** for T4's dev commit. T4 IS the satisfier; this is the one commit between W1 close and W2 close that should pass cleanly.
-- [ ]
+- [x]
 
 ---
 
