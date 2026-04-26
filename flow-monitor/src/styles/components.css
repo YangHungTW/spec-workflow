@@ -1686,3 +1686,33 @@ html.dark {
   border: 1px solid var(--card-border);
   flex-shrink: 0;
 }
+
+/* ── TASK PROGRESS BAR (T7, R11) ── */
+
+.task-progress-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.task-progress-bar__track {
+  flex: 1;
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--surface-secondary);
+  overflow: hidden;
+}
+
+.task-progress-bar__fill {
+  height: 100%;
+  border-radius: 9999px;
+  background: var(--primary);
+  transition: width 0.2s ease;
+}
+
+.task-progress-bar__label {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
