@@ -1,4 +1,5 @@
 pub mod archive_discovery;
+pub mod fs_watcher;
 pub mod audit;
 pub mod artefact_presence;
 pub mod command_taxonomy;
