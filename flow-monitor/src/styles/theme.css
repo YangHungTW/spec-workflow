@@ -201,4 +201,8 @@ html.dark {
   /* Markdown preview */
   --markdown-bg: #1A211D;
   --markdown-text: #E8F0EB;
+
+  /* Live-watch pip — running (green pulse) and errored (grey static) */
+  --live-watch-pip-running: #22C55E;
+  --live-watch-pip-errored: #4D7360;
 }
