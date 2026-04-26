@@ -92,7 +92,7 @@ printf '=== A1: AC1 — 3-tier resolver ===\n'
 # ---------------------------------------------------------------------------
 # A1a — env var set: resolver must use $SCAFF_SRC directly when set and valid
 # ---------------------------------------------------------------------------
-printf '--- A1a: env var override ---\n'
+printf '%s\n' '--- A1a: env var override ---'
 A1A_OUT=""
 A1A_EXIT=0
 A1A_OUT="$(SCAFF_SRC="$REPO_ROOT" bash -c '
@@ -121,7 +121,7 @@ fi
 # ---------------------------------------------------------------------------
 # A1b — symlink fallback: unset SCAFF_SRC, resolver reads from symlink
 # ---------------------------------------------------------------------------
-printf '--- A1b: symlink fallback ---\n'
+printf '%s\n' '--- A1b: symlink fallback ---'
 A1B_OUT=""
 A1B_EXIT=0
 # Pass HOME into the subshell so it uses the sandboxed HOME with the fake symlink
@@ -151,7 +151,7 @@ fi
 # ---------------------------------------------------------------------------
 # A1c — no env var, no symlink: resolver must fail loudly with exit 65
 # ---------------------------------------------------------------------------
-printf '--- A1c: loud failure when neither resolves ---\n'
+printf '%s\n' '--- A1c: loud failure when neither resolves ---'
 # Remove symlink for this sub-fixture; restore afterward
 rm "$HOME/.claude/agents/scaff"
 
@@ -217,8 +217,11 @@ git -C "$CONSUMER" add .gitignore
 git -C "$CONSUMER" commit -q -m "init"
 
 # Run scaff-seed init from source's bin/scaff-seed (consumer-cwd-discipline.md)
+# PATH=/usr/bin:/bin pinned for the sub-shell: scaff-seed's write_atomic invokes
+# python3, and a sandboxed HOME breaks asdf-shim resolution; system python3 at
+# /usr/bin/python3 is available on every macOS install we target.
 SRC_REF="$(git -C "$REPO_ROOT" rev-parse HEAD)"
-(cd "$CONSUMER" && "$REPO_ROOT/bin/scaff-seed" init --from "$REPO_ROOT" --ref "$SRC_REF") \
+(cd "$CONSUMER" && PATH=/usr/bin:/bin:$PATH "$REPO_ROOT/bin/scaff-seed" init --from "$REPO_ROOT" --ref "$SRC_REF") \
   > /dev/null 2>&1 || true
 
 HOOK="$CONSUMER/.git/hooks/pre-commit"
@@ -247,7 +250,8 @@ fi
 printf 'x\n' > "$CONSUMER/x"
 git -C "$CONSUMER" add "$CONSUMER/x"
 HOOK_EXIT=0
-(cd "$CONSUMER" && SCAFF_SRC="$REPO_ROOT" HOME="$HOME" .git/hooks/pre-commit) \
+# Same PATH pin as the install step: scaff-lint scan-staged also uses python3.
+(cd "$CONSUMER" && PATH=/usr/bin:/bin:$PATH SCAFF_SRC="$REPO_ROOT" HOME="$HOME" .git/hooks/pre-commit) \
   > /dev/null 2>&1 || HOOK_EXIT=$?
 
 if [ "$HOOK_EXIT" = "0" ]; then
@@ -281,7 +285,9 @@ fi
 GATE_BLOCK="$(awk '/^# === SCAFF PREFLIGHT/,/^# === END SCAFF PREFLIGHT/' "$PREFLIGHT_MD")"
 printf '%s\n' "$GATE_BLOCK" > "$SANDBOX/gate.sh"
 
-# Sub-fixture A5a: no config.yml in consumer — gate must exit 70 (REFUSED)
+# Sub-fixture A5a: no config.yml in consumer — gate must exit 70 (REFUSED).
+# Remove any config.yml left over from A4's scaff-seed init; A5b re-creates it.
+rm -f "$CONSUMER/.specaffold/config.yml"
 A5A_EXIT=0
 (cd "$CONSUMER" && SCAFF_SRC="$REPO_ROOT" HOME="$HOME" bash "$SANDBOX/gate.sh") \
   > /dev/null 2>&1 || A5A_EXIT=$?
