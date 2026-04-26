@@ -130,8 +130,8 @@ SHA_PRE_BEFORE="$(shasum < "$CONSUMER/.specaffold/preflight.md" | awk '{print $1
 SECOND_OUT="$SANDBOX/second_init.out"
 (cd "$CONSUMER" && "$SEED" init --from "$REPO_ROOT" --ref "$SRC_REF") > "$SECOND_OUT" 2>&1 || true
 
-grep -F 'already: .specaffold/config.yml' "$SECOND_OUT" > /dev/null \
-  || fail "A4" "second init did not report 'already: .specaffold/config.yml'; output: $(cat "$SECOND_OUT")"
+grep -F 'already:.specaffold/config.yml' "$SECOND_OUT" > /dev/null \
+  || fail "A4" "second init did not report 'already:.specaffold/config.yml'; output: $(cat "$SECOND_OUT")"
 
 grep -F 'already: .specaffold/preflight.md' "$SECOND_OUT" > /dev/null \
   || fail "A4" "second init did not report 'already: .specaffold/preflight.md'; output: $(cat "$SECOND_OUT")"
@@ -166,8 +166,8 @@ set +e
 (cd "$CONSUMER_F" && "$SEED" init --from "$REPO_ROOT" --ref "$SRC_REF") > "$FOREIGN_OUT" 2>&1
 set -e
 
-grep -F 'skipped:user-modified: .specaffold/config.yml' "$FOREIGN_OUT" > /dev/null \
-  || fail "A5" "expected 'skipped:user-modified: .specaffold/config.yml' in output; got: $(cat "$FOREIGN_OUT")"
+grep -F 'skipped:user-modified:.specaffold/config.yml' "$FOREIGN_OUT" > /dev/null \
+  || fail "A5" "expected 'skipped:user-modified:.specaffold/config.yml' in output; got: $(cat "$FOREIGN_OUT")"
 
 SHA_FOREIGN_AFTER="$(shasum < "$CONSUMER_F/.specaffold/config.yml" | awk '{print $1}')"
 
