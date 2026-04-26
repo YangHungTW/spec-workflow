@@ -70,7 +70,7 @@ fi
 # ---------------------------------------------------------------------------
 # Assert: exactly one matching entry in the hooks array
 # ---------------------------------------------------------------------------
-COUNT="$(python3 - "$WORK/settings.json" <<'PY'
+COUNT="$(python3 - "$WORK/.claude/settings.json" <<'PY'
 import json, sys
 try:
     d = json.load(open(sys.argv[1]))

@@ -26,3 +26,4 @@
 - 2026-04-26 next — prd accepted (03-prd.md complete; OQ1 deferred to tech stage, not a blocker)
 - 2026-04-26 next — stage_status bug/tiny/tech = skipped
 - 2026-04-26 next — plan stub hand-written from 03-prd.md (bug × tiny plumbing gap: /scaff:plan hard-requires 04-tech.md but tech is matrix-skipped; TPM short-circuit only covers chore. Workaround mirrors tpm/chore-tiny-plan-short-circuit-plumbing-gap.md legacy step-1 pattern. Surfaced as plumbing-gap follow-up.)
+- 2026-04-26 Developer — T1 implement: TDD red→green; bin/scaff-install-hook default to .claude/settings.json + makedirs + idempotent-before-backup; bin/scaff-seed bash prefix on 4 command args; tests t7/t27/t28/t39/t114 updated to new path; A5 appended to t114 covering AC1-AC3; bug repro PASS
