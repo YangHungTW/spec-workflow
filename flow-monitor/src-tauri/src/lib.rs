@@ -98,10 +98,12 @@ pub fn run() {
             ipc::SessionList::new(),
         )))
         .setup(|app| {
-            let app_handle = app.handle().clone();
-            tauri::async_runtime::spawn(async move {
-                run_session_polling(app_handle).await;
-            });
+            let repos = {
+                let settings_state = app.state::<ipc::SettingsState>();
+                let guard = settings_state.0.lock().expect("settings lock poisoned");
+                guard.repos.clone()
+            };
+            fs_watcher::spawn_watcher(repos, app.handle().clone()).expect("watcher init");
             Ok(())
         })
         .manage(crate::lock::LockState::new())
