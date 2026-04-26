@@ -102,7 +102,7 @@ None. No PRD ambiguities, no tech blockers, no missing decisions. PRD D1–D4 + 
 - **Verify**: T2's `test/t112_init_seeds_preflight_files.sh` covers AC1–AC7 end-to-end. Pre-flight syntax check via `bash -n /Users/yanghungtw/Tools/specaffold/bin/scaff-seed`. Then run T2's test script as the integration verification.
 - **Depends on**: —
 - **Parallel-safe-with**: T2 (file-disjoint: T1 → `bin/scaff-seed`; T2 → `test/t112_init_seeds_preflight_files.sh`)
-- [ ]
+- [x]
 
 ## T2 — Author regression test `test/t112_init_seeds_preflight_files.sh` covering AC1–AC7
 
@@ -131,4 +131,4 @@ None. No PRD ambiguities, no tech blockers, no missing decisions. PRD D1–D4 + 
 - **Verify**: `bash -n /Users/yanghungtw/Tools/specaffold/test/t112_init_seeds_preflight_files.sh` for syntax; then run `/Users/yanghungtw/Tools/specaffold/test/t112_init_seeds_preflight_files.sh` end-to-end after T1's edits are in the same commit set — must exit 0 with PASS marker. Single file is the sole deliverable; the test command itself IS the verify command per tpm.appendix `Verify` rule.
 - **Depends on**: —
 - **Parallel-safe-with**: T1 (file-disjoint: T1 → `bin/scaff-seed`; T2 → `test/t112_init_seeds_preflight_files.sh`)
-- [ ]
+- [x]
