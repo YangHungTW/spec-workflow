@@ -39,3 +39,5 @@
 - 2026-04-26 review result — wave 3 retry=PASS; T12 fix `5eead94` removed `_allow` sentinel; allowlist clause added in bin/scaff-lint for flow-monitor/src/i18n/*.json (narrow scope); all 3 axes PASS; final wave 3 aggregate=NITS
 - 2026-04-26 Developer — T11 polling fully removed; consumer-grep gate clean; lib.rs run_session_polling deleted
 - 2026-04-26 implement wave 3 done — T10, T11, T12 merged (STATUS.md merge conflict resolved); cargo build PASS, tsc clean (only 2 pre-existing RepoSidebar errors)
+- 2026-04-26 review result — wave 4 verdict=BLOCK blocking-tasks=T16 (perf must: `date +%s` shell-out per loop iteration in measure-latency.sh write-loop); T13/T15 PASS all 3 axes; T14 style NITS (1 unused const); T16 sec advisory (FIXTURE_SLUG traversal in sandbox); auto-retry T16 (attempt 1/2)
+- 2026-04-26 review result — wave 4 retry=PASS; T16 fix `84e4c53` removed date shell-out from write loop + added FIXTURE_SLUG traversal guard (advisory→PASS); all 3 axes PASS; final wave 4 aggregate=NITS
