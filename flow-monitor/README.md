@@ -1,3 +1,4 @@
+<!-- scaff-lint: allow-cjk reason="中文 is the display name for Traditional Chinese in the language-toggle smoke check; intentional UI terminology" -->
 # Flow Monitor
 
 Native macOS desktop application for monitoring multiple parallel scaff
@@ -66,6 +67,10 @@ After launch, verify all six items before declaring the build good:
    window must open showing the active session count.
 6. **Tray icon** — the macOS menu-bar tray icon must appear after launch; clicking
    it must show a popover with active session count.
+
+Confirmed 2026-04-26: the graph-view feature (W2–W5) does not alter any of the
+six smoke procedures above. All six checks remain identical in procedure and
+pass criteria after the graph-view integration lands.
 
 ## Dogfood handoff
 
