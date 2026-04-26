@@ -32,11 +32,11 @@ The first chore-tiny feature shipped end-to-end (`20260426-chore-t108-migrate-co
 
 The plumbing fix (one of the two below) is owed to a future chore feature; capturing the workaround here saves the next TPM from re-deriving it and surfaces the gap as an actionable followup.
 
-As of 2026-04-26, three chore-tiny features have shipped end-to-end with this hand-written stub (`20260426-chore-t108-migrate-coverage`, `20260426-chore-seed-copies-settings`, `20260426-chore-t114-migrate-coverage`); the plumbing fix is now overdue and the workaround pattern is empirically stable enough to template either Option A or B.
+As of 2026-04-26, three chore-tiny features shipped end-to-end with this hand-written stub (`20260426-chore-t108-migrate-coverage`, `20260426-chore-seed-copies-settings`, `20260426-chore-t114-migrate-coverage`), plus one chore × standard variant (`20260426-chore-scaff-plan-chore-aware` itself). The Option A plumbing fix landed in `20260426-chore-scaff-plan-chore-aware` on 2026-04-26: plumbing fix landed — `/scaff:plan` now accepts missing `04-tech.md` when `work-type=chore`, and TPM's chore-tiny short-circuit path auto-generates `05-plan.md` without orchestrator hand-writing. The workaround in §How-to-apply step 1 is now **legacy** (applicable only when reading the four archived precedents).
 
 ## How to apply
 
-1. **At /scaff:next dispatch from prd to implement on a chore-tiny feature**:
+1. **[LEGACY — applicable only when reading the four archived precedents: `20260426-chore-t108-migrate-coverage`, `20260426-chore-seed-copies-settings`, `20260426-chore-t114-migrate-coverage`, `20260426-chore-scaff-plan-chore-aware`] At /scaff:next dispatch from prd to implement on a chore-tiny feature**:
    - Verify STATUS `work-type: chore` and `tier: tiny`.
    - Verify `03-prd.md` exists and has a `## Checklist` section with `- [ ]` items.
    - Append `[x]` to the `tech` line in STATUS with Notes line: `<date> next — tech skipped (stage_status chore/tiny/tech = skipped)`.
@@ -94,7 +94,9 @@ As of 2026-04-26, three chore-tiny features have shipped end-to-end with this ha
      checklist source on chore-tiny.
      ```
 
-2. **The plumbing fix (do this when a future chore-tiny lands or as a /scaff:chore on the scaff repo itself)** — pick ONE:
+2. **[CURRENT — for all new chore × any-tier features] Dispatch `/scaff:plan` normally.** The Option A plumbing fix (`20260426-chore-scaff-plan-chore-aware`, 2026-04-26) wired TPM's chore-tiny short-circuit path in `.claude/agents/scaff/tpm.md`. When STATUS has `work-type: chore` and `04-tech.md` is absent, TPM auto-generates a minimal `05-plan.md` without orchestrator hand-writing. No special handling needed at `/scaff:next` dispatch.
+
+3. **[ARCHIVED — for historical reference only] The plumbing fix options that were under consideration** — pick ONE:
    - **Option A**: `/scaff:plan` step 1 becomes "Require `03-prd.md`; require `04-tech.md` ONLY if work-type ≠ chore". TPM short-circuits to a minimal 05-plan.md when no 04-tech.md is present (lifts the chore PRD checklist).
    - **Option B**: `/scaff:implement` step 1 becomes "Require `05-plan.md` OR (work-type=chore AND `03-prd.md` with `^- \[ \]` items)". The implement reader treats the chore PRD's checklist as the task list directly when no plan exists.
 

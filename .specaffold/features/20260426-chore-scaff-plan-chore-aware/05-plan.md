@@ -62,7 +62,7 @@ The matrix-skip pseudocode in `.claude/commands/scaff/next.md` (landed by `20260
   - Markdown sanity: `head -200 .claude/commands/scaff/plan.md` and `head -300 .claude/agents/scaff/tpm.md` confirm no broken fences / headings.
 - **Depends on**: —
 - **Parallel-safe-with**: —
-- [ ]
+- [x]
 
 ## T2 — Clean up next.md hand-write pseudocode + update memory + generalise suffix wording
 - **Milestone**: M1
@@ -84,7 +84,7 @@ The matrix-skip pseudocode in `.claude/commands/scaff/next.md` (landed by `20260
   - §1.5 piggyback: `grep -F 'chore × tiny matrix' .claude/commands/scaff/next.md` returns no matches OR returns only matches in historical / explanatory prose blocks (not in the active pseudocode comment); the suffix template is generalised to a form that doesn't hardcode `tiny`.
 - **Depends on**: T1 (T2's next.md and memory both reference the new TPM short-circuit behaviour T1 establishes)
 - **Parallel-safe-with**: —
-- [ ]
+- [x]
 
 ## 3. Risks
 
