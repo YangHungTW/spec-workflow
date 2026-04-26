@@ -16,7 +16,7 @@
 - [x] plan          (05-plan.md)                 — TPM  [merged: narrative + task checklist]
 - [x] implement     (05-plan.md tasks checked off) — Developer
 - [x] validate      (08-validate.md, verdict PASS) — QA-tester + QA-analyst  [merged: verify + gap-check]
-- [ ] archive       (moved to .specaffold/archive/)     — TPM
+- [x] archive       (moved to .specaffold/archive/)     — TPM
 
 ## Notes
 <!-- date + role + what changed -->
@@ -34,3 +34,8 @@
 - 2026-04-26 implement — all tasks done (T1); checked [x] implement; advanced stage field implement → validate.
 - 2026-04-26 validate — slug=20260426-chore-status-template-skip-stages verdict=NITS (advisory findings in 08-validate.md): tester=PASS / analyst=NITS with 2 should-severity findings (qa-analyst index.md hook line stale; threshold-SUGGEST bookkeeping-floor variant warrants memory extension).
 - 2026-04-26 validate — checked [x] validate; advanced stage field validate → archive.
+- 2026-04-26 archive — tier stays tiny; SUGGEST declined per tpm/threshold-suggest-test-vs-prod-line-asymmetry pattern (variant=bookkeeping-floor; 4 files / 9 lines; bookkeeping=2/4=50% of file count, prod=9 lines = 22× under 200 threshold; user-approved at retro).
+- 2026-04-26 archive — analyst Finding 1 (qa-analyst index.md hook stale) fixed in retro pass: line 15 hook rewritten to acknowledge dual-shape (legacy [x] for archived precedents, [~] going forward); no longer a retirement candidate (user-approved at retro).
+- 2026-04-26 archive — analyst Finding 2 (threshold-SUGGEST bookkeeping-floor variant) fixed via memory edit: tpm/threshold-suggest-test-vs-prod-line-asymmetry.md extended §Why + §How-to-apply (added decline criterion 2b) + §Example (added second variant entry for this feature) (user-approved at retro).
+- 2026-04-26 archive — retro produced 0 new memory entries + 2 memory edits: qa-analyst/index.md line 15 hook; tpm/threshold-suggest-test-vs-prod-line-asymmetry.md extended for bookkeeping-floor variant. The Developer-missed-index-update lesson assessed and not filed as a new memory (one occurrence; covered by README index-maintenance discipline; if recurs, file as shared/ scope).
+- 2026-04-26 archive — checked [x] archive; feature complete.
