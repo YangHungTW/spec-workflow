@@ -1,17 +1,17 @@
 # STATUS
 
-- **slug**: <slug>
+- **slug**: 20260426-fix-commands-source-from-scaff-src
 - **has-ui**: false
-- **work-type**: feature
+- **work-type**: bug
 - **tier**: standard
 - **stage**: request
-- **created**: <YYYY-MM-DD>
-- **updated**: <YYYY-MM-DD>
+- **created**: 2026-04-26
+- **updated**: 2026-04-26
 
 ## Stage checklist
 - [x] request       (00-request.md)              — PM
+- [x] prd           (03-prd.md)                  — PM
 - [ ] design        (02-design/)                 — Designer (skip if has-ui: false)
-- [ ] prd           (03-prd.md)                  — PM
 - [ ] tech          (04-tech.md)                 — Architect
 - [ ] plan          (05-plan.md)                 — TPM  [merged: narrative + task checklist]
 - [ ] implement     (05-plan.md tasks checked off) — Developer
@@ -21,3 +21,4 @@
 ## Notes
 <!-- date + role + what changed -->
 - 2026-04-26 PM — seeded 00-request.md (Source: description; Context section references parent bug 20260426-fix-init-missing-preflight-files at .specaffold/archive/) and 03-prd.md from bug template; tier standard set via --tier flag (no propose-and-confirm); 7 R-clauses, 8 ACs, 4 D-placeholders for architect, 0 open questions.
+- 2026-04-26 orchestrator — fixed STATUS.md placeholders left by PM (slug, work-type, dates) and reordered prd/design checklist to match bug-tier intake convention (request+prd both done at intake).
