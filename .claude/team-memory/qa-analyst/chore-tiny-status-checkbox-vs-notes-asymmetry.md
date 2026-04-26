@@ -23,7 +23,7 @@ Three consecutive chore-tiny features (`20260426-chore-t108-migrate-coverage`, `
    - Checkbox is `[x]` but no Notes line records the skip — checkbox is unsupported.
    - `04-tech.md` exists despite the checkbox-Notes skip claim — the artefact contradicts the claim.
    - The work-type is feature, not chore (different matrix; the convention does not transfer).
-3. **Retire this memory** when the STATUS template plumbing-fix lands (i.e. `_template/STATUS.md` or the chore-intake path leaves design/tech/plan as `[ ]` until the orchestrator's matrix-skip pass flips them with the Notes line atomically). At that point this memory's scenario disappears.
+3. **New convention (post-`20260426-chore-status-template-skip-stages`)**: the orchestrator now writes `[~] <stage> ... (skipped — chore × tiny matrix)` (or `(skipped — has-ui: false)` for the design-skip path) instead of `[x]` for matrix-skipped stages. Accept `[~]` silently — it is self-describing and intentional. Legacy archived chore-tiny features (`20260426-chore-t108-migrate-coverage`, `20260426-chore-seed-copies-settings`, `20260426-chore-t114-migrate-coverage`) retain the `[x]` form; the acceptance criteria in step 1 still apply when reviewing those archives. This memory is no longer a candidate for retirement on the plumbing-fix landing; it remains as a reference for the legacy `[x]` shape and the transition to `[~]`.
 
 ## Example
 

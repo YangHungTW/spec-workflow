@@ -49,7 +49,7 @@ Single wave, single task. No inline review (`R16` default for `tier=tiny`). No w
   - Adjacent regression: `bash test/t114_seed_settings_json.sh` exits 0 (smoke check that the next.md edit didn't accidentally break any test runner that reads from .claude/).
 - **Depends on**: —
 - **Parallel-safe-with**: —
-- [ ]
+- [x]
 
 ## 3. Risks
 

@@ -27,3 +27,4 @@
 - 2026-04-26 next — stage_status chore/tiny/tech = skipped.
 - 2026-04-26 next — plan skipped (stage_status chore/tiny/plan = optional; /scaff:plan hard-requires 04-tech.md which is matrix-skipped; minimal 05-plan.md hand-written from 03-prd.md checklist for implement consumption — see tpm/chore-tiny-plan-short-circuit-plumbing-gap.md).
 - 2026-04-26 next — advanced stage field prd → implement.
+- 2026-04-26 Developer — T1 done: .claude/commands/scaff/next.md updated to render matrix-skipped stages and has-ui design-skip stage as `[~] <stage> (skipped — <reason>)`; .claude/team-memory/qa-analyst/chore-tiny-status-checkbox-vs-notes-asymmetry.md §How-to-apply step 3 updated to acknowledge new convention forward (legacy archived [x] precedents still applicable for those archives); _template/STATUS.md and bin/scaff-stage-matrix unchanged. C1, C2, C4 verified locally; C3 is forward-only by design.

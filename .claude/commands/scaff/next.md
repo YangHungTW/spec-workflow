@@ -56,7 +56,11 @@ source "$SCAFF_SRC/bin/scaff-stage-matrix"
      status=$(stage_status "$work_type" "$tier" "$next_stage")
      case "$status" in
        skipped)
-         # check the box inline: append `[x]` to that stage line with note `skipped (work-type: <wt>, tier: <t>)`
+         # rewrite the leading `[ ]` to `[~]` and append ` (skipped — chore × tiny matrix)` suffix to that stage line.
+         # do NOT replace the original right-hand annotation (e.g. `(02-design/) — Designer (skip if has-ui: false)`); only the
+         # leading checkbox is rewritten and a suffix appended. Example:
+         #   Before: - [ ] design        (02-design/)                 — Designer (skip if has-ui: false)
+         #   After:  - [~] design        (02-design/)                 — Designer (skip if has-ui: false) (skipped — chore × tiny matrix)
          # append STATUS Notes line: `<date> next — stage_status $work_type/$tier/$next_stage = skipped`
          # re-read STATUS and advance again (loop — same as has-ui skip below)
          ;;
@@ -67,7 +71,7 @@ source "$SCAFF_SRC/bin/scaff-stage-matrix"
      ```
      STATUS Notes line format: `YYYY-MM-DD next — stage_status <work-type>/<tier>/<stage> = skipped`
      R10.1 byte-identity: for `work_type=feature`, `stage_status` produces identical skip verdicts to the former `tier_skips_stage` table — no behavioural change for legacy feature workflows.
-   - If `has-ui: false` and next stage is `design` → auto-check the `design` box with note `skipped (has-ui: false)` in STATUS Notes, then re-read and advance again.
+   - If `has-ui: false` and next stage is `design` → rewrite the `design` checklist line to `[~] design ... (skipped — has-ui: false)` in STATUS, append a STATUS Notes line, then re-read and advance again.
    - Otherwise, follow the matching command file's instructions:
 
 | Next stage | Follow |
