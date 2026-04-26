@@ -1658,6 +1658,48 @@ html.dark {
   top: 3px;
 }
 
+/* ── LIVE WATCH FOOTER ── */
+
+.live-watch-footer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--sidebar-border);
+  font-size: 11px;
+  color: var(--sidebar-text-muted);
+}
+
+.live-watch-footer__pip {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Running state — green pulse animation */
+.live-watch-footer__pip--running {
+  background: var(--live-watch-pip-running);
+  animation: live-watch-pulse 1.6s ease-in-out infinite;
+}
+
+/* Errored state — grey, no animation (AC16) */
+.live-watch-footer__pip--errored {
+  background: var(--live-watch-pip-errored);
+  animation: none;
+}
+
+@keyframes live-watch-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.35; }
+}
+
+.live-watch-footer__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* ── ARCHIVED CARD DETAIL BADGES (T15) ── */
 
 .card-detail__archived-badge {
