@@ -4,7 +4,7 @@
 - **has-ui**: false
 - **work-type**: bug
 - **tier**: standard
-- **stage**: validate
+- **stage**: archive
 - **created**: 2026-04-26
 - **updated**: 2026-04-26
 
@@ -16,7 +16,7 @@
 - [x] plan          (05-plan.md)                 — TPM  [merged: narrative + task checklist]
 - [x] implement     (05-plan.md tasks checked off) — Developer
 - [x] validate      (08-validate.md, verdict PASS) — QA-tester + QA-analyst  [merged: verify + gap-check]
-- [ ] archive       (moved to .specaffold/archive/)     — TPM
+- [x] archive       (moved to .specaffold/archive/)     — TPM
 
 ## Notes
 <!-- date + role + what changed -->
@@ -30,3 +30,4 @@
 - 2026-04-26 implement wave 1 done — T1, T2; all 6 tests t107-t112 green
 - 2026-04-26 validate — slug=20260426-fix-init-missing-preflight-files verdict=NITS (1 should + 2 advisory: scaff-seed already:<path> vs already: <path> token format inconsistency between helper and plan_copy; tech doc D3 stale)
 - 2026-04-26 architectural-shift discovered post-validate — runtime exploration found that bin/* (scaff-tier, scaff-stage-matrix, scaff-lint, scaff-aggregate-verdicts) are also missing from scaff-seed manifest, so /scaff:next still fails in consumer repos. Decision: NOT expand this bug to copy bin/ (option A); instead pivot to thin-consumer architecture (option B) — command preambles source from $SCAFF_SRC, not $REPO_ROOT. This fix's emit_default_config_yml helper remains keep-worthy in B world (config.yml lives in consumer); plan_copy preflight.md becomes redundant but harmless. B-world fix lands in follow-up bug.
+- 2026-04-26 archive — bug merged to main via riders pattern in commit bc24d7a (orchestrator's validate commit 6cf2b76 accidentally landed on parallel 20260426-flow-monitor-graph-view branch; user's other session carried both branches forward at merge time without history rewrite — see shared/orchestrator-rider-commit-recovery.md); 2 retro memory entries landed (shared/orchestrator-rider-commit-recovery.md, qa-analyst/wiring-trace-ends-at-user-goal.md); moved to .specaffold/archive/
