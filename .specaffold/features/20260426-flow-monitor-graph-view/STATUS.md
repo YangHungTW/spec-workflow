@@ -42,3 +42,5 @@
 - 2026-04-26 review result — wave 4 verdict=BLOCK blocking-tasks=T16 (perf must: `date +%s` shell-out per loop iteration in measure-latency.sh write-loop); T13/T15 PASS all 3 axes; T14 style NITS (1 unused const); T16 sec advisory (FIXTURE_SLUG traversal in sandbox); auto-retry T16 (attempt 1/2)
 - 2026-04-26 review result — wave 4 retry=PASS; T16 fix `84e4c53` removed date shell-out from write loop + added FIXTURE_SLUG traversal guard (advisory→PASS); all 3 axes PASS; final wave 4 aggregate=NITS
 - 2026-04-26 implement wave 4 done — T13, T14, T15, T16 merged (all clean merges; 1452 LOC total: integration test + 5 vitest files + 2 bash scripts + DEV log instrument)
+- 2026-04-26 review result — wave 5 verdict=BLOCK blocking-tasks=T18 (style must: scaff-lint:allow-cjk sentinel in README — same anti-pattern as T12 _allow); T17 NITS (1 should — BEM naming drift); T18 sec/perf PASS; auto-retry T18 (attempt 1/2)
+- 2026-04-26 review result — wave 5 retry=PASS; T18 fix `884dd56` removed README sentinel + extended bin/scaff-lint allowlist for flow-monitor/README.md + dropped [CHANGED] annotation in theme.css; all 3 axes PASS; final wave 5 aggregate=NITS
