@@ -135,7 +135,7 @@ Parallel-safety: **T17** edits `SettingsGeneral.tsx` (deprecation note for the i
     - Depends on: none
     - Parallel-safe-with: T1 (T1 imports these types but does not touch Cargo.toml or the struct definitions — disjoint), T2
 
-- [ ] T5: **Wiring task** — `lib.rs run() .setup()` swap: spawn `fs_watcher::spawn_watcher`
+- [x] T5: **Wiring task** — `lib.rs run() .setup()` swap: spawn `fs_watcher::spawn_watcher`
     - Wave: W2
     - Owner: Developer
     - Files: `flow-monitor/src-tauri/src/lib.rs` (`.setup()` block region only)
@@ -148,7 +148,7 @@ Parallel-safety: **T17** edits `SettingsGeneral.tsx` (deprecation note for the i
     - Depends on: T1, T4
     - Parallel-safe-with: T6, T7, T8, T9 (all different files — `.tsx` / `App.tsx` vs Rust)
 
-- [ ] T6: Author `<SessionGraph>` — inline SVG, 11 nodes, edges, bypass arc, whiskers
+- [x] T6: Author `<SessionGraph>` — inline SVG, 11 nodes, edges, bypass arc, whiskers
     - Wave: W2
     - Owner: Developer
     - Files: `flow-monitor/src/components/SessionGraph.tsx` (new), `flow-monitor/src/styles/components.css` (append `.session-graph__*` classes)
@@ -161,7 +161,7 @@ Parallel-safety: **T17** edits `SettingsGeneral.tsx` (deprecation note for the i
     - Depends on: T2 (hook contract), T4 (ArtifactKind type imported via store)
     - Parallel-safe-with: T5 (different file tree), T7, T8 (T8 also touches `theme.css` — coordinate: T8 owns `--live-watch-pip-*` tokens, T6 owns `--graph-*` tokens; same file but disjoint blocks, parallel-safe per `tpm/parallel-safe-append-sections`), T9
 
-- [ ] T7: Author `<TaskProgressBar>` — `done / total` bar above graph
+- [x] T7: Author `<TaskProgressBar>` — `done / total` bar above graph
     - Wave: W2
     - Owner: Developer
     - Files: `flow-monitor/src/components/TaskProgressBar.tsx` (new), `flow-monitor/src/styles/components.css` (append `.task-progress-bar__*` classes)
@@ -174,7 +174,7 @@ Parallel-safety: **T17** edits `SettingsGeneral.tsx` (deprecation note for the i
     - Depends on: T2 (only for type signature; no hook called from this component)
     - Parallel-safe-with: T5, T6, T8, T9 (all disjoint file edits in components.css — append-only different sections)
 
-- [ ] T8: Author `<LiveWatchFooter>` — pulsing pip + i18n label, grey on errored
+- [x] T8: Author `<LiveWatchFooter>` — pulsing pip + i18n label, grey on errored
     - Wave: W2
     - Owner: Developer
     - Files: `flow-monitor/src/components/LiveWatchFooter.tsx` (new), `flow-monitor/src/styles/components.css` (append `.live-watch-footer__*` classes), `flow-monitor/src/styles/theme.css` (append `--live-watch-pip-running` and `--live-watch-pip-errored` tokens to `:root[data-theme="dark"]`)
@@ -187,7 +187,7 @@ Parallel-safety: **T17** edits `SettingsGeneral.tsx` (deprecation note for the i
     - Depends on: T2 (hook), T12 (i18n key, but we accept fallback `t()` returning the key during dev — strict gate is W3)
     - Parallel-safe-with: T5, T6 (different sections of `theme.css` — disjoint token blocks), T7, T9
 
-- [ ] T9: `App.tsx` — toast effect on `watcher_status.errored`
+- [x] T9: `App.tsx` — toast effect on `watcher_status.errored`
     - Wave: W2
     - Owner: Developer
     - Files: `flow-monitor/src/App.tsx`

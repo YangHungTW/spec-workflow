@@ -33,3 +33,5 @@
 - 2026-04-26 review result — wave 1 retry=PASS; T2 fix `9f65e1f` cleared all 3 axes; final aggregate=NITS (T1 + T4 retain NITS findings; folded into merge commits)
 - 2026-04-26 implement wave 1 done — T1, T2, T3 (folded), T4 merged (Cargo.toml conflict resolved: dedup notify deps + keep tokio sync feature); cargo build PASS post-merge
 - 2026-04-26 Developer — T5: .setup() swap complete; spawn_watcher wired; cargo build PASS; notify_dedupe_test 4/4 PASS
+- 2026-04-26 review result — wave 2 verdict=NITS (15 reviewers, 0 must, ~6 should/advisory across T5/T6/T8/T9 — all WHAT-comments or already-flagged W1 items); all 5 tasks merged
+- 2026-04-26 implement wave 2 done — T5, T6, T7, T8, T9 merged (theme.css + components.css conflicts auto-resolved per parallel-safe-append-sections; both T6/T8 token blocks kept disjoint); tsc clean on new files
