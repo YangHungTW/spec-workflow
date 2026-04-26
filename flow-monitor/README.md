@@ -1,4 +1,3 @@
-<!-- scaff-lint: allow-cjk reason="中文 is the display name for Traditional Chinese in the language-toggle smoke check; intentional UI terminology" -->
 # Flow Monitor
 
 Native macOS desktop application for monitoring multiple parallel scaff

@@ -206,7 +206,6 @@ html.dark {
   --live-watch-pip-running: #22C55E;
   --live-watch-pip-errored: #4D7360;
 
-  /* [CHANGED 2026-04-26] dark-only — light-mode follow-up tracked in PRD §6 risk 5 */
   /* Graph node backgrounds and strokes — dark-only (light-mode follow-up deferred) */
   --graph-node-bg: #1E2535;
   --graph-node-stroke: #334155;
