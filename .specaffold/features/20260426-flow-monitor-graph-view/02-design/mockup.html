@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>flow-monitor — Graph View Mockup</title>
+<style>
+/* ── Reset & Base ──────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+  background: #0f1117;
+  color: #e2e8f0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* ── Screen layout ─────────────────────────────────────────────── */
+.screen-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  padding: 32px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.screen-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #64748b;
+  margin-bottom: 10px;
+}
+
+/* ── App shell ─────────────────────────────────────────────────── */
+.app-shell {
+  display: flex;
+  height: 680px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #1e2535;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+}
+
+/* ── Sidebar ───────────────────────────────────────────────────── */
+.sidebar {
+  width: 200px;
+  min-width: 200px;
+  background: #0a0d14;
+  border-right: 1px solid #1e2535;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 0;
+}
+
+.sidebar__logo {
+  padding: 0 16px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #a78bfa;
+  letter-spacing: -0.02em;
+  border-bottom: 1px solid #1e2535;
+}
+
+.sidebar__logo span {
+  font-weight: 400;
+  color: #475569;
+}
+
+.sidebar__section-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #334155;
+  padding: 14px 16px 6px;
+}
+
+.sidebar__repo-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 16px;
+  cursor: pointer;
+  border-radius: 0;
+  font-size: 12px;
+  color: #94a3b8;
+  transition: background 0.1s;
+}
+.sidebar__repo-item:hover { background: #131724; }
+.sidebar__repo-item--active {
+  background: #131724;
+  color: #e2e8f0;
+  font-weight: 500;
+}
+
+.sidebar__badge {
+  font-size: 10px;
+  background: #1e2535;
+  color: #64748b;
+  border-radius: 8px;
+  padding: 0 5px;
+  min-width: 16px;
+  text-align: center;
+}
+
+.sidebar__footer {
+  margin-top: auto;
+  padding: 12px 16px;
+  border-top: 1px solid #1e2535;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+/* Live indicator — replaces PollingFooter */
+.live-pip {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22c55e;
+  flex-shrink: 0;
+  animation: pulse-live 2s ease-in-out infinite;
+}
+.live-pip--inactive {
+  background: #334155;
+  animation: none;
+}
+@keyframes pulse-live {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(34,197,94,0.4); }
+  50%       { opacity: 0.8; box-shadow: 0 0 0 4px rgba(34,197,94,0); }
+}
+
+.sidebar__footer-label {
+  font-size: 11px;
+  color: #475569;
+}
+.sidebar__footer-label strong { color: #64748b; }
+
+/* ── Main content ──────────────────────────────────────────────── */
+.main-content {
+  flex: 1;
+  background: #0f1117;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.toolbar {
+  padding: 14px 20px 12px;
+  border-bottom: 1px solid #1e2535;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.toolbar__title { font-size: 15px; font-weight: 600; color: #f1f5f9; }
+.toolbar__subtitle { font-size: 11px; color: #475569; margin-left: 8px; }
+
+.toolbar__sort {
+  font-size: 11px;
+  color: #64748b;
+  background: #1e2535;
+  border: 1px solid #2d3748;
+  border-radius: 5px;
+  padding: 3px 8px;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding: 16px 20px;
+}
+
+/* ── Session Card ──────────────────────────────────────────────── */
+.session-card {
+  background: #131724;
+  border: 1px solid #1e2535;
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+.session-card--active {
+  border-color: #22c55e44;
+}
+
+.session-card__header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.session-card__repo-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.session-card__repo-name {
+  font-size: 10px;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+}
+
+.badge {
+  font-size: 9px;
+  font-weight: 700;
+  border-radius: 4px;
+  padding: 1px 5px;
+  letter-spacing: 0.04em;
+}
+.badge--ui { background: #4c1d95; color: #c4b5fd; }
+.badge--active { background: #14532d; color: #86efac; }
+.badge--stalled { background: #450a0a; color: #fca5a5; }
+
+.session-card__slug {
+  font-size: 12px;
+  font-weight: 600;
+  color: #e2e8f0;
+  font-family: "SF Mono", "Fira Code", monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.session-card__slug-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.stage-pill {
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 5px;
+  padding: 2px 7px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.stage-pill--plan      { background: #1e3a5f; color: #60a5fa; }
+.stage-pill--implement { background: #1a2e1a; color: #86efac; }
+.stage-pill--design    { background: #2d1b69; color: #c4b5fd; }
+.stage-pill--prd       { background: #1e293b; color: #94a3b8; }
+
+.session-card__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #475569;
+}
+
+.session-card__note {
+  font-size: 11px;
+  color: #64748b;
+  line-height: 1.4;
+  border-left: 2px solid #1e2535;
+  padding-left: 8px;
+}
+
+/* ── Graph View ────────────────────────────────────────────────── */
+.stage-graph {
+  position: relative;
+  width: 100%;
+  height: 200px;
+}
+
+.stage-graph svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* Node styling */
+.graph-node { cursor: default; }
+
+.node-rect {
+  rx: 6;
+  ry: 6;
+  fill: #1e2535;
+  stroke: #334155;
+  stroke-width: 1;
+}
+.node-rect--completed {
+  fill: #0f2010;
+  stroke: #166534;
+}
+.node-rect--active {
+  fill: #1e3a5f;
+  stroke: #3b82f6;
+  stroke-width: 2;
+  filter: drop-shadow(0 0 6px rgba(59,130,246,0.35));
+}
+.node-rect--skipped {
+  fill: #1a1226;
+  stroke: #2d1b69;
+  stroke-dasharray: 4 2;
+  opacity: 0.6;
+}
+.node-rect--partial {
+  fill: #14271a;
+  stroke: #15803d;
+}
+
+.node-label {
+  font-size: 8.5px;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 600;
+  fill: #94a3b8;
+  pointer-events: none;
+  dominant-baseline: middle;
+  text-anchor: middle;
+}
+.node-label--completed { fill: #4ade80; }
+.node-label--active    { fill: #93c5fd; }
+.node-label--skipped   { fill: #7c3aed; opacity: 0.7; }
+.node-label--partial   { fill: #6ee7b7; }
+
+.node-check {
+  font-size: 9px;
+  fill: #22c55e;
+  dominant-baseline: middle;
+  text-anchor: middle;
+}
+.node-active-dot {
+  fill: #3b82f6;
+  animation: pulse-node 1.5s ease-in-out infinite;
+}
+@keyframes pulse-node {
+  0%, 100% { r: 3; opacity: 1; }
+  50%       { r: 4.5; opacity: 0.7; }
+}
+
+.edge-line {
+  stroke: #2d3748;
+  stroke-width: 1;
+  fill: none;
+  marker-end: url(#arrowhead);
+}
+.edge-line--done {
+  stroke: #166534;
+  stroke-width: 1.5;
+}
+
+/* Activity spinner on active node */
+.spin-arc {
+  fill: none;
+  stroke: #3b82f6;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  animation: spin-arc 1.2s linear infinite;
+  transform-origin: center;
+}
+@keyframes spin-arc {
+  from { stroke-dasharray: 0 25; stroke-dashoffset: 0; }
+  50%  { stroke-dasharray: 18 7; }
+  to   { stroke-dasharray: 0 25; stroke-dashoffset: -25; }
+}
+
+/* ── Task mini-bar (implement state) ───────────────────────────── */
+.task-bar {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+  margin-top: 2px;
+}
+.task-bar__label {
+  font-size: 10px;
+  color: #475569;
+  margin-right: 4px;
+}
+.task-pip {
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  background: #1e2535;
+  border: 1px solid #334155;
+}
+.task-pip--done { background: #166534; border-color: #22c55e; }
+.task-pip--active {
+  background: #1e3a5f;
+  border-color: #3b82f6;
+  animation: pulse-pip 1.5s ease-in-out infinite;
+}
+@keyframes pulse-pip { 0%,100%{opacity:1} 50%{opacity:0.55} }
+.task-pip--pending { background: #131724; border-color: #1e2535; }
+
+/* ── Live timestamp whisker ────────────────────────────────────── */
+.live-ts {
+  font-size: 9.5px;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.live-ts--updated {
+  color: #475569;
+}
+.live-ts__dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #334155;
+}
+.live-ts__dot--recent {
+  background: #22c55e;
+  animation: pulse-live 2s ease-in-out infinite;
+}
+
+/* ── Annotation callout (for mockup only) ──────────────────────── */
+.annotation {
+  font-size: 10px;
+  color: #f59e0b;
+  background: rgba(245,158,11,0.08);
+  border: 1px dashed rgba(245,158,11,0.3);
+  border-radius: 4px;
+  padding: 5px 10px;
+  margin-top: -4px;
+}
+.annotation b { color: #fbbf24; }
+
+/* ── Screen 3: live-update closeup ─────────────────────────────── */
+.closeup-row {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+.closeup-card {
+  background: #131724;
+  border: 1px solid #1e2535;
+  border-radius: 10px;
+  padding: 14px;
+  flex: 1;
+}
+.closeup-card h3 {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: 10px;
+}
+
+/* Before state */
+.live-before { opacity: 0.7; }
+
+.event-trace {
+  background: #0a0d14;
+  border: 1px solid #1e2535;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 10px;
+  color: #64748b;
+  line-height: 1.8;
+}
+.event-trace__line--dim { color: #334155; }
+.event-trace__line--highlight { color: #86efac; }
+.event-trace__line--active { color: #60a5fa; }
+.event-trace__line--ts { color: #475569; }
+
+/* ── Scrollable area ───────────────────────────────────────────── */
+.scroll-hint {
+  font-size: 10px;
+  color: #334155;
+  text-align: center;
+  padding: 6px;
+}
+
+/* ── State switcher tabs (for mockup navigation) ───────────────── */
+.tab-row {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid #1e2535;
+  background: #0a0d14;
+  padding: 0 20px;
+}
+.tab {
+  font-size: 11px;
+  padding: 8px 14px;
+  color: #475569;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  user-select: none;
+}
+.tab--active { color: #e2e8f0; border-bottom-color: #3b82f6; }
+
+/* ── Utility ───────────────────────────────────────────────────── */
+.mt8 { margin-top: 8px; }
+.gap4 { gap: 4px; }
+.flex { display: flex; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.text-dim { color: #475569; }
+.text-mono { font-family: "SF Mono","Fira Code",monospace; }
+</style>
+</head>
+<body>
+<div class="screen-wrapper">
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       SCREEN 1 — Session card: stage=plan
+       Completed: request, design, prd, tech | Active: plan | Future: tasks…
+  ════════════════════════════════════════════════════════════════ -->
+  <div>
+    <div class="screen-label">Screen 1 — stage=plan (request / design / prd / tech done, plan in progress)</div>
+    <div class="app-shell">
+
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar__logo">flow<span>-monitor</span></div>
+        <div class="sidebar__section-label">Repos</div>
+        <div class="sidebar__repo-item sidebar__repo-item--active">
+          specaffold <span class="sidebar__badge">2</span>
+        </div>
+        <div class="sidebar__repo-item">
+          my-project <span class="sidebar__badge">1</span>
+        </div>
+
+        <div style="margin-top:auto">
+          <div class="sidebar__section-label">Filter</div>
+          <div class="sidebar__repo-item sidebar__repo-item--active">All Projects</div>
+          <div class="sidebar__repo-item">Active</div>
+          <div class="sidebar__repo-item">Stalled</div>
+        </div>
+
+        <!-- Live pip indicator replaces PollingFooter -->
+        <div class="sidebar__footer">
+          <div class="live-pip"></div>
+          <span class="sidebar__footer-label">Live &nbsp;<strong>FS watch</strong></span>
+        </div>
+      </aside>
+
+      <!-- Main content -->
+      <div class="main-content">
+        <div class="toolbar">
+          <div>
+            <span class="toolbar__title">All Projects</span>
+            <span class="toolbar__subtitle">3 sessions &middot; 0 stalled</span>
+          </div>
+          <span class="toolbar__sort">Sort: Stage ▾</span>
+        </div>
+
+        <div class="card-grid">
+
+          <!-- Card 1: plan stage (primary focus of this screen) -->
+          <div class="session-card session-card--active">
+            <div class="session-card__header">
+              <div class="session-card__repo-row">
+                <span class="session-card__repo-name">specaffold</span>
+                <span class="badge badge--active">Active</span>
+                <span class="badge badge--ui">UI</span>
+              </div>
+              <div class="session-card__slug-row">
+                <span class="session-card__slug text-mono">20260426-flow-monitor-graph-view</span>
+                <span class="stage-pill stage-pill--plan">plan</span>
+              </div>
+            </div>
+
+            <p class="session-card__note">Architect produced 04-tech.md — plan tasks now unblocked</p>
+
+            <!-- DAG GRAPH — stage=plan -->
+            <div class="stage-graph">
+              <svg viewBox="0 0 440 200" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <marker id="arrowhead" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto">
+                    <polygon points="0 0, 6 2, 0 4" fill="#2d3748"/>
+                  </marker>
+                  <marker id="arrowhead-done" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto">
+                    <polygon points="0 0, 6 2, 0 4" fill="#166534"/>
+                  </marker>
+                </defs>
+
+                <!-- Edges: completed path -->
+                <path class="edge-line edge-line--done" d="M 68 30 L 102 30" marker-end="url(#arrowhead-done)"/>
+                <path class="edge-line edge-line--done" d="M 170 30 L 204 30" marker-end="url(#arrowhead-done)"/>
+                <path class="edge-line edge-line--done" d="M 272 30 L 306 30" marker-end="url(#arrowhead-done)"/>
+                <!-- tech → plan (active) -->
+                <path class="edge-line" d="M 374 30 L 408 30" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+
+                <!-- Second row of edges -->
+                <!-- plan → tasks -->
+                <path class="edge-line" d="M 440 44 Q 440 80 340 80 L 90 80 Q 68 80 68 110" marker-end="url(#arrowhead)"/>
+                <!-- tasks → implement -->
+                <path class="edge-line" d="M 68 130 L 102 130" marker-end="url(#arrowhead)"/>
+                <!-- implement → gap-check -->
+                <path class="edge-line" d="M 168 130 L 204 130" marker-end="url(#arrowhead)"/>
+                <!-- gap-check → verify -->
+                <path class="edge-line" d="M 268 130 L 304 130" marker-end="url(#arrowhead)"/>
+                <!-- verify → archive -->
+                <path class="edge-line" d="M 368 130 L 402 130" marker-end="url(#arrowhead)"/>
+
+                <!-- Top row: request → brainstorm(skipped) → design → prd → tech → plan -->
+
+                <!-- request: completed -->
+                <rect class="node-rect node-rect--completed" x="2" y="16" width="66" height="28"/>
+                <text class="node-label node-label--completed" x="35" y="30">request</text>
+                <text class="node-check" x="62" y="19" font-size="8">✓</text>
+
+                <!-- brainstorm: skipped -->
+                <rect class="node-rect node-rect--skipped" x="104" y="16" width="64" height="28"/>
+                <text class="node-label node-label--skipped" x="136" y="30">brainstorm</text>
+                <!-- skip arrow bypass -->
+                <path class="edge-line" d="M 68 20 Q 136 4 204 20" stroke="#2d1b69" stroke-dasharray="3 2" stroke-width="1" fill="none" marker-end="url(#arrowhead)"/>
+
+                <!-- design: completed -->
+                <rect class="node-rect node-rect--completed" x="206" y="16" width="64" height="28"/>
+                <text class="node-label node-label--completed" x="238" y="30">design</text>
+                <text class="node-check" x="266" y="19" font-size="8">✓</text>
+
+                <!-- prd: completed -->
+                <rect class="node-rect node-rect--completed" x="308" y="16" width="64" height="28"/>
+                <text class="node-label node-label--completed" x="340" y="30">prd</text>
+                <text class="node-check" x="368" y="19" font-size="8">✓</text>
+
+                <!-- tech: completed -->
+                <rect class="node-rect node-rect--completed" x="2" y="56" width="66" height="28" transform="translate(372,-46)"/>
+                <!-- reposition: x=374 y=16 -->
+                <rect class="node-rect node-rect--completed" x="374" y="16" width="62" height="28"/>
+                <text class="node-label node-label--completed" x="405" y="30">tech</text>
+                <text class="node-check" x="432" y="19" font-size="8">✓</text>
+
+                <!-- ── plan: ACTIVE ── -->
+                <rect class="node-rect node-rect--active" x="374" y="44" width="62" height="28"/>
+                <text class="node-label node-label--active" x="405" y="58">plan</text>
+                <!-- spinning progress arc -->
+                <circle class="spin-arc" cx="432" cy="47" r="4"
+                  stroke-dasharray="16 8" stroke-dashoffset="0"/>
+
+                <!-- Bottom row: tasks → implement → gap-check → verify → archive -->
+
+                <!-- tasks: future -->
+                <rect class="node-rect" x="2" y="116" width="66" height="28"/>
+                <text class="node-label" x="35" y="130">tasks</text>
+
+                <!-- implement: future -->
+                <rect class="node-rect" x="104" y="116" width="62" height="28"/>
+                <text class="node-label" x="135" y="130">implement</text>
+
+                <!-- gap-check: future -->
+                <rect class="node-rect" x="206" y="116" width="60" height="28"/>
+                <text class="node-label" x="236" y="130">gap-check</text>
+
+                <!-- verify: future -->
+                <rect class="node-rect" x="306" y="116" width="60" height="28"/>
+                <text class="node-label" x="336" y="130">verify</text>
+
+                <!-- archive: future -->
+                <rect class="node-rect" x="404" y="116" width="32" height="28"/>
+                <text class="node-label" x="420" y="130">archive</text>
+
+                <!-- Artifact labels below key edges -->
+                <text x="220" y="12" font-size="7.5" fill="#334155" text-anchor="middle">03-prd.md</text>
+                <text x="340" y="12" font-size="7.5" fill="#334155" text-anchor="middle">04-tech.md</text>
+                <text x="405" y="76" font-size="7.5" fill="#475569" text-anchor="middle">tasks.md</text>
+
+              </svg>
+            </div>
+
+            <div class="session-card__meta">
+              <span class="live-ts live-ts--updated">
+                <span class="live-ts__dot live-ts__dot--recent"></span>
+                04-tech.md · 2m ago
+              </span>
+              <span class="text-dim" style="font-size:11px">plan node active</span>
+            </div>
+          </div>
+
+          <!-- Card 2: another session at design stage -->
+          <div class="session-card">
+            <div class="session-card__header">
+              <div class="session-card__repo-row">
+                <span class="session-card__repo-name">specaffold</span>
+                <span class="badge badge--active">Active</span>
+              </div>
+              <div class="session-card__slug-row">
+                <span class="session-card__slug text-mono">20260420-symlink-op</span>
+                <span class="stage-pill stage-pill--design">design</span>
+              </div>
+            </div>
+            <p class="session-card__note">Designer reviewing mockup feedback, awaiting approval</p>
+
+            <div class="stage-graph">
+              <svg viewBox="0 0 440 90" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <marker id="ah2" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto">
+                    <polygon points="0 0, 6 2, 0 4" fill="#2d3748"/>
+                  </marker>
+                  <marker id="ah2-done" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto">
+                    <polygon points="0 0, 6 2, 0 4" fill="#166534"/>
+                  </marker>
+                </defs>
+                <!-- request done -->
+                <rect class="node-rect node-rect--completed" x="2" y="18" width="60" height="26"/>
+                <text class="node-label node-label--completed" x="32" y="31">request</text>
+                <text class="node-check" x="58" y="21" font-size="8">✓</text>
+                <!-- edge done -->
+                <path class="edge-line edge-line--done" d="M 62 31 L 96 31" marker-end="url(#ah2-done)"/>
+                <!-- brainstorm done -->
+                <rect class="node-rect node-rect--completed" x="98" y="18" width="68" height="26"/>
+                <text class="node-label node-label--completed" x="132" y="31">brainstorm</text>
+                <text class="node-check" x="162" y="21" font-size="8">✓</text>
+                <!-- edge done -->
+                <path class="edge-line edge-line--done" d="M 166 31 L 200 31" marker-end="url(#ah2-done)"/>
+                <!-- design: active -->
+                <rect class="node-rect node-rect--active" x="202" y="18" width="60" height="26"/>
+                <text class="node-label node-label--active" x="232" y="31">design</text>
+                <circle class="spin-arc" cx="258" cy="21" r="4" stroke-dasharray="16 8"/>
+                <!-- edge future -->
+                <path class="edge-line" d="M 262 31 L 296 31" marker-end="url(#ah2)"/>
+                <!-- prd future -->
+                <rect class="node-rect" x="298" y="18" width="50" height="26"/>
+                <text class="node-label" x="323" y="31">prd</text>
+                <!-- edge future -->
+                <path class="edge-line" d="M 348 31 L 382 31" marker-end="url(#ah2)"/>
+                <!-- tech future -->
+                <rect class="node-rect" x="384" y="18" width="50" height="26"/>
+                <text class="node-label" x="409" y="31">tech</text>
+                <!-- ellipsis continuation -->
+                <text x="430" y="53" font-size="10" fill="#334155">···</text>
+              </svg>
+            </div>
+
+            <div class="session-card__meta">
+              <span class="live-ts">
+                <span class="live-ts__dot"></span>
+                mockup.html · 18m ago
+              </span>
+              <span class="text-dim" style="font-size:11px">design node active</span>
+            </div>
+          </div>
+
+        </div><!-- /.card-grid -->
+      </div><!-- /.main-content -->
+    </div><!-- /.app-shell -->
+
+    <div class="annotation mt8">
+      <b>Design note — Screen 1:</b>
+      Graph replaces the linear <code>StageChecklist</code>. Two rows of nodes:
+      (1) top linear chain request → brainstorm → design → prd → tech, then plan bridges into row 2;
+      (2) bottom chain tasks → implement → gap-check → verify → archive.
+      Completed nodes: dark-green fill + ✓ tick. Active node: blue ring + spinning arc.
+      Skipped brainstorm: dashed purple outline + bypass arc above the row.
+      Future nodes: neutral fill, no decoration.
+      Artifact labels (03-prd.md, 04-tech.md) float above dependency edges.
+    </div>
+  </div><!-- /screen 1 -->
+
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       SCREEN 2 — Session card: stage=implement, partial tasks
+  ════════════════════════════════════════════════════════════════ -->
+  <div>
+    <div class="screen-label">Screen 2 — stage=implement (plan done, 3 of 7 tasks complete)</div>
+    <div class="app-shell">
+
+      <aside class="sidebar">
+        <div class="sidebar__logo">flow<span>-monitor</span></div>
+        <div class="sidebar__section-label">Repos</div>
+        <div class="sidebar__repo-item sidebar__repo-item--active">specaffold <span class="sidebar__badge">1</span></div>
+        <div style="margin-top:auto">
+          <div class="sidebar__footer">
+            <div class="live-pip"></div>
+            <span class="sidebar__footer-label">Live &nbsp;<strong>FS watch</strong></span>
+          </div>
+        </div>
+      </aside>
+
+      <div class="main-content">
+        <div class="toolbar">
+          <div>
+            <span class="toolbar__title">specaffold</span>
+            <span class="toolbar__subtitle">1 session &middot; 0 stalled</span>
+          </div>
+          <span class="toolbar__sort">Sort: Stage ▾</span>
+        </div>
+
+        <div class="card-grid" style="grid-template-columns:1fr">
+          <div class="session-card session-card--active" style="max-width:520px">
+            <div class="session-card__header">
+              <div class="session-card__repo-row">
+                <span class="session-card__repo-name">specaffold</span>
+                <span class="badge badge--active">Active</span>
+                <span class="badge badge--ui">UI</span>
+              </div>
+              <div class="session-card__slug-row">
+                <span class="session-card__slug text-mono">20260426-flow-monitor-graph-view</span>
+                <span class="stage-pill stage-pill--implement">implement</span>
+              </div>
+            </div>
+
+            <p class="session-card__note">T3 complete — Developer working on StageGraph component</p>
+
+            <!-- Task mini-bar -->
+            <div class="flex items-center gap4" style="gap:6px;margin-top:-4px">
+              <span class="task-bar__label">Tasks 3 / 7</span>
+              <div class="task-bar">
+                <!-- 3 done, 1 active, 3 pending -->
+                <div class="task-pip task-pip--done" title="T1 done"></div>
+                <div class="task-pip task-pip--done" title="T2 done"></div>
+                <div class="task-pip task-pip--done" title="T3 done"></div>
+                <div class="task-pip task-pip--active" title="T4 in progress"></div>
+                <div class="task-pip task-pip--pending" title="T5 pending"></div>
+                <div class="task-pip task-pip--pending" title="T6 pending"></div>
+                <div class="task-pip task-pip--pending" title="T7 pending"></div>
+              </div>
+            </div>
+
+            <!-- Full graph at implement stage -->
+            <div class="stage-graph" style="height:220px">
+              <svg viewBox="0 0 440 210" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <marker id="ah3" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto">
+                    <polygon points="0 0, 6 2, 0 4" fill="#2d3748"/>
+                  </marker>
+                  <marker id="ah3-done" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto">
+                    <polygon points="0 0, 6 2, 0 4" fill="#166534"/>
+                  </marker>
+                </defs>
+
+                <!-- Top row edges (all completed) -->
+                <path class="edge-line edge-line--done" d="M 64 30 L 98 30" marker-end="url(#ah3-done)"/>
+                <!-- brainstorm skipped bypass arc -->
+                <path d="M 64 24 Q 136 4 202 24" stroke="#2d1b69" stroke-dasharray="3 2" stroke-width="1" fill="none" marker-end="url(#ah3)"/>
+                <path class="edge-line edge-line--done" d="M 202 30 L 236 30" marker-end="url(#ah3-done)"/>
+                <path class="edge-line edge-line--done" d="M 298 30 L 332 30" marker-end="url(#ah3-done)"/>
+                <path class="edge-line edge-line--done" d="M 394 30 L 428 30" marker-end="url(#ah3-done)"/>
+
+                <!-- request -->
+                <rect class="node-rect node-rect--completed" x="2" y="16" width="62" height="28"/>
+                <text class="node-label node-label--completed" x="33" y="30">request</text>
+                <text class="node-check" x="60" y="19" font-size="8">✓</text>
+
+                <!-- brainstorm skipped -->
+                <rect class="node-rect node-rect--skipped" x="100" y="16" width="62" height="28"/>
+                <text class="node-label node-label--skipped" x="131" y="30">brainstorm</text>
+
+                <!-- design done -->
+                <rect class="node-rect node-rect--completed" x="204" y="16" width="58" height="28"/>
+                <text class="node-label node-label--completed" x="233" y="30">design</text>
+                <text class="node-check" x="258" y="19" font-size="8">✓</text>
+
+                <!-- prd done -->
+                <rect class="node-rect node-rect--completed" x="204" y="56" width="58" height="28" transform="translate(128,-40)"/>
+                <rect class="node-rect node-rect--completed" x="334" y="16" width="58" height="28"/>
+                <text class="node-label node-label--completed" x="363" y="30">prd</text>
+                <text class="node-check" x="388" y="19" font-size="8">✓</text>
+
+                <!-- tech done -->
+                <rect class="node-rect node-rect--completed" x="430" y="16" width="8" height="28" style="display:none"/>
+                <!-- reflow: put tech at start of row 2 bridge -->
+                <!-- Simplified: show tech as done leading into plan -->
+                <path class="edge-line edge-line--done" d="M 394 44 Q 394 70 230 70 L 60 70" marker-end="url(#ah3-done)" stroke="#166534"/>
+                <rect class="node-rect node-rect--completed" x="430" y="16" width="4" height="28" style="display:none"/>
+                <!-- tech pill alongside prd in row -->
+                <!-- add tech after prd... reuse space on right -->
+                <!-- Actually keep layout clean: tech above, using second row -->
+
+                <!-- Row 2: plan (done) → tasks (done) → implement (active) → gap-check → verify → archive -->
+                <path class="edge-line edge-line--done" d="M 62 80 L 96 80" marker-end="url(#ah3-done)"/>
+                <path class="edge-line edge-line--done" d="M 162 80 L 196 80" marker-end="url(#ah3-done)"/>
+                <!-- tasks → implement active edge -->
+                <path class="edge-line" d="M 262 80 L 296 80" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#ah3)"/>
+                <path class="edge-line" d="M 362 80 L 396 80" marker-end="url(#ah3)"/>
+                <path class="edge-line" d="M 426 80 L 430 80" marker-end="url(#ah3)"/>
+
+                <!-- plan: done -->
+                <rect class="node-rect node-rect--completed" x="2" y="66" width="60" height="28"/>
+                <text class="node-label node-label--completed" x="32" y="80">plan</text>
+                <text class="node-check" x="58" y="69" font-size="8">✓</text>
+
+                <!-- tasks: partial (3/7 done) -->
+                <rect class="node-rect node-rect--partial" x="98" y="66" width="62" height="28"/>
+                <text class="node-label node-label--partial" x="129" y="78">tasks</text>
+                <text x="129" y="89" font-size="7" fill="#4ade80" text-anchor="middle">3/7</text>
+
+                <!-- implement: ACTIVE -->
+                <rect class="node-rect node-rect--active" x="198" y="66" width="62" height="28"/>
+                <text class="node-label node-label--active" x="229" y="80">implement</text>
+                <circle class="spin-arc" cx="256" cy="69" r="4" stroke-dasharray="16 8"/>
+                <!-- active dot -->
+                <circle class="node-active-dot" cx="229" cy="95" r="3"/>
+
+                <!-- gap-check: future -->
+                <rect class="node-rect" x="298" y="66" width="62" height="28"/>
+                <text class="node-label" x="329" y="80">gap-check</text>
+
+                <!-- verify: future -->
+                <rect class="node-rect" x="398" y="66" width="28" height="28"/>
+                <text class="node-label" x="412" y="80">verify</text>
+
+                <!-- archive: future (below) -->
+                <path class="edge-line" d="M 412 94 L 412 120" marker-end="url(#ah3)"/>
+                <rect class="node-rect" x="382" y="122" width="60" height="26"/>
+                <text class="node-label" x="412" y="135">archive</text>
+
+                <!-- tech node (done) — placed separately to avoid clutter -->
+                <text x="370" y="55" font-size="7.5" fill="#475569" text-anchor="middle">04-tech.md</text>
+                <!-- artifact labels -->
+                <text x="129" y="60" font-size="7" fill="#334155" text-anchor="middle">tasks.md</text>
+                <text x="229" y="60" font-size="7" fill="#475569" text-anchor="middle">T4 active</text>
+
+              </svg>
+            </div>
+
+            <div class="session-card__meta">
+              <span class="live-ts live-ts--updated">
+                <span class="live-ts__dot live-ts__dot--recent"></span>
+                T3 STATUS · just now
+              </span>
+              <span style="font-size:11px;color:#475569">implement · T4 running</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /.app-shell -->
+
+    <div class="annotation mt8">
+      <b>Design note — Screen 2:</b>
+      Tasks node shows partial state (green outline, "3/7" counter inside node).
+      Implement node is active (blue ring + spinning arc + pulsing dot).
+      The 7-pip task-bar above the graph gives immediate progress at a glance without expanding the graph node.
+      Each pip maps to one task file; done=green, active=blue-pulse, pending=dark.
+      No controls — purely read-only status display.
+    </div>
+  </div><!-- /screen 2 -->
+
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       SCREEN 3 — Live-update affordance closeup
+       Shows: sidebar footer pip, node timestamp whisker, event trace
+  ════════════════════════════════════════════════════════════════ -->
+  <div>
+    <div class="screen-label">Screen 3 — Live-update affordance: FS-watch event → node update within ~1s</div>
+
+    <div class="closeup-row">
+
+      <!-- Sidebar footer comparison -->
+      <div class="closeup-card" style="max-width:220px;flex:0 0 220px">
+        <h3>Sidebar footer</h3>
+        <div style="margin-bottom:14px">
+          <div style="font-size:10px;color:#475569;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">Old (polling)</div>
+          <div class="live-before" style="display:flex;align-items:center;gap:7px;padding:8px 10px;background:#0a0d14;border:1px solid #1e2535;border-radius:6px">
+            <span style="color:#22c55e;font-size:14px">●</span>
+            <span style="font-size:11px;color:#475569">Polling &nbsp;·&nbsp; 5s</span>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:10px;color:#475569;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">New (FS watch)</div>
+          <div style="display:flex;align-items:center;gap:7px;padding:8px 10px;background:#0a0d14;border:1px solid #1e2535;border-radius:6px">
+            <div class="live-pip" style="flex-shrink:0"></div>
+            <span style="font-size:11px;color:#64748b">Live &nbsp;<strong style="color:#94a3b8">FS watch</strong></span>
+          </div>
+        </div>
+        <div style="margin-top:16px;font-size:10px;color:#475569;line-height:1.6">
+          The pip pulses green when the Rust FS-watcher is healthy.
+          It turns grey if the watcher drops (error state).
+          No interval counter is shown — events are push, not pull.
+        </div>
+      </div>
+
+      <!-- Node timestamp whisker comparison -->
+      <div class="closeup-card" style="flex:1">
+        <h3>Per-node "last-changed" whisker</h3>
+        <div style="margin-bottom:12px;font-size:11px;color:#475569;line-height:1.6">
+          Each node shows the mtime of its primary artifact when hovered or always-on
+          when recently changed (&lt;60s). This surfaces <em>which specific artifact</em>
+          triggered the last graph update — more informative than a global "polled 2s ago".
+        </div>
+
+        <!-- Mockup of two node states -->
+        <div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:16px">
+          <!-- Node: just updated -->
+          <div style="text-align:center">
+            <div style="font-size:10px;color:#475569;margin-bottom:4px">Just updated</div>
+            <svg viewBox="0 0 90 60" width="120" height="72" xmlns="http://www.w3.org/2000/svg">
+              <rect class="node-rect node-rect--completed" x="5" y="10" width="80" height="28"/>
+              <text class="node-label node-label--completed" x="45" y="24">prd</text>
+              <text x="75" y="13" font-size="8" fill="#22c55e">✓</text>
+              <!-- whisker -->
+              <text x="45" y="50" font-size="7.5" fill="#22c55e" text-anchor="middle">03-prd.md · just now</text>
+              <circle cx="13" cy="50" r="2.5" fill="#22c55e"/>
+            </svg>
+          </div>
+          <!-- Node: older -->
+          <div style="text-align:center">
+            <div style="font-size:10px;color:#475569;margin-bottom:4px">Quiet (no whisker)</div>
+            <svg viewBox="0 0 90 60" width="120" height="72" xmlns="http://www.w3.org/2000/svg">
+              <rect class="node-rect node-rect--completed" x="5" y="10" width="80" height="28"/>
+              <text class="node-label node-label--completed" x="45" y="24">design</text>
+              <text x="75" y="13" font-size="8" fill="#22c55e">✓</text>
+              <!-- no whisker shown when old -->
+              <text x="45" y="50" font-size="7.5" fill="#334155" text-anchor="middle">(whisker hidden &gt;60s)</text>
+            </svg>
+          </div>
+          <!-- Active node: pulsing -->
+          <div style="text-align:center">
+            <div style="font-size:10px;color:#475569;margin-bottom:4px">Active node</div>
+            <svg viewBox="0 0 90 60" width="120" height="72" xmlns="http://www.w3.org/2000/svg">
+              <rect class="node-rect node-rect--active" x="5" y="10" width="80" height="28"/>
+              <text class="node-label node-label--active" x="45" y="24">implement</text>
+              <circle class="spin-arc" cx="78" cy="13" r="5" stroke-dasharray="16 8"/>
+              <text x="45" y="50" font-size="7.5" fill="#60a5fa" text-anchor="middle">T4 STATUS · 4s ago</text>
+              <circle cx="13" cy="50" r="2.5" fill="#3b82f6" class="node-active-dot"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Event trace panel -->
+      <div class="closeup-card" style="flex:1">
+        <h3>IPC event flow (conceptual)</h3>
+        <div class="event-trace">
+          <div class="event-trace__line--dim">// Rust notify crate → Tauri IPC → React</div>
+          <div class="event-trace__line--ts">T+0ms &nbsp; FS event: 04-tech.md modified</div>
+          <div class="event-trace__line--highlight">T+12ms  emit("fs_artifact_changed", {</div>
+          <div class="event-trace__line--highlight">&nbsp;&nbsp;&nbsp;artifact: "04-tech.md",</div>
+          <div class="event-trace__line--highlight">&nbsp;&nbsp;&nbsp;stage: "tech",</div>
+          <div class="event-trace__line--highlight">&nbsp;&nbsp;&nbsp;session: "20260426-…"</div>
+          <div class="event-trace__line--highlight">})</div>
+          <div class="event-trace__line--ts">T+15ms  React listener fires</div>
+          <div class="event-trace__line--active">T+16ms  node[tech] → completed ✓</div>
+          <div class="event-trace__line--active">T+16ms  node[plan] → active ▶</div>
+          <div class="event-trace__line--ts">T+16ms  whisker: "04-tech.md · just now"</div>
+          <div class="event-trace__line--dim">// total: ~16ms vs 5000ms poll</div>
+        </div>
+        <div style="margin-top:10px;font-size:10px;color:#475569;line-height:1.5">
+          The PollingFooter is fully removed. The sidebar pip is the only
+          liveness indicator. No polling interval is surfaced to the user —
+          the graph simply updates when files change.
+        </div>
+      </div>
+
+    </div><!-- /.closeup-row -->
+
+    <div class="annotation mt8">
+      <b>Design decision — live-update affordance:</b>
+      Chose a single sidebar pip + per-node timestamp whisker over (a) keeping the PollingFooter
+      or (b) a floating "last refreshed" banner. Rationale: the sidebar pip answers "is the watcher
+      alive?" at a glance; the per-node whisker answers "when did <i>this artifact</i> last change?" —
+      the two pieces of information the user actually needs. A global "last refreshed" timestamp
+      is meaningless when only one node in the graph changed.
+    </div>
+  </div><!-- /screen 3 -->
+
+  <div class="scroll-hint">End of mockup — 3 screens</div>
+
+</div><!-- /.screen-wrapper -->
+</body>
+</html>

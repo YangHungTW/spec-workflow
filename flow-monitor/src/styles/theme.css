@@ -201,4 +201,39 @@ html.dark {
   /* Markdown preview */
   --markdown-bg: #1A211D;
   --markdown-text: #E8F0EB;
+
+  /* Live-watch pip — running (green pulse) and errored (grey static) */
+  --live-watch-pip-running: #22C55E;
+  --live-watch-pip-errored: #4D7360;
+
+  /* Graph node backgrounds and strokes — dark-only (light-mode follow-up deferred) */
+  --graph-node-bg: #1E2535;
+  --graph-node-stroke: #334155;
+  --graph-node-completed-bg: #0F2010;
+  --graph-node-completed-stroke: #166534;
+  --graph-node-active-bg: #1E3A5F;
+  --graph-node-active-stroke: #3B82F6;
+  --graph-node-active-shadow: rgba(59, 130, 246, 0.35);
+  --graph-node-skipped-bg: #1A1226;
+  --graph-node-skipped-stroke: #2D1B69;
+  --graph-node-partial-bg: #14271A;
+  --graph-node-partial-stroke: #15803D;
+
+  /* Graph label fills */
+  --graph-label-future: #94A3B8;
+  --graph-label-completed: #4ADE80;
+  --graph-label-active: #93C5FD;
+  --graph-label-skipped: #7C3AED;
+  --graph-label-partial: #6EE7B7;
+
+  /* Graph edge colours */
+  --graph-edge-done: #166534;
+  --graph-edge-future: #2D3748;
+  --graph-edge-label: #334155;
+
+  /* Graph misc */
+  --graph-check: #22C55E;
+  --graph-partial-counter: #4ADE80;
+  --graph-bypass-stroke: #2D1B69;
+  --graph-whisker: #475569;
 }

@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, useSearchParams, Navigate } from "react-router-dom";
 import { invoke } from "@tauri-apps/api/core";
 import { CardDetailHeader } from "../components/CardDetailHeader";
-import { StageChecklist } from "../components/StageChecklist";
 import { TabStrip } from "../components/TabStrip";
 import { NotesTimeline } from "../components/NotesTimeline";
 import type { NoteEntry } from "../components/NotesTimeline";
@@ -183,7 +182,6 @@ function CardDetail({ isArchived = false }: CardDetailProps) {
 
       <div className="card-detail__body">
         <aside className="card-detail__left-rail" data-testid="card-detail-left-rail">
-          <StageChecklist currentStage={stage} />
           <NotesTimeline notes={notes} />
         </aside>
 

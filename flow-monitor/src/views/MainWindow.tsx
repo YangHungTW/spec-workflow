@@ -5,7 +5,7 @@ import { listen } from "@tauri-apps/api/event";
 import { useTranslation } from "../i18n";
 import { RepoSidebar, type RepoEntry } from "../components/RepoSidebar";
 import { SortToolbar } from "../components/SortToolbar";
-import { PollingFooter } from "../components/PollingFooter";
+import { LiveWatchFooter } from "../components/LiveWatchFooter";
 import { SessionCard } from "../components/SessionCard";
 import EmptyState from "./EmptyState";
 import { useSessionStore, sortSessions, type SessionState } from "../stores/sessionStore";
@@ -45,7 +45,7 @@ interface SettingsResponse {
  *     Settings + theme toggle at bottom (T48)
  *   - Top toolbar: page title + subtitle (T48.6), sort dropdown
  *   - Main area: 2-column card grid (≥720px) or 1-column (< 720px)
- *   - Sidebar footer (PollingFooter): "Polling · {interval}s" with green dot
+ *   - Sidebar footer (LiveWatchFooter): pulsing pip + FS-watcher status label
  *
  * Group-by-repo (AC8.a): when "All Projects" is selected and ≥2 repos are
  * registered, sessions are grouped under collapsible repo headers.
@@ -68,7 +68,6 @@ function MainWindow() {
 
   const [sessions, setSessions] = useState<SessionState[]>([]);
   const [repos, setRepos] = useState<RepoEntry[]>([]);
-  const [pollingIntervalSecs, setPollingIntervalSecs] = useState<number>(3);
   const [loading, setLoading] = useState(true);
   // Tracks whether the compact panel window is currently open (AC10.a).
   const [compactPanelOpen, setCompactPanelOpen] = useState<boolean>(false);
@@ -91,7 +90,6 @@ function MainWindow() {
           hasUi: s.has_ui ?? false,
         }));
         setSessions(mapped);
-        setPollingIntervalSecs(settingsData.polling_interval_secs ?? 3);
         if (settingsData.repos) {
           setRepos(
             settingsData.repos.map((p) => {
@@ -232,8 +230,8 @@ function MainWindow() {
         >
           {t("btn.compactPanel")}
         </button>
-        {/* Polling footer at the bottom of the sidebar (AC4.c) */}
-        <PollingFooter intervalSeconds={pollingIntervalSecs} />
+        {/* FS-watcher footer at the bottom of the sidebar (R15, R16) */}
+        <LiveWatchFooter />
       </aside>
 
       {/* Main content area */}

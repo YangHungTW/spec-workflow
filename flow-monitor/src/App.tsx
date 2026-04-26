@@ -4,10 +4,24 @@ import MainWindow from "./views/MainWindow";
 import CardDetail from "./views/CardDetail";
 import Settings from "./views/Settings";
 import CompactPanel from "./views/CompactPanel";
-import { I18nProvider } from "./i18n";
+import { I18nProvider, useTranslation } from "./i18n";
 import { CommandPalette } from "./components/CommandPalette";
 import { PreflightToast } from "./components/PreflightToast";
 import { useInvokeStore } from "./stores/invokeStore";
+import { useWatcherStatus } from "./stores/artifactStore";
+
+// Sibling toast that fires when the FS watcher transitions to "errored" (R16 / D4).
+// Dismissed automatically when state recovers to "running".
+function WatcherErrorToast() {
+  const { state } = useWatcherStatus();
+  const { t } = useTranslation();
+  if (state !== "errored") return null;
+  return (
+    <div role="alert" aria-live="assertive" data-testid="watcher-error-toast">
+      {t("watcher.error.toast")}
+    </div>
+  );
+}
 
 function ThemeProvider({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
@@ -93,6 +107,10 @@ function App() {
                 }}
               />
             )}
+
+            {/* WatcherErrorToast — shown while watcher state is "errored" (R16 / D4).
+                Dismissed automatically when state recovers to "running". */}
+            <WatcherErrorToast />
           </SessionsProvider>
         </SettingsProvider>
       </I18nProvider>

@@ -1,12 +1,10 @@
 /**
- * Tests for T29: MainWindow polling indicator subscription wiring
+ * Tests for MainWindow event subscription wiring
  *
- * AC4.c — MainWindow's PollingFooter subscribes to polling_cycle_complete
- *          events and updates its displayed interval within one render cycle.
  * AC10.a — MainWindow stays open and functional; toggling compact panel
  *           invokes set_compact_panel_open IPC.
  * AC10.c — MainWindow subscribes to sessions_changed event so both windows
- *           share the same poll cycle data.
+ *           share the same data.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, act, fireEvent } from "@testing-library/react";
@@ -30,6 +28,11 @@ vi.mock("@tauri-apps/api/core", () => ({
 vi.mock("../../stores/themeStore", () => ({
   useTheme: () => ({ theme: "light", setTheme: vi.fn(), toggleTheme: vi.fn() }),
   applyThemeToDocument: vi.fn(),
+}));
+
+// Mock artifactStore — LiveWatchFooter calls useWatcherStatus
+vi.mock("../../stores/artifactStore", () => ({
+  useWatcherStatus: () => ({ state: "running" }),
 }));
 
 // Mock @tauri-apps/api/event
@@ -72,12 +75,11 @@ function setupInvokeMock(pollingIntervalSecs = 3) {
   });
 }
 
-describe("MainWindow — polling_cycle_complete subscription (AC4.c)", () => {
+describe("MainWindow — sessions_changed + compact panel (AC10.a, AC10.c)", () => {
   beforeEach(() => {
     mockInvoke.mockReset();
     mockUnlisten.mockReset();
     vi.mocked(listen).mockClear();
-    // Reset captured listeners
     for (const key of Object.keys(capturedListeners)) {
       delete capturedListeners[key];
     }
@@ -85,26 +87,6 @@ describe("MainWindow — polling_cycle_complete subscription (AC4.c)", () => {
 
   afterEach(() => {
     vi.clearAllTimers();
-  });
-
-  it("renders the polling footer (PollingFooter is present in MainWindow)", async () => {
-    setupInvokeMock(3);
-    await act(async () => {
-      render(<MemoryRouter><MainWindow /></MemoryRouter>);
-    });
-    expect(screen.getByTestId("polling-footer")).toBeTruthy();
-  });
-
-  it("polling_cycle_complete listener is registered on mount", async () => {
-    setupInvokeMock(3);
-    await act(async () => {
-      render(<MemoryRouter><MainWindow /></MemoryRouter>);
-    });
-    // Either MainWindow or PollingFooter registers the listener — either is valid
-    expect(vi.mocked(listen)).toHaveBeenCalledWith(
-      "polling_cycle_complete",
-      expect.any(Function),
-    );
   });
 
   it("sessions_changed listener is registered on mount (AC10.c)", async () => {
@@ -117,16 +99,13 @@ describe("MainWindow — polling_cycle_complete subscription (AC4.c)", () => {
       expect.any(Function),
     );
   });
-});
 
-describe("MainWindow — compact panel toggle (AC10.a)", () => {
-  beforeEach(() => {
-    mockInvoke.mockReset();
-    mockUnlisten.mockReset();
-    vi.mocked(listen).mockClear();
-    for (const key of Object.keys(capturedListeners)) {
-      delete capturedListeners[key];
-    }
+  it("renders live-watch-footer (LiveWatchFooter is present in MainWindow)", async () => {
+    setupInvokeMock(3);
+    await act(async () => {
+      render(<MemoryRouter><MainWindow /></MemoryRouter>);
+    });
+    expect(screen.getByTestId("live-watch-footer")).toBeTruthy();
   });
 
   it("compact panel toggle button invokes set_compact_panel_open(true)", async () => {

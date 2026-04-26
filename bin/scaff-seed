@@ -352,6 +352,63 @@ classify_pre_commit_shim() {
 }
 
 # ---------------------------------------------------------------------------
+# classify_default_config_yml <consumer_root>
+# Pure classifier for the default config.yml emit (D3 implementation note).
+# Emits one of: missing | ok | user-modified
+# No mutation; no side effects.
+# ---------------------------------------------------------------------------
+classify_default_config_yml() {
+  local consumer_root="$1"
+  local cfg="${consumer_root}/.specaffold/config.yml"
+
+  if [ ! -e "$cfg" ] && [ ! -L "$cfg" ]; then
+    echo "missing"
+    return
+  fi
+
+  # Compare file content against the expected default bytes.
+  local expected actual
+  expected="$(printf 'lang:\n  chat: en\n')"
+  actual="$(cat "$cfg" 2>/dev/null || true)"
+  if [ "$expected" = "$actual" ]; then
+    echo "ok"
+    return
+  fi
+
+  echo "user-modified"
+}
+
+# ---------------------------------------------------------------------------
+# emit_default_config_yml <consumer_root>
+# Dispatcher for the default config.yml emit.
+# Called from cmd_init AND cmd_migrate — single source of truth for default
+# content (D5: no inlined heredoc duplication at call sites).
+# ---------------------------------------------------------------------------
+emit_default_config_yml() {
+  local consumer_root="$1"
+  local state
+  state=$(classify_default_config_yml "$consumer_root")
+  local dst="${consumer_root}/.specaffold/config.yml"
+
+  case "$state" in
+    missing)
+      printf 'lang:\n  chat: en\n' | write_atomic "$dst"
+      echo "created:.specaffold/config.yml"
+      _CNT_CREATED=$((_CNT_CREATED + 1))
+      ;;
+    ok)
+      echo "already:.specaffold/config.yml"
+      _CNT_ALREADY=$((_CNT_ALREADY + 1))
+      ;;
+    user-modified)
+      echo "skipped:user-modified:.specaffold/config.yml"
+      _CNT_SKIPPED=$((_CNT_SKIPPED + 1))
+      if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
+      ;;
+  esac
+}
+
+# ---------------------------------------------------------------------------
 # plan_copy <src_root> <mode>
 # Enumerates managed relpaths from the source tree.
 # mode=init|migrate: includes static subtrees + team-memory skeleton.
@@ -376,6 +433,13 @@ plan_copy() {
       done
     fi
   done
+
+  # Explicit single-file entries for .specaffold/ files that must not be
+  # copied verbatim from the prefix loop (D6: sibling block, not prefix-list
+  # entry, because the prefix loop guards with [ -d ] which skips regular files).
+  if [ -f "${src_root}/.specaffold/preflight.md" ]; then
+    printf '.specaffold/preflight.md\n'
+  fi
 
   # Team-memory skeleton — only for init or migrate modes
   case "$mode" in
@@ -746,6 +810,12 @@ EOF
       if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
       ;;
   esac
+
+  # ---------------------------------------------------------------------------
+  # Step 8c: Emit default config.yml (D1, D5).
+  # Single helper; no inlined heredoc here — content lives in emit_default_config_yml.
+  # ---------------------------------------------------------------------------
+  emit_default_config_yml "$consumer_root"
 
   # ---------------------------------------------------------------------------
   # Idempotent path: nothing changed AND manifest already exists → skip
@@ -1327,6 +1397,12 @@ EOF
       if [ "$MAX_CODE" -lt 1 ]; then MAX_CODE=1; fi
       ;;
   esac
+
+  # ---------------------------------------------------------------------------
+  # Step 8c: Emit default config.yml (D1, D5).
+  # Single helper; no inlined heredoc here — content lives in emit_default_config_yml.
+  # ---------------------------------------------------------------------------
+  emit_default_config_yml "$consumer_root"
 
   # ---------------------------------------------------------------------------
   # Idempotent-exit short-circuit: nothing changed AND manifest already exists
