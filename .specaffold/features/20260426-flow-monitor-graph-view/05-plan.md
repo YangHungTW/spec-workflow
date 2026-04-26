@@ -200,7 +200,7 @@ Parallel-safety: **T17** edits `SettingsGeneral.tsx` (deprecation note for the i
     - Depends on: T2
     - Parallel-safe-with: T5, T6, T7, T8
 
-- [ ] T10: Mount `<SessionGraph>` + `<TaskProgressBar>` in `<SessionCard>`
+- [x] T10: Mount `<SessionGraph>` + `<TaskProgressBar>` in `<SessionCard>`
     - Wave: W3
     - Owner: Developer
     - Files: `flow-monitor/src/components/SessionCard.tsx`
@@ -213,7 +213,7 @@ Parallel-safety: **T17** edits `SettingsGeneral.tsx` (deprecation note for the i
     - Depends on: T6, T7, T2
     - Parallel-safe-with: T11 (T11 edits `MainWindow.tsx` + deletes `StageChecklist.tsx` + edits `lib.rs` polling region + i18n unrelated to T10's `SessionCard.tsx`), T12
 
-- [ ] T11: Rip out polling + `StageChecklist` + `PollingFooter`, swap `LiveWatchFooter` in `<MainWindow>`, run consumer-grep gate
+- [x] T11: Rip out polling + `StageChecklist` + `PollingFooter`, swap `LiveWatchFooter` in `<MainWindow>`, run consumer-grep gate
     - Wave: W3
     - Owner: Developer
     - Files: `flow-monitor/src/components/StageChecklist.tsx` (DELETE), `flow-monitor/src/components/PollingFooter.tsx` (DELETE), `flow-monitor/src/views/MainWindow.tsx` (swap import + remove `pollingIntervalSecs` state if unused), `flow-monitor/src-tauri/src/lib.rs` (delete `run_session_polling` fn body + `polling_cycle_complete` emitter), `flow-monitor/src-tauri/src/poller.rs` (review for orphan deletion if all callers gone), `flow-monitor/src/styles/components.css` (delete `.polling-footer` and `.stage-checklist` rules)
@@ -227,7 +227,7 @@ Parallel-safety: **T17** edits `SettingsGeneral.tsx` (deprecation note for the i
     - Parallel-safe-with: T10 (different files), T12 (different files)
     - **STATUS Notes hook**: on completion, append `- 2026-04-26 Developer — T11 polling fully removed; consumer-grep gate clean; lib.rs run_session_polling deleted` to STATUS Notes.
 
-- [ ] T12: i18n keys — register `sidebar.liveFsWatch`, `watcher.error.toast`, `card.tasks.progress.label`, `settings.polling.deprecated.note`, graph aria/whisker tooltips
+- [x] T12: i18n keys — register `sidebar.liveFsWatch`, `watcher.error.toast`, `card.tasks.progress.label`, `settings.polling.deprecated.note`, graph aria/whisker tooltips
     - Wave: W3
     - Owner: Developer
     - Files: `flow-monitor/src/i18n/en.json`, `flow-monitor/src/i18n/zh-TW.json`
