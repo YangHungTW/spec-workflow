@@ -47,7 +47,7 @@ Single wave, single task. No inline review (`R16` default for `tier=tiny`). No w
   - Adjacent regression: `bash test/t113_scaff_src_resolver.sh` exits 0.
 - **Depends on**: —
 - **Parallel-safe-with**: —
-- [ ]
+- [x]
 
 ## 3. Risks
 
