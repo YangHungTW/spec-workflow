@@ -4,7 +4,7 @@
 - **has-ui**: false
 - **work-type**: chore
 - **tier**: tiny
-- **stage**: validate
+- **stage**: archive
 - **created**: 2026-04-26
 - **updated**: 2026-04-26
 
@@ -15,7 +15,7 @@
 - [x] tech          (04-tech.md)                 — Architect
 - [x] plan          (05-plan.md)                 — TPM  [merged: narrative + task checklist]
 - [x] implement     (05-plan.md tasks checked off) — Developer
-- [ ] validate      (08-validate.md, verdict PASS) — QA-tester + QA-analyst  [merged: verify + gap-check]
+- [x] validate      (08-validate.md, verdict PASS) — QA-tester + QA-analyst  [merged: verify + gap-check]
 - [ ] archive       (moved to .specaffold/archive/)     — TPM
 
 ## Notes
@@ -32,3 +32,5 @@
 - 2026-04-26 implement wave 1 done — T1.
 - 2026-04-26 implement — threshold check OK: 3 files / 104 lines vs tiny limits 3/200; no upgrade SUGGESTED.
 - 2026-04-26 implement — all tasks done (T1); checked [x] implement; advanced stage field implement → validate.
+- 2026-04-26 validate — slug=20260426-chore-t114-migrate-coverage verdict=NITS (advisory findings in 08-validate.md): tester=PASS / analyst=NITS with 2 should-severity findings (A4 .bak content fidelity not asserted; STATUS [x] tech checkbox-vs-Notes inconsistency).
+- 2026-04-26 validate — checked [x] validate; advanced stage field validate → archive.
