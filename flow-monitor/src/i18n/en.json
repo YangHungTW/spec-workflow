@@ -1,4 +1,6 @@
 {
+  "_allow": "<!-- scaff-lint: allow-cjk reason=\"i18n bundle — zh-TW values are legitimately CJK\" -->",
+
   "sidebar.allProjects": "All Projects",
   "sidebar.addRepo": "+ Add repo…",
   "sidebar.projects": "Projects",
@@ -9,6 +11,7 @@
   "sidebar.pollingFooter": "Polling · {interval}s",
   "sidebar.archived": "Archived",
   "sidebar.archivedCount": "{count} archived",
+  "sidebar.liveFsWatch": "Live FS watch",
 
   "role.pm": "PM",
   "role.architect": "Architect",
@@ -87,6 +90,7 @@
   "settings.repoAddFailed": "Failed to add repository.",
   "settings.language": "Language",
   "settings.about": "About",
+  "settings.polling.deprecated.note": "Polling interval is no longer used (filesystem watch replaces it). This control will be removed in a future release.",
 
   "notification.stalled-title": "Session stalled: {slug}",
   "notification.stalled-body": "{stage} · idle for {duration} · {repo}",
@@ -101,6 +105,7 @@
   "card.collapseRepo": "Collapse {repo}",
   "card.expandRepo": "Expand {repo}",
   "card.active": "Active",
+  "card.tasks.progress.label": "{done} / {total} tasks",
 
   "action.advance_to.design": "Advance to Design",
   "action.advance_to.prd": "Advance to PRD",
@@ -132,7 +137,11 @@
   "toast.in_flight": "Action already in flight",
   "toast.terminal_failed": "Terminal unavailable — copied to clipboard instead",
   "toast.preflight": "{command} — {slug}",
+  "watcher.error.toast": "Filesystem watcher disconnected. Live updates unavailable.",
 
   "notification.stalled.title": "Session Stalled",
-  "notification.stalled.body": "{slug} · idle {duration}"
+  "notification.stalled.body": "{slug} · idle {duration}",
+
+  "graph.aria.label": "Session graph; current stage {stage}",
+  "graph.whisker.tooltip": "Updated {seconds}s ago"
 }

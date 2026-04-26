@@ -1,4 +1,6 @@
 {
+  "_allow": "<!-- scaff-lint: allow-cjk reason=\"i18n bundle — zh-TW values are legitimately CJK\" -->",
+
   "sidebar.allProjects": "全部專案",
   "sidebar.addRepo": "+ 新增倉庫…",
   "sidebar.projects": "專案",
@@ -9,6 +11,7 @@
   "sidebar.pollingFooter": "輪詢中 · 每 {interval} 秒",
   "sidebar.archived": "Archived",
   "sidebar.archivedCount": "{count} archived",
+  "sidebar.liveFsWatch": "即時檔案監看",
 
   "role.pm": "PM",
   "role.architect": "架構師",
@@ -87,6 +90,7 @@
   "settings.repoAddFailed": "新增倉庫失敗。",
   "settings.language": "語言",
   "settings.about": "關於",
+  "settings.polling.deprecated.note": "輪詢間隔已停用（已改為檔案系統監看）。此控制項將於未來版本移除。",
 
   "notification.stalled-title": "工作階段停滯：{slug}",
   "notification.stalled-body": "{stage} · 閒置 {duration} · {repo}",
@@ -101,6 +105,7 @@
   "card.collapseRepo": "收合 {repo}",
   "card.expandRepo": "展開 {repo}",
   "card.active": "進行中",
+  "card.tasks.progress.label": "{done} / {total} 個任務",
 
   "action.advance_to.design": "進入設計階段",
   "action.advance_to.prd": "進入 PRD 階段",
@@ -132,7 +137,11 @@
   "toast.in_flight": "動作進行中",
   "toast.terminal_failed": "無法開啟終端機 — 已複製到剪貼簿",
   "toast.preflight": "{command} — {slug}",
+  "watcher.error.toast": "檔案系統監看器中斷連線，無法接收即時更新。",
 
   "notification.stalled.title": "工作階段已停滯",
-  "notification.stalled.body": "{slug} · 閒置 {duration}"
+  "notification.stalled.body": "{slug} · 閒置 {duration}",
+
+  "graph.aria.label": "工作階段圖；目前階段 {stage}",
+  "graph.whisker.tooltip": "{seconds} 秒前更新"
 }
