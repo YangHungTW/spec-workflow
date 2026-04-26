@@ -26,3 +26,4 @@
 - 2026-04-26 next — stage_status chore/standard/tech = skipped.
 - 2026-04-26 next — plan REQUIRED on chore × standard but /scaff:plan hard-requires 04-tech.md (matrix-skipped); applying the chore-tiny short-circuit memory's workaround one final time as a chore × standard variant; T1 of this very feature lands the plumbing fix that eliminates the workaround going forward.
 - 2026-04-26 next — advanced stage field prd → implement.
+- 2026-04-26 review dispatched — slug=20260426-chore-scaff-plan-chore-aware wave=1 tasks=T1 axes=security,performance,style
