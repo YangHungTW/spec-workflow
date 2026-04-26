@@ -56,11 +56,11 @@ source "$SCAFF_SRC/bin/scaff-stage-matrix"
      status=$(stage_status "$work_type" "$tier" "$next_stage")
      case "$status" in
        skipped)
-         # rewrite the leading `[ ]` to `[~]` and append ` (skipped — chore × tiny matrix)` suffix to that stage line.
+         # rewrite the leading `[ ]` to `[~]` and append ` (skipped — <work-type> × <tier> matrix)` suffix to that stage line.
          # do NOT replace the original right-hand annotation (e.g. `(02-design/) — Designer (skip if has-ui: false)`); only the
          # leading checkbox is rewritten and a suffix appended. Example:
          #   Before: - [ ] design        (02-design/)                 — Designer (skip if has-ui: false)
-         #   After:  - [~] design        (02-design/)                 — Designer (skip if has-ui: false) (skipped — chore × tiny matrix)
+         #   After:  - [~] design        (02-design/)                 — Designer (skip if has-ui: false) (skipped — chore × standard matrix)
          # append STATUS Notes line: `<date> next — stage_status $work_type/$tier/$next_stage = skipped`
          # re-read STATUS and advance again (loop — same as has-ui skip below)
          ;;
