@@ -4,7 +4,7 @@
 - **has-ui**: false
 - **work-type**: chore
 - **tier**: standard
-- **stage**: validate
+- **stage**: archive
 - **created**: 2026-04-26
 - **updated**: 2026-04-26
 
@@ -15,7 +15,7 @@
 - [~] tech          (04-tech.md)                 — Architect (skipped — chore × standard matrix)
 - [x] plan          (05-plan.md)                 — TPM  [merged: narrative + task checklist]
 - [x] implement     (05-plan.md tasks checked off) — Developer
-- [ ] validate      (08-validate.md, verdict PASS) — QA-tester + QA-analyst  [merged: verify + gap-check]
+- [x] validate      (08-validate.md, verdict PASS) — QA-tester + QA-analyst  [merged: verify + gap-check]
 - [ ] archive       (moved to .specaffold/archive/)     — TPM
 
 ## Notes
@@ -33,3 +33,4 @@
 - 2026-04-26 implement — T2 merge conflict on STATUS Notes append (orchestrator dispatch line vs Developer T2 note); resolved by keeping both; root cause: dev wrote to orchestrator-controlled STATUS.md from worktree; not a parallel-safety failure (single-task wave).
 - 2026-04-26 implement wave 2 done — T2
 - 2026-04-26 implement — all waves complete (T1, T2); checked off [x] implement; advanced stage field implement → validate.
+- 2026-04-26 validate — slug=20260426-chore-scaff-plan-chore-aware verdict=NITS (advisory findings in 08-validate.md: 1 should-severity drifted-example on .claude/commands/scaff/next.md line 63 — `After:` example hardcodes tier `standard` instead of the `<tier>` placeholder used in the active instruction line 59).
