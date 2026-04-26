@@ -4,7 +4,7 @@
 - **has-ui**: false
 - **work-type**: chore
 - **tier**: tiny
-- **stage**: validate
+- **stage**: archive
 - **created**: 2026-04-26
 - **updated**: 2026-04-26
 
@@ -15,7 +15,7 @@
 - [x] tech          (04-tech.md)                 — Architect
 - [x] plan          (05-plan.md)                 — TPM  [merged: narrative + task checklist]
 - [x] implement     (05-plan.md tasks checked off) — Developer
-- [ ] validate      (08-validate.md, verdict PASS) — QA-tester + QA-analyst  [merged: verify + gap-check]
+- [x] validate      (08-validate.md, verdict PASS) — QA-tester + QA-analyst  [merged: verify + gap-check]
 - [ ] archive       (moved to .specaffold/archive/)     — TPM
 
 ## Notes
@@ -32,3 +32,5 @@
 - 2026-04-26 implement wave 1 done — T1.
 - 2026-04-26 implement — auto-upgrade SUGGESTED tiny→standard (diff: 433 lines, 4 files; threshold 200/3); awaiting TPM confirmation.
 - 2026-04-26 implement — all tasks done (T1); checked [x] implement; advanced stage field implement → validate.
+- 2026-04-26 validate — slug=20260426-chore-seed-copies-settings verdict=NITS (advisory findings in 08-validate.md): tester=PASS / analyst=NITS with 2 should-severity findings (migrate-arm partial-wiring-trace; double-.bak in malformed-JSON path).
+- 2026-04-26 validate — checked [x] validate; advanced stage field validate → archive.
