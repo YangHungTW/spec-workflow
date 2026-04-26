@@ -16,7 +16,7 @@
 - [x] plan          (05-plan.md)                 — TPM  [merged: narrative + task checklist]
 - [x] implement     (05-plan.md tasks checked off) — Developer
 - [x] validate      (08-validate.md, verdict PASS) — QA-tester + QA-analyst  [merged: verify + gap-check]
-- [ ] archive       (moved to .specaffold/archive/)     — TPM
+- [x] archive       (moved to .specaffold/archive/)     — TPM
 
 ## Notes
 <!-- date + role + what changed -->
@@ -34,3 +34,8 @@
 - 2026-04-26 implement — all tasks done (T1); checked [x] implement; advanced stage field implement → validate.
 - 2026-04-26 validate — slug=20260426-chore-seed-copies-settings verdict=NITS (advisory findings in 08-validate.md): tester=PASS / analyst=NITS with 2 should-severity findings (migrate-arm partial-wiring-trace; double-.bak in malformed-JSON path).
 - 2026-04-26 validate — checked [x] validate; advanced stage field validate → archive.
+- 2026-04-26 archive — tier stays tiny; SUGGEST declined per tpm/threshold-suggest-test-vs-prod-line-asymmetry pattern (test=63%, prod=mirror-dup by plan §1.2; user-approved at retro).
+- 2026-04-26 archive — analyst Finding 1 (migrate-arm partial-wiring-trace) → file follow-up chore "extend t114 to cover scaff-seed migrate path" (tier=tiny, work-type=chore; user-approved at retro).
+- 2026-04-26 archive — analyst Finding 2 (double-.bak in ValueError) accepted: identical content, no data loss; same posture as bin/scaff-install-hook precedent; deferred to a future chore that addresses both call sites together (user-approved at retro).
+- 2026-04-26 archive — retro produced 3 user-approved memory entries: developer/pre-existing-test-failure-before-changing.md; qa-analyst/scaff-seed-dual-emit-site-hazard.md; tpm/threshold-suggest-test-vs-prod-line-asymmetry.md.
+- 2026-04-26 archive — checked [x] archive; feature complete.
