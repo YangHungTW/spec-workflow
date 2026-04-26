@@ -62,7 +62,7 @@ The matrix-skip pseudocode in `.claude/commands/scaff/next.md` (landed by `20260
   - Markdown sanity: `head -200 .claude/commands/scaff/plan.md` and `head -300 .claude/agents/scaff/tpm.md` confirm no broken fences / headings.
 - **Depends on**: —
 - **Parallel-safe-with**: —
-- [ ]
+- [x]
 
 ## T2 — Clean up next.md hand-write pseudocode + update memory + generalise suffix wording
 - **Milestone**: M1
