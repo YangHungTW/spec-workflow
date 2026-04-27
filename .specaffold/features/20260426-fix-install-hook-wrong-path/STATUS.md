@@ -4,7 +4,7 @@
 - **has-ui**: false
 - **work-type**: bug
 - **tier**: standard
-- **stage**: implement
+- **stage**: validate
 - **created**: 2026-04-26
 - **updated**: 2026-04-26
 
@@ -15,7 +15,7 @@
 - [~] tech          (04-tech.md)                 — Architect (skipped — bug × tiny matrix)
 - [x] plan          (05-plan.md)                 — TPM  [merged: narrative + task checklist]
 - [x] implement     (05-plan.md tasks checked off) — Developer
-- [ ] validate      (08-validate.md, verdict PASS) — QA-tester + QA-analyst  [merged: verify + gap-check]
+- [x] validate      (08-validate.md, verdict PASS) — QA-tester + QA-analyst  [merged: verify + gap-check]
 - [ ] archive       (moved to .specaffold/archive/)     — TPM
 
 ## Notes
@@ -32,3 +32,4 @@
 - 2026-04-26 implement complete — all tasks done; next is /scaff:next → validate
 
 - 2026-04-26 orchestrator — tier upgrade tiny→standard: wave 1 threshold trip (442 lines / 11 files vs 200/3 limits, D7/R14)
+- 2026-04-27 validate — slug=20260426-fix-install-hook-wrong-path verdict=NITS (advisory findings in 08-validate.md: 3 should + 1 advisory, all in test layer; tester=PASS, analyst=NITS)
