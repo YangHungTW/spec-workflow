@@ -7,10 +7,11 @@
 #   bin/scaff-install-hook add    <event> <command>
 #   bin/scaff-install-hook remove <event> <command>
 #
-# Operates on settings.json in the CURRENT DIRECTORY (caller's cwd).
+# Operates on .claude/settings.json relative to the caller's cwd; creates
+# .claude/ if missing.
 # Uses Python 3 read-merge-write: never overwrites unrelated keys.
-# Backs up to settings.json.bak before each mutation.
-# Writes atomically via settings.json.tmp → os.replace.
+# Backs up to .claude/settings.json.bak before each mutation.
+# Writes atomically via .claude/settings.json.tmp → os.replace.
 # Idempotent: running add twice leaves exactly one matching entry.
 # =============================================================================
 
@@ -63,20 +64,14 @@ import json, os, shutil, sys
 
 event = sys.argv[1]
 cmd   = sys.argv[2]
-p     = "settings.json"
+p     = ".claude/settings.json"
+os.makedirs(os.path.dirname(p), exist_ok=True)
 
 try:
     with open(p) as f:
         data = json.load(f)
 except FileNotFoundError:
     data = {}
-
-# Backup before mutation
-if os.path.exists(p):
-    shutil.copyfile(p, p + ".bak")
-else:
-    # Write empty backup so the file exists (signals "was missing")
-    open(p + ".bak", "w").close()
 
 # Idempotence check: does the entry already exist?
 hooks = data.setdefault("hooks", {})
@@ -85,10 +80,18 @@ already = any(
     any(h.get("command") == cmd for h in grp.get("hooks", []))
     for grp in event_arr
 )
-if not already:
-    event_arr.append({"hooks": [{"type": "command", "command": cmd}]})
+if already:
+    sys.exit(0)
 
-# Atomic write
+# Entry not present — back up then append and write atomically.
+if os.path.exists(p):
+    shutil.copyfile(p, p + ".bak")
+else:
+    # Write empty backup so the file exists (signals "was missing")
+    open(p + ".bak", "w").close()
+
+event_arr.append({"hooks": [{"type": "command", "command": cmd}]})
+
 tmp = p + ".tmp"
 with open(tmp, "w") as f:
     json.dump(data, f, indent=2)
@@ -106,7 +109,7 @@ import json, os, shutil, sys
 
 event = sys.argv[1]
 cmd   = sys.argv[2]
-p     = "settings.json"
+p     = ".claude/settings.json"
 
 try:
     with open(p) as f:

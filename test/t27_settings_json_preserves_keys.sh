@@ -45,11 +45,11 @@ case "$HOME" in
 esac
 
 # ---------------------------------------------------------------------------
-# Setup: create a sandbox settings.json dir with pre-seeded unrelated keys
+# Setup: create a sandbox .claude/settings.json dir with pre-seeded unrelated keys
 # ---------------------------------------------------------------------------
 WORK="$SANDBOX/work"
-mkdir -p "$WORK"
-cat > "$WORK/settings.json" <<'JSON'
+mkdir -p "$WORK/.claude"
+cat > "$WORK/.claude/settings.json" <<'JSON'
 {"permissions":{"allow":["Bash(ls:*)"]},"env":{"FOO":"bar"}}
 JSON
 
@@ -66,7 +66,7 @@ fi
 # ---------------------------------------------------------------------------
 # Assert: permissions.allow and env.FOO survive AND SessionStart entry present
 # ---------------------------------------------------------------------------
-RESULT="$(python3 - "$WORK/settings.json" <<'PY'
+RESULT="$(python3 - "$WORK/.claude/settings.json" <<'PY'
 import json, sys
 try:
     d = json.load(open(sys.argv[1]))
